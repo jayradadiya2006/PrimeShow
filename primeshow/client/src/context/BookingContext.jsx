@@ -1,0 +1,659 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
+
+const BookingContext = createContext();
+const API_BASE = 'http://localhost:5000/api';
+
+const MOCK_MOVIES = [
+  {
+    id: 'mov_1',
+    title: 'Avatar: Fire and Ash',
+    tagline: 'Enter the Uncharted Regions of Pandora',
+    synopsis: 'Jake Sully and Neytiri encounter the Ash People, a volcanic Na\'vi clan whose aggressive nature challenges their perception of Pandora. A visually breathtaking cinematic masterpiece in native IMAX 3D.',
+    duration: '3h 12m',
+    rating: 9.4,
+    votesCount: 42800,
+    parentalRating: 'UA 16+',
+    releaseDate: '2026-12-18',
+    showDates: ['2026-07-31', '2026-08-01', '2026-08-02'],
+    genres: ['Sci-Fi', 'Action', 'Adventure', 'Fantasy'],
+    languages: ['English', 'Hindi', 'Tamil', 'Telugu'],
+    formats: ['IMAX 3D', '4DX', 'Dolby Atmos', '3D', '2D'],
+    poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80',
+    banner: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+    trailerUrl: 'https://www.youtube.com/watch?v=d9MyW72ELq0',
+    director: 'James Cameron',
+    producer: 'Jon Landau & James Cameron',
+    cast: [
+      { id: 'c_1', name: 'Sam Worthington', role: 'Jake Sully', character: 'Jake Sully', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' },
+      { id: 'c_2', name: 'Zoe Saldana', role: 'Neytiri', character: 'Neytiri', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' },
+      { id: 'c_3', name: 'Sigourney Weaver', role: 'Kiri', character: 'Kiri', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80' }
+    ],
+    theatres: [
+      {
+        id: 'th_1',
+        name: 'PVR Director\'s Cut, Palladium Mall',
+        city: 'Mumbai',
+        address: 'Lower Parel, Mumbai',
+        facilities: ['VIP Recliners', 'Dolby Atmos', 'Gourmet In-Seat Dining'],
+        shows: [
+          { id: 'sh_101', time: '10:00 AM', format: 'IMAX 3D', price: 650, tier: 'Recliner', screen: 'Screen 1', availableSeats: 80 },
+          { id: 'sh_102', time: '01:30 PM', format: 'IMAX 3D', price: 780, tier: 'Recliner', screen: 'Screen 1', availableSeats: 65 },
+          { id: 'sh_103', time: '07:00 PM', format: 'IMAX 3D', price: 950, tier: 'Recliner', screen: 'Screen 1', availableSeats: 90 }
+        ]
+      },
+      {
+        id: 'th_2',
+        name: 'INOX Megaplex, Inorbit Mall',
+        city: 'Mumbai',
+        address: 'Malad West, Mumbai',
+        facilities: ['IMAX 3D', 'ScreenX 270°', 'MX4D'],
+        shows: [
+          { id: 'sh_201', time: '11:15 AM', format: '4DX', price: 480, tier: 'Premium', screen: 'Screen 2', availableSeats: 110 },
+          { id: 'sh_202', time: '04:30 PM', format: '4DX', price: 580, tier: 'Premium', screen: 'Screen 2', availableSeats: 45 },
+          { id: 'sh_203', time: '09:45 PM', format: 'Dolby Atmos', price: 620, tier: 'Premium', screen: 'Screen 3', availableSeats: 120 }
+        ]
+      }
+    ],
+    schedules: {
+      '2026-07-31': [
+        {
+          id: 'th_1',
+          name: 'PVR Director\'s Cut, Palladium Mall',
+          city: 'Mumbai',
+          address: 'Lower Parel, Mumbai',
+          facilities: ['VIP Recliners', 'Dolby Atmos', 'Gourmet In-Seat Dining'],
+          shows: [
+            { id: 'sh_101', time: '10:00 AM', format: 'IMAX 3D', price: 650, tier: 'Recliner', screen: 'Screen 1', availableSeats: 80 },
+            { id: 'sh_102', time: '01:30 PM', format: 'IMAX 3D', price: 780, tier: 'Recliner', screen: 'Screen 1', availableSeats: 65 },
+            { id: 'sh_103', time: '07:00 PM', format: 'IMAX 3D', price: 950, tier: 'Recliner', screen: 'Screen 1', availableSeats: 90 }
+          ]
+        },
+        {
+          id: 'th_2',
+          name: 'INOX Megaplex, Inorbit Mall',
+          city: 'Mumbai',
+          address: 'Malad West, Mumbai',
+          facilities: ['IMAX 3D', 'ScreenX 270°', 'MX4D'],
+          shows: [
+            { id: 'sh_201', time: '11:15 AM', format: '4DX', price: 480, tier: 'Premium', screen: 'Screen 2', availableSeats: 110 },
+            { id: 'sh_202', time: '04:30 PM', format: '4DX', price: 580, tier: 'Premium', screen: 'Screen 2', availableSeats: 45 }
+          ]
+        }
+      ],
+      '2026-08-01': [
+        {
+          id: 'th_1',
+          name: 'PVR Director\'s Cut, Palladium Mall',
+          city: 'Mumbai',
+          address: 'Lower Parel, Mumbai',
+          facilities: ['VIP Recliners', 'Dolby Atmos'],
+          shows: [
+            { id: 'sh_104', time: '02:00 PM', format: 'IMAX 3D', price: 700, tier: 'Recliner', screen: 'Screen 1', availableSeats: 100 }
+          ]
+        }
+      ]
+    },
+    status: 'Now Showing',
+    featured: true
+  },
+  {
+    id: 'mov_2',
+    title: 'Dune: Part Two',
+    tagline: 'Long Live The Fighters',
+    synopsis: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.',
+    duration: '2h 46m',
+    rating: 9.3,
+    votesCount: 89400,
+    parentalRating: 'UA',
+    releaseDate: '2026-03-01',
+    showDates: ['2026-07-31', '2026-08-01'],
+    genres: ['Sci-Fi', 'Adventure', 'Drama'],
+    languages: ['English', 'Hindi'],
+    formats: ['IMAX 3D', 'Dolby Atmos', '2D'],
+    poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80',
+    banner: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80',
+    trailerUrl: 'https://www.youtube.com/watch?v=Way9Dexny3w',
+    director: 'Denis Villeneuve',
+    producer: 'Mary Parent & Cale Boyter',
+    cast: [
+      { id: 'c_201', name: 'Timothée Chalamet', role: 'Paul Atreides', character: 'Paul Atreides', photo: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80' },
+      { id: 'c_202', name: 'Zendaya', role: 'Chani', character: 'Chani', photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80' }
+    ],
+    theatres: [
+      {
+        id: 'th_1',
+        name: 'PVR Director\'s Cut, Palladium Mall',
+        city: 'Mumbai',
+        address: 'Lower Parel, Mumbai',
+        facilities: ['VIP Recliners', 'Dolby Atmos'],
+        shows: [
+          { id: 'sh_301', time: '12:00 PM', format: 'IMAX 3D', price: 600, tier: 'Recliner', screen: 'Screen 1', availableSeats: 100 },
+          { id: 'sh_302', time: '06:00 PM', format: 'Dolby Atmos', price: 700, tier: 'Recliner', screen: 'Screen 2', availableSeats: 85 }
+        ]
+      }
+    ],
+    status: 'Now Showing',
+    featured: true
+  },
+  {
+    id: 'mov_3',
+    title: 'Kalki 2898 AD: Chapter II',
+    tagline: 'The Epic Battle of the Millennia',
+    synopsis: 'Set in a post-apocalyptic world in the year 2898 AD, the modern avatar of Vishnu descends to protect humanity.',
+    duration: '3h 05m',
+    rating: 9.1,
+    votesCount: 65200,
+    parentalRating: 'UA',
+    releaseDate: '2026-06-27',
+    showDates: ['2026-07-31'],
+    genres: ['Action', 'Sci-Fi'],
+    languages: ['Hindi', 'Telugu', 'Tamil'],
+    formats: ['IMAX 3D', '3D', 'Dolby Atmos'],
+    poster: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80',
+    banner: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=1920&q=80',
+    trailerUrl: 'https://www.youtube.com/watch?v=kQDd1AhGIHk',
+    director: 'Nag Ashwin',
+    producer: 'C. Ashwini Dutt',
+    cast: [
+      { id: 'c_301', name: 'Prabhas', role: 'Bhairava', character: 'Bhairava', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' }
+    ],
+    theatres: [
+      {
+        id: 'th_2',
+        name: 'INOX Megaplex, Inorbit Mall',
+        city: 'Mumbai',
+        address: 'Malad West, Mumbai',
+        facilities: ['IMAX 3D', '3D'],
+        shows: [
+          { id: 'sh_401', time: '02:00 PM', format: '3D', price: 400, tier: 'Premium', screen: 'Screen 1', availableSeats: 95 },
+          { id: 'sh_402', time: '08:30 PM', format: 'IMAX 3D', price: 650, tier: 'Premium', screen: 'Screen 1', availableSeats: 110 }
+        ]
+      }
+    ],
+    status: 'Now Showing',
+    featured: true
+  }
+];
+
+export const BookingProvider = ({ children }) => {
+  const [moviesList, setMoviesList] = useState(MOCK_MOVIES);
+  
+  const fetchMovies = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/movies`);
+      if (res.data && res.data.length > 0) {
+        setMoviesList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    fetchMovies();
+  }, []);
+
+  // Master Dynamic Screen Seat Configuration Store
+  const DEFAULT_SEAT_ROWS = [
+    { row: 'N', tier: 'Classic Normal (Screen Front)', price: 280, seatsCount: 12 },
+    { row: 'P', tier: 'Premium Tier', price: 480, seatsCount: 12 },
+    { row: 'R', tier: 'Luxury Recliner', price: 650, seatsCount: 10 },
+    { row: 'V', tier: 'VIP Gold Lounge (Back Tier)', price: 950, seatsCount: 8 }
+  ];
+
+  const [screenLayoutsMap, setScreenLayoutsMap] = useState(() => {
+    const saved = localStorage.getItem('primeshow_screen_layouts_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return {
+      'sc_1': {
+        screenId: 'sc_1',
+        screenName: 'Screen 1 - IMAX 3D',
+        rows: DEFAULT_SEAT_ROWS,
+        blockedSeats: ['V1', 'V2'],
+        customStatuses: {}
+      },
+      'sc_2': {
+        screenId: 'sc_2',
+        screenName: 'Screen 2 - 4DX',
+        rows: [
+          { row: 'N', tier: 'Classic Normal', price: 300, seatsCount: 10 },
+          { row: 'P', tier: '4DX Motion Tier', price: 550, seatsCount: 10 },
+          { row: 'V', tier: 'VIP Recliner', price: 850, seatsCount: 8 }
+        ],
+        blockedSeats: ['V1'],
+        customStatuses: {}
+      }
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('primeshow_screen_layouts_v1', JSON.stringify(screenLayoutsMap));
+  }, [screenLayoutsMap]);
+
+  const getScreenLayout = (screenId = 'sc_1') => {
+    return screenLayoutsMap[screenId] || {
+      screenId,
+      screenName: 'Screen 1',
+      rows: DEFAULT_SEAT_ROWS,
+      blockedSeats: ['V1', 'V2'],
+      customStatuses: {}
+    };
+  };
+
+  const updateScreenRowsConfig = (screenId = 'sc_1', updatedRows) => {
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      return {
+        ...prev,
+        [screenId]: { ...current, rows: updatedRows }
+      };
+    });
+  };
+
+  const toggleBlockSeatForScreen = (screenId = 'sc_1', seatId) => {
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const blocked = current.blockedSeats || [];
+      const isBlocked = blocked.includes(seatId);
+      const updatedBlocked = isBlocked
+        ? blocked.filter(s => s !== seatId)
+        : [...blocked, seatId];
+      
+      const custom = { ...(current.customStatuses || {}) };
+      if (!isBlocked) {
+        custom[seatId] = 'BLOCKED';
+      } else {
+        delete custom[seatId];
+      }
+
+      return {
+        ...prev,
+        [screenId]: { ...current, blockedSeats: updatedBlocked, customStatuses: custom }
+      };
+    });
+  };
+
+  const setManualSeatStatusForScreen = (screenId = 'sc_1', seatId, newStatus) => {
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const custom = { ...(current.customStatuses || {}) };
+      let blocked = [...(current.blockedSeats || [])];
+
+      if (newStatus === 'BLOCKED') {
+        if (!blocked.includes(seatId)) blocked.push(seatId);
+        custom[seatId] = 'BLOCKED';
+      } else if (newStatus === 'AVAILABLE') {
+        blocked = blocked.filter(s => s !== seatId);
+        delete custom[seatId];
+      } else {
+        custom[seatId] = newStatus;
+      }
+
+      return {
+        ...prev,
+        [screenId]: { ...current, blockedSeats: blocked, customStatuses: custom }
+      };
+    });
+  };
+
+  const addRowToScreenLayout = (screenId = 'sc_1', rowChar, tierName, price, seatsCount) => {
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const existingRows = current.rows || [];
+      const updatedRows = [...existingRows.filter(r => r.row !== rowChar), {
+        row: rowChar.toUpperCase(),
+        tier: tierName,
+        price: Number(price),
+        seatsCount: Number(seatsCount)
+      }];
+      return {
+        ...prev,
+        [screenId]: { ...current, rows: updatedRows }
+      };
+    });
+  };
+
+  const deleteRowFromScreenLayout = (screenId = 'sc_1', rowChar) => {
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const updatedRows = (current.rows || []).filter(r => r.row !== rowChar);
+      return {
+        ...prev,
+        [screenId]: { ...current, rows: updatedRows }
+      };
+    });
+  };
+
+  const [activeBooking, setActiveBooking] = useState({
+    movie: null,
+    theatre: null,
+    show: null,
+    selectedSeats: [],
+    selectedTier: 'Recliner',
+    appliedCoupon: null,
+    discountAmount: 0,
+    paymentMethod: 'UPI'
+  });
+
+  // Dynamic User Bookings Store
+  const [myBookings, setMyBookings] = useState(() => {
+    const saved = localStorage.getItem('primeshow_my_bookings_v2');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('primeshow_my_bookings_v2', JSON.stringify(myBookings));
+  }, [myBookings]);
+
+  // Global Tracked Booked Seats Map
+  const [showBookedSeatsMap, setShowBookedSeatsMap] = useState({
+    sh_101: ['C4', 'C5', 'D6', 'D7'],
+    sh_102: ['E1', 'E2']
+  });
+
+  const selectShowForBooking = (movieObj, theatreObj, showObj) => {
+    setActiveBooking({
+      movie: movieObj,
+      theatre: theatreObj,
+      show: showObj,
+      selectedSeats: [],
+      selectedTier: 'Recliner',
+      appliedCoupon: null,
+      discountAmount: 0,
+      paymentMethod: 'UPI'
+    });
+  };
+
+  const toggleSeatSelection = (seatId, tierPrice, tierName) => {
+    setActiveBooking(prev => {
+      const exists = prev.selectedSeats.includes(seatId);
+      const updatedSeats = exists
+        ? prev.selectedSeats.filter(s => s !== seatId)
+        : [...prev.selectedSeats, seatId];
+      
+      return {
+        ...prev,
+        selectedSeats: updatedSeats,
+        selectedTier: tierName || prev.selectedTier
+      };
+    });
+  };
+
+  const applyCoupon = async (code, totalAmount) => {
+    try {
+      const token = localStorage.getItem('primeshow_token');
+      const res = await axios.post(`${API_BASE}/coupons/verify`, 
+        { code, amount: totalAmount },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setActiveBooking(prev => ({
+        ...prev,
+        appliedCoupon: res.data.code,
+        discountAmount: res.data.discountAmount
+      }));
+
+      return { success: true, description: res.data.description, discountAmount: res.data.discountAmount };
+    } catch (err) {
+      const cleanCode = code.toUpperCase().trim();
+      if (cleanCode === 'PRIMESHOW50') {
+        const disc = Math.min(Math.round(totalAmount * 0.5), 250);
+        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'PRIMESHOW50', discountAmount: disc }));
+        return { success: true, description: '50% Flat Discount applied!', discountAmount: disc };
+      } else if (cleanCode === 'LUXURY200') {
+        const disc = 200;
+        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'LUXURY200', discountAmount: disc }));
+        return { success: true, description: 'Flat ₹200 Cashback applied!', discountAmount: disc };
+      } else if (cleanCode === 'ADMINVIP') {
+        const disc = 500;
+        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'ADMINVIP', discountAmount: disc }));
+        return { success: true, description: 'VIP Admin ₹500 Pass applied!', discountAmount: disc };
+      }
+
+      return { success: false, error: err.response?.data?.error || 'Invalid or non-eligible coupon code' };
+    }
+  };
+
+  const removeCoupon = () => {
+    setActiveBooking(prev => ({ ...prev, appliedCoupon: null, discountAmount: 0 }));
+  };
+
+  const confirmBooking = async (bookingDetails) => {
+    const bookingId = `bk_${Math.floor(100000 + Math.random() * 900000)}`;
+    
+    const targetMovie = activeBooking.movie || {};
+    const movieTitle = bookingDetails.movieTitle || targetMovie.title || 'Movie';
+    const poster = bookingDetails.poster || targetMovie.poster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80';
+    const theatreName = bookingDetails.theatreName || activeBooking.theatre?.name || 'Multiplex';
+
+    const newBooking = {
+      id: bookingId,
+      ...bookingDetails,
+      movieTitle,
+      poster,
+      theatreName,
+      bookingDate: new Date().toISOString(),
+      status: 'CONFIRMED',
+      qrCodeData: `PRIMESHOW-${bookingId}-${movieTitle.replace(/\s+/g, '')}-${bookingDetails.seats.join('')}`
+    };
+
+    setMyBookings(prev => [newBooking, ...prev]);
+
+    if (activeBooking.show?.id) {
+      const showId = activeBooking.show.id;
+      setShowBookedSeatsMap(prev => ({
+        ...prev,
+        [showId]: [...(prev[showId] || []), ...bookingDetails.seats]
+      }));
+    }
+
+    try {
+      const token = localStorage.getItem('primeshow_token');
+      await axios.post(`${API_BASE}/bookings/create`, {
+        showId: activeBooking.show?.id || 'sh_101',
+        seats: bookingDetails.seats,
+        tier: bookingDetails.tier,
+        totalAmount: bookingDetails.totalAmount,
+        couponCode: bookingDetails.couponCode,
+        paymentMethod: bookingDetails.paymentMethod,
+        basePrice: bookingDetails.basePrice,
+        convenienceFee: bookingDetails.convenienceFee,
+        tax: bookingDetails.tax,
+        discount: bookingDetails.discount
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {}
+
+    return newBooking;
+  };
+
+  const addMovieToGlobalStore = async (newMovieData) => {
+    try {
+      const token = localStorage.getItem('primeshow_token');
+      const res = await axios.post(`${API_BASE}/movies`, newMovieData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMoviesList(prev => [res.data, ...prev]);
+    } catch (err) {
+      const fallbackMovie = {
+        id: `mov_${Date.now()}`,
+        ...newMovieData,
+        duration: newMovieData.duration || '2h 30m',
+        rating: newMovieData.rating || 9.0,
+        votesCount: 100,
+        parentalRating: newMovieData.parentalRating || 'UA',
+        releaseDate: newMovieData.releaseDate || '2026-12-18',
+        showDates: newMovieData.showDates || ['2026-07-31', '2026-08-01'],
+        genres: Array.isArray(newMovieData.genres) ? newMovieData.genres : (newMovieData.genres ? newMovieData.genres.split(',').map(s=>s.trim()) : ['Action']),
+        languages: Array.isArray(newMovieData.languages) ? newMovieData.languages : (newMovieData.languages ? newMovieData.languages.split(',').map(s=>s.trim()) : ['English', 'Hindi']),
+        formats: Array.isArray(newMovieData.formats) ? newMovieData.formats : (newMovieData.formats ? newMovieData.formats.split(',').map(s=>s.trim()) : ['IMAX 3D', 'Dolby Atmos']),
+        poster: newMovieData.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+        banner: newMovieData.banner || newMovieData.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+        trailerUrl: newMovieData.trailerUrl || 'https://www.youtube.com/watch?v=d9MyW72ELq0',
+        director: newMovieData.director || 'Famous Director',
+        producer: newMovieData.producer || 'PrimeShow Studios',
+        cast: newMovieData.cast || [],
+        theatres: newMovieData.theatres || [],
+        status: 'Now Showing',
+        featured: true
+      };
+      setMoviesList(prev => [fallbackMovie, ...prev]);
+    }
+  };
+
+  const updateMovieInGlobalStore = async (movieId, updatedFields) => {
+    setMoviesList(prev => prev.map(m => m.id === movieId ? { ...m, ...updatedFields } : m));
+    try {
+      const token = localStorage.getItem('primeshow_token');
+      await axios.put(`${API_BASE}/movies/${movieId}`, updatedFields, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {}
+  };
+
+  const deleteMovieFromGlobalStore = async (movieId) => {
+    try {
+      const token = localStorage.getItem('primeshow_token');
+      await axios.delete(`${API_BASE}/movies/${movieId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {}
+    setMoviesList(prev => prev.filter(m => m.id !== movieId));
+  };
+
+  // Show Management Helpers
+  const addShowDateToMovie = (movieId, dateStr) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId) {
+        const existingDates = m.showDates || [];
+        if (!existingDates.includes(dateStr)) {
+          return { ...m, showDates: [...existingDates, dateStr] };
+        }
+      }
+      return m;
+    }));
+  };
+
+  const deleteShowDateFromMovie = (movieId, dateStr) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId) {
+        const existingDates = m.showDates || [];
+        const updatedDates = existingDates.filter(d => d !== dateStr);
+        const updatedSchedules = { ...(m.schedules || {}) };
+        delete updatedSchedules[dateStr];
+        return { ...m, showDates: updatedDates, schedules: updatedSchedules };
+      }
+      return m;
+    }));
+  };
+
+  const addShowSlotToMovieTheatre = (movieId, dateStr, theatreObj, showSlotObj) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId) {
+        const schedules = { ...(m.schedules || {}) };
+        const dateTheatres = schedules[dateStr] ? JSON.parse(JSON.stringify(schedules[dateStr])) : (m.theatres ? JSON.parse(JSON.stringify(m.theatres)) : []);
+        const theatreIndex = dateTheatres.findIndex(t => t.id === theatreObj.id || t.name === theatreObj.name);
+
+        if (theatreIndex > -1) {
+          const targetTheatre = dateTheatres[theatreIndex];
+          targetTheatre.shows = [...(targetTheatre.shows || []), showSlotObj];
+        } else {
+          dateTheatres.push({
+            id: theatreObj.id || `th_${Date.now()}`,
+            name: theatreObj.name || 'PVR Cinemas',
+            city: theatreObj.city || 'Mumbai',
+            address: theatreObj.address || 'Central City Mall',
+            facilities: theatreObj.facilities || ['IMAX 3D', 'VIP Recliners'],
+            shows: [showSlotObj]
+          });
+        }
+        schedules[dateStr] = dateTheatres;
+        const existingDates = m.showDates || [];
+        const updatedDates = existingDates.includes(dateStr) ? existingDates : [...existingDates, dateStr];
+        return { ...m, showDates: updatedDates, schedules };
+      }
+      return m;
+    }));
+  };
+
+  const deleteShowSlotFromMovieTheatre = (movieId, dateStr, theatreId, showId) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId) {
+        const schedules = { ...(m.schedules || {}) };
+        if (schedules[dateStr]) {
+          schedules[dateStr] = schedules[dateStr].map(t => {
+            if (t.id === theatreId) {
+              return { ...t, shows: t.shows.filter(s => s.id !== showId) };
+            }
+            return t;
+          }).filter(t => t.shows.length > 0);
+        } else if (m.theatres) {
+          const updatedTheatres = m.theatres.map(t => {
+            if (t.id === theatreId) {
+              return { ...t, shows: t.shows.filter(s => s.id !== showId) };
+            }
+            return t;
+          }).filter(t => t.shows.length > 0);
+          return { ...m, theatres: updatedTheatres };
+        }
+        return { ...m, schedules };
+      }
+      return m;
+    }));
+  };
+
+  const deleteTheatreFromMovieDate = (movieId, dateStr, theatreId) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId) {
+        const schedules = { ...(m.schedules || {}) };
+        if (schedules[dateStr]) {
+          schedules[dateStr] = schedules[dateStr].filter(t => t.id !== theatreId);
+        } else if (m.theatres) {
+          return { ...m, theatres: m.theatres.filter(t => t.id !== theatreId) };
+        }
+        return { ...m, schedules };
+      }
+      return m;
+    }));
+  };
+
+  return (
+    <BookingContext.Provider value={{
+      moviesList,
+      fetchMovies,
+      addMovieToGlobalStore,
+      updateMovieInGlobalStore,
+      deleteMovieFromGlobalStore,
+      addShowDateToMovie,
+      deleteShowDateFromMovie,
+      addShowSlotToMovieTheatre,
+      deleteShowSlotFromMovieTheatre,
+      deleteTheatreFromMovieDate,
+      screenLayoutsMap,
+      getScreenLayout,
+      updateScreenRowsConfig,
+      toggleBlockSeatForScreen,
+      setManualSeatStatusForScreen,
+      addRowToScreenLayout,
+      deleteRowFromScreenLayout,
+      activeBooking,
+      selectShowForBooking,
+      toggleSeatSelection,
+      applyCoupon,
+      removeCoupon,
+      confirmBooking,
+      myBookings,
+      setMyBookings,
+      showBookedSeatsMap
+    }}>
+      {children}
+    </BookingContext.Provider>
+  );
+};
+
+export const useBooking = () => useContext(BookingContext);

@@ -1,0 +1,2815 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Shield, Film, Ticket, Users, DollarSign, Plus, Edit, Trash2, CheckCircle2, 
+  XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X
+} from 'lucide-react';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { useBooking } from '../../context/BookingContext';
+
+const API_BASE = 'http://localhost:5000/api';
+
+export const AdminDashboard = ({ onReturnHome }) => {
+  const { user, login, logout, token, supportMessages, replyToSupportMessage, broadcastNotification } = useAuth();
+  const { 
+    moviesList, addMovieToGlobalStore, updateMovieInGlobalStore, deleteMovieFromGlobalStore,
+    addShowDateToMovie, deleteShowDateFromMovie, addShowSlotToMovieTheatre, deleteShowSlotFromMovieTheatre, deleteTheatreFromMovieDate,
+    screenLayoutsMap, getScreenLayout, updateScreenRowsConfig, toggleBlockSeatForScreen, setManualSeatStatusForScreen, addRowToScreenLayout, deleteRowFromScreenLayout, showBookedSeatsMap
+  } = useBooking();
+  const [activeTab, setActiveTab] = useState('analytics');
+
+  // Admin Auth Form State
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const handleAdminAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthLoading(true);
+    const res = await login(adminEmail, adminPassword);
+    setAuthLoading(false);
+    if (!res.success) {
+      setAuthError(res.error || 'Invalid Admin Credentials');
+    } else if (res.user?.role !== 'ADMIN') {
+      setAuthError('Access Denied: Administrator account required.');
+    }
+  };
+
+  // Broadcast Notification Form State
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('PROMO');
+
+  // Admin Offers & Seats State
+  const [offersList, setOffersList] = useState([]);
+  const [actionSuccess, setActionSuccess] = useState('');
+
+  // Cinema & Screen Scoped Seat State
+  const [theatresList, setTheatresList] = useState([]);
+  const [selectedTheatreId, setSelectedTheatreId] = useState('th_1');
+  const [selectedScreenId, setSelectedScreenId] = useState('sc_1');
+  const [screenBlockedSeats, setScreenBlockedSeats] = useState([]);
+
+  // Full Movie Form State
+  const [movieForm, setMovieForm] = useState({
+    title: '',
+    synopsis: '',
+    duration: '2h 30m',
+    rating: 9.0,
+    parentalRating: 'UA',
+    releaseDate: '2026-12-18',
+    genres: 'Sci-Fi, Action',
+    languages: 'English, Hindi',
+    formats: 'IMAX 3D, Dolby Atmos',
+    poster: '',
+    banner: '',
+    trailerUrl: '',
+    director: '',
+    status: 'Now Showing'
+  });
+  const [editingMovieId, setEditingMovieId] = useState(null);
+
+  // Show & Date Schedule Manager State
+  const [schedMovieId, setSchedMovieId] = useState('mov_1');
+  const [schedDateInput, setSchedDateInput] = useState('');
+  const [selectedSchedDate, setSelectedSchedDate] = useState('2026-07-31');
+
+  const [schedTheatreName, setSchedTheatreName] = useState('PVR Director\'s Cut, Palladium Mall');
+  const [schedCity, setSchedCity] = useState('Mumbai');
+  const [schedAddress, setSchedAddress] = useState('Lower Parel, Mumbai');
+  const [schedFacilities, setSchedFacilities] = useState('VIP Recliners, Dolby Atmos, Gourmet Dining');
+  const [schedScreen, setSchedScreen] = useState('Screen 1 - IMAX 3D');
+  const [schedFormat, setSchedFormat] = useState('IMAX 3D');
+  const [schedTime, setSchedTime] = useState('07:30 PM');
+  const [schedPrice, setSchedPrice] = useState(650);
+  const [schedTier, setSchedTier] = useState('Recliner');
+
+  // Seat Row Config Form State
+  const [newRowChar, setNewRowChar] = useState('');
+  const [newRowTier, setNewRowTier] = useState('Executive Gold');
+  const [newRowPrice, setNewRowPrice] = useState(500);
+  const [newRowSeatsCount, setNewRowSeatsCount] = useState(10);
+
+  // Cast Management State per Selected Movie
+  const [castMovieId, setCastMovieId] = useState('mov_1');
+  const [castName, setCastName] = useState('');
+  const [castRole, setCastRole] = useState('');
+  const [castPhoto, setCastPhoto] = useState('');
+
+  // Offers Form State
+  const [offerTitle, setOfferTitle] = useState('');
+  const [offerCode, setOfferCode] = useState('');
+  const [offerBank, setOfferBank] = useState('All Bank Cards');
+  const [offerDiscount, setOfferDiscount] = useState(200);
+  const [editingOfferId, setEditingOfferId] = useState(null);
+
+  // Support Reply State
+  const [replyTextMap, setReplyTextMap] = useState({});
+
+  // Dynamic Theatre & Seat Layout Calculations
+  const DEFAULT_THEATRES = [
+    {
+      id: 'th_1',
+      name: "PVR Director's Cut, Palladium Mall",
+      city: 'Mumbai',
+      screens: [
+        { id: 'sc_1', name: 'Screen 1 - IMAX 3D' },
+        { id: 'sc_2', name: 'Screen 2 - 4DX' },
+        { id: 'sc_3', name: 'Screen 3 - VIP Recliner' }
+      ]
+    },
+    {
+      id: 'th_2',
+      name: 'INOX Megaplex, Inorbit Mall',
+      city: 'Mumbai',
+      screens: [
+        { id: 'sc_4', name: 'Screen 1 - ScreenX 270°' },
+        { id: 'sc_5', name: 'Screen 2 - Dolby Atmos' }
+      ]
+    }
+  ];
+
+  const currentTheatresList = (theatresList && theatresList.length > 0) ? theatresList : DEFAULT_THEATRES;
+  const activeTheatreObj = currentTheatresList.find(t => t.id === selectedTheatreId) || currentTheatresList[0];
+  const activeScreensList = activeTheatreObj?.screens || [
+    { id: 'sc_1', name: 'Screen 1 - IMAX 3D' },
+    { id: 'sc_2', name: 'Screen 2 - 4DX' }
+  ];
+
+  const currentLayout = getScreenLayout(selectedScreenId);
+  const seatRowsList = currentLayout.rows || [];
+
+  const handleAddRowForm = (e) => {
+    e.preventDefault();
+    if (!newRowChar) return;
+    addRowToScreenLayout(selectedScreenId, newRowChar, newRowTier, newRowPrice, newRowSeatsCount);
+    setNewRowChar('');
+    setActionSuccess(`Added Row ${newRowChar.toUpperCase()} (${newRowTier}) with ${newRowSeatsCount} seats at ₹${newRowPrice}!`);
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  // Theatre CRUD State
+  const [theatreForm, setTheatreForm] = useState({
+    name: '',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    address: '',
+    logo: '',
+    image: '',
+    facilities: 'VIP Recliners, IMAX 3D, Dolby Atmos',
+    screensCount: 6,
+    totalSeats: 200
+  });
+  const [editingTheatreId, setEditingTheatreId] = useState(null);
+
+  // Show Slot Form State
+  const [showSlotForm, setShowSlotForm] = useState({
+    theatreId: 'th_1',
+    movieId: 'mov_1',
+    screenName: 'Screen 1 - IMAX 3D',
+    format: 'IMAX 3D',
+    time: '07:30 PM',
+    price: 450
+  });
+
+  // Event CRUD State
+  const [eventsList, setEventsList] = useState([]);
+  const [eventForm, setEventForm] = useState({
+    title: '',
+    category: 'Live Concert',
+    venue: '',
+    city: 'Mumbai',
+    date: '18 JAN 2027',
+    time: '07:00 PM',
+    price: 1500,
+    totalCapacity: 5000,
+    availableSeats: 5000,
+    image: '',
+    description: ''
+  });
+  const [editingEventId, setEditingEventId] = useState(null);
+
+  // Plays CRUD State
+  const [playsList, setPlaysList] = useState([]);
+  const [playForm, setPlayForm] = useState({
+    title: '',
+    language: 'Gujarati',
+    category: 'Comedy Drama',
+    badge: 'HOT SELLER',
+    venue: '',
+    city: 'Mumbai',
+    date: '14 FEB 2027',
+    time: '08:00 PM',
+    price: 600,
+    totalCapacity: 1200,
+    availableSeats: 1200,
+    image: '',
+    description: ''
+  });
+  const [editingPlayId, setEditingPlayId] = useState(null);
+  // Activities CRUD State
+  const [activitiesList, setActivitiesList] = useState([]);
+  const [activityForm, setActivityForm] = useState({
+    title: '',
+    category: 'Water Park',
+    badge: 'UNLIMITED ACCESS',
+    location: '',
+    city: 'Mumbai',
+    validity: 'Full Day Pass (10:00 AM - 07:00 PM)',
+    price: 1299,
+    totalCapacity: 2000,
+    availableSeats: 2000,
+    image: '',
+    description: '',
+    benefits: ['Unlimited Rides', 'Free Entry']
+  });
+  const [newBenefitInput, setNewBenefitInput] = useState('');
+  const [editingActivityId, setEditingActivityId] = useState(null);
+
+  // Offer Banners CRUD State
+  const [offerBannersList, setOfferBannersList] = useState([]);
+  const [offerSubTab, setOfferSubTab] = useState('banners'); // 'banners' | 'cards'
+  const [bannerForm, setBannerForm] = useState({
+    title: '',
+    tagline: '',
+    code: '',
+    category: 'Movies',
+    image: '',
+    expiryDate: '2026-12-31',
+    ctaText: 'Claim Offer',
+    ctaLink: 'movies'
+  });
+  const [editingBannerId, setEditingBannerId] = useState(null);
+
+  // Fetch Theatres, Offers, Banners, Events, Plays & Activities
+  const fetchAdminData = async () => {
+    try {
+      const [offRes, banRes, thRes, evRes, plRes, actRes] = await Promise.all([
+        axios.get(`${API_BASE}/offers`),
+        axios.get(`${API_BASE}/offers/banners`),
+        axios.get(`${API_BASE}/theatres`),
+        axios.get(`${API_BASE}/events`),
+        axios.get(`${API_BASE}/plays`),
+        axios.get(`${API_BASE}/activities`)
+      ]);
+      setOffersList(offRes.data);
+      setOfferBannersList(banRes.data);
+      setTheatresList(thRes.data);
+      setEventsList(evRes.data);
+      setPlaysList(plRes.data);
+      setActivitiesList(actRes.data);
+    } catch (err) {
+      setOffersList([
+        { id: 'off_1', code: 'PRIMESHOW50', title: '50% Flat Discount on IMAX & VIP Bookings', bank: 'All Cards & UPI' },
+        { id: 'off_2', code: 'LUXURY200', title: 'Flat ₹200 Cashback for HDFC Bank Cards', bank: 'HDFC Bank' }
+      ]);
+      setTheatresList([
+        {
+          id: 'th_1',
+          name: 'PVR Director\'s Cut, Palladium Mall',
+          city: 'Mumbai',
+          screens: [
+            { id: 'sc_1', name: 'Screen 1 - Director\'s Cut IMAX 3D', totalSeats: 120 },
+            { id: 'sc_2', name: 'Screen 2 - Luxe Gold Lounge', totalSeats: 80 }
+          ]
+        },
+        {
+          id: 'th_2',
+          name: 'INOX Megaplex, Inorbit Mall',
+          city: 'Mumbai',
+          screens: [
+            { id: 'sc_3', name: 'Screen 1 - INSIGNIA 4DX', totalSeats: 100 }
+          ]
+        }
+      ]);
+    }
+  };
+
+  // Fetch Scoped Blocked Seats when Cinema or Screen changes
+  const fetchScopedSeats = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/theatres/${selectedTheatreId}/screens/${selectedScreenId}/blocked-seats`);
+      setScreenBlockedSeats(res.data.blockedSeats || []);
+    } catch (err) {
+      setScreenBlockedSeats(['V1', 'V2']);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  useEffect(() => {
+    fetchScopedSeats();
+  }, [selectedTheatreId, selectedScreenId]);
+
+  // Handle Full Movie Save (Create / Edit)
+  const handleSaveMovie = async (e) => {
+    e.preventDefault();
+    if (!movieForm.title) return;
+
+    const payload = {
+      ...movieForm,
+      genres: movieForm.genres.split(',').map(s => s.trim()),
+      languages: movieForm.languages.split(',').map(s => s.trim()),
+      formats: movieForm.formats.split(',').map(s => s.trim()),
+      poster: movieForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      banner: movieForm.banner || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80'
+    };
+
+    if (editingMovieId) {
+      await updateMovieInGlobalStore(editingMovieId, payload);
+      setActionSuccess('Movie updated & synced live with User site!');
+    } else {
+      await addMovieToGlobalStore(payload);
+      setActionSuccess('New movie added to catalog & synced live with User site!');
+    }
+
+    setMovieForm({
+      title: '', synopsis: '', duration: '2h 30m', rating: 9.0, parentalRating: 'UA',
+      releaseDate: '2026-12-18', genres: 'Sci-Fi, Action', languages: 'English, Hindi',
+      formats: 'IMAX 3D, Dolby Atmos', poster: '', banner: '', trailerUrl: '', director: '', status: 'Now Showing'
+    });
+    setEditingMovieId(null);
+    setTimeout(() => setActionSuccess(''), 4000);
+  };
+
+  const handleEditMovieClick = (movie) => {
+    setEditingMovieId(movie.id);
+    setMovieForm({
+      title: movie.title || '',
+      synopsis: movie.synopsis || '',
+      duration: movie.duration || '2h 30m',
+      rating: movie.rating || 9.0,
+      parentalRating: movie.parentalRating || 'UA',
+      releaseDate: movie.releaseDate || '2026-12-18',
+      genres: Array.isArray(movie.genres) ? movie.genres.join(', ') : movie.genres || 'Action',
+      languages: Array.isArray(movie.languages) ? movie.languages.join(', ') : movie.languages || 'English',
+      formats: Array.isArray(movie.formats) ? movie.formats.join(', ') : movie.formats || 'IMAX 3D',
+      poster: movie.poster || '',
+      banner: movie.banner || '',
+      trailerUrl: movie.trailerUrl || '',
+      director: movie.director || '',
+      status: movie.status || 'Now Showing'
+    });
+  };
+
+  const handleDeleteMovie = async (id) => {
+    await deleteMovieFromGlobalStore(id);
+    setActionSuccess('Movie removed from catalog & user home page.');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  // Cast Management CRUD
+  const handleAddCastMember = async (e) => {
+    e.preventDefault();
+    if (!castName || !castMovieId) return;
+
+    try {
+      await axios.post(`${API_BASE}/movies/${castMovieId}/cast`, {
+        name: castName,
+        role: castRole || 'Lead Role',
+        photo: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'
+      });
+    } catch (err) {}
+
+    const targetMovie = moviesList.find(m => m.id === castMovieId);
+    if (targetMovie) {
+      if (!targetMovie.cast) targetMovie.cast = [];
+      targetMovie.cast.push({
+        id: `c_${Date.now()}`,
+        name: castName,
+        role: castRole || 'Lead Role',
+        photo: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'
+      });
+    }
+
+    setCastName('');
+    setCastRole('');
+    setCastPhoto('');
+    setActionSuccess('Cast member added to movie!');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleDeleteCastMember = async (movieId, castId) => {
+    try {
+      await axios.delete(`${API_BASE}/movies/${movieId}/cast/${castId}`);
+    } catch (err) {}
+
+    const targetMovie = moviesList.find(m => m.id === movieId);
+    if (targetMovie && targetMovie.cast) {
+      targetMovie.cast = targetMovie.cast.filter(c => c.id !== castId);
+    }
+    setActionSuccess('Cast member removed');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  // Movie Show & Date Schedule Handlers
+  const handleAddScheduleDate = (e) => {
+    e.preventDefault();
+    if (!schedDateInput || !schedMovieId) return;
+    addShowDateToMovie(schedMovieId, schedDateInput);
+    setSelectedSchedDate(schedDateInput);
+    setSchedDateInput('');
+    setActionSuccess(`Added booking date ${schedDateInput} to movie!`);
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleDeleteScheduleDate = (movieId, dateStr) => {
+    deleteShowDateFromMovie(movieId, dateStr);
+    setActionSuccess(`Removed booking date ${dateStr} from movie.`);
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleAddDateScopedShowSlot = (e) => {
+    e.preventDefault();
+    if (!schedMovieId || !selectedSchedDate || !schedTheatreName || !schedTime) return;
+
+    const theatreObj = {
+      id: `th_${schedTheatreName.replace(/\s+/g, '_').toLowerCase()}`,
+      name: schedTheatreName,
+      city: schedCity,
+      address: schedAddress,
+      facilities: schedFacilities.split(',').map(s => s.trim())
+    };
+
+    const showSlotObj = {
+      id: `sh_${Date.now()}`,
+      time: schedTime,
+      format: schedFormat,
+      price: Number(schedPrice),
+      tier: schedTier,
+      screen: schedScreen,
+      availableSeats: 120
+    };
+
+    addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
+    setActionSuccess(`Added ${schedTime} (${schedFormat}) show at ${schedTheatreName} for ${selectedSchedDate}!`);
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  // Cinema & Screen Scoped Seat Blocking
+  const handleToggleScopedSeatBlock = async (seatId) => {
+    try {
+      const res = await axios.post(`${API_BASE}/theatres/${selectedTheatreId}/screens/${selectedScreenId}/toggle-seat-block`, { seatId });
+      setScreenBlockedSeats(res.data.blockedSeats);
+    } catch (err) {
+      if (screenBlockedSeats.includes(seatId)) {
+        setScreenBlockedSeats(screenBlockedSeats.filter(s => s !== seatId));
+      } else {
+        setScreenBlockedSeats([...screenBlockedSeats, seatId]);
+      }
+    }
+    setActionSuccess(`Seat block toggled for Screen ID: ${selectedScreenId}`);
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  // Offers Full CRUD
+  const handleSaveOffer = async (e) => {
+    e.preventDefault();
+    if (!offerTitle || !offerCode) return;
+
+    const offerPayload = {
+      title: offerTitle,
+      code: offerCode.toUpperCase(),
+      bank: offerBank,
+      discountValue: Number(offerDiscount),
+      description: `Special ${offerCode.toUpperCase()} discount voucher valid on all screenings.`
+    };
+
+    if (editingOfferId) {
+      try {
+        await axios.put(`${API_BASE}/offers/${editingOfferId}`, offerPayload, { headers: { Authorization: `Bearer ${token}` } });
+      } catch (err) {}
+      setOffersList(offersList.map(o => o.id === editingOfferId ? { ...o, ...offerPayload } : o));
+      setActionSuccess('Offer updated successfully!');
+    } else {
+      try {
+        const res = await axios.post(`${API_BASE}/offers`, offerPayload, { headers: { Authorization: `Bearer ${token}` } });
+        setOffersList([res.data, ...offersList]);
+      } catch (err) {
+        setOffersList([{ id: `off_${Date.now()}`, ...offerPayload, expiryDate: '2026-12-31' }, ...offersList]);
+      }
+      setActionSuccess('New offer published live!');
+    }
+
+    setOfferTitle('');
+    setOfferCode('');
+    setEditingOfferId(null);
+    setTimeout(() => setActionSuccess(''), 4000);
+  };
+
+  const handleDeleteOffer = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/offers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+    } catch (err) {}
+    setOffersList(offersList.filter(o => o.id !== id));
+    setActionSuccess('Offer deleted');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleReplySubmit = async (msgId) => {
+    const text = replyTextMap[msgId];
+    if (!text) return;
+    await replyToSupportMessage(msgId, text);
+    setReplyTextMap({ ...replyTextMap, [msgId]: '' });
+    setActionSuccess('Reply sent to WhatsApp customer live chat!');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleBroadcastNotificationSubmit = async (e) => {
+    e.preventDefault();
+    if (!notifTitle.trim() || !notifMessage.trim()) return;
+    await broadcastNotification(notifTitle, notifMessage, notifType);
+    setNotifTitle('');
+    setNotifMessage('');
+    setActionSuccess('System Notification Broadcasted to all User Profiles!');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleSaveTheatre = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingTheatreId) {
+        const res = await axios.put(`${API_BASE}/theatres/${editingTheatreId}`, theatreForm);
+        setTheatresList(theatresList.map(t => t.id === editingTheatreId ? res.data : t));
+        setActionSuccess('Theatre details updated successfully!');
+      } else {
+        const res = await axios.post(`${API_BASE}/theatres`, theatreForm);
+        setTheatresList([res.data, ...theatresList]);
+        setActionSuccess('New Theatre added to platform!');
+      }
+      setTheatreForm({ name: '', city: 'Mumbai', state: 'Maharashtra', address: '', logo: '', image: '', facilities: 'VIP Recliners, IMAX 3D', screensCount: 6, totalSeats: 200 });
+      setEditingTheatreId(null);
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionSuccess('Error saving theatre details');
+      setTimeout(() => setActionSuccess(''), 3000);
+    }
+  };
+
+  const handleDeleteTheatre = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/theatres/${id}`);
+      setTheatresList(theatresList.filter(t => t.id !== id));
+      setActionSuccess('Theatre deleted!');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {}
+  };
+
+  const handleAddShowSlot = async (e) => {
+    e.preventDefault();
+    try {
+      const selectedMov = moviesList.find(m => m.id === showSlotForm.movieId) || { title: 'Avatar: Fire and Ash' };
+      const payload = {
+        ...showSlotForm,
+        movieTitle: selectedMov.title
+      };
+      const res = await axios.post(`${API_BASE}/theatres/${showSlotForm.theatreId}/shows`, payload);
+      setTheatresList(theatresList.map(t => t.id === showSlotForm.theatreId ? res.data : t));
+      setActionSuccess('Show Slot added to Theatre!');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {}
+  };
+
+  const handleDeleteShowSlot = async (theatreId, showId) => {
+    try {
+      const res = await axios.delete(`${API_BASE}/theatres/${theatreId}/shows/${showId}`);
+      setTheatresList(theatresList.map(t => t.id === theatreId ? res.data : t));
+      setActionSuccess('Show Slot removed');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {}
+  };
+
+  const handleSaveEvent = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingEventId) {
+        const res = await axios.put(`${API_BASE}/events/${editingEventId}`, eventForm);
+        setEventsList(eventsList.map(ev => ev.id === editingEventId ? res.data : ev));
+        setActionSuccess('Event details updated successfully!');
+      } else {
+        const res = await axios.post(`${API_BASE}/events`, eventForm);
+        setEventsList([res.data, ...eventsList]);
+        setActionSuccess('New Live Event created successfully!');
+      }
+      setEventForm({ title: '', category: 'Live Concert', venue: '', city: 'Mumbai', date: '18 JAN 2027', time: '07:00 PM', price: 1500, totalCapacity: 5000, availableSeats: 5000, image: '', description: '' });
+      setEditingEventId(null);
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionSuccess('Error saving event');
+      setTimeout(() => setActionSuccess(''), 3000);
+    }
+  };
+
+  const handleDeleteEvent = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/events/${id}`);
+      setEventsList(eventsList.filter(ev => ev.id !== id));
+      setActionSuccess('Event deleted!');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {}
+  };
+
+  const handleSavePlay = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingPlayId) {
+        const res = await axios.put(`${API_BASE}/plays/${editingPlayId}`, playForm);
+        setPlaysList(playsList.map(p => p.id === editingPlayId ? res.data : p));
+        setActionSuccess('Play details updated successfully!');
+      } else {
+        const res = await axios.post(`${API_BASE}/plays`, playForm);
+        setPlaysList([res.data, ...playsList]);
+        setActionSuccess('New Theater Play added successfully!');
+      }
+      setPlayForm({ title: '', language: 'Gujarati', category: 'Comedy Drama', badge: 'HOT SELLER', venue: '', city: 'Mumbai', date: '14 FEB 2027', time: '08:00 PM', price: 600, totalCapacity: 1200, availableSeats: 1200, image: '', description: '' });
+      setEditingPlayId(null);
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionSuccess('Error saving play details');
+      setTimeout(() => setActionSuccess(''), 3000);
+    }
+  };
+
+  const handleDeletePlay = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/plays/${id}`);
+      setPlaysList(playsList.filter(p => p.id !== id));
+      setActionSuccess('Play deleted!');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {}
+  };
+
+  const handleAddBenefit = () => {
+    if (newBenefitInput.trim()) {
+      setActivityForm({
+        ...activityForm,
+        benefits: [...(activityForm.benefits || []), newBenefitInput.trim()]
+      });
+      setNewBenefitInput('');
+    }
+  };
+
+  const handleRemoveBenefit = (indexToRemove) => {
+    setActivityForm({
+      ...activityForm,
+      benefits: (activityForm.benefits || []).filter((_, idx) => idx !== indexToRemove)
+    });
+  };
+
+  const handleSaveActivity = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingActivityId) {
+        const res = await axios.put(`${API_BASE}/activities/${editingActivityId}`, activityForm);
+        setActivitiesList(activitiesList.map(a => a.id === editingActivityId ? res.data : a));
+        setActionSuccess('Activity pass details updated successfully!');
+      } else {
+        const res = await axios.post(`${API_BASE}/activities`, activityForm);
+        setActivitiesList([res.data, ...activitiesList]);
+        setActionSuccess('New Adventure Activity Pass created successfully!');
+      }
+      setActivityForm({ title: '', category: 'Water Park', badge: 'UNLIMITED ACCESS', location: '', city: 'Mumbai', validity: 'Full Day Pass (10:00 AM - 07:00 PM)', price: 1299, totalCapacity: 2000, availableSeats: 2000, image: '', description: '', benefits: ['Unlimited Rides', 'Free Entry'] });
+      setEditingActivityId(null);
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionSuccess('Error saving activity pass details');
+      setTimeout(() => setActionSuccess(''), 3000);
+    }
+  };
+
+  const handleDeleteActivity = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/activities/${id}`);
+      setActivitiesList(activitiesList.filter(a => a.id !== id));
+      setActionSuccess('Activity pass deleted!');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {}
+  };
+
+  const handleSaveBanner = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingBannerId) {
+        const res = await axios.put(`${API_BASE}/offers/banners/${editingBannerId}`, bannerForm);
+        setOfferBannersList(offerBannersList.map(b => b.id === editingBannerId ? res.data : b));
+        setActionSuccess('Banner slide updated successfully!');
+      } else {
+        const res = await axios.post(`${API_BASE}/offers/banners`, bannerForm);
+        setOfferBannersList([res.data, ...offerBannersList]);
+        setActionSuccess('New Offer Carousel Banner created successfully!');
+      }
+      setBannerForm({ title: '', tagline: '', code: '', category: 'Movies', image: '', expiryDate: '2026-12-31', ctaText: 'Claim Offer', ctaLink: 'movies' });
+      setEditingBannerId(null);
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionSuccess('Error saving banner details');
+      setTimeout(() => setActionSuccess(''), 3000);
+    }
+  };
+
+  const handleDeleteBanner = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/offers/banners/${id}`);
+      setOfferBannersList(offerBannersList.filter(b => b.id !== id));
+      setActionSuccess('Banner slide deleted!');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {}
+  };
+
+  const adminNavItems = [
+    { id: 'analytics', label: 'Analytics Overview', icon: TrendingUp },
+    { id: 'movies', label: 'Movie & Cast Management', icon: Film },
+    { id: 'theatres', label: 'Theatre & Showtimes CRUD', icon: Building },
+    { id: 'events', label: 'Events & Festivals CRUD', icon: Sparkles },
+    { id: 'plays', label: 'Plays & Theater CRUD', icon: Theater },
+    { id: 'activities', label: 'Activities & Theme Parks CRUD', icon: Compass },
+    { id: 'seats', label: 'Cinema & Screen Seat Grid', icon: Lock },
+    { id: 'offers', label: 'Offers & Promos CRUD', icon: Tag },
+    { id: 'notifications', label: 'Broadcast Notifications', icon: Bell },
+    { id: 'support', label: 'WhatsApp Live Chat Desk', icon: MessageSquare }
+  ];
+
+  if (!user || user.role !== 'ADMIN') {
+    return (
+      <div className="min-h-screen bg-[#050508] text-white flex items-center justify-center p-4">
+        <div className="w-full max-w-md p-8 rounded-3xl glass-panel border border-cyan-400/30 space-y-6 shadow-2xl">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-400 flex items-center justify-center mx-auto">
+              <Shield className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-bold font-sans text-white">PrimeShow Admin Command</h2>
+            <p className="text-xs text-cyan-300">Sign in with administrator credentials to manage catalog</p>
+          </div>
+
+          <form onSubmit={handleAdminAuthSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-cyan-300 mb-1">Admin Email *</label>
+              <input
+                type="email"
+                required
+                placeholder="admin@primeshow.com"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                className="w-full p-3 rounded-xl glass-input text-xs text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-cyan-300 mb-1">Admin Password *</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full p-3 rounded-xl glass-input text-xs text-white"
+              />
+            </div>
+
+            {authError && (
+              <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold text-center">
+                {authError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-lg shadow-cyan-500/20 cursor-pointer"
+            >
+              {authLoading ? 'Authenticating...' : 'Sign In to Admin Command'}
+            </button>
+          </form>
+
+          <div className="text-center pt-2 border-t border-white/10">
+            <p className="text-[11px] text-white/40">Demo Credentials: admin@primeshow.com / admin123</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#030306] text-white flex flex-col md:flex-row font-sans">
+      
+      {/* Sleek Admin Left Sidebar Navigation Panel */}
+      <aside className="w-full md:w-64 glass-panel border-r border-cyan-400/20 p-6 flex flex-col justify-between shrink-0 bg-black/60 backdrop-blur-xl">
+        <div>
+          {/* Admin Brand Header */}
+          <div className="flex items-center gap-3 pb-6 mb-6 border-b border-white/10">
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-lg shadow-cyan-500/20">
+              <Shield className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold font-sans text-white leading-tight">PrimeShow</h2>
+              <span className="text-[10px] text-cyan-300 uppercase tracking-widest font-bold block">ADMIN COMMAND PANEL</span>
+            </div>
+          </div>
+
+          {/* Sidebar Menu Items */}
+          <nav className="space-y-1.5">
+            {adminNavItems.map(item => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/25'
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </div>
+                  {isActive && <ChevronRight className="w-3.5 h-3.5" />}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Navigation & Logout Controls */}
+        <div className="pt-6 border-t border-white/10 mt-6 space-y-2">
+          <button
+            onClick={onReturnHome}
+            className="w-full py-3 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 hover:bg-amber-500 hover:text-black text-xs font-bold flex items-center justify-center gap-2 transition-all"
+          >
+            <Home className="w-4 h-4" />
+            <span>Return to Main Site</span>
+          </button>
+
+          <button
+            onClick={logout}
+            className="w-full py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/60 hover:text-rose-300 text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out Session</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Admin Content Area */}
+      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
+        
+        {actionSuccess && (
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-5 h-5" />
+            <span>{actionSuccess}</span>
+          </div>
+        )}
+
+        {/* Tab 1: Analytics Overview */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-3xl font-bold font-sans text-white">Analytics Overview</h1>
+              <p className="text-xs text-cyan-300">High-density performance metrics and ticket sales</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
+                <div className="text-xs text-cyan-300 mb-2">Total Ticket Revenue</div>
+                <div className="text-3xl font-bold font-sans text-white">₹2,485,900</div>
+                <div className="text-[10px] text-emerald-400 font-semibold mt-1">↑ +24.8% vs last month</div>
+              </div>
+
+              <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
+                <div className="text-xs text-cyan-300 mb-2">Confirmed Bookings</div>
+                <div className="text-3xl font-bold font-sans text-white">3,890</div>
+                <div className="text-[10px] text-amber-300 font-semibold mt-1">94.2% Occupancy Rate</div>
+              </div>
+
+              <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
+                <div className="text-xs text-cyan-300 mb-2">Active Movies</div>
+                <div className="text-3xl font-bold font-sans text-white">{moviesList.length} Active</div>
+                <div className="text-[10px] text-cyan-300 font-semibold mt-1">Real-time user sync active</div>
+              </div>
+
+              <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
+                <div className="text-xs text-cyan-300 mb-2">Pending Support Tickets</div>
+                <div className="text-3xl font-bold font-sans text-white">
+                  {supportMessages.filter(m => m.status === 'pending').length}
+                </div>
+                <div className="text-[10px] text-rose-400 font-semibold mt-1">Requires Response</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: Movie & Cast Management CRUD */}
+        {activeTab === 'movies' && (
+          <div className="space-y-8">
+            <h1 className="text-3xl font-bold font-sans text-white">Movie, Trailer & Cast Management</h1>
+
+            {/* Movie Form */}
+            <form onSubmit={handleSaveMovie} className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-4">
+              <h3 className="text-base font-bold font-sans text-white">
+                {editingMovieId ? 'Edit Movie Details' : 'Add New Movie to Catalog'}
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Movie Title *</label>
+                  <input type="text" required value={movieForm.title} onChange={e => setMovieForm({...movieForm, title: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Director *</label>
+                  <input type="text" value={movieForm.director} onChange={e => setMovieForm({...movieForm, director: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Producer</label>
+                  <input type="text" placeholder="Producer Name" value={movieForm.producer || ''} onChange={e => setMovieForm({...movieForm, producer: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Rating (e.g. 9.4)</label>
+                  <input type="number" step="0.1" value={movieForm.rating} onChange={e => setMovieForm({...movieForm, rating: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Certificate / Rating *</label>
+                  <input type="text" placeholder="UA 16+, UA, U, A" value={movieForm.parentalRating || 'UA'} onChange={e => setMovieForm({...movieForm, parentalRating: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Release Date *</label>
+                  <input type="text" placeholder="YYYY-MM-DD (e.g. 2026-12-18)" value={movieForm.releaseDate || '2026-12-18'} onChange={e => setMovieForm({...movieForm, releaseDate: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Genres (comma separated)</label>
+                  <input type="text" value={movieForm.genres} onChange={e => setMovieForm({...movieForm, genres: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Languages</label>
+                  <input type="text" value={movieForm.languages} onChange={e => setMovieForm({...movieForm, languages: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Formats (e.g. IMAX 3D, Dolby Atmos)</label>
+                  <input type="text" value={movieForm.formats} onChange={e => setMovieForm({...movieForm, formats: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">YouTube Trailer Link / Embed URL *</label>
+                  <input type="text" value={movieForm.trailerUrl || ''} onChange={e => setMovieForm({...movieForm, trailerUrl: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" placeholder="https://www.youtube.com/watch?v=..." />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Poster Image URL</label>
+                  <input type="url" value={movieForm.poster} onChange={e => setMovieForm({...movieForm, poster: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" placeholder="https://..." />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-cyan-300 mb-1">Synopsis / Description</label>
+                <textarea rows={3} value={movieForm.synopsis} onChange={e => setMovieForm({...movieForm, synopsis: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white"></textarea>
+              </div>
+
+              <div className="flex gap-3">
+                <button type="submit" className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs cursor-pointer">
+                  {editingMovieId ? 'Update Movie & Sync Live' : 'Add Movie & Sync Live'}
+                </button>
+                {editingMovieId && (
+                  <button type="button" onClick={() => setEditingMovieId(null)} className="px-4 py-3 rounded-xl bg-white/10 text-white text-xs font-bold cursor-pointer">
+                    Cancel Edit
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {/* Cast Management Section */}
+            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-4">
+              <h3 className="text-base font-bold font-sans text-white">Cast & Crew Management Module</h3>
+              <form onSubmit={handleAddCastMember} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <select value={castMovieId} onChange={e => setCastMovieId(e.target.value)} className="p-3 rounded-xl glass-input text-xs text-white bg-black">
+                  {moviesList.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+                </select>
+                <input type="text" required placeholder="Cast Actor Name" value={castName} onChange={e => setCastName(e.target.value)} className="p-3 rounded-xl glass-input text-xs text-white" />
+                <input type="text" placeholder="Character Role Name" value={castRole} onChange={e => setCastRole(e.target.value)} className="p-3 rounded-xl glass-input text-xs text-white" />
+                <input type="text" placeholder="Photo URL or Browse File" value={castPhoto} onChange={e => setCastPhoto(e.target.value)} className="p-3 rounded-xl glass-input text-xs text-white" />
+                <div className="sm:col-span-4 flex items-center gap-3">
+                  <label className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer">
+                    Upload Photo File
+                    <input type="file" accept="image/*" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setCastPhoto(reader.result);
+                        reader.readAsDataURL(file);
+                      }
+                    }} className="hidden" />
+                  </label>
+                  <button type="submit" className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs cursor-pointer">
+                    Add / Replace Cast Member
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Show Dates & Theatre Schedule Management Module */}
+            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
+              <div className="border-b border-white/10 pb-3">
+                <h3 className="text-lg font-bold font-sans text-white">Movie Show Dates & Theatre Schedule Manager</h3>
+                <p className="text-xs text-amber-300">Configure available booking dates, theatres, and showtime slots for each movie</p>
+              </div>
+
+              {/* Movie & Date Selector Controls */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/5 p-4 rounded-2xl border border-white/10">
+                {/* 1. Select Movie */}
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1.5">1. Select Target Movie *</label>
+                  <select
+                    value={schedMovieId}
+                    onChange={(e) => {
+                      setSchedMovieId(e.target.value);
+                      const targetM = moviesList.find(m => m.id === e.target.value);
+                      if (targetM && targetM.showDates && targetM.showDates.length > 0) {
+                        setSelectedSchedDate(targetM.showDates[0]);
+                      }
+                    }}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                  >
+                    {moviesList.map(m => (
+                      <option key={m.id} value={m.id}>{m.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 2. Configure Available Dates */}
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1.5">2. Add New Booking Date *</label>
+                  <form onSubmit={handleAddScheduleDate} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="YYYY-MM-DD (e.g. 2026-08-05)"
+                      value={schedDateInput}
+                      onChange={(e) => setSchedDateInput(e.target.value)}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold"
+                    />
+                    <button type="submit" className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shrink-0 cursor-pointer">
+                      Add Date
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Configured Dates Badges */}
+              {(() => {
+                const targetM = moviesList.find(m => m.id === schedMovieId);
+                const showDates = targetM?.showDates || [];
+                return (
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-white/80 block">Configured Dates for {targetM?.title}:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {showDates.map(dStr => (
+                        <span
+                          key={dStr}
+                          onClick={() => setSelectedSchedDate(dStr)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+                            selectedSchedDate === dStr
+                              ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                              : 'bg-white/10 text-white hover:bg-white/20'
+                          }`}
+                        >
+                          <span>📅 {dStr}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteScheduleDate(schedMovieId, dStr);
+                            }}
+                            className="text-rose-400 hover:text-rose-200 font-extrabold ml-1"
+                            title="Remove date from user site"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                      {showDates.length === 0 && (
+                        <span className="text-xs text-white/40 italic">No dates configured. Add a date above.</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Add Theatre & Show Slot Form for Selected Date */}
+              <div className="pt-4 border-t border-white/10 space-y-4">
+                <h4 className="text-sm font-bold text-amber-400">
+                  3. Add Theatre & Show Slot for Date: <span className="underline">{selectedSchedDate}</span>
+                </h4>
+
+                <form onSubmit={handleAddDateScopedShowSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">Theatre Name *</label>
+                    <input type="text" required value={schedTheatreName} onChange={e => setSchedTheatreName(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">City *</label>
+                    <input type="text" required value={schedCity} onChange={e => setSchedCity(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">Address</label>
+                    <input type="text" value={schedAddress} onChange={e => setSchedAddress(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">Screen Name</label>
+                    <input type="text" value={schedScreen} onChange={e => setSchedScreen(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">Format *</label>
+                    <select value={schedFormat} onChange={e => setSchedFormat(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black">
+                      <option value="IMAX 3D">IMAX 3D</option>
+                      <option value="4DX">4DX</option>
+                      <option value="Dolby Atmos">Dolby Atmos</option>
+                      <option value="3D">3D</option>
+                      <option value="2D">2D</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">Show Time *</label>
+                    <input type="text" required placeholder="e.g. 07:30 PM" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">Price (₹) *</label>
+                    <input type="number" required value={schedPrice} onChange={e => setSchedPrice(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                  </div>
+                  <div className="flex items-end">
+                    <button type="submit" className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 cursor-pointer">
+                      + Add Show Slot
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Configured Theatres & Showtimes List for Selected Date */}
+              {(() => {
+                const targetM = moviesList.find(m => m.id === schedMovieId);
+                const schedsForDate = targetM?.schedules?.[selectedSchedDate] || (selectedSchedDate === '2026-07-31' ? targetM?.theatres : []);
+                
+                return (
+                  <div className="space-y-3 pt-2">
+                    <h4 className="text-xs font-bold text-white/70 uppercase">
+                      Scheduled Theatres & Times for {selectedSchedDate} ({schedsForDate?.length || 0} Theatres):
+                    </h4>
+
+                    {schedsForDate && schedsForDate.length > 0 ? (
+                      <div className="space-y-3">
+                        {schedsForDate.map((th) => (
+                          <div key={th.id || th.name} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                              <div className="text-sm font-bold text-white flex items-center gap-2">
+                                <span>{th.name}</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-medium">{th.city}</span>
+                              </div>
+                              <div className="text-[11px] text-white/50">{th.address}</div>
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                {th.shows?.map((sh) => (
+                                  <span key={sh.id} className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold flex items-center gap-1.5">
+                                    <span>{sh.time} ({sh.format}) - ₹{sh.price}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => deleteShowSlotFromMovieTheatre(schedMovieId, selectedSchedDate, th.id, sh.id)}
+                                      className="text-rose-400 hover:text-rose-200 font-extrabold ml-1"
+                                      title="Delete showtime"
+                                    >
+                                      ✕
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => deleteTheatreFromMovieDate(schedMovieId, selectedSchedDate, th.id)}
+                              className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white text-rose-300 text-xs font-bold transition-all border border-rose-500/30 cursor-pointer shrink-0"
+                            >
+                              Remove Theatre
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 rounded-2xl bg-white/5 text-center text-xs text-white/40 italic">
+                        No theatres currently scheduled for {selectedSchedDate}. Use the form above to add a show slot.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Movies List Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {moviesList.map(m => (
+                <div key={m.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <img src={m.poster} alt={m.title} className="w-14 h-20 object-cover rounded-xl border border-amber-400/40" />
+                    <div>
+                      <div className="text-sm font-bold text-white line-clamp-1">{m.title}</div>
+                      <div className="text-xs text-cyan-300">★ {m.rating} • {m.duration}</div>
+                      <div className="text-[10px] text-white/50">{m.director}</div>
+                    </div>
+                  </div>
+
+                  {/* Cast Members List */}
+                  {m.cast && m.cast.length > 0 && (
+                    <div className="pt-2 border-t border-white/10">
+                      <span className="text-[10px] font-bold text-cyan-300 uppercase block mb-1">Cast Members</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {m.cast.map(c => (
+                          <span key={c.id || c.name} className="px-2 py-0.5 rounded bg-white/10 text-[10px] text-white flex items-center gap-1">
+                            <span>{c.name} ({c.role})</span>
+                            <button onClick={() => handleDeleteCastMember(m.id, c.id)} className="text-rose-400 font-bold hover:text-rose-300 ml-1">×</button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+                    <button onClick={() => handleEditMovieClick(m)} className="p-2 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black transition-colors" title="Edit Movie">
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDeleteMovie(m.id)} className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors" title="Delete Movie">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Cinema & Screen Specific Seat Operations */}
+        {activeTab === 'seats' && (
+          <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold font-sans text-white">Cinema & Screen Seat Management</h1>
+              <p className="text-xs text-cyan-300">Select Cinema and Screen first. Seat layouts and block rules apply strictly to the selected screen.</p>
+            </div>
+
+            {/* Cinema & Screen Selector Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-cyan-300 mb-1">Select Cinema / Theatre</label>
+                <select
+                  value={selectedTheatreId}
+                  onChange={e => {
+                    setSelectedTheatreId(e.target.value);
+                    const targetTh = currentTheatresList.find(t => t.id === e.target.value);
+                    if (targetTh && targetTh.screens && targetTh.screens[0]) {
+                      setSelectedScreenId(targetTh.screens[0].id);
+                    }
+                  }}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                >
+                  {currentTheatresList.map(t => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-cyan-300 mb-1">Select Screen</label>
+                <select
+                  value={selectedScreenId}
+                  onChange={e => setSelectedScreenId(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                >
+                  {activeScreensList.map(sc => (
+                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs text-cyan-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div>
+                Managing layout & prices for: <strong className="text-white">{activeTheatreObj?.name}</strong> → <strong className="text-amber-400">{activeScreensList.find(s => s.id === selectedScreenId)?.name || 'Screen 1'}</strong>
+              </div>
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-white/10 border border-white/20 inline-block"></span> Available</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-rose-500/30 border border-rose-500 inline-block"></span> Blocked 🔒</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-white/5 text-white/30 inline-block text-center">✕</span> Booked</span>
+              </div>
+            </div>
+
+            {/* Interactive Visual Layout Grid */}
+            <div className="p-6 rounded-3xl bg-black/40 border border-white/10 space-y-6 overflow-x-auto">
+              <div className="w-full max-w-xl mx-auto text-center">
+                <div className="screen-curve mb-2"></div>
+                <span className="text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
+                  ▲ CINEMATIC SCREEN THIS WAY (FRONT) ▲
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                {seatRowsList.map((tierObj) => (
+                  <div key={tierObj.row} className="flex flex-col items-center">
+                    <div className="text-[11px] font-bold text-amber-400 mb-1.5 uppercase tracking-wider flex items-center gap-2">
+                      <span>Row {tierObj.row}: {tierObj.tier}</span>
+                      <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">₹{tierObj.price}</span>
+                      <button
+                        type="button"
+                        onClick={() => deleteRowFromScreenLayout(selectedScreenId, tierObj.row)}
+                        className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-2 cursor-pointer"
+                        title="Delete entire row"
+                      >
+                        [Delete Row {tierObj.row}]
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="w-6 text-xs font-bold text-white/40 text-center">{tierObj.row}</span>
+
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
+                          const seatNum = idx + 1;
+                          const seatId = `${tierObj.row}${seatNum}`;
+                          const isBlocked = (currentLayout.blockedSeats || []).includes(seatId);
+                          const customStat = currentLayout.customStatuses?.[seatId];
+                          const isBooked = customStat === 'BOOKED';
+
+                          return (
+                            <button
+                              key={seatId}
+                              type="button"
+                              onClick={() => {
+                                if (isBlocked) {
+                                  setManualSeatStatusForScreen(selectedScreenId, seatId, 'AVAILABLE');
+                                } else if (isBooked) {
+                                  setManualSeatStatusForScreen(selectedScreenId, seatId, 'AVAILABLE');
+                                } else {
+                                  toggleBlockSeatForScreen(selectedScreenId, seatId);
+                                }
+                              }}
+                              className={`w-8 h-8 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
+                                isBooked
+                                  ? 'bg-white/5 border border-white/5 text-white/30'
+                                  : isBlocked
+                                  ? 'bg-rose-500/30 border-2 border-rose-500 text-rose-300 shadow-lg shadow-rose-500/20'
+                                  : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/80 hover:text-white'
+                              }`}
+                              title={`Click to toggle status for ${seatId}`}
+                            >
+                              {isBooked ? '✕' : (isBlocked ? '🔒' : seatNum)}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <span className="w-6 text-xs font-bold text-white/40 text-center">{tierObj.row}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Add / Custom Row Form */}
+            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4">
+              <h3 className="text-sm font-bold text-cyan-300 uppercase">Add / Customize Seat Row & Category Pricing</h3>
+              <form onSubmit={handleAddRowForm} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-white/70 mb-1">Row Letter (e.g. A, H, K) *</label>
+                  <input type="text" maxLength={2} required placeholder="Row Letter" value={newRowChar} onChange={e => setNewRowChar(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white uppercase font-bold" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-white/70 mb-1">Category / Tier Name *</label>
+                  <input type="text" required placeholder="e.g. Executive Recliner" value={newRowTier} onChange={e => setNewRowTier(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-white/70 mb-1">Ticket Price (₹) *</label>
+                  <input type="number" required value={newRowPrice} onChange={e => setNewRowPrice(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-white/70 mb-1">Number of Seats *</label>
+                  <input type="number" min={1} max={25} required value={newRowSeatsCount} onChange={e => setNewRowSeatsCount(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
+                </div>
+                <div className="flex items-end">
+                  <button type="submit" className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer">
+                    + Add / Save Row
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Bulk Actions */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  updateScreenRowsConfig(selectedScreenId, [
+                    { row: 'N', tier: 'Classic Normal', price: 250, seatsCount: 12 },
+                    { row: 'P', tier: 'Premium Tier', price: 450, seatsCount: 12 },
+                    { row: 'R', tier: 'Luxury Recliner', price: 650, seatsCount: 10 },
+                    { row: 'V', tier: 'VIP Gold Lounge', price: 950, seatsCount: 8 }
+                  ]);
+                  setActionSuccess('Reset screen layout to standard 4-Tier template.');
+                  setTimeout(() => setActionSuccess(''), 3000);
+                }}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+              >
+                Reset Standard Template
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Offers Module CRUD */}
+        {activeTab === 'offers' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold font-sans text-white">Offers & Promos Management</h1>
+                <p className="text-xs text-amber-300">Control animated slide show banners & bank coupon cards</p>
+              </div>
+
+              {/* Sub-Tab Switcher */}
+              <div className="flex gap-2 p-1 rounded-2xl glass-panel border border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setOfferSubTab('banners')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    offerSubTab === 'banners'
+                      ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  🎠 Carousel Slide Banners ({offerBannersList.length})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setOfferSubTab('cards')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    offerSubTab === 'cards'
+                      ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  💳 Bank Coupon Cards ({offersList.length})
+                </button>
+              </div>
+            </div>
+
+            {/* SUB-TAB A: Carousel Slide Banners CRUD */}
+            {offerSubTab === 'banners' && (
+              <div className="space-y-8">
+                {/* Form to Add / Edit Banner Slide */}
+                <form onSubmit={handleSaveBanner} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
+                  <h3 className="text-lg font-bold text-amber-400">
+                    {editingBannerId ? 'Edit Carousel Banner Slide' : 'Add New Offer Slide Show Banner'}
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-white mb-1">Banner Title *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Buy 1 Get 1 FREE on IMAX 3D Movies"
+                        value={bannerForm.title}
+                        onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
+                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-white mb-1">Promo Code *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. BOGOIMAX"
+                        value={bannerForm.code}
+                        onChange={(e) => setBannerForm({ ...bannerForm, code: e.target.value.toUpperCase() })}
+                        className="w-full p-3 rounded-xl glass-input text-xs text-white font-mono font-bold uppercase"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-white mb-1">Category *</label>
+                      <select
+                        value={bannerForm.category}
+                        onChange={(e) => setBannerForm({ ...bannerForm, category: e.target.value })}
+                        className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                      >
+                        <option value="Movies">Movies</option>
+                        <option value="Theatres">Theaters</option>
+                        <option value="Plays">Plays</option>
+                        <option value="Events">Events</option>
+                        <option value="Activities">Activities / Games</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-white mb-1">CTA Button Label</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Book Movie Ticket"
+                        value={bannerForm.ctaText}
+                        onChange={(e) => setBannerForm({ ...bannerForm, ctaText: e.target.value })}
+                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-white mb-1">Expiry Date</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 2026-12-31"
+                        value={bannerForm.expiryDate}
+                        onChange={(e) => setBannerForm({ ...bannerForm, expiryDate: e.target.value })}
+                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      />
+                    </div>
+
+                    <div className="md:col-span-3">
+                      <label className="block text-xs font-bold text-white mb-1">Banner Image URL *</label>
+                      <input
+                        type="url"
+                        required
+                        placeholder="https://images.unsplash.com/..."
+                        value={bannerForm.image}
+                        onChange={(e) => setBannerForm({ ...bannerForm, image: e.target.value })}
+                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      />
+                    </div>
+
+                    <div className="md:col-span-3">
+                      <label className="block text-xs font-bold text-white mb-1">Tagline / Description</label>
+                      <input
+                        type="text"
+                        placeholder="Enter catchy offer description..."
+                        value={bannerForm.tagline}
+                        onChange={(e) => setBannerForm({ ...bannerForm, tagline: e.target.value })}
+                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-2">
+                    {editingBannerId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingBannerId(null);
+                          setBannerForm({ title: '', tagline: '', code: '', category: 'Movies', image: '', expiryDate: '2026-12-31', ctaText: 'Claim Offer', ctaLink: 'movies' });
+                        }}
+                        className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold cursor-pointer"
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                    >
+                      {editingBannerId ? 'Update Banner Slide' : 'Publish Banner Slide'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Banner Banners List */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white">Live Carousel Banners ({offerBannersList.length})</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {offerBannersList.map((ban) => (
+                      <div key={ban.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
+                        <div className="flex items-start gap-4">
+                          <img src={ban.image} alt={ban.title} className="w-24 h-20 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
+                          <div className="space-y-1">
+                            <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                              {ban.category}
+                            </span>
+                            <h4 className="text-base font-bold text-white leading-tight">{ban.title}</h4>
+                            <p className="text-xs font-mono font-bold text-amber-400">Code: {ban.code}</p>
+                            <p className="text-[11px] text-white/50">{ban.tagline}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
+                          <button
+                            onClick={() => {
+                              setEditingBannerId(ban.id);
+                              setBannerForm({
+                                title: ban.title,
+                                tagline: ban.tagline || '',
+                                code: ban.code,
+                                category: ban.category || 'Movies',
+                                image: ban.image || '',
+                                expiryDate: ban.expiryDate || '2026-12-31',
+                                ctaText: ban.ctaText || 'Claim Offer',
+                                ctaLink: ban.ctaLink || 'movies'
+                              });
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <Edit className="w-3.5 h-3.5" /> Edit
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteBanner(ban.id)}
+                            className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SUB-TAB B: Bank Discount Cards CRUD */}
+            {offerSubTab === 'cards' && (
+              <div className="space-y-6">
+                <form onSubmit={handleSaveOffer} className="glass-panel p-6 rounded-3xl border border-white/10 max-w-xl space-y-4">
+                  <h3 className="text-base font-bold text-amber-400">
+                    {editingOfferId ? 'Edit Bank Coupon' : 'Create New Bank Coupon & Card Promo'}
+                  </h3>
+
+                  <div>
+                    <label className="block text-xs font-bold text-white mb-1">Offer Title</label>
+                    <input type="text" required value={offerTitle} onChange={e => setOfferTitle(e.target.value)} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-white mb-1">Promo Code</label>
+                      <input type="text" required value={offerCode} onChange={e => setOfferCode(e.target.value)} className="w-full p-3 rounded-xl glass-input text-xs text-white uppercase font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-white mb-1">Bank Partner</label>
+                      <input type="text" value={offerBank} onChange={e => setOfferBank(e.target.value)} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                    </div>
+                  </div>
+
+                  <button type="submit" className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer">
+                    {editingOfferId ? 'Update Offer & Sync' : 'Publish Offer Live'}
+                  </button>
+                </form>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {offersList.map(off => (
+                    <div key={off.id || off.code} className="glass-panel p-5 rounded-3xl border border-white/10 flex items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-amber-400 text-sm">{off.code}</span>
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">{off.bank}</span>
+                        </div>
+                        <h4 className="text-xs font-bold text-white mt-1">{off.title}</h4>
+                      </div>
+                      <button onClick={() => handleDeleteOffer(off.id)} className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* Tab 5: WhatsApp-Style Live Support Chat Desk */}
+        {activeTab === 'support' && (
+          <div className="space-y-4">
+            <h1 className="text-3xl font-bold font-sans text-white">WhatsApp Live Support Desk</h1>
+
+            {supportMessages.map(msg => (
+              <div key={msg.id} className="glass-panel p-5 rounded-3xl border border-cyan-400/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-cyan-300">{msg.userName} ({msg.userEmail})</span>
+                    <div className="text-[10px] text-white/40">{msg.subject} • {msg.createdAt}</div>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${msg.status === 'replied' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                    {msg.status}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-xs text-white">
+                  "{msg.message}"
+                </div>
+
+                {msg.reply ? (
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-xs text-emerald-200 flex items-center justify-between">
+                    <span><strong>Admin Reply Sent:</strong> {msg.reply}</span>
+                    <span className="text-emerald-300 font-bold">✓✓</span>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 pt-2">
+                    <input
+                      type="text"
+                      placeholder="Type instant reply to customer..."
+                      value={replyTextMap[msg.id] || ''}
+                      onChange={(e) => setReplyTextMap({ ...replyTextMap, [msg.id]: e.target.value })}
+                      className="flex-1 px-3 py-2 rounded-xl glass-input text-xs text-white"
+                    />
+                    <button
+                      onClick={() => handleReplySubmit(msg.id)}
+                      className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs flex items-center gap-1"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send Reply</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tab 6: Broadcast Notifications */}
+        {activeTab === 'notifications' && (
+          <div className="space-y-6 max-w-2xl">
+            <h2 className="text-2xl font-bold font-sans text-white">Broadcast System Notification</h2>
+            <p className="text-xs text-white/60">Create and broadcast announcements directly to all customer profile notification drawers in real time.</p>
+
+            <form onSubmit={handleBroadcastNotificationSubmit} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-white mb-1">Notification Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. IMAX 3D Weekend Discount 50% Off"
+                  value={notifTitle}
+                  onChange={(e) => setNotifTitle(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-white mb-1">Category / Type</label>
+                <select
+                  value={notifType}
+                  onChange={(e) => setNotifType(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                >
+                  <option value="PROMO">PROMO (Promotional Voucher)</option>
+                  <option value="MOVIE">MOVIE (New Release Update)</option>
+                  <option value="SYSTEM">SYSTEM (Maintenance / Notice)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-white mb-1">Notification Message Content</label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Type the full announcement broadcast message..."
+                  value={notifMessage}
+                  onChange={(e) => setNotifMessage(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
+              >
+                <Bell className="w-4 h-4" />
+                <span>Broadcast Live Notification to All Users</span>
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Tab 7: Theatre & Showtimes Management CRUD */}
+        {activeTab === 'theatres' && (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-bold font-sans text-white">Theatre & Showtimes Management</h2>
+
+            {/* Section A: Add / Edit Theatre Form */}
+            <form onSubmit={handleSaveTheatre} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
+              <h3 className="text-lg font-bold text-amber-400">
+                {editingTheatreId ? 'Edit Multiplex Details' : 'Add New Multiplex Venue'}
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Theatre Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. PVR Luxe, Nexus Mall"
+                    value={theatreForm.name}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, name: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">City *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Mumbai, Delhi NCR, Bengaluru"
+                    value={theatreForm.city}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, city: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">State</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Maharashtra"
+                    value={theatreForm.state}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, state: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-bold text-white mb-1">Address *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Full street address..."
+                    value={theatreForm.address}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, address: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Facilities / Amenities (Comma Separated)</label>
+                  <input
+                    type="text"
+                    placeholder="VIP Recliners, IMAX 3D, Dolby Atmos"
+                    value={theatreForm.facilities}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, facilities: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Screens Count</label>
+                  <input
+                    type="number"
+                    value={theatreForm.screensCount}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, screensCount: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Total Seat Capacity</label>
+                  <input
+                    type="number"
+                    value={theatreForm.totalSeats}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, totalSeats: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Banner Image URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/..."
+                    value={theatreForm.image}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, image: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Logo URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/..."
+                    value={theatreForm.logo}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, logo: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                {editingTheatreId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingTheatreId(null);
+                      setTheatreForm({ name: '', city: 'Mumbai', state: 'Maharashtra', address: '', logo: '', image: '', facilities: 'VIP Recliners, IMAX 3D', screensCount: 6, totalSeats: 200 });
+                    }}
+                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20"
+                >
+                  {editingTheatreId ? 'Update Theatre' : 'Add Theatre to System'}
+                </button>
+              </div>
+            </form>
+
+            {/* Section B: Manage Showtime Slots per Theatre */}
+            <form onSubmit={handleAddShowSlot} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
+              <h3 className="text-lg font-bold text-cyan-400">Add Showtime Slot to Multiplex</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Target Theatre</label>
+                  <select
+                    value={showSlotForm.theatreId}
+                    onChange={(e) => setShowSlotForm({ ...showSlotForm, theatreId: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    {theatresList.map(t => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Target Movie</label>
+                  <select
+                    value={showSlotForm.movieId}
+                    onChange={(e) => setShowSlotForm({ ...showSlotForm, movieId: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    {moviesList.map(m => (
+                      <option key={m.id} value={m.id}>{m.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Format</label>
+                  <select
+                    value={showSlotForm.format}
+                    onChange={(e) => setShowSlotForm({ ...showSlotForm, format: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="IMAX 3D">IMAX 3D</option>
+                    <option value="Dolby Atmos">Dolby Atmos</option>
+                    <option value="4DX">4DX</option>
+                    <option value="3D">3D</option>
+                    <option value="2D">2D</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Screen Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Screen 1 - IMAX 3D"
+                    value={showSlotForm.screenName}
+                    onChange={(e) => setShowSlotForm({ ...showSlotForm, screenName: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Showtime Slot</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 10:30 AM, 02:15 PM"
+                    value={showSlotForm.time}
+                    onChange={(e) => setShowSlotForm({ ...showSlotForm, time: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Base Ticket Price (₹)</label>
+                  <input
+                    type="number"
+                    value={showSlotForm.price}
+                    onChange={(e) => setShowSlotForm({ ...showSlotForm, price: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs shadow-lg shadow-cyan-500/20"
+                >
+                  Add Show Slot
+                </button>
+              </div>
+            </form>
+
+            {/* Section C: Existing Theatres Directory */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white">Configured Multiplex Venues ({theatresList.length})</h3>
+
+              {theatresList.map(t => (
+                <div key={t.id} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                    <div className="flex items-center gap-4">
+                      <img src={t.image || t.logo} alt={t.name} className="w-16 h-16 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
+                      <div>
+                        <h4 className="text-lg font-bold text-white">{t.name}</h4>
+                        <p className="text-xs text-white/60">{t.address} • <strong className="text-amber-300">{t.city}</strong></p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingTheatreId(t.id);
+                          setTheatreForm({
+                            name: t.name,
+                            city: t.city,
+                            state: t.state || 'Maharashtra',
+                            address: t.address,
+                            logo: t.logo || '',
+                            image: t.image || '',
+                            facilities: Array.isArray(t.facilities) ? t.facilities.join(', ') : (t.facilities || ''),
+                            screensCount: t.screensCount || 6,
+                            totalSeats: t.totalSeats || 200
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteTheatre(t.id)}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Showtimes List */}
+                  <div>
+                    <h5 className="text-xs font-bold text-white/70 mb-2">Scheduled Showtimes:</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {(t.shows || []).map(s => (
+                        <div key={s.id} className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
+                          <div>
+                            <div className="font-bold text-amber-300">{s.movieTitle}</div>
+                            <div className="text-[10px] text-white/50">{s.format} • {s.time} (₹{s.price})</div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteShowSlot(t.id, s.id)}
+                            className="p-1 rounded bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* Tab 8: Events & Festivals CRUD */}
+        {activeTab === 'events' && (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-bold font-sans text-white">Events & Festivals Management</h2>
+
+            {/* Section A: Add / Edit Event Form */}
+            <form onSubmit={handleSaveEvent} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
+              <h3 className="text-lg font-bold text-amber-400">
+                {editingEventId ? 'Edit Event Details' : 'Create New Live Event'}
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Event Title / Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Coldplay: Music of the Spheres World Tour"
+                    value={eventForm.title}
+                    onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Category *</label>
+                  <select
+                    value={eventForm.category}
+                    onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="Live Concert">Live Concert</option>
+                    <option value="Stand-up Comedy">Stand-up Comedy</option>
+                    <option value="Festival">Festival</option>
+                    <option value="Singing">Singing</option>
+                    <option value="DJ Night">DJ Night</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Corner Tap / Badge</label>
+                  <select
+                    value={eventForm.badge || 'SELLING FAST'}
+                    onChange={(e) => setEventForm({ ...eventForm, badge: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="SELLING FAST">🔥 SELLING FAST</option>
+                    <option value="LIMITED SEATS">⚡ LIMITED SEATS</option>
+                    <option value="LIVE NOW">🔴 LIVE NOW</option>
+                    <option value="FILLING FAST">✨ FILLING FAST</option>
+                    <option value="None">None</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Venue / Location Address *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. DY Patil Stadium, Mumbai"
+                    value={eventForm.venue}
+                    onChange={(e) => setEventForm({ ...eventForm, venue: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">City *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Mumbai, Delhi NCR, Goa"
+                    value={eventForm.city}
+                    onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Date *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 18 JAN 2027"
+                    value={eventForm.date}
+                    onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Time Slot *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 07:00 PM"
+                    value={eventForm.time}
+                    onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Ticket Price per Person (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={eventForm.price}
+                    onChange={(e) => setEventForm({ ...eventForm, price: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Total Venue Capacity</label>
+                  <input
+                    type="number"
+                    value={eventForm.totalCapacity}
+                    onChange={(e) => setEventForm({ ...eventForm, totalCapacity: e.target.value, availableSeats: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Event Banner Image URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/..."
+                    value={eventForm.image}
+                    onChange={(e) => setEventForm({ ...eventForm, image: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-bold text-white mb-1">Detailed Description</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Enter full event overview, lineup details, rules..."
+                    value={eventForm.description}
+                    onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                {editingEventId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingEventId(null);
+                      setEventForm({ title: '', category: 'Live Concert', venue: '', city: 'Mumbai', date: '18 JAN 2027', time: '07:00 PM', price: 1500, totalCapacity: 5000, availableSeats: 5000, image: '', description: '' });
+                    }}
+                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold cursor-pointer"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  {editingEventId ? 'Update Event' : 'Create Live Event'}
+                </button>
+              </div>
+            </form>
+
+            {/* Section B: Existing Events Directory */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white">Configured Live Events ({eventsList.length})</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {eventsList.map(ev => (
+                  <div key={ev.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
+                    <div className="flex items-start gap-4">
+                      <img src={ev.image} alt={ev.title} className="w-20 h-20 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
+                      <div className="space-y-1">
+                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                          {ev.category}
+                        </span>
+                        <h4 className="text-base font-bold text-white leading-tight">{ev.title}</h4>
+                        <p className="text-xs text-white/60">{ev.venue} • <strong className="text-amber-300">₹{ev.price}/person</strong></p>
+                        <p className="text-[11px] text-white/40">{ev.date} @ {ev.time} • Seats: {ev.availableSeats} / {ev.totalCapacity}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => {
+                          setEditingEventId(ev.id);
+                          setEventForm({
+                            title: ev.title,
+                            category: ev.category || 'Live Concert',
+                            badge: ev.badge || 'SELLING FAST',
+                            venue: ev.venue,
+                            city: ev.city || 'Mumbai',
+                            date: ev.date,
+                            time: ev.time,
+                            price: ev.price,
+                            totalCapacity: ev.totalCapacity || 5000,
+                            availableSeats: ev.availableSeats || 5000,
+                            image: ev.image || '',
+                            description: ev.description || ''
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteEvent(ev.id)}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* Tab 9: Plays & Theater CRUD */}
+        {activeTab === 'plays' && (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-bold font-sans text-white">Plays & Theater Shows Management</h2>
+
+            {/* Section A: Add / Edit Play Form */}
+            <form onSubmit={handleSavePlay} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
+              <h3 className="text-lg font-bold text-amber-400">
+                {editingPlayId ? 'Edit Theater Play Details' : 'Add New Theater Play'}
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Play Title / Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Gujjubhai Banya Dabang"
+                    value={playForm.title}
+                    onChange={(e) => setPlayForm({ ...playForm, title: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Language *</label>
+                  <select
+                    value={playForm.language}
+                    onChange={(e) => setPlayForm({ ...playForm, language: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="Gujarati">Gujarati</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="English">English</option>
+                    <option value="Marathi">Marathi</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Genre / Category *</label>
+                  <select
+                    value={playForm.category}
+                    onChange={(e) => setPlayForm({ ...playForm, category: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="Comedy Drama">Comedy Drama</option>
+                    <option value="Comedy">Comedy</option>
+                    <option value="Musical Drama">Musical Drama</option>
+                    <option value="Classic Tragedy">Classic Tragedy</option>
+                    <option value="Suspense Thriller">Suspense Thriller</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Corner Tap / Badge</label>
+                  <select
+                    value={playForm.badge || 'HOT SELLER'}
+                    onChange={(e) => setPlayForm({ ...playForm, badge: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="HOT SELLER">🔥 HOT SELLER</option>
+                    <option value="HOUSEFULL SOON">⚡ HOUSEFULL SOON</option>
+                    <option value="PREMIERE">✨ PREMIERE</option>
+                    <option value="CRITICS CHOICE">🏆 CRITICS CHOICE</option>
+                    <option value="None">None</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">City *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Mumbai, Ahmedabad, Pune"
+                    value={playForm.city}
+                    onChange={(e) => setPlayForm({ ...playForm, city: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Theater Venue & Address *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Royal Opera House, Mumbai"
+                    value={playForm.venue}
+                    onChange={(e) => setPlayForm({ ...playForm, venue: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Date *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 14 FEB 2027"
+                    value={playForm.date}
+                    onChange={(e) => setPlayForm({ ...playForm, date: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Showtime *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 08:00 PM"
+                    value={playForm.time}
+                    onChange={(e) => setPlayForm({ ...playForm, time: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Ticket Price per Person (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={playForm.price}
+                    onChange={(e) => setPlayForm({ ...playForm, price: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Total Seats Available</label>
+                  <input
+                    type="number"
+                    value={playForm.totalCapacity}
+                    onChange={(e) => setPlayForm({ ...playForm, totalCapacity: e.target.value, availableSeats: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Poster / Banner Image URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/..."
+                    value={playForm.image}
+                    onChange={(e) => setPlayForm({ ...playForm, image: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-bold text-white mb-1">Description / Synopsis</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Enter play synopsis, cast details, language overview..."
+                    value={playForm.description}
+                    onChange={(e) => setPlayForm({ ...playForm, description: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                {editingPlayId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPlayId(null);
+                      setPlayForm({ title: '', language: 'Gujarati', category: 'Comedy Drama', badge: 'HOT SELLER', venue: '', city: 'Mumbai', date: '14 FEB 2027', time: '08:00 PM', price: 600, totalCapacity: 1200, availableSeats: 1200, image: '', description: '' });
+                    }}
+                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold cursor-pointer"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  {editingPlayId ? 'Update Play' : 'Create Theater Play'}
+                </button>
+              </div>
+            </form>
+
+            {/* Section B: Existing Plays Directory */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white">Configured Theater Plays ({playsList.length})</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {playsList.map(pl => (
+                  <div key={pl.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
+                    <div className="flex items-start gap-4">
+                      <img src={pl.image} alt={pl.title} className="w-20 h-20 rounded-2xl object-cover border border-purple-400/40 shrink-0" />
+                      <div className="space-y-1">
+                        <div className="flex gap-1.5">
+                          <span className="px-2 py-0.5 rounded bg-purple-600/20 text-purple-300 font-bold text-[10px] uppercase">
+                            {pl.language}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                            {pl.category}
+                          </span>
+                        </div>
+                        <h4 className="text-base font-bold text-white leading-tight">{pl.title}</h4>
+                        <p className="text-xs text-white/60">{pl.venue} • <strong className="text-amber-300">₹{pl.price}/ticket</strong></p>
+                        <p className="text-[11px] text-white/40">{pl.date} @ {pl.time} • Seats: {pl.availableSeats} / {pl.totalCapacity}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => {
+                          setEditingPlayId(pl.id);
+                          setPlayForm({
+                            title: pl.title,
+                            language: pl.language || 'Gujarati',
+                            category: pl.category || 'Comedy Drama',
+                            badge: pl.badge || 'HOT SELLER',
+                            venue: pl.venue,
+                            city: pl.city || 'Mumbai',
+                            date: pl.date,
+                            time: pl.time,
+                            price: pl.price,
+                            totalCapacity: pl.totalCapacity || 1200,
+                            availableSeats: pl.availableSeats || 1200,
+                            image: pl.image || '',
+                            description: pl.description || ''
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDeletePlay(pl.id)}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* Tab 10: Activities & Theme Parks CRUD */}
+        {activeTab === 'activities' && (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-bold font-sans text-white">Adventure & Theme Park Activities Management</h2>
+
+            {/* Section A: Add / Edit Activity Form */}
+            <form onSubmit={handleSaveActivity} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
+              <h3 className="text-lg font-bold text-amber-400">
+                {editingActivityId ? 'Edit Activity Pass Details' : 'Add New Adventure Activity Pass'}
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Activity Title / Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Imagicaa Water Park & Snow World"
+                    value={activityForm.title}
+                    onChange={(e) => setActivityForm({ ...activityForm, title: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Category *</label>
+                  <select
+                    value={activityForm.category}
+                    onChange={(e) => setActivityForm({ ...activityForm, category: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="Water Park">Water Park</option>
+                    <option value="Theme Park">Theme Park</option>
+                    <option value="Trampoline Park">Trampoline Park</option>
+                    <option value="Adventure Sport">Adventure Sport</option>
+                    <option value="Arcade Zone">Arcade Zone</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Corner Tap / Badge</label>
+                  <select
+                    value={activityForm.badge || 'UNLIMITED ACCESS'}
+                    onChange={(e) => setActivityForm({ ...activityForm, badge: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="UNLIMITED ACCESS">🌟 UNLIMITED ACCESS</option>
+                    <option value="BEST VALUE">⚡ BEST VALUE</option>
+                    <option value="POPULAR">🔥 POPULAR</option>
+                    <option value="None">None</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">City *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Mumbai, Lonavala, Pune"
+                    value={activityForm.city}
+                    onChange={(e) => setActivityForm({ ...activityForm, city: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Location & Address *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Khopoli, Mumbai-Pune Expressway"
+                    value={activityForm.location}
+                    onChange={(e) => setActivityForm({ ...activityForm, location: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Validity Period *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Full Day Pass (10:30 AM - 07:00 PM)"
+                    value={activityForm.validity}
+                    onChange={(e) => setActivityForm({ ...activityForm, validity: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Ticket Price per Pass (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={activityForm.price}
+                    onChange={(e) => setActivityForm({ ...activityForm, price: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Total Pass Capacity</label>
+                  <input
+                    type="number"
+                    value={activityForm.totalCapacity}
+                    onChange={(e) => setActivityForm({ ...activityForm, totalCapacity: e.target.value, availableSeats: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-bold text-white mb-1">Banner / Image URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://images.unsplash.com/..."
+                    value={activityForm.image}
+                    onChange={(e) => setActivityForm({ ...activityForm, image: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                {/* Dynamic Benefits Manager */}
+                <div className="md:col-span-3 space-y-2 p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <label className="block text-xs font-bold text-amber-400">Dynamic Benefits & Perks Manager</label>
+                  
+                  {/* Benefits Chips */}
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {(activityForm.benefits || []).map((b, idx) => (
+                      <span key={idx} className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold flex items-center gap-1.5">
+                        {b}
+                        <button type="button" onClick={() => handleRemoveBenefit(idx)} className="hover:text-rose-400">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Add Benefit Input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter benefit (e.g., Free Locker Access, Buffet Lunch, Fast Track Queue)"
+                      value={newBenefitInput}
+                      onChange={(e) => setNewBenefitInput(e.target.value)}
+                      className="flex-1 p-2.5 rounded-xl glass-input text-xs text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddBenefit}
+                      className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+                    >
+                      + Add Benefit
+                    </button>
+                  </div>
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-bold text-white mb-1">Description / Overview</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Enter activity pass overview, safety guidelines..."
+                    value={activityForm.description}
+                    onChange={(e) => setActivityForm({ ...activityForm, description: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                {editingActivityId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingActivityId(null);
+                      setActivityForm({ title: '', category: 'Water Park', badge: 'UNLIMITED ACCESS', location: '', city: 'Mumbai', validity: 'Full Day Pass (10:00 AM - 07:00 PM)', price: 1299, totalCapacity: 2000, availableSeats: 2000, image: '', description: '', benefits: ['Unlimited Rides', 'Free Entry'] });
+                    }}
+                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold cursor-pointer"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  {editingActivityId ? 'Update Activity Pass' : 'Create Activity Pass'}
+                </button>
+              </div>
+            </form>
+
+            {/* Section B: Existing Activities Directory */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-white">Configured Adventure Passes ({activitiesList.length})</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {activitiesList.map(act => (
+                  <div key={act.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
+                    <div className="flex items-start gap-4">
+                      <img src={act.image} alt={act.title} className="w-20 h-20 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
+                      <div className="space-y-1">
+                        <div className="flex gap-1.5">
+                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                            {act.category}
+                          </span>
+                        </div>
+                        <h4 className="text-base font-bold text-white leading-tight">{act.title}</h4>
+                        <p className="text-xs text-white/60">{act.location} • <strong className="text-amber-300">₹{act.price}/pass</strong></p>
+                        <p className="text-[11px] text-white/40">{act.validity} • Passes: {act.availableSeats} / {act.totalCapacity}</p>
+                        
+                        {act.benefits && (
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {act.benefits.map((b, i) => (
+                              <span key={i} className="px-1.5 py-0.5 rounded bg-white/5 text-[9px] text-white/70">
+                                ✓ {b}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => {
+                          setEditingActivityId(act.id);
+                          setActivityForm({
+                            title: act.title,
+                            category: act.category || 'Water Park',
+                            badge: act.badge || 'UNLIMITED ACCESS',
+                            location: act.location,
+                            city: act.city || 'Mumbai',
+                            validity: act.validity,
+                            price: act.price,
+                            totalCapacity: act.totalCapacity || 2000,
+                            availableSeats: act.availableSeats || 2000,
+                            image: act.image || '',
+                            description: act.description || '',
+                            benefits: act.benefits || []
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Edit
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteActivity(act.id)}
+                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+      </main>
+
+    </div>
+  );
+};
