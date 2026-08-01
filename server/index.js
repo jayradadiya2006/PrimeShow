@@ -26,6 +26,16 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Health check endpoint for Render deployment
+app.get(['/', '/api/health'], (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'PrimeShow Node.js REST API Backend',
+    timestamp: new Date().toISOString(),
+    database: 'MongoDB Atlas'
+  });
+});
+
 // -------------------------------------------------------------
 // AUTHENTICATION ENDPOINTS
 // -------------------------------------------------------------

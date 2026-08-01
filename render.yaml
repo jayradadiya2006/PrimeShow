@@ -1,0 +1,20 @@
+# Render Blueprint Specification for PrimeShow Node.js Backend
+services:
+  - type: web
+    name: primeshow-backend
+    env: node
+    region: singapore
+    plan: free
+    branch: main
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        value: primeshow_ultra_secret_key_2026
+      - key: NODE_ENV
+        value: production
