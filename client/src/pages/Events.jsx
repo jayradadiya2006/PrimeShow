@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Calendar, MapPin, Ticket, Search, Filter, Clock, ArrowRight } from 'lucide-react';
+import { Sparkles, Calendar, MapPin, Ticket, Search, Filter, Clock, ArrowRight, X } from 'lucide-react';
 import axios from 'axios';
 import { EventBookingModal } from '../components/EventBookingModal';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const Events = () => {
   const [eventsList, setEventsList] = useState([]);
@@ -92,14 +92,18 @@ export const Events = () => {
 
   const filteredEvents = eventsList.filter(ev => {
     const matchesCat = activeCategory === 'All' || ev.category === activeCategory;
-    const matchesSearch = ev.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          ev.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (ev.category && ev.category.toLowerCase().includes(searchQuery.toLowerCase()));
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q || 
+                          ev.title?.toLowerCase().includes(q) || 
+                          ev.venue?.toLowerCase().includes(q) ||
+                          ev.city?.toLowerCase().includes(q) ||
+                          ev.description?.toLowerCase().includes(q) ||
+                          (ev.category && ev.category.toLowerCase().includes(q));
     return matchesCat && matchesSearch;
   });
 
-  const handleOpenBooking = (ev) => {
-    setSelectedEvent(ev);
+  const handleOpenBooking = (evt) => {
+    setSelectedEvent(evt);
     setIsBookingModalOpen(true);
   };
 
@@ -108,139 +112,125 @@ export const Events = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white pt-8 pb-20 font-sans">
+    <div className="min-h-screen bg-[#050508]/90 text-slate-900 dark:text-white pt-6 sm:pt-8 pb-20 font-sans">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         
         {/* Header Title */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-4xl font-bold font-serif text-white mb-2">Live Concerts & Stand-up Shows</h1>
-            <p className="text-xs text-amber-300">Book stadium concerts, comedy specials, singing performances, and music festivals</p>
+            <h1 className="text-2xl sm:text-4xl font-bold font-sans text-slate-900 dark:text-white mb-1">Live Events & Concerts</h1>
+            <p className="text-xs text-amber-600 dark:text-amber-300 font-semibold">Book tickets for stadium concerts, comedy shows, music festivals, and live performances</p>
           </div>
 
           {/* Search Bar */}
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3.5 top-3 w-4 h-4 text-white/40" />
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400 dark:text-white/40" />
             <input
               type="text"
-              placeholder="Search events, comedy, venue..."
+              placeholder="Search event title, artist, or venue..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-full glass-input text-xs text-white placeholder-white/40"
+              className="w-full pl-10 pr-10 py-2.5 rounded-full glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
             />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-3 text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Category Filter Pills */}
-        <div className="flex overflow-x-auto gap-2 pb-4 mb-8 text-xs font-semibold">
-          {categories.map(c => {
-            const isActive = activeCategory === c;
-            return (
-              <button
-                key={c}
-                onClick={() => setActiveCategory(c)}
-                className={`px-4 py-2 rounded-full transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
-                    : 'glass-panel text-white/70 hover:text-white hover:bg-white/10 border border-white/10'
-                }`}
-              >
-                {c}
-              </button>
-            );
-          })}
+        <div className="flex overflow-x-auto gap-2 pb-4 mb-8 text-xs font-semibold scrollbar-none">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-2 rounded-full transition-all cursor-pointer shrink-0 ${
+                activeCategory === cat
+                  ? 'bg-amber-500 text-black font-extrabold shadow-md shadow-amber-500/20'
+                  : 'bg-slate-200/60 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
         {/* Events Grid */}
-        {loading ? (
-          <div className="text-center py-16">
-            <div className="w-10 h-10 rounded-full border-4 border-amber-400 border-t-transparent animate-spin mx-auto mb-4"></div>
-            <p className="text-xs text-amber-300 font-bold uppercase tracking-widest">Loading Live Events Showcase...</p>
-          </div>
-        ) : filteredEvents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map(ev => (
-              <div 
-                key={ev.id} 
-                className="glass-panel rounded-3xl overflow-hidden border border-white/10 hover:border-amber-400/50 transition-all flex flex-col justify-between shadow-xl"
-              >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredEvents.map((evt) => (
+            <div 
+              key={evt.id}
+              className="glass-panel rounded-3xl overflow-hidden border border-slate-300 dark:border-white/10 hover:border-amber-400/50 transition-all duration-300 group flex flex-col sm:flex-row justify-between shadow-xl"
+            >
+              <div className="sm:w-2/5 relative aspect-[4/3] sm:aspect-auto overflow-hidden">
+                <img
+                  src={evt.image}
+                  alt={evt.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-amber-500 text-black text-[10px] font-extrabold shadow-md">
+                  {evt.category}
+                </div>
+              </div>
+
+              <div className="sm:w-3/5 p-5 flex flex-col justify-between space-y-4">
                 <div>
-                  <div className="relative h-52 overflow-hidden">
-                    <img src={ev.image} alt={ev.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#090a12] via-transparent to-transparent"></div>
-                    <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold text-[10px] uppercase backdrop-blur-md">
-                      {ev.category}
-                    </span>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors line-clamp-2 mb-2">
+                    {evt.title}
+                  </h3>
+                  
+                  <div className="space-y-1.5 text-xs text-slate-600 dark:text-white/70">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span className="line-clamp-1">{evt.venue}</span>
+                    </div>
 
-                    {/* Dynamic Corner Tap / Badge */}
-                    {ev.badge && ev.badge !== 'None' && (
-                      <span className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md border ${
-                        ev.badge === 'LIVE NOW' ? 'bg-rose-500/90 text-white border-rose-400 animate-pulse' :
-                        ev.badge === 'LIMITED SEATS' ? 'bg-purple-600/90 text-white border-purple-400' :
-                        ev.badge === 'FILLING FAST' ? 'bg-emerald-500/90 text-black border-emerald-300 font-extrabold' :
-                        'bg-amber-400/90 text-black border-amber-300 font-extrabold'
-                      }`}>
-                        🔥 {ev.badge}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-6 space-y-3">
-                    <h3 className="text-xl font-bold font-serif text-white line-clamp-1">{ev.title}</h3>
-                    <p className="text-xs text-white/60 line-clamp-2 leading-relaxed">{ev.description}</p>
-
-                    <div className="text-xs text-white/70 space-y-1.5 pt-1">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>{ev.date} @ {ev.time}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span className="truncate">{ev.venue}</span>
-                      </div>
-                      <div className="flex items-center justify-between pt-1 text-[11px]">
-                        <span className="text-white/50">Capacity Status:</span>
-                        <span className="font-bold text-emerald-400">
-                          {ev.availableSeats ? `${ev.availableSeats.toLocaleString('en-IN')} seats available` : 'Seats Available'}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                      <span>{evt.date} • {evt.time}</span>
                     </div>
                   </div>
+
+                  <p className="text-[11px] text-slate-500 dark:text-white/50 line-clamp-2 mt-3">{evt.description}</p>
                 </div>
 
-                <div className="p-6 pt-0 border-t border-white/10 mt-4 flex items-center justify-between">
+                <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-white/50 block">Ticket Price</span>
-                    <span className="text-lg font-bold font-sans text-amber-400">₹{Number(ev.price).toLocaleString('en-IN')} <span className="text-[10px] font-normal text-white/60">/ person</span></span>
+                    <span className="text-[10px] text-slate-500 dark:text-white/50 block">Starts From</span>
+                    <span className="text-base font-black text-amber-600 dark:text-amber-400">₹{evt.price}</span>
                   </div>
 
-                  {/* Fixed Responsive Interactive Click Handler */}
                   <button
-                    onClick={() => handleOpenBooking(ev)}
-                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                    onClick={() => handleOpenBooking(evt)}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
                   >
-                    <Ticket className="w-4 h-4" />
-                    <span>Book Ticket</span>
+                    <Ticket className="w-3.5 h-3.5" />
+                    <span>Book Passes</span>
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="glass-panel p-12 rounded-3xl text-center text-white/50">
-            No live events found matching your filter criteria.
+            </div>
+          ))}
+        </div>
+
+        {filteredEvents.length === 0 && (
+          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
+            <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No live events match your filter</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60">Try searching with a different category or search keyword.</p>
           </div>
         )}
-
       </div>
 
-      {/* Dynamic Event Booking Modal */}
-      {isBookingModalOpen && (
+      {/* Booking Modal */}
+      {isBookingModalOpen && selectedEvent && (
         <EventBookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
-          event={selectedEvent}
-          onBookingSuccess={handleBookingSuccess}
+          eventItem={selectedEvent}
+          onSuccess={handleBookingSuccess}
         />
       )}
     </div>

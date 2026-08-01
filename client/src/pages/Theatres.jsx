@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Film, Shield, Star, PlaySquare, Search, Filter, ArrowRight } from 'lucide-react';
+import { MapPin, Film, Shield, Star, PlaySquare, Search, Filter, ArrowRight, X } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const Theatres = ({ onSelectTheatre }) => {
   const { selectedCity } = useAuth();
@@ -66,109 +66,130 @@ export const Theatres = ({ onSelectTheatre }) => {
 
   const filteredTheatres = theatresList.filter(t => {
     const matchesCity = activeCityFilter === 'All' || t.city === activeCityFilter;
-    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          t.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          t.city.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = searchQuery.toLowerCase().trim();
+    const matchesSearch = !q || 
+                          t.name?.toLowerCase().includes(q) || 
+                          t.address?.toLowerCase().includes(q) ||
+                          t.city?.toLowerCase().includes(q) ||
+                          (Array.isArray(t.facilities) && t.facilities.some(f => f.toLowerCase().includes(q)));
     return matchesCity && matchesSearch;
   });
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white pt-8 pb-20 font-sans">
+    <div className="min-h-screen bg-[#050508]/90 text-slate-900 dark:text-white pt-6 sm:pt-8 pb-20 font-sans">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         
         {/* Header Title */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-4xl font-bold font-serif text-white mb-2">Ultra-Luxury Multiplex Directory</h1>
-            <p className="text-xs text-amber-300">Browse multiplexes across cities with IMAX 3D, Dolby Atmos, and VIP Recliners</p>
+            <h1 className="text-2xl sm:text-4xl font-bold font-sans text-slate-900 dark:text-white mb-1">Ultra-Luxury Multiplex Directory</h1>
+            <p className="text-xs text-amber-600 dark:text-amber-300 font-semibold">Browse multiplexes across cities with IMAX 3D, Dolby Atmos, and VIP Recliners</p>
           </div>
 
           {/* Search Bar */}
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3.5 top-3 w-4 h-4 text-white/40" />
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400 dark:text-white/40" />
             <input
               type="text"
-              placeholder="Search theatre or location..."
+              placeholder="Search multiplex name, location, or facility..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-full glass-input text-xs text-white placeholder-white/40"
+              className="w-full pl-10 pr-10 py-2.5 rounded-full glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
             />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-3 text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
         {/* City Filter Pills */}
-        <div className="flex overflow-x-auto gap-2 pb-4 mb-8 text-xs font-semibold">
-          {citiesList.map(c => {
-            const isActive = activeCityFilter === c;
-            return (
-              <button
-                key={c}
-                onClick={() => setActiveCityFilter(c)}
-                className={`px-4 py-2 rounded-full transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
-                    : 'glass-panel text-white/70 hover:text-white hover:bg-white/10 border border-white/10'
-                }`}
-              >
-                {c === 'All' ? 'All Cities' : c}
-              </button>
-            );
-          })}
+        <div className="flex overflow-x-auto gap-2 pb-4 mb-8 text-xs font-semibold scrollbar-none">
+          {citiesList.map(city => (
+            <button
+              key={city}
+              onClick={() => setActiveCityFilter(city)}
+              className={`px-4 py-2 rounded-full transition-all cursor-pointer shrink-0 ${
+                activeCityFilter === city
+                  ? 'bg-amber-500 text-black font-extrabold shadow-md shadow-amber-500/20'
+                  : 'bg-slate-200/60 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10'
+              }`}
+            >
+              {city}
+            </button>
+          ))}
         </div>
 
-        {/* Theatres List */}
-        {loading ? (
-          <div className="text-center py-16">
-            <div className="w-10 h-10 rounded-full border-4 border-amber-400 border-t-transparent animate-spin mx-auto mb-4"></div>
-            <p className="text-xs text-amber-300 font-bold uppercase tracking-widest">Loading Multiplex Directory...</p>
-          </div>
-        ) : filteredTheatres.length > 0 ? (
-          <div className="space-y-6">
-            {filteredTheatres.map(m => (
-              <div key={m.id} className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col md:flex-row items-center gap-6 shadow-xl hover:border-amber-400/40 transition-all">
-                <img
-                  src={m.image || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80"}
-                  alt={m.name}
-                  className="w-full md:w-64 h-48 object-cover rounded-2xl border border-amber-400/30 shrink-0"
-                />
-                
-                <div className="flex-1 text-left">
-                  <div className="flex items-center gap-2 text-amber-400 text-xs font-bold mb-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{m.city}, {m.state || 'Maharashtra'}</span>
-                    <span className="text-white/40">•</span>
-                    <span className="text-white/80">{m.screensCount || (m.screens ? m.screens.length : 6)} Screens ({m.totalSeats || 200} Seats)</span>
+        {/* Theatres Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTheatres.map((theatre) => (
+            <div 
+              key={theatre.id}
+              className="glass-panel rounded-3xl overflow-hidden border border-slate-300 dark:border-white/10 hover:border-amber-400/50 transition-all duration-300 group flex flex-col justify-between shadow-xl"
+            >
+              <div>
+                <div className="relative aspect-[16/9] overflow-hidden">
+                  <img
+                    src={theatre.image}
+                    alt={theatre.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050508] via-transparent to-transparent"></div>
+                  
+                  <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-amber-400 text-[10px] font-bold border border-amber-400/30 flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-amber-400" />
+                    <span>4.9 / 5.0</span>
                   </div>
-                  <h3 className="text-2xl font-bold font-serif text-white mb-2">{m.name}</h3>
-                  <p className="text-xs text-white/60 mb-4 leading-relaxed">{m.address}</p>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {(m.facilities || []).map((f, i) => (
-                      <span key={i} className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/20 text-[11px] font-semibold text-amber-200">
-                        {f}
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <span className="px-2.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold uppercase">
+                      {theatre.screensCount} Screens • {theatre.totalSeats} Recliners
+                    </span>
+                    <h3 className="text-lg font-bold text-white mt-1 group-hover:text-amber-300 transition-colors line-clamp-1">{theatre.name}</h3>
+                  </div>
+                </div>
+
+                <div className="p-5 space-y-3">
+                  <div className="flex items-start gap-2 text-xs text-slate-600 dark:text-white/60">
+                    <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <span className="line-clamp-2">{theatre.address}</span>
+                  </div>
+
+                  {/* Facilities Badges */}
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {theatre.facilities?.map((facility, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-lg bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-[10px] font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        {facility}
                       </span>
                     ))}
                   </div>
                 </div>
-
-                <div className="shrink-0 w-full md:w-auto">
-                  <button
-                    onClick={() => onSelectTheatre(m.id)}
-                    className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    <span>View Theatre & Showtimes</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="glass-panel p-12 rounded-3xl text-center text-white/50">
-            No multiplexes found matching your criteria.
+
+              <div className="p-5 pt-0">
+                <button
+                  onClick={() => onSelectTheatre && onSelectTheatre(theatre.id)}
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>Select Theatre & View Shows</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredTheatres.length === 0 && (
+          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
+            <PlaySquare className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No multiplexes match your search</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60">Try searching for another city, location, or facility name.</p>
           </div>
         )}
-
       </div>
     </div>
   );
