@@ -7,7 +7,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useBooking } from '../../context/BookingContext';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const AdminDashboard = ({ onReturnHome }) => {
   const { user, login, logout, token, supportMessages, replyToSupportMessage, broadcastNotification } = useAuth();
