@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   Search, MapPin, User, LogOut, Ticket, Heart, Award, 
-  Settings, Menu, X, Film, Sparkles, ChevronDown, Gift, Building2, Tag, PlaySquare, Bell, HelpCircle, Shield
+  Settings, Menu, X, Film, Sparkles, ChevronDown, Gift, Building2, Tag, PlaySquare, Bell, HelpCircle
 } from 'lucide-react';
 
 export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal }) => {
   const { user, logout, selectedCity } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -34,28 +35,30 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
   return (
     <header className="sticky top-0 z-[100] w-full transition-all duration-300">
       {/* Top Primary Glass Navbar */}
-      <nav className="glass-panel border-b border-slate-300 dark:border-white/10 px-4 md:px-8 py-3.5 flex items-center justify-between relative z-[100]">
+      <nav className="glass-panel border-b border-slate-300 dark:border-white/10 px-3 sm:px-4 md:px-8 py-2.5 sm:py-3.5 flex items-center justify-between relative z-[100]">
         
-        {/* Left: Brand Logo */}
-        <div className="flex items-center gap-6">
+        {/* Left: Brand Logo & Mobile-Compact Brand Name */}
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
           <button 
-            onClick={() => setActiveTab('home')}
-            className="flex items-center gap-2.5 text-left group focus:outline-none cursor-pointer"
+            onClick={() => { setActiveTab('home'); setIsMobileMenuOpen(false); }}
+            className="flex items-center gap-1.5 sm:gap-2.5 text-left group focus:outline-none cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform duration-300">
-              <span className="text-black font-black text-2xl font-sans">P</span>
+            {/* Logo Icon: Compact on mobile (w-7 h-7 / text-base), Desktop intact (w-10 h-10 / text-2xl) */}
+            <div className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform duration-300">
+              <span className="text-black font-black text-base sm:text-xl md:text-2xl font-sans">P</span>
             </div>
             <div>
-              <span className="text-2xl md:text-3xl font-bold font-sans tracking-wide bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900 dark:from-amber-200 dark:via-amber-400 dark:to-amber-100 bg-clip-text text-transparent">
+              {/* Brand Text: Compact on mobile (text-base sm:text-xl), Desktop intact (text-2xl md:text-3xl) */}
+              <span className="text-base sm:text-xl md:text-3xl font-bold font-sans tracking-wide bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900 dark:from-amber-200 dark:via-amber-400 dark:to-amber-100 bg-clip-text text-transparent">
                 PrimeShow
               </span>
-              <span className="hidden sm:inline-block block text-[10px] tracking-widest text-amber-700 dark:text-amber-400/80 uppercase font-sans font-semibold">
+              <span className="hidden sm:inline-block block text-[9px] sm:text-[10px] tracking-widest text-amber-700 dark:text-amber-400/80 uppercase font-sans font-semibold">
                 Ultra Luxury Cinema
               </span>
             </div>
           </button>
 
-          {/* City Selector Button */}
+          {/* Desktop City Selector Button */}
           <button
             onClick={onOpenCityModal}
             className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 hover:border-amber-500 dark:hover:border-amber-400/50 hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-xs font-medium text-amber-800 dark:text-amber-200 cursor-pointer"
@@ -66,7 +69,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
           </button>
         </div>
 
-        {/* Center: Global Live Predictive Search Bar */}
+        {/* Center: Global Live Predictive Search Bar (Desktop View Intact) */}
         <div className="relative hidden md:block w-full max-w-md mx-6">
           <div className="relative flex items-center">
             <Search className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-white/40" />
@@ -81,7 +84,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             />
           </div>
 
-          {/* Live Search Suggestions Dropdown */}
+          {/* Desktop Search Suggestions Dropdown */}
           {isSearchFocused && searchQuery.length > 0 && (
             <div className="absolute left-0 right-0 top-12 glass-modal rounded-2xl p-3 border border-amber-500/30 shadow-2xl z-[100]">
               <div className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 px-3 py-1 uppercase tracking-wider">
@@ -109,10 +112,19 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           
-          {/* Settings Menu Dropdown with Z-100 Stacking Context */}
-          <div className="relative z-[100]">
+          {/* Mobile Search Toggle Icon */}
+          <button
+            onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+            className="md:hidden p-2 rounded-full bg-slate-200/60 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white/80 transition-all cursor-pointer"
+            title="Search"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+
+          {/* Desktop Settings Dropdown (hidden on mobile, moved into Mobile Drawer) */}
+          <div className="relative hidden md:block z-[100]">
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
               className="p-2.5 rounded-full bg-slate-200/60 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white/80 transition-all cursor-pointer"
@@ -193,35 +205,38 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             )}
           </div>
 
-          {/* User Account / Profile CTA Button */}
-          {!user ? (
-            <button
-              onClick={onOpenAuth}
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Sign In</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => setActiveTab('profile-info')}
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 hover:border-amber-500 dark:hover:border-amber-400/40 transition-all group cursor-pointer"
-            >
-              <img
-                src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
-                alt={user.name}
-                className="w-7 h-7 rounded-full object-cover border border-amber-400/50"
-              />
-              <span className="hidden md:inline-block text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-300">
-                {user.name.split(' ')[0]}
-              </span>
-            </button>
-          )}
+          {/* Desktop User Account / Profile CTA Button (hidden on mobile, moved into Mobile Drawer) */}
+          <div className="hidden md:block">
+            {!user ? (
+              <button
+                onClick={onOpenAuth}
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setActiveTab('profile-info')}
+                className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 hover:border-amber-500 dark:hover:border-amber-400/40 transition-all group cursor-pointer"
+              >
+                <img
+                  src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
+                  alt={user.name}
+                  className="w-7 h-7 rounded-full object-cover border border-amber-400/50"
+                />
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-300">
+                  {user.name.split(' ')[0]}
+                </span>
+              </button>
+            )}
+          </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Hamburger Drawer Menu Toggle Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2.5 rounded-xl glass-panel text-slate-900 dark:text-white"
+            className="md:hidden p-2 rounded-xl bg-slate-200/80 dark:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/15 cursor-pointer"
+            aria-label="Toggle Mobile Navigation Drawer"
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -229,8 +244,178 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
         </div>
       </nav>
 
-      {/* Secondary Category Navigation Bar */}
-      <div className="bg-slate-200/90 dark:bg-[#07090e]/90 backdrop-blur-md border-b border-slate-300/80 dark:border-white/5 px-4 md:px-8 py-2 overflow-x-auto scrollbar-none flex items-center gap-2 md:gap-3 z-40">
+      {/* Expandable Mobile Search Bar (md:hidden) */}
+      {isMobileSearchOpen && (
+        <div className="md:hidden glass-panel border-b border-slate-300 dark:border-white/10 px-4 py-3 animate-fade-in relative z-[95]">
+          <div className="relative flex items-center">
+            <Search className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-white/40" />
+            <input
+              type="text"
+              autoFocus
+              placeholder="Search movies, theatres, events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 text-xs rounded-full glass-input text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-3 text-slate-400">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Mobile Search Results */}
+          {searchQuery.length > 0 && (
+            <div className="mt-2 glass-modal rounded-2xl p-2 border border-amber-500/30 max-h-60 overflow-y-auto">
+              {searchSuggestions.length > 0 ? (
+                searchSuggestions.map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setActiveTab('movies');
+                      setSearchQuery('');
+                      setIsMobileSearchOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-between text-xs"
+                  >
+                    <span className="font-semibold text-slate-900 dark:text-white">{item.title}</span>
+                    <span className="text-[10px] text-amber-500">{item.category}</span>
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-2 text-xs text-slate-500 dark:text-white/50">No matches found</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Mobile Slide-Out Drawer / Hamburger Dropdown Menu (md:hidden) */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden glass-modal border-b border-slate-300 dark:border-white/15 px-4 py-4 space-y-4 animate-fade-in relative z-[95] shadow-2xl max-h-[85vh] overflow-y-auto">
+          
+          {/* Mobile City Selector */}
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10">
+            <div className="flex items-center gap-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
+              <MapPin className="w-4 h-4" />
+              <span>Current City: <strong>{selectedCity}</strong></span>
+            </div>
+            <button
+              onClick={() => { onOpenCityModal(); setIsMobileMenuOpen(false); }}
+              className="text-[11px] font-bold text-amber-500 hover:underline"
+            >
+              Change
+            </button>
+          </div>
+
+          {/* User Profile Card / Sign In CTA in Mobile Drawer */}
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20">
+            {!user ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Welcome to PrimeShow</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-white/60">Sign in to manage bookings & rewards</p>
+                </div>
+                <button
+                  onClick={() => { onOpenAuth(); setIsMobileMenuOpen(false); }}
+                  className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+                >
+                  Sign In
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
+                    alt={user.name}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-amber-400"
+                  />
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">{user.name}</h4>
+                    <p className="text-[10px] text-amber-500 font-semibold">{user.role === 'ADMIN' ? '👑 Admin Command Desk' : 'VIP Member'}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { logout(); setIsMobileMenuOpen(false); setActiveTab('home'); }}
+                  className="p-2 rounded-xl bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-xs font-bold flex items-center gap-1"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Exit</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Profile Navigation Options */}
+          {user && (
+            <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
+              <button
+                onClick={() => { setActiveTab('profile-info'); setIsMobileMenuOpen(false); }}
+                className="p-2.5 rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white flex items-center gap-2"
+              >
+                <User className="w-4 h-4 text-amber-500" />
+                <span>My Profile</span>
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('profile-bookings'); setIsMobileMenuOpen(false); }}
+                className="p-2.5 rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white flex items-center gap-2"
+              >
+                <Ticket className="w-4 h-4 text-amber-500" />
+                <span>My Tickets</span>
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('profile-notifications'); setIsMobileMenuOpen(false); }}
+                className="p-2.5 rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white flex items-center gap-2"
+              >
+                <Bell className="w-4 h-4 text-amber-500" />
+                <span>Notifications</span>
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('profile-wishlist'); setIsMobileMenuOpen(false); }}
+                className="p-2.5 rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white flex items-center gap-2"
+              >
+                <Heart className="w-4 h-4 text-rose-500" />
+                <span>Wishlist</span>
+              </button>
+            </div>
+          )}
+
+          {/* Category Navigation Items inside Mobile Drawer */}
+          <div>
+            <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-2 px-1">
+              Explore Categories
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {navCategories.map((cat) => {
+                const Icon = cat.icon;
+                const isActive = activeTab === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setActiveTab(cat.id); setIsMobileMenuOpen(false); }}
+                    className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-amber-500 text-black shadow-md'
+                        : 'bg-slate-200/60 dark:bg-white/5 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-white/10'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-amber-500'}`} />
+                    <span>{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* Secondary Category Navigation Bar (Desktop & Horizontal Scrollable Mobile Bar) */}
+      <div className="bg-slate-200/90 dark:bg-[#07090e]/90 backdrop-blur-md border-b border-slate-300/80 dark:border-white/5 px-3 sm:px-4 md:px-8 py-2 overflow-x-auto scrollbar-none flex items-center gap-2 md:gap-3 z-40">
         {navCategories.map((cat) => {
           const Icon = cat.icon;
           const isActive = activeTab === cat.id;
@@ -238,7 +423,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             <button
               key={cat.id}
               onClick={() => setActiveTab(cat.id)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer ${
                 isActive
                   ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
                   : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-white/10'
