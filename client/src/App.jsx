@@ -72,11 +72,11 @@ const MainAppContent = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Dedicated Pages without distraction (both First & Second Navbars are hidden)
+  // Dedicated Pages without distraction (both First & Second Navbars are completely hidden)
   const isDedicatedPage = [
     'profile-info', 'profile-bookings', 'profile-wishlist', 
     'profile-support', 'profile', 'profile-settings', 'settings', 'admin'
-  ].includes(activeTab);
+  ].includes(activeTab) || isCityOpen;
 
   return (
     <div className="relative min-h-screen bg-slate-100 dark:bg-[#0A0C10] text-slate-900 dark:text-slate-100 transition-colors duration-300 flex flex-col justify-between selection:bg-amber-500 selection:text-black font-sans">
