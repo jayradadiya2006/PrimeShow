@@ -23,6 +23,7 @@ import { Offers } from './pages/Offers';
 import { GiftCards } from './pages/GiftCards';
 import { Corporate } from './pages/Corporate';
 import { Profile } from './pages/Profile';
+import { Settings } from './pages/Settings';
 
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 
@@ -38,20 +39,24 @@ const MainAppContent = () => {
   const [isSeatPickerOpen, setIsSeatPickerOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  // Check URL pathname or query params for Admin route on initial load or popstate
+  // Check URL pathname or query params for Admin, Settings, or Profile routes on initial load or popstate
   useEffect(() => {
-    const checkUrlForAdmin = () => {
+    const checkUrlRoutes = () => {
       const path = window.location.pathname.toLowerCase();
       const search = window.location.search.toLowerCase();
       const hash = window.location.hash.toLowerCase();
       if (path.includes('/admin') || search.includes('admin') || hash.includes('admin')) {
         setActiveTab('admin');
+      } else if (path.includes('/settings') || search.includes('settings') || hash.includes('settings')) {
+        setActiveTab('settings');
+      } else if (path.includes('/profile') || search.includes('profile') || hash.includes('profile')) {
+        setActiveTab('profile-info');
       }
     };
 
-    checkUrlForAdmin();
-    window.addEventListener('popstate', checkUrlForAdmin);
-    return () => window.removeEventListener('popstate', checkUrlForAdmin);
+    checkUrlRoutes();
+    window.addEventListener('popstate', checkUrlRoutes);
+    return () => window.removeEventListener('popstate', checkUrlRoutes);
   }, []);
 
   const handleSelectMovie = (id) => {
@@ -67,19 +72,27 @@ const MainAppContent = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Dedicated Pages without distraction (both First & Second Navbars are hidden)
+  const isDedicatedPage = [
+    'profile-info', 'profile-bookings', 'profile-wishlist', 
+    'profile-support', 'profile', 'profile-settings', 'settings', 'admin'
+  ].includes(activeTab);
+
   return (
     <div className="relative min-h-screen bg-slate-100 dark:bg-[#0A0C10] text-slate-900 dark:text-slate-100 transition-colors duration-300 flex flex-col justify-between selection:bg-amber-500 selection:text-black font-sans">
       
       {/* Background Theme Surface */}
       <MotionBackground />
 
-      {/* Global Navbar */}
-      <Navbar 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        onOpenCityModal={() => setIsCityOpen(true)}
-      />
+      {/* Global Navbars (Hidden on Profile, Settings, and Admin pages for clean distraction-free UI) */}
+      {!isDedicatedPage && (
+        <Navbar 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenCityModal={() => setIsCityOpen(true)}
+        />
+      )}
 
       {/* Main Content Router View */}
       <main className="flex-grow z-10">
@@ -148,24 +161,25 @@ const MainAppContent = () => {
           <Corporate />
         )}
 
-        {activeTab === 'profile-info' && (
-          <Profile initialTab="profile-info" />
+        {(activeTab === 'profile-info' || activeTab === 'profile') && (
+          <Profile initialTab="profile-info" onReturnHome={() => setActiveTab('home')} />
         )}
 
         {activeTab === 'profile-bookings' && (
-          <Profile initialTab="bookings" />
+          <Profile initialTab="bookings" onReturnHome={() => setActiveTab('home')} />
         )}
 
         {activeTab === 'profile-wishlist' && (
-          <Profile initialTab="wishlist" />
+          <Profile initialTab="wishlist" onReturnHome={() => setActiveTab('home')} />
         )}
 
         {activeTab === 'profile-support' && (
-          <Profile initialTab="support" />
+          <Profile initialTab="support" onReturnHome={() => setActiveTab('home')} />
         )}
 
-        {activeTab === 'profile-settings' && (
-          <Profile initialTab="settings" />
+        {/* Dedicated Settings Page (Decoupled from Profile) */}
+        {(activeTab === 'settings' || activeTab === 'profile-settings') && (
+          <Settings onReturnHome={() => setActiveTab('home')} />
         )}
 
         {/* Admin Dashboard Panel */}
@@ -200,25 +214,23 @@ const MainAppContent = () => {
         />
       )}
 
-      {/* Interactive Seat Picker Matrix Modal */}
+      {/* Interactive Seat Selection Modal */}
       {isSeatPickerOpen && (
         <SeatBookingModal 
           isOpen={isSeatPickerOpen}
           onClose={() => setIsSeatPickerOpen(false)}
-          movieId={selectedMovieId}
-          onProceedToCheckout={() => {
+          onProceedToPayment={() => {
             setIsSeatPickerOpen(false);
             setIsCheckoutOpen(true);
           }}
         />
       )}
 
-      {/* Dynamic UPI Payment & Ticket Pass Generator Modal */}
+      {/* Payment Gateway Modal */}
       {isCheckoutOpen && (
         <CheckoutModal 
           isOpen={isCheckoutOpen}
           onClose={() => setIsCheckoutOpen(false)}
-          movieId={selectedMovieId}
           onPaymentSuccess={() => {
             setIsCheckoutOpen(false);
             setActiveTab('profile-bookings');
@@ -230,7 +242,7 @@ const MainAppContent = () => {
   );
 };
 
-export default function App() {
+export function App() {
   return (
     <AuthProvider>
       <BookingProvider>
@@ -239,3 +251,5 @@ export default function App() {
     </AuthProvider>
   );
 }
+
+export default App;

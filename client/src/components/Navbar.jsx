@@ -375,7 +375,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                 {/* 3. Settings */}
                 <button
                   onClick={() => {
-                    setActiveTab('profile-settings');
+                    setActiveTab('settings');
                     setIsMobileDrawerOpen(false);
                   }}
                   className="w-full text-left p-3.5 rounded-2xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/50 flex items-center justify-between text-white font-bold text-sm transition-all group cursor-pointer"

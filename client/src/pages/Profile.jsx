@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, Ticket, Heart, Award, Shield, Lock, Download, Share2, QrCode, 
-  CheckCircle2, Edit3, Camera, Bell, HelpCircle, Send, MessageSquare, Sun, Moon, X, Image, Laptop, Check, Upload, Calendar, MapPin, Phone, Mail, Smartphone, AtSign, Eye, EyeOff
+  CheckCircle2, Edit3, Camera, Bell, HelpCircle, Send, MessageSquare, Sun, Moon, X, Image, Laptop, Check, Upload, Calendar, MapPin, Phone, Mail, Smartphone, AtSign, Eye, EyeOff, ArrowLeft
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { jsPDF } from 'jspdf';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 
-export const Profile = ({ initialTab = 'profile-info' }) => {
+export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   const { 
     user, updateUserProfile, themePreference, setThemePreference, effectiveTheme, 
     supportMessages, sendMessageToSupport, notifications, markNotificationRead 
@@ -194,7 +194,30 @@ export const Profile = ({ initialTab = 'profile-info' }) => {
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white pt-8 pb-20 font-sans">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#050508] text-slate-900 dark:text-white pb-20 font-sans transition-colors duration-300">
+      
+      {/* Dedicated Minimal Header Bar for Profile Page */}
+      <header className="sticky top-0 z-50 glass-panel border-b border-slate-300 dark:border-white/10 px-4 sm:px-8 py-4 flex items-center justify-between shadow-lg mb-6">
+        <button
+          onClick={onReturnHome}
+          className="flex items-center gap-2 text-xs sm:text-sm font-extrabold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors group cursor-pointer"
+        >
+          <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
+            <ArrowLeft className="w-4 h-4" />
+          </div>
+          <span>Back to Home</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
+            <User className="w-4 h-4" />
+          </div>
+          <span className="text-base sm:text-lg font-bold tracking-wide">My Account Suite</span>
+        </div>
+
+        <div className="w-20"></div> {/* Spacer for symmetry */}
+      </header>
+
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         
         {savedMsg && (
