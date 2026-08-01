@@ -7,6 +7,7 @@ const VIDEO_SOURCES = [
     id: 0,
     label: "Now Showing",
     url: "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_081127_0992a171-d3c6-4978-8213-0ec5df8b6d63.mp4",
+    poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1920&q=80",
     title: "Avatar: Fire and Ash",
     sub: "Native IMAX 3D Experience"
   },
@@ -14,6 +15,7 @@ const VIDEO_SOURCES = [
     id: 1,
     label: "Premium Experience",
     url: "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_092026_dd05b805-ea0f-40b2-8c52-332b88502592.mp4",
+    poster: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1920&q=80",
     title: "Dune: Part Two",
     sub: "Dolby Atmos 360 Surround Sound"
   },
@@ -21,6 +23,7 @@ const VIDEO_SOURCES = [
     id: 2,
     label: "Book Instantly",
     url: "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_081042_df7202bf-bd80-4b2b-bbc6-1f09ba2870e9.mp4",
+    poster: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1920&q=80",
     title: "Kalki 2898 AD: Chapter II",
     sub: "Exclusive VIP Recliner Seats"
   },
@@ -28,6 +31,7 @@ const VIDEO_SOURCES = [
     id: 3,
     label: "Cinematic Reel",
     url: "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260606_154941_df1a96e1-a06f-450c-bd02-d863414cc1a0.mp4",
+    poster: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1920&q=80",
     title: "VANGUARD Cinema Showreel",
     sub: "Ultra HD Dynamic Character Highlights"
   }
@@ -224,6 +228,18 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
   return (
     <section className="relative w-full h-screen min-h-[680px] overflow-hidden bg-[#0A0C10] flex items-center justify-center font-sans">
       
+      {/* Instant Fallback Backdrop Images for Zero Latency Readability */}
+      {VIDEO_SOURCES.map((video, idx) => (
+        <img
+          key={`img_${video.id}`}
+          src={video.poster}
+          alt={video.title}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1000ms] ease-in-out pointer-events-none ${
+            activeVideoIdx === idx ? 'opacity-40 scale-105' : 'opacity-0 scale-100'
+          }`}
+        />
+      ))}
+
       {/* 4 Stacked Crossfade Movie & Character Reel Video Elements */}
       {VIDEO_SOURCES.map((video, idx) => (
         <video
@@ -232,6 +248,7 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
           muted
           loop
           playsInline
+          poster={video.poster}
           src={video.url}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1000ms] ease-in-out pointer-events-none ${
             activeVideoIdx === idx ? 'opacity-65 scale-105' : 'opacity-0 scale-100'
