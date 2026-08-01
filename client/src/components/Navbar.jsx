@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   Search, MapPin, User, LogOut, Ticket, Heart, Award, 
-  Settings, Menu, X, Film, Sparkles, ChevronDown, Gift, Building2, Tag, PlaySquare, Bell, HelpCircle, MoreVertical, Activity
+  Settings, Menu, X, Film, Sparkles, ChevronDown, Gift, Building2, Tag, PlaySquare, Bell, HelpCircle
 } from 'lucide-react';
 
 export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal }) => {
@@ -239,14 +239,18 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             )}
           </div>
 
-          {/* Mobile Three-Dot Menu Icon (⋮) - Replaces separate profile & settings icons on mobile */}
+          {/* Mobile Hamburger / Three-Lines Menu Icon (☰) */}
           <button
             onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
             className="md:hidden p-2.5 rounded-xl bg-slate-200/80 dark:bg-white/10 text-slate-900 dark:text-white border border-slate-300 dark:border-white/15 cursor-pointer transition-all hover:bg-slate-300 dark:hover:bg-white/20 active:scale-95 flex items-center justify-center"
             aria-label="Open Mobile Menu Drawer"
             title="Menu Options"
           >
-            <MoreVertical className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+            {isMobileDrawerOpen ? (
+              <X className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+            ) : (
+              <Menu className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+            )}
           </button>
 
         </div>
@@ -321,44 +325,30 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                 </button>
               </div>
 
-              {/* 3 Vertical Navigation Options */}
+              {/* Strictly 3 Navigation Options Inside Drawer */}
               <div className="space-y-3">
                 
-                {/* 1. Activity Tracker */}
+                {/* 1. City Selection */}
                 <button
                   onClick={() => {
-                    setActiveTab('profile-bookings');
+                    onOpenCityModal();
                     setIsMobileDrawerOpen(false);
                   }}
                   className="w-full text-left p-3.5 rounded-2xl bg-white/5 hover:bg-amber-500/20 border border-white/10 hover:border-amber-400/50 flex items-center justify-between text-white font-bold text-sm transition-all group cursor-pointer"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
-                      <Activity className="w-5 h-5" />
+                      <MapPin className="w-5 h-5" />
                     </div>
-                    <span>Activity Tracker</span>
+                    <div>
+                      <span>City Selection</span>
+                      <div className="text-[11px] font-normal text-amber-400">{selectedCity}</div>
+                    </div>
                   </div>
                   <ChevronDown className="w-4 h-4 text-white/40 -rotate-90" />
                 </button>
 
-                {/* 2. Settings Menu */}
-                <button
-                  onClick={() => {
-                    setActiveTab('profile-settings');
-                    setIsMobileDrawerOpen(false);
-                  }}
-                  className="w-full text-left p-3.5 rounded-2xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/50 flex items-center justify-between text-white font-bold text-sm transition-all group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
-                      <Settings className="w-5 h-5" />
-                    </div>
-                    <span>Settings Menu</span>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-white/40 -rotate-90" />
-                </button>
-
-                {/* 3. Profile Menu */}
+                {/* 2. Profile */}
                 <button
                   onClick={() => {
                     if (user) {
@@ -374,7 +364,30 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                     <div className="w-9 h-9 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
                       <User className="w-5 h-5" />
                     </div>
-                    <span>Profile Menu</span>
+                    <div>
+                      <span>Profile</span>
+                      <div className="text-[11px] font-normal text-white/50">{user ? user.name : 'Sign In / Register'}</div>
+                    </div>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-white/40 -rotate-90" />
+                </button>
+
+                {/* 3. Settings */}
+                <button
+                  onClick={() => {
+                    setActiveTab('profile-settings');
+                    setIsMobileDrawerOpen(false);
+                  }}
+                  className="w-full text-left p-3.5 rounded-2xl bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-400/50 flex items-center justify-between text-white font-bold text-sm transition-all group cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                      <Settings className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span>Settings</span>
+                      <div className="text-[11px] font-normal text-white/50">Preferences & Theme</div>
+                    </div>
                   </div>
                   <ChevronDown className="w-4 h-4 text-white/40 -rotate-90" />
                 </button>
