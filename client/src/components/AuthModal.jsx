@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export const AuthModal = ({ isOpen, onClose }) => {
+export const AuthModal = ({ isOpen, onClose, onAdminRedirect }) => {
   const { login, register } = useAuth();
   const [activeTab, setActiveTab] = useState('login'); // 'login', 'register', 'otp'
   
@@ -26,7 +26,11 @@ export const AuthModal = ({ isOpen, onClose }) => {
     const res = await login(email, password);
     setLoading(false);
     if (res.success) {
-      onClose();
+      if (res.user?.role === 'ADMIN' && onAdminRedirect) {
+        onAdminRedirect();
+      } else {
+        onClose();
+      }
     } else {
       setErrorMsg(res.error || 'Authentication failed');
     }
@@ -42,24 +46,32 @@ export const AuthModal = ({ isOpen, onClose }) => {
     const res = await register(name, email, phone, password);
     setLoading(false);
     if (res.success) {
-      onClose();
+      if (res.user?.role === 'ADMIN' && onAdminRedirect) {
+        onAdminRedirect();
+      } else {
+        onClose();
+      }
     } else {
       setErrorMsg(res.error || 'Registration failed');
     }
   };
 
-  const handleQuickDemoCustomer = () => {
+  const handleQuickDemoCustomer = async () => {
     setEmail('user@primeshow.com');
     setPassword('password123');
-    login('user@primeshow.com', 'password123');
+    await login('user@primeshow.com', 'password123');
     onClose();
   };
 
-  const handleQuickDemoAdmin = () => {
+  const handleQuickDemoAdmin = async () => {
     setEmail('admin@primeshow.com');
     setPassword('admin123');
-    login('admin@primeshow.com', 'admin123');
-    onClose();
+    const res = await login('admin@primeshow.com', 'admin123');
+    if (res.success && onAdminRedirect) {
+      onAdminRedirect();
+    } else {
+      onClose();
+    }
   };
 
   const handleSendOtp = (e) => {
