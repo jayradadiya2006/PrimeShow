@@ -15,4 +15,4 @@ Disallow: /api/
 Disallow: /checkout
 Disallow: /private-theatre/
 
-Sitemap: https://primeshow.vercel.app/sitemap.xml
+Sitemap: https://prime-show-tau.vercel.app/sitemap.xml
