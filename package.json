@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm run start:server\" \"npm run start:client\"",
     "start:server": "node server/index.js",
     "start:client": "vite --config client/vite.config.js client",
-    "build": "vite build --config client/vite.config.js client && node -e \"require('fs').cpSync('client/dist', 'dist', { recursive: true })\""
+    "build": "vite build"
   },
   "dependencies": {
     "axios": "^1.18.1",
