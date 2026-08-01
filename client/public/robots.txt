@@ -1,0 +1,18 @@
+# PrimeShow Robots.txt - Production Indexing Instructions
+User-agent: *
+Allow: /
+Allow: /movies
+Allow: /theatres
+Allow: /events
+Allow: /plays
+Allow: /activities
+Allow: /offers
+
+# Exclude Private Admin Dashboard & Internal Modals
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout
+Disallow: /private-theatre/
+
+Sitemap: https://primeshow.vercel.app/sitemap.xml
