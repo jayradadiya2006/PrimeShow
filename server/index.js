@@ -1,11 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const { movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
+const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
+const { User, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat } = require('./models');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = 'primeshow_ultra_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'primeshow_ultra_secret_key_2026';
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -871,6 +873,7 @@ app.post('/api/activities/book', (req, res) => {
   res.status(201).json(newBooking);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 PrimeShow REST API Backend running on http://localhost:${PORT}`);
+  await connectDB();
 });
