@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   X, CheckCircle2, Tag, ShieldCheck, CreditCard, QrCode, Download, 
-  Share2, Sparkles, ArrowRight, Wallet, Building, Copy, Check, Printer, Smartphone, AlertCircle
+  Share2, Sparkles, ArrowRight, Wallet, Building, Copy, Check, Printer, Smartphone, AlertCircle, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
@@ -15,6 +15,7 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
 
   const [couponCode, setCouponCode] = useState('');
   const [couponStatus, setCouponStatus] = useState(null);
+  const [isMovieInfoExpanded, setIsMovieInfoExpanded] = useState(false);
   
   // 4 Payment Gateway Tabs: 'UPI', 'NetBanking', 'Card', 'Wallet'
   const [paymentMethod, setPaymentMethod] = useState('UPI');
@@ -37,9 +38,9 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
 
   const { movie, theatre, show, selectedSeats, selectedTier, appliedCoupon, discountAmount } = activeBooking;
 
-  // Payee & Dynamic UPI Details
-  const payeeName = 'Jay Hiralal Radadiya';
-  const payeeUpiId = 'jay.radadiya@ptaxis';
+  // Payee & Platform Identity Details
+  const payeeName = 'PrimeShow Official Cinema Pass';
+  const payeeUpiId = 'pay@primeshow';
 
   // Real-Time Price Calculations based on selected movie & seat tier
   const seatPrice = show.price || 480;
@@ -160,68 +161,92 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-fade-in font-sans">
-      <div className="relative w-full max-w-2xl glass-modal rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl text-white max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[260] flex items-center justify-center p-3 sm:p-4 bg-black/95 backdrop-blur-2xl animate-fade-in font-sans">
+      <div className="relative w-full max-w-2xl glass-modal rounded-3xl p-4 sm:p-7 border border-white/15 shadow-2xl text-white max-h-[92vh] overflow-y-auto overflow-x-hidden">
         
-        {/* Close Button */}
+        {/* Top Corner Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-colors cursor-pointer"
+          className="absolute top-3 right-3 sm:top-5 sm:right-5 z-30 p-2 rounded-full bg-white/10 hover:bg-rose-500/30 text-white transition-colors cursor-pointer shrink-0"
+          title="Close Checkout Modal"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 text-white" />
         </button>
 
         {!completedTicket ? (
-          <div>
+          <div className="space-y-4">
             {/* Header */}
-            <div className="border-b border-white/10 pb-4 mb-6">
-              <h2 className="text-2xl font-bold font-serif text-white">Booking Summary & Payment Gateway</h2>
-              <p className="text-xs text-amber-300">Secure real-time transaction powered by NPCI UPI & Bank Protocols</p>
+            <div className="border-b border-white/10 pb-3 pr-8">
+              <h2 className="text-xl sm:text-2xl font-bold font-sans text-white">Booking Summary & Checkout</h2>
+              <p className="text-xs text-amber-300 mt-0.5">Secure real-time transaction powered by NPCI UPI & Banking Protocols</p>
             </div>
 
-            {/* Dynamic Movie & Seat Info Card */}
-            <div className="flex items-center gap-4 glass-panel p-4 rounded-2xl border border-white/10 mb-6">
-              <img src={movie.poster} alt={movie.title} className="w-16 h-24 object-cover rounded-xl border border-amber-400/40 shrink-0" />
-              <div>
-                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
-                  {show.format || 'IMAX 3D'}
-                </span>
-                <h3 className="text-lg font-bold font-sans text-white mt-0.5">{movie.title}</h3>
-                <p className="text-xs text-white/70">{theatre.name}</p>
-                <div className="text-xs text-amber-300 font-semibold mt-1">
-                  Seats: {selectedSeats.join(', ')} ({selectedTier})
+            {/* Movie Details Card with Poster & Read More Toggle */}
+            <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-white/10">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <img 
+                  src={movie.poster} 
+                  alt={movie.title} 
+                  className="w-18 h-26 sm:w-22 sm:h-30 object-cover rounded-2xl border border-amber-400/40 shrink-0 shadow-lg" 
+                />
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase border border-amber-400/30">
+                      {show.format || 'IMAX 3D'}
+                    </span>
+                    {movie.synopsis && (
+                      <button
+                        onClick={() => setIsMovieInfoExpanded(!isMovieInfoExpanded)}
+                        className="text-amber-300 underline font-bold text-[10px] cursor-pointer inline-flex items-center gap-0.5 ml-auto"
+                      >
+                        <span>{isMovieInfoExpanded ? 'Less' : 'Read More'}</span>
+                        {isMovieInfoExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+                    )}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold font-sans text-white truncate">{movie.title}</h3>
+                  <p className="text-[11px] sm:text-xs text-white/70 truncate">{theatre.name}</p>
+                  <div className="text-xs text-amber-300 font-semibold pt-0.5">
+                    Seats: <strong className="text-white">{selectedSeats.join(', ')}</strong> ({selectedTier})
+                  </div>
+                  <div className="text-[11px] text-white/50">{show.date || '2026-07-28'} • {show.time} ({show.screenName || 'Screen 1'})</div>
                 </div>
-                <div className="text-[11px] text-white/50">{show.date || '2026-07-28'} • {show.time}</div>
               </div>
+
+              {isMovieInfoExpanded && movie.synopsis && (
+                <p className="text-[11px] text-white/70 mt-2.5 animate-fade-in bg-white/5 p-2.5 rounded-xl border border-white/10 leading-relaxed">
+                  {movie.synopsis}
+                </p>
+              )}
             </div>
 
-            {/* Stateful Coupon Input */}
-            <div className="mb-6">
-              <label className="block text-xs font-semibold text-white/80 mb-2 flex items-center gap-1.5">
+            {/* Promo Code Input (Button Completely Inside Border Box) */}
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-white/80 flex items-center gap-1.5">
                 <Tag className="w-4 h-4 text-amber-400" />
-                <span>Apply Promo Code / Bank Coupon</span>
+                <span>Apply Promo Code / Coupon</span>
               </label>
 
               {appliedCoupon ? (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/20 border border-amber-400/50 text-xs">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-500/20 border border-amber-400/50 text-xs">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-amber-400" />
+                    <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
                     <span className="font-bold text-amber-300">{appliedCoupon} Applied (-₹{discountAmount})</span>
                   </div>
-                  <button onClick={removeCoupon} className="text-rose-400 hover:underline text-xs cursor-pointer">Remove</button>
+                  <button onClick={removeCoupon} className="text-rose-400 hover:underline text-xs cursor-pointer font-bold">Remove</button>
                 </div>
               ) : (
-                <form onSubmit={handleApplyCouponSubmit} className="flex gap-2">
+                <form onSubmit={handleApplyCouponSubmit} className="relative flex items-center bg-white/5 border border-white/10 rounded-2xl p-1.5 focus-within:border-amber-400/80 transition-colors w-full overflow-hidden">
                   <input
                     type="text"
                     placeholder="Try 'PRIMESHOW50' or 'LUXURY200'"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 px-4 py-2.5 rounded-xl glass-input text-xs text-white uppercase font-bold"
+                    className="w-full bg-transparent px-3 py-1.5 text-xs text-white uppercase font-bold outline-none placeholder:normal-case placeholder:font-normal placeholder:text-white/40"
                   />
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs cursor-pointer shrink-0 transition-colors"
                   >
                     Apply
                   </button>
@@ -229,17 +254,17 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
               )}
 
               {couponStatus?.error && (
-                <div className="text-[11px] text-rose-400 mt-1 font-medium">{couponStatus.msg}</div>
+                <div className="text-[11px] text-rose-400 font-medium pl-1">{couponStatus.msg}</div>
               )}
               {couponStatus?.success && (
-                <div className="text-[11px] text-amber-300 mt-1 font-medium">{couponStatus.msg}</div>
+                <div className="text-[11px] text-amber-300 font-medium pl-1">{couponStatus.msg}</div>
               )}
             </div>
 
-            {/* Real-Time Price Breakdown */}
-            <div className="glass-panel p-4 rounded-2xl border border-white/10 space-y-2 text-xs mb-6">
+            {/* Real-Time Price Breakdown with Proper Spacing */}
+            <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-white/10 space-y-2 text-xs">
               <div className="flex justify-between text-white/70">
-                <span>Base Ticket Price ({selectedSeats.length} seats @ ₹{seatPrice}/seat)</span>
+                <span>Base Price ({selectedSeats.length} seats @ ₹{seatPrice}/seat)</span>
                 <span>₹{basePrice.toLocaleString('en-IN')}</span>
               </div>
               <div className="flex justify-between text-white/70">
@@ -256,24 +281,25 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
                   <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
                 </div>
               )}
-              <div className="border-t border-white/10 pt-2 flex justify-between text-base font-bold text-white">
-                <span>Grand Total Amount</span>
-                <span className="text-amber-400 font-sans text-2xl font-black">₹{grandTotal.toLocaleString('en-IN')}</span>
+              <div className="border-t border-white/10 pt-3 flex items-center justify-between gap-3 text-sm sm:text-base font-bold text-white">
+                <span className="text-xs sm:text-sm text-white/90">Grand Total Amount</span>
+                <span className="text-amber-400 font-sans text-xl sm:text-2xl font-black shrink-0">₹{grandTotal.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
-            {/* 4 Distinct Payment Gateways */}
-            <div className="mb-6 space-y-4">
+            {/* Payment Method Options (Single Horizontal Scrollable Row) */}
+            <div className="space-y-2">
               <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider">
-                Select 1 of 4 Payment Options
+                Select Payment Option
               </label>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {/* Single Horizontal Scrollable Row with Hidden Scrollbars */}
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none no-scrollbar py-1 w-full max-w-full">
                 {[
                   { id: 'UPI', label: 'Dynamic UPI & QR', icon: QrCode },
                   { id: 'NetBanking', label: 'Net Banking', icon: Building },
                   { id: 'Card', label: 'Credit / Debit', icon: CreditCard },
-                  { id: 'Wallet', label: 'Wallets & Online', icon: Wallet }
+                  { id: 'Wallet', label: 'Wallets', icon: Wallet }
                 ].map((m) => {
                   const Icon = m.icon;
                   const isActive = paymentMethod === m.id;
@@ -281,10 +307,10 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
                     <button
                       key={m.id}
                       onClick={() => setPaymentMethod(m.id)}
-                      className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
                         isActive
-                          ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/25'
-                          : 'glass-panel text-white/60 hover:text-white border-white/10 hover:bg-white/10'
+                          ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/25'
+                          : 'glass-panel text-white/70 hover:text-white border-white/10 hover:bg-white/10'
                       }`}
                     >
                       <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-amber-400'}`} />
@@ -294,40 +320,40 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
                 })}
               </div>
 
-              {/* PAYMENT OPTION 1: DYNAMIC UPI QR CODE & PAYEE DETAILS (PRIMARY FOCUS) */}
+              {/* PAYMENT OPTION 1: DYNAMIC UPI QR CODE & PAYEE DETAILS */}
               {paymentMethod === 'UPI' && (
-                <div className="p-5 rounded-2xl glass-panel border-2 border-amber-400/40 space-y-4 animate-fade-in bg-gradient-to-b from-[#0e0f18] to-[#07080d]">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="p-4 sm:p-5 rounded-2xl glass-panel border-2 border-amber-400/40 space-y-4 animate-fade-in bg-gradient-to-b from-[#0e0f18] to-[#07080d]">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
                     {/* Inline SVG QR Code Renderer */}
-                    <div className="bg-white p-3 rounded-2xl shadow-2xl shrink-0 border-2 border-amber-400/60 flex flex-col items-center">
+                    <div className="bg-white p-2.5 rounded-2xl shadow-2xl shrink-0 border-2 border-amber-400/60 flex flex-col items-center">
                       <QRCodeSVG
                         value={upiSchemaUrl}
-                        size={170}
+                        size={150}
                         level="H"
                         includeMargin={true}
                       />
-                      <span className="text-[10px] font-bold text-black uppercase tracking-wider mt-1">Scan via Any UPI App</span>
+                      <span className="text-[9px] font-bold text-black uppercase tracking-wider mt-1">Scan via Any UPI App</span>
                     </div>
 
-                    {/* Payee Info & Manual Copy Box */}
-                    <div className="flex-1 space-y-3 text-left w-full">
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                        <span className="text-[10px] text-white/40 uppercase tracking-widest block font-bold">Payee Beneficiary Name</span>
-                        <div className="text-sm font-bold text-white flex items-center gap-2">
+                    {/* Payee Info & Manual Copy Box (Fits Perfectly Within Screen Bounds) */}
+                    <div className="flex-1 space-y-3 text-left w-full max-w-full overflow-hidden">
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-0.5">
+                        <span className="text-[9px] text-white/40 uppercase tracking-widest block font-bold">Platform Payee Identity</span>
+                        <div className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 truncate">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span>{payeeName}</span>
+                          <span className="truncate">{payeeName}</span>
                         </div>
                       </div>
 
-                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between gap-2">
-                        <div>
-                          <span className="text-[10px] text-amber-300/80 uppercase tracking-widest block font-bold">Official Payee UPI ID</span>
-                          <span className="text-xs font-mono font-bold text-amber-300">{payeeUpiId}</span>
+                      <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 w-full max-w-full overflow-hidden">
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[9px] text-amber-300/80 uppercase tracking-widest block font-bold">Official Payee UPI ID</span>
+                          <span className="text-xs sm:text-sm font-mono font-bold text-amber-300 truncate block">{payeeUpiId}</span>
                         </div>
                         <button
                           type="button"
                           onClick={handleCopyUpiId}
-                          className="px-3 py-1.5 rounded-lg bg-amber-500 text-black hover:bg-amber-400 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all shrink-0"
+                          className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-amber-500 text-black hover:bg-amber-400 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
                         >
                           {isCopiedUpi ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                           <span>{isCopiedUpi ? 'Copied!' : 'Copy UPI ID'}</span>
@@ -351,7 +377,7 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
 
               {/* PAYMENT OPTION 2: NET BANKING */}
               {paymentMethod === 'NetBanking' && (
-                <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 animate-fade-in text-xs">
+                <div className="p-4 sm:p-5 rounded-2xl glass-panel border border-white/10 space-y-3 animate-fade-in text-xs">
                   <label className="block text-xs font-bold text-white mb-1">Select Net Banking Financial Institution</label>
                   <select
                     value={selectedBank}
@@ -369,7 +395,7 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
 
               {/* PAYMENT OPTION 3: CREDIT / DEBIT CARDS */}
               {paymentMethod === 'Card' && (
-                <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 animate-fade-in text-xs">
+                <div className="p-4 sm:p-5 rounded-2xl glass-panel border border-white/10 space-y-3 animate-fade-in text-xs">
                   <div>
                     <label className="block text-[11px] font-bold text-white mb-1">Cardholder Full Name</label>
                     <input
@@ -415,7 +441,7 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
 
               {/* PAYMENT OPTION 4: WALLETS & ONLINE PAYMENT */}
               {paymentMethod === 'Wallet' && (
-                <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 animate-fade-in text-xs">
+                <div className="p-4 sm:p-5 rounded-2xl glass-panel border border-white/10 space-y-3 animate-fade-in text-xs">
                   <label className="block text-xs font-bold text-white mb-1">Select Online Wallet Partner</label>
                   <select
                     value={selectedWallet}
@@ -432,21 +458,21 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
               )}
             </div>
 
-            {/* Pay Action Button & Verification Loader */}
+            {/* Pay / Book Ticket Action Button (Single Row Alignment) */}
             <button
               disabled={isProcessing}
               onClick={handlePayNow}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-sm shadow-xl shadow-amber-500/30 hover:brightness-110 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer disabled:opacity-60"
+              className="w-full py-3.5 sm:py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-black font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-amber-500/30 hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 shrink-0 mt-2"
             >
               {isProcessing ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
-                  <span>{verificationStep || `Verifying Payment of ₹${grandTotal}...`}</span>
+                  <div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
+                  <span>{verificationStep || `Verifying Payment of ₹${grandTotal.toLocaleString('en-IN')}...`}</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-base">
-                  <span>Pay ₹{grandTotal.toLocaleString('en-IN')} & Generate Movie Ticket</span>
-                  <ArrowRight className="w-5 h-5" />
+                <div className="flex items-center justify-center gap-2">
+                  <span>Pay ₹{grandTotal.toLocaleString('en-IN')} & Book Ticket</span>
+                  <ArrowRight className="w-4 h-4 text-black" />
                 </div>
               )}
             </button>
@@ -459,7 +485,7 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
             </div>
 
             <div>
-              <h2 className="text-2xl font-bold font-serif text-white">Payment Verified & Ticket Generated!</h2>
+              <h2 className="text-2xl font-bold font-sans text-white">Payment Verified & Ticket Generated!</h2>
               <p className="text-xs text-amber-300">Official Cinema Pass reserved at {completedTicket.theatreName}</p>
             </div>
 
@@ -468,7 +494,7 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
               <div className="flex items-center justify-between border-b border-amber-400/30 pb-4 mb-4">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">PrimeShow Official Pass</span>
-                  <div className="text-xl font-bold font-serif text-white">{completedTicket.movieTitle}</div>
+                  <div className="text-xl font-bold font-sans text-white">{completedTicket.movieTitle}</div>
                   <div className="text-xs text-white/70">{completedTicket.theatreName}</div>
                 </div>
                 <div className="text-right">
