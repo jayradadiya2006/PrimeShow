@@ -954,14 +954,50 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
+              {/* YouTube Trailer Link */}
+              <div>
+                <label className="block text-xs font-bold text-cyan-300 mb-1">YouTube Trailer Link / Embed URL *</label>
+                <input type="text" value={movieForm.trailerUrl || ''} onChange={e => setMovieForm({...movieForm, trailerUrl: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" placeholder="https://www.youtube.com/watch?v=..." />
+              </div>
+
+              {/* Dynamic Image Fields: Poster & Background Banner */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">YouTube Trailer Link / Embed URL *</label>
-                  <input type="text" value={movieForm.trailerUrl || ''} onChange={e => setMovieForm({...movieForm, trailerUrl: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" placeholder="https://www.youtube.com/watch?v=..." />
+                {/* 1. Movie Thumbnail Poster */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-cyan-300">1. Movie Thumbnail Poster (Small Detail Poster)</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={movieForm.poster || ''} onChange={e => setMovieForm({...movieForm, poster: e.target.value})} className="flex-1 p-3 rounded-xl glass-input text-xs text-white" placeholder="Poster Image URL (https://...)" />
+                    <label className="px-3 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1">
+                      <span>Upload</span>
+                      <input type="file" accept="image/*" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setMovieForm({...movieForm, poster: reader.result});
+                          reader.readAsDataURL(file);
+                        }
+                      }} className="hidden" />
+                    </label>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Poster Image URL</label>
-                  <input type="url" value={movieForm.poster} onChange={e => setMovieForm({...movieForm, poster: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" placeholder="https://..." />
+
+                {/* 2. Main Background Banner */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-cyan-300">2. Main Background Banner (Backdrop Image)</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={movieForm.banner || ''} onChange={e => setMovieForm({...movieForm, banner: e.target.value})} className="flex-1 p-3 rounded-xl glass-input text-xs text-white" placeholder="Banner/Backdrop URL (https://...)" />
+                    <label className="px-3 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1">
+                      <span>Upload</span>
+                      <input type="file" accept="image/*" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setMovieForm({...movieForm, banner: reader.result});
+                          reader.readAsDataURL(file);
+                        }
+                      }} className="hidden" />
+                    </label>
+                  </div>
                 </div>
               </div>
 

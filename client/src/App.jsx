@@ -118,6 +118,7 @@ const MainAppContent = () => {
             movieId={selectedMovieId}
             onBookTickets={() => setIsSeatPickerOpen(true)}
             onSelectMovie={handleSelectMovie}
+            onBackToMovies={() => setActiveTab('home')}
           />
         )}
 

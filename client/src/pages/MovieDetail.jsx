@@ -58,6 +58,15 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
 
   if (!movie) return null;
 
+  // Reliable Back Button Handler
+  const handleBackClick = () => {
+    if (typeof onBackToMovies === 'function') {
+      onBackToMovies();
+    } else {
+      window.location.hash = '';
+    }
+  };
+
   // Dynamic Date Chips Generator based strictly on movie.showDates configured by Admin
   const generateDynamicDates = () => {
     if (Array.isArray(movie.showDates) && movie.showDates.length > 0) {
@@ -143,13 +152,14 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   return (
     <div className="min-h-screen bg-[#050508] text-white pb-20 font-sans">
       
-      {/* 1. Prominent Top Sub-Header Bar (Strictly Below First Navbar, Clean Back Button & Title) */}
+      {/* 1. Prominent Top Sub-Header Bar (Strictly Below First Navbar, Fixed Back Arrow Navigation) */}
       <div className="bg-[#0A0D14]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-3 sticky top-[56px] sm:top-[64px] z-30 flex items-center justify-between gap-3 shadow-lg">
         <div className="flex items-center gap-3">
           <button
-            onClick={onBackToMovies}
-            className="p-2 rounded-xl bg-white/10 hover:bg-amber-500 hover:text-black text-white transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold shrink-0"
+            onClick={handleBackClick}
+            className="p-2.5 rounded-xl bg-white/10 hover:bg-amber-500 hover:text-black text-white transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold shrink-0"
             title="Return to Home"
+            aria-label="Back Arrow Navigation"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Back to Home</span>
@@ -172,11 +182,11 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
       {/* 2. Hero Banner Header & Left-Aligned Movie Information */}
       <div className="relative w-full overflow-hidden bg-black border-b border-white/10">
         
-        {/* Backdrop Banner Image */}
+        {/* Backdrop Banner Image (Dynamic Admin Uploaded Background Banner) */}
         <div className="relative w-full h-[40vh] sm:h-[55vh] min-h-[280px]">
           <img
             src={movie.banner || movie.poster}
-            alt={movie.title}
+            alt={`${movie.title} Background Banner`}
             className="w-full h-full object-cover opacity-40 scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#050508] via-[#050508]/70 to-transparent"></div>
@@ -186,12 +196,26 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
         <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-24 sm:-mt-36 relative z-10 pb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6">
             
-            {/* Movie Poster (Left-Aligned, Adjusted Downward for Mobile) */}
-            <img
-              src={movie.poster}
-              alt={movie.title}
-              className="w-28 sm:w-44 aspect-[2/3] rounded-2xl sm:rounded-3xl object-cover border-2 border-white/20 shadow-2xl shrink-0"
-            />
+            {/* Movie Poster & Repositioned Watch Trailer CTA Button Beside Poster */}
+            <div className="flex flex-col items-start gap-2 shrink-0">
+              <img
+                src={movie.poster}
+                alt={`${movie.title} Poster`}
+                className="w-28 sm:w-44 aspect-[2/3] rounded-2xl sm:rounded-3xl object-cover border-2 border-white/20 shadow-2xl shrink-0"
+              />
+
+              {/* Repositioned 'Watch Trailer' Button Directly Beside/Adjacent to Movie Poster */}
+              {movie.trailerUrl && (
+                <button
+                  onClick={() => setIsTrailerOpen(true)}
+                  className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[11px] font-extrabold flex items-center justify-center gap-1.5 shadow-lg shadow-red-600/30 cursor-pointer"
+                  title="Watch Official Trailer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Watch Trailer</span>
+                </button>
+              )}
+            </div>
 
             {/* Movie Details (Left-Aligned) */}
             <div className="space-y-2 sm:space-y-3 flex-1 text-left">
@@ -216,8 +240,8 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
                 <p className="text-xs sm:text-sm text-amber-300/90 font-medium italic">{movie.tagline}</p>
               )}
 
-              {/* Ratings, Duration, Director, Producer */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-semibold text-white/80">
+              {/* Ratings & Duration (Director & Producer removed from here to prevent duplication) */}
+              <div className="flex items-center gap-2 sm:gap-4 text-xs font-semibold text-white/80">
                 <span className="flex items-center gap-1 text-amber-400">
                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                   <strong className="text-xs sm:text-sm">{movie.rating || 9.2}</strong> ({((movie.votesCount || 25000)/1000).toFixed(1)}k votes)
@@ -229,16 +253,8 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
                 </span>
               </div>
 
-              {/* Director & Producer Meta */}
-              <div className="text-xs text-white/70 space-x-3 pt-0.5">
-                <span>Director: <strong className="text-white">{movie.director || 'James Cameron'}</strong></span>
-                {movie.producer && (
-                  <span>• Producer: <strong className="text-white">{movie.producer}</strong></span>
-                )}
-              </div>
-
-              {/* Genres & Formats (Single Horizontal Line with Horizontal Scroll on Mobile) */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
+              {/* Genres & Formats (Hidden Visible Scrollbar while preserving touch scrolling) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none no-scrollbar [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pt-1">
                 {Array.isArray(movie.genres) && movie.genres.map((g, i) => (
                   <span key={i} className="px-2.5 py-1 rounded-lg bg-white/10 text-white/90 text-[10px] sm:text-xs font-semibold border border-white/10 shrink-0">
                     {g}
@@ -251,19 +267,6 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
                 ))}
               </div>
 
-              {/* Trailer CTA Button */}
-              {movie.trailerUrl && (
-                <div className="pt-2">
-                  <button
-                    onClick={() => setIsTrailerOpen(true)}
-                    className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-red-600/30 cursor-pointer"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Watch Trailer</span>
-                  </button>
-                </div>
-              )}
-
             </div>
           </div>
         </div>
@@ -272,8 +275,8 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
       {/* Main Details Body */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-6 sm:pt-10 space-y-8 sm:space-y-12">
         
-        {/* 3. About Movie Section (With Read More / Read Less Toggle) */}
-        <div className="glass-panel p-5 sm:p-8 rounded-3xl border border-white/10 space-y-3">
+        {/* 3. About Movie Section (Contains Director & Producer strictly to avoid duplicate text) */}
+        <div className="glass-panel p-5 sm:p-8 rounded-3xl border border-white/10 space-y-4">
           <h3 className="text-base sm:text-xl font-bold font-sans text-white flex items-center gap-2">
             <Film className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             <span>About The Movie</span>
@@ -297,10 +300,11 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
             </p>
           </div>
 
-          <div className="pt-2 border-t border-white/10 flex flex-wrap gap-4 text-xs text-white/60">
-            <div><span className="text-amber-400/80 font-semibold">Director:</span> {movie.director || 'James Cameron'}</div>
-            {movie.producer && <div><span className="text-amber-400/80 font-semibold">Producer:</span> {movie.producer}</div>}
-            {movie.language && <div><span className="text-amber-400/80 font-semibold">Language:</span> {movie.language}</div>}
+          {/* Director & Producer Meta Strictly Kept Inside About Section */}
+          <div className="pt-3 border-t border-white/10 flex flex-wrap gap-4 text-xs text-white/70">
+            <div><span className="text-amber-400 font-semibold">Director:</span> {movie.director || 'James Cameron'}</div>
+            {movie.producer && <div><span className="text-amber-400 font-semibold">Producer:</span> {movie.producer}</div>}
+            {movie.language && <div><span className="text-amber-400 font-semibold">Language:</span> {movie.language}</div>}
           </div>
         </div>
 
@@ -319,8 +323,8 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
               <p className="text-xs text-amber-300">Showing available dates & theatres configured by Admin</p>
             </div>
 
-            {/* Date Selector Chips */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
+            {/* Date Selector Chips (Hidden Scrollbar) */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none no-scrollbar [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {availableDates.map((d) => (
                 <button
                   key={d.date}
@@ -480,7 +484,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
           <span>PrimeShow Ultra Luxury Cinema</span>
         </div>
         <div className="flex flex-wrap justify-center gap-4 text-[11px] text-white/60">
-          <button onClick={onBackToMovies} className="hover:text-amber-400 cursor-pointer">Home</button>
+          <button onClick={handleBackClick} className="hover:text-amber-400 cursor-pointer">Home</button>
           <span>•</span>
           <button onClick={handleScrollToShowtimes} className="hover:text-amber-400 cursor-pointer">Select Showtimes</button>
           <span>•</span>
