@@ -52,6 +52,76 @@ const DEFAULT_HERO_SLIDES = [
   }
 ];
 
+const DEFAULT_FEATURE_STRIPS = [
+  {
+    id: 'feat_1',
+    title: 'Instant UPI Ticket Pass',
+    subtitle: 'Scan Jay Hiralal Radadiya QR for instant pass generation',
+    icon: 'Zap',
+    color: 'amber',
+    badge: 'INSTANT'
+  },
+  {
+    id: 'feat_2',
+    title: 'Private Cinema Screen',
+    subtitle: 'Book full theatre lounge for private birthday parties',
+    icon: 'Film',
+    color: 'purple',
+    badge: 'LUXURY'
+  },
+  {
+    id: 'feat_3',
+    title: 'Exclusive Promo Vouchers',
+    subtitle: 'Flat 50% discount on IMAX 3D recliners using PRIMESHOW50',
+    icon: 'Gift',
+    color: 'emerald',
+    badge: 'OFFER'
+  },
+  {
+    id: 'feat_4',
+    title: 'Expert VIP Concierge',
+    subtitle: 'Dedicated lounge assistance & gourmet dining booking',
+    icon: 'Sparkles',
+    color: 'cyan',
+    badge: 'VIP'
+  }
+];
+
+const DEFAULT_UPCOMING_MOVIES = [
+  {
+    id: 'up_1',
+    title: 'Avengers: Secret Wars',
+    release: 'Dec 2026',
+    poster: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+    genres: ['Action', 'Superhero'],
+    synopsis: 'The multiverse collapses as heroes assemble for the ultimate cosmic showdown.'
+  },
+  {
+    id: 'up_2',
+    title: 'The Dark Knight: Legacy',
+    release: 'Nov 2026',
+    poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80',
+    genres: ['Action', 'Crime'],
+    synopsis: 'A new vigilante emerges in Gotham City to honor the shadow of Batman.'
+  },
+  {
+    id: 'up_3',
+    title: 'Interstellar II: Beyond Horizon',
+    release: 'Jan 2027',
+    poster: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80',
+    genres: ['Sci-Fi', 'Adventure'],
+    synopsis: 'Explorers venture through an uncharted wormhole in search of human salvation.'
+  },
+  {
+    id: 'up_4',
+    title: 'Gladiator: Rise of Empires',
+    release: 'Oct 2026',
+    poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
+    genres: ['Action', 'Drama'],
+    synopsis: 'Colosseum legends collide in ancient Rome for supreme honor.'
+  }
+];
+
 const MOCK_MOVIES = [
   {
     id: 'mov_1',
@@ -720,6 +790,60 @@ export const BookingProvider = ({ children }) => {
     setHeroSlidesList(prev => prev.filter(s => s.id !== slideId));
   };
 
+  // Feature Strips Dynamic Store & Persistent LocalStorage
+  const [featureStripsList, setFeatureStripsList] = useState(() => {
+    const saved = localStorage.getItem('primeshow_feature_strips_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return DEFAULT_FEATURE_STRIPS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('primeshow_feature_strips_v1', JSON.stringify(featureStripsList));
+  }, [featureStripsList]);
+
+  const addFeatureStrip = (stripObj) => {
+    const newStrip = { id: `feat_${Date.now()}`, ...stripObj };
+    setFeatureStripsList(prev => [newStrip, ...prev]);
+    return newStrip;
+  };
+
+  const updateFeatureStrip = (stripId, updatedFields) => {
+    setFeatureStripsList(prev => prev.map(s => s.id === stripId ? { ...s, ...updatedFields } : s));
+  };
+
+  const deleteFeatureStrip = (stripId) => {
+    setFeatureStripsList(prev => prev.filter(s => s.id !== stripId));
+  };
+
+  // Upcoming Movies Dynamic Store & Persistent LocalStorage
+  const [upcomingMoviesList, setUpcomingMoviesList] = useState(() => {
+    const saved = localStorage.getItem('primeshow_upcoming_movies_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return DEFAULT_UPCOMING_MOVIES;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('primeshow_upcoming_movies_v1', JSON.stringify(upcomingMoviesList));
+  }, [upcomingMoviesList]);
+
+  const addUpcomingMovie = (movieObj) => {
+    const newMovie = { id: `up_${Date.now()}`, ...movieObj };
+    setUpcomingMoviesList(prev => [newMovie, ...prev]);
+    return newMovie;
+  };
+
+  const updateUpcomingMovie = (movieId, updatedFields) => {
+    setUpcomingMoviesList(prev => prev.map(m => m.id === movieId ? { ...m, ...updatedFields } : m));
+  };
+
+  const deleteUpcomingMovie = (movieId) => {
+    setUpcomingMoviesList(prev => prev.filter(m => m.id !== movieId));
+  };
+
   return (
     <BookingContext.Provider value={{
       moviesList,
@@ -752,7 +876,15 @@ export const BookingProvider = ({ children }) => {
       heroSlidesList,
       addHeroSlide,
       updateHeroSlide,
-      deleteHeroSlide
+      deleteHeroSlide,
+      featureStripsList,
+      addFeatureStrip,
+      updateFeatureStrip,
+      deleteFeatureStrip,
+      upcomingMoviesList,
+      addUpcomingMovie,
+      updateUpcomingMovie,
+      deleteUpcomingMovie
     }}>
       {children}
     </BookingContext.Provider>

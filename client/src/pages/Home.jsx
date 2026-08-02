@@ -3,27 +3,30 @@ import { HeroCrossfader } from '../components/HeroCrossfader';
 import { MovieCarousel } from '../components/MovieCarousel';
 import { MovieCard } from '../components/MovieCard';
 import { useBooking } from '../context/BookingContext';
-import { Sparkles, Film, Award, Ticket, Star, ChevronRight, Shield, Zap, Gift, Play } from 'lucide-react';
+import { Sparkles, Film, Award, Ticket, Star, ChevronRight, Shield, Zap, Gift, Play, Bell } from 'lucide-react';
 
 export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, setActiveTab }) => {
-  const { moviesList } = useBooking();
+  const { moviesList, featureStripsList, upcomingMoviesList } = useBooking();
+  const [remindersSet, setRemindersSet] = useState({});
 
-  const upcomingMovies = [
-    {
-      id: 'mov_up_1',
-      title: 'Avengers: Secret Wars',
-      release: 'Dec 2026',
-      poster: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-      genres: ['Action', 'Superhero']
-    },
-    {
-      id: 'mov_up_2',
-      title: 'The Dark Knight: Legacy',
-      release: 'Nov 2026',
-      poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80',
-      genres: ['Action', 'Crime']
+  const toggleReminder = (id) => {
+    setRemindersSet(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const getIconComponent = (iconName) => {
+    switch (iconName) {
+      case 'Zap': return Zap;
+      case 'Film': return Film;
+      case 'Gift': return Gift;
+      case 'Sparkles': return Sparkles;
+      case 'Shield': return Shield;
+      case 'Ticket': return Ticket;
+      default: return Zap;
     }
-  ];
+  };
 
   return (
     <div className="min-h-screen bg-[#050508] text-white font-sans overflow-x-hidden">
@@ -38,17 +41,54 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
       />
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8 space-y-12 sm:space-y-16 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8 space-y-10 sm:space-y-16 py-6 sm:py-12">
         
-        {/* Section 0: Automated Movie Slide Show (Carousel) */}
+        {/* Section 0: Feature Chips / Quick Action Strip (Single-Row Horizontal Scroll & Hidden Scrollbar) */}
+        <div className="w-full">
+          <div className="flex flex-row flex-nowrap items-center gap-2.5 sm:gap-4 overflow-x-auto scrollbar-none no-scrollbar py-1 w-full max-w-full">
+            {(featureStripsList && featureStripsList.length > 0 ? featureStripsList : [
+              { id: 'feat_1', title: 'Instant UPI Pass', subtitle: 'Instant QR generation', icon: 'Zap', color: 'amber', badge: 'INSTANT' },
+              { id: 'feat_2', title: 'Private Cinema Screen', subtitle: 'Book full lounge', icon: 'Film', color: 'purple', badge: 'LUXURY' },
+              { id: 'feat_3', title: 'Promo Vouchers', subtitle: 'Flat 50% discount', icon: 'Gift', color: 'emerald', badge: 'OFFER' },
+              { id: 'feat_4', title: 'Expert VIP Concierge', subtitle: 'Lounge & gourmet dining', icon: 'Sparkles', color: 'cyan', badge: 'VIP' }
+            ]).map((feat) => {
+              const IconComp = getIconComponent(feat.icon);
+              return (
+                <div
+                  key={feat.id}
+                  className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl border text-xs font-bold shrink-0 flex items-center gap-2.5 sm:gap-3 glass-panel border-white/10 hover:border-amber-400/40 hover:bg-white/10 transition-all cursor-pointer select-none"
+                >
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
+                    <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs sm:text-sm font-bold text-white whitespace-nowrap">{feat.title}</span>
+                      {feat.badge && (
+                        <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black uppercase">
+                          {feat.badge}
+                        </span>
+                      )}
+                    </div>
+                    {feat.subtitle && (
+                      <p className="text-[10px] sm:text-xs text-white/50 whitespace-nowrap font-normal">{feat.subtitle}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Section 1: Automated Movie Slide Show (Carousel) */}
         <MovieCarousel
           onBookNow={onBookNow}
           onSelectMovie={onSelectMovie}
         />
 
-        {/* Section 1: Now Showing Mobile 2-Column Responsive Grid */}
+        {/* Section 2: Now Showing Mobile 2-Column Responsive Grid */}
         <div className="space-y-4 sm:space-y-6">
-          <div className="flex flex-row items-center justify-between gap-2 mb-4 sm:mb-6">
+          <div className="flex flex-row items-center justify-between gap-2 mb-3 sm:mb-6">
             <div>
               <div className="flex items-center gap-1.5 text-amber-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -79,44 +119,11 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
           </div>
         </div>
 
-        {/* Section 2: Promotional Banners Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-          <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-amber-500/20 via-amber-500/5 to-transparent border border-amber-400/30 flex items-center gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
-              <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+        {/* Section 3: Upcoming Releases Showcase (Single-Row Mobile Scrollable Line / Carousel) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-white">Instant UPI Ticket Pass</h3>
-              <p className="text-[11px] sm:text-xs text-white/60">Scan Jay Hiralal Radadiya QR for instant pass generation</p>
-            </div>
-          </div>
-
-          <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-purple-500/20 via-purple-500/5 to-transparent border border-purple-400/30 flex items-center gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-400 shrink-0">
-              <Film className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-white">Private Cinema Screen</h3>
-              <p className="text-[11px] sm:text-xs text-white/60">Book full theatre lounge for private birthday parties</p>
-            </div>
-          </div>
-
-          <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-emerald-500/20 via-emerald-500/5 to-transparent border border-emerald-400/30 flex items-center gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0">
-              <Gift className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-white">Exclusive Promo Vouchers</h3>
-              <p className="text-[11px] sm:text-xs text-white/60">Flat 50% discount on IMAX 3D recliners using PRIMESHOW50</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 3: Upcoming Releases Showcase */}
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <div className="flex items-center gap-1.5 text-purple-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
+              <div className="flex items-center gap-1.5 text-purple-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5">
                 <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Coming Soon</span>
               </div>
@@ -124,20 +131,47 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {upcomingMovies.map((mov) => (
-              <div key={mov.id} className="glass-panel p-4 rounded-2xl sm:rounded-3xl border border-white/10 flex items-center gap-4 hover:border-purple-400/50 transition-all">
-                <img src={mov.poster} alt={mov.title} className="w-20 h-28 sm:w-24 sm:h-32 rounded-xl sm:rounded-2xl object-cover border border-white/10 shrink-0" />
-                <div className="space-y-1.5">
-                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[9px] sm:text-[10px] font-bold uppercase">
-                    Releasing {mov.release}
-                  </span>
-                  <h3 className="text-sm sm:text-lg font-bold text-white">{mov.title}</h3>
-                  <p className="text-[11px] sm:text-xs text-white/60">{mov.genres.join(' • ')}</p>
-                  <button className="px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] sm:text-xs font-bold transition-all cursor-pointer">
-                    Set Reminder
-                  </button>
+          {/* Single-Row Mobile Layout Carousel with Compact Cards */}
+          <div className="flex flex-row flex-nowrap items-stretch gap-3 sm:gap-5 overflow-x-auto scrollbar-none no-scrollbar py-2 w-full max-w-full">
+            {(upcomingMoviesList && upcomingMoviesList.length > 0 ? upcomingMoviesList : [
+              { id: 'up_1', title: 'Avengers: Secret Wars', release: 'Dec 2026', poster: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80', genres: ['Action', 'Superhero'] },
+              { id: 'up_2', title: 'The Dark Knight: Legacy', release: 'Nov 2026', poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80', genres: ['Action', 'Crime'] },
+              { id: 'up_3', title: 'Interstellar II', release: 'Jan 2027', poster: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80', genres: ['Sci-Fi', 'Adventure'] },
+              { id: 'up_4', title: 'Gladiator II', release: 'Oct 2026', poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80', genres: ['Action', 'Drama'] }
+            ]).map((mov) => (
+              <div 
+                key={mov.id} 
+                className="w-[140px] xs:w-[155px] sm:w-[190px] shrink-0 glass-panel p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl border border-white/10 flex flex-col justify-between hover:border-purple-400/50 transition-all group"
+              >
+                <div>
+                  <div className="relative w-full h-[170px] sm:h-[220px] rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 mb-2">
+                    <img 
+                      src={mov.poster} 
+                      alt={mov.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                    />
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-purple-500/90 text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-md">
+                      {mov.release}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xs sm:text-sm font-bold text-white truncate max-w-full">{mov.title}</h3>
+                  <p className="text-[10px] sm:text-xs text-white/50 truncate max-w-full mt-0.5">
+                    {Array.isArray(mov.genres) ? mov.genres.join(' • ') : mov.genres}
+                  </p>
                 </div>
+
+                <button
+                  onClick={() => toggleReminder(mov.id)}
+                  className={`w-full mt-2.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                    remindersSet[mov.id]
+                      ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30'
+                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
+                  }`}
+                >
+                  <Bell className="w-3 h-3" />
+                  <span>{remindersSet[mov.id] ? 'Reminder Set ✓' : 'Set Reminder'}</span>
+                </button>
               </div>
             ))}
           </div>

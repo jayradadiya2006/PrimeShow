@@ -15,7 +15,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
     moviesList, addMovieToGlobalStore, updateMovieInGlobalStore, deleteMovieFromGlobalStore,
     addShowDateToMovie, deleteShowDateFromMovie, addShowSlotToMovieTheatre, deleteShowSlotFromMovieTheatre, deleteTheatreFromMovieDate,
     screenLayoutsMap, getScreenLayout, updateScreenRowsConfig, toggleBlockSeatForScreen, setManualSeatStatusForScreen, addRowToScreenLayout, deleteRowFromScreenLayout, showBookedSeatsMap,
-    heroSlidesList, addHeroSlide, updateHeroSlide, deleteHeroSlide
+    heroSlidesList, addHeroSlide, updateHeroSlide, deleteHeroSlide,
+    featureStripsList, addFeatureStrip, updateFeatureStrip, deleteFeatureStrip,
+    upcomingMoviesList, addUpcomingMovie, updateUpcomingMovie, deleteUpcomingMovie
   } = useBooking();
   const [activeTab, setActiveTab] = useState('analytics');
 
@@ -164,6 +166,98 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const handleDeleteHeroSlideClick = (slideId) => {
     deleteHeroSlide(slideId);
     setActionSuccess('Hero slide removed from slideshow!');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  // Feature Strips Management State
+  const [featForm, setFeatForm] = useState({
+    title: '',
+    subtitle: '',
+    badge: 'INSTANT',
+    icon: 'Zap'
+  });
+  const [editingFeatId, setEditingFeatId] = useState(null);
+
+  const handleSaveFeatureStrip = (e) => {
+    e.preventDefault();
+    if (!featForm.title) return;
+
+    if (editingFeatId) {
+      updateFeatureStrip(editingFeatId, featForm);
+      setActionSuccess('Feature action chip updated & synced live!');
+    } else {
+      addFeatureStrip(featForm);
+      setActionSuccess('New Feature action chip added to homepage strip!');
+    }
+
+    setFeatForm({ title: '', subtitle: '', badge: 'INSTANT', icon: 'Zap' });
+    setEditingFeatId(null);
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleEditFeatClick = (feat) => {
+    setEditingFeatId(feat.id);
+    setFeatForm({
+      title: feat.title || '',
+      subtitle: feat.subtitle || '',
+      badge: feat.badge || 'INSTANT',
+      icon: feat.icon || 'Zap'
+    });
+  };
+
+  const handleDeleteFeatClick = (featId) => {
+    deleteFeatureStrip(featId);
+    setActionSuccess('Feature action chip removed!');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  // Upcoming Releases Management State
+  const [upcomingForm, setUpcomingForm] = useState({
+    title: '',
+    release: 'Dec 2026',
+    poster: '',
+    genres: 'Action, Sci-Fi',
+    synopsis: ''
+  });
+  const [editingUpcomingId, setEditingUpcomingId] = useState(null);
+
+  const handleSaveUpcomingMovie = (e) => {
+    e.preventDefault();
+    if (!upcomingForm.title) return;
+
+    const payload = {
+      ...upcomingForm,
+      genres: typeof upcomingForm.genres === 'string' ? upcomingForm.genres.split(',').map(s => s.trim()) : upcomingForm.genres,
+      poster: upcomingForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80'
+    };
+
+    if (editingUpcomingId) {
+      updateUpcomingMovie(editingUpcomingId, payload);
+      setActionSuccess('Upcoming Release updated & synced live!');
+    } else {
+      addUpcomingMovie(payload);
+      setActionSuccess('New Upcoming Release added to homepage!');
+    }
+
+    setUpcomingForm({ title: '', release: 'Dec 2026', poster: '', genres: 'Action, Sci-Fi', synopsis: '' });
+    setEditingUpcomingId(null);
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleEditUpcomingClick = (mov) => {
+    setEditingUpcomingId(mov.id);
+    setUpcomingForm({
+      title: mov.title || '',
+      release: mov.release || 'Dec 2026',
+      poster: mov.poster || '',
+      genres: Array.isArray(mov.genres) ? mov.genres.join(', ') : mov.genres || 'Action',
+      synopsis: mov.synopsis || ''
+    });
+  };
+
+  const handleDeleteUpcomingClick = (movId) => {
+    deleteUpcomingMovie(movId);
+    setActionSuccess('Upcoming Release removed!');
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
@@ -792,6 +886,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const adminNavItems = [
     { id: 'analytics', label: 'Analytics Overview', icon: TrendingUp },
     { id: 'hero', label: 'Hero Slideshow & Banners', icon: Image },
+    { id: 'strips', label: 'Home Page Feature Strips', icon: Zap },
+    { id: 'upcoming', label: 'Upcoming Releases', icon: Award },
     { id: 'movies', label: 'Movie & Cast Management', icon: Film },
     { id: 'theatres', label: 'Theatre & Showtimes CRUD', icon: Building },
     { id: 'events', label: 'Events & Festivals CRUD', icon: Sparkles },
@@ -1158,6 +1254,294 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         title="Delete Slide"
                       >
                         <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Home Page Feature Strips Management (CRUD) */}
+        {activeTab === 'strips' && (
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-3xl font-bold font-sans text-white">Home Page Feature Strips</h1>
+              <p className="text-xs text-cyan-300">Manage quick action chips and promotional feature strips visible on the homepage.</p>
+            </div>
+
+            {/* Create / Edit Feature Strip Form */}
+            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
+              <h3 className="text-lg font-bold font-sans text-white">
+                {editingFeatId ? 'Edit Feature Action Chip' : 'Add New Feature Action Chip'}
+              </h3>
+
+              <form onSubmit={handleSaveFeatureStrip} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Feature Title *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Instant UPI Pass"
+                      value={featForm.title}
+                      onChange={(e) => setFeatForm({ ...featForm, title: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Subtitle / Details</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Instant QR pass generation"
+                      value={featForm.subtitle}
+                      onChange={(e) => setFeatForm({ ...featForm, subtitle: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Badge Tag</label>
+                    <select
+                      value={featForm.badge}
+                      onChange={(e) => setFeatForm({ ...featForm, badge: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                    >
+                      <option value="INSTANT">INSTANT</option>
+                      <option value="LUXURY">LUXURY</option>
+                      <option value="OFFER">OFFER</option>
+                      <option value="VIP">VIP</option>
+                      <option value="NEW">NEW</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Icon Style</label>
+                    <select
+                      value={featForm.icon}
+                      onChange={(e) => setFeatForm({ ...featForm, icon: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                    >
+                      <option value="Zap">Zap (Lightning)</option>
+                      <option value="Film">Film (Cinema)</option>
+                      <option value="Gift">Gift (Promo)</option>
+                      <option value="Sparkles">Sparkles (VIP)</option>
+                      <option value="Ticket">Ticket</option>
+                      <option value="Shield">Shield</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs cursor-pointer shadow-lg shadow-cyan-500/20"
+                  >
+                    {editingFeatId ? 'Update Feature Chip' : '+ Add Feature Action Chip'}
+                  </button>
+                  {editingFeatId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingFeatId(null);
+                        setFeatForm({ title: '', subtitle: '', badge: 'INSTANT', icon: 'Zap' });
+                      }}
+                      className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* Configured Feature Strips Cards List */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
+                Current Active Feature Chips ({featureStripsList.length} Chips)
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {featureStripsList.map((feat) => (
+                  <div key={feat.id} className="glass-panel rounded-2xl p-4 border border-white/10 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-white">{feat.title}</span>
+                        {feat.badge && (
+                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold uppercase">
+                            {feat.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-white/60">{feat.subtitle}</p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleEditFeatClick(feat)}
+                        className="p-2 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black transition-colors cursor-pointer"
+                        title="Edit Chip"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFeatClick(feat.id)}
+                        className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                        title="Delete Chip"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Upcoming Releases Management (CRUD) */}
+        {activeTab === 'upcoming' && (
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-3xl font-bold font-sans text-white">Upcoming Releases Management</h1>
+              <p className="text-xs text-cyan-300">Upload upcoming movies, release dates, and posters featured on the homepage carousel.</p>
+            </div>
+
+            {/* Create / Edit Upcoming Release Form */}
+            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
+              <h3 className="text-lg font-bold font-sans text-white">
+                {editingUpcomingId ? 'Edit Upcoming Release' : 'Add New Upcoming Release'}
+              </h3>
+
+              <form onSubmit={handleSaveUpcomingMovie} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Movie Title *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Avengers: Secret Wars"
+                      value={upcomingForm.title}
+                      onChange={(e) => setUpcomingForm({ ...upcomingForm, title: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Release Date Tag *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Dec 2026 or Diwali 2026"
+                      value={upcomingForm.release}
+                      onChange={(e) => setUpcomingForm({ ...upcomingForm, release: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Genres (comma separated)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Action, Superhero, Sci-Fi"
+                      value={upcomingForm.genres}
+                      onChange={(e) => setUpcomingForm({ ...upcomingForm, genres: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Poster Image URL & Uploader */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-cyan-300">Poster Image URL / File</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Poster Image URL (https://...)"
+                      value={upcomingForm.poster}
+                      onChange={(e) => setUpcomingForm({ ...upcomingForm, poster: e.target.value })}
+                      className="flex-1 p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                    <label className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1.5">
+                      <span>Browse File</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setUpcomingForm({ ...upcomingForm, poster: reader.result });
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs cursor-pointer shadow-lg shadow-cyan-500/20"
+                  >
+                    {editingUpcomingId ? 'Update Release' : '+ Add Upcoming Release'}
+                  </button>
+                  {editingUpcomingId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingUpcomingId(null);
+                        setUpcomingForm({ title: '', release: 'Dec 2026', poster: '', genres: 'Action, Sci-Fi', synopsis: '' });
+                      }}
+                      className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* Configured Upcoming Releases Cards List */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
+                Current Active Upcoming Releases ({upcomingMoviesList.length} Titles)
+              </h3>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {upcomingMoviesList.map((mov) => (
+                  <div key={mov.id} className="glass-panel rounded-2xl p-3 border border-white/10 flex flex-col justify-between space-y-2">
+                    <div>
+                      <div className="relative h-44 rounded-xl overflow-hidden border border-white/10 mb-2">
+                        <img src={mov.poster} alt={mov.title} className="w-full h-full object-cover" />
+                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-purple-500 text-white text-[9px] font-black uppercase">
+                          {mov.release}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-white truncate">{mov.title}</h4>
+                      <p className="text-[10px] text-white/50 truncate">
+                        {Array.isArray(mov.genres) ? mov.genres.join(', ') : mov.genres}
+                      </p>
+                    </div>
+
+                    <div className="flex justify-end gap-1.5 pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => handleEditUpcomingClick(mov)}
+                        className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black transition-colors cursor-pointer"
+                        title="Edit Title"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUpcomingClick(mov.id)}
+                        className="p-1.5 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                        title="Delete Title"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
