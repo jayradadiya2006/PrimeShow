@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, Film, Ticket, Users, DollarSign, Plus, Edit, Trash2, CheckCircle2, 
-  XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X
+  XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X, Zap, Award
 } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useBooking } from '../../context/BookingContext';
+import { AdminTabErrorBoundary } from '../../components/AdminErrorBoundary';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
@@ -1086,13 +1087,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
           {/* Sidebar Menu Items (Horizontal scroll on mobile, vertical stack on desktop) */}
           <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-visible scrollbar-none no-scrollbar gap-1.5 w-full py-1">
             {adminNavItems.map(item => {
-              const Icon = item.icon;
+              const Icon = item.icon || Sparkles;
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => handleTabChange(item.id)}
-                  className={`flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all shrink-0 whitespace-nowrap ${
+                  className={`flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all shrink-0 whitespace-nowrap cursor-pointer ${
                     isActive
                       ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/25'
                       : 'text-white/70 hover:text-white hover:bg-white/5 bg-white/5 md:bg-transparent'
@@ -1129,8 +1130,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
         </div>
       </aside>
 
-      {/* Main Admin Content Area */}
+      {/* Main Admin Content Area (Protected by Local Sub-Tab Error Boundary) */}
       <main className="flex-1 p-6 md:p-10 overflow-y-auto">
+        <AdminTabErrorBoundary activeTab={activeTab} onSwitchToAnalytics={() => handleTabChange('analytics')}>
         
         {actionSuccess && (
           <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center flex items-center justify-center gap-2">
@@ -3600,6 +3602,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
           </div>
         )}
 
+        </AdminTabErrorBoundary>
       </main>
 
     </div>
