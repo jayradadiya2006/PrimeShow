@@ -182,34 +182,34 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
             </div>
 
             {/* Movie Details Card with Poster & Read More Toggle */}
-            <div className="glass-panel p-3.5 sm:p-4 rounded-2xl border border-white/10">
-              <div className="flex items-start gap-3 sm:gap-4">
+            <div className="glass-panel p-3 sm:p-4 rounded-2xl border border-white/10 overflow-hidden">
+              <div className="flex items-start gap-3 sm:gap-4 w-full max-w-full">
                 <img 
                   src={movie.poster} 
                   alt={movie.title} 
-                  className="w-18 h-26 sm:w-22 sm:h-30 object-cover rounded-2xl border border-amber-400/40 shrink-0 shadow-lg" 
+                  className="w-[85px] sm:w-[105px] h-[120px] sm:h-[145px] object-cover rounded-2xl border border-amber-400/40 shrink-0 shadow-md" 
                 />
-                <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex-1 min-w-0 space-y-1 overflow-hidden">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase border border-amber-400/30">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase border border-amber-400/30 shrink-0">
                       {show.format || 'IMAX 3D'}
                     </span>
                     {movie.synopsis && (
                       <button
                         onClick={() => setIsMovieInfoExpanded(!isMovieInfoExpanded)}
-                        className="text-amber-300 underline font-bold text-[10px] cursor-pointer inline-flex items-center gap-0.5 ml-auto"
+                        className="text-amber-300 underline font-bold text-[10px] cursor-pointer inline-flex items-center gap-0.5 ml-auto shrink-0"
                       >
                         <span>{isMovieInfoExpanded ? 'Less' : 'Read More'}</span>
                         {isMovieInfoExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                       </button>
                     )}
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold font-sans text-white truncate">{movie.title}</h3>
-                  <p className="text-[11px] sm:text-xs text-white/70 truncate">{theatre.name}</p>
-                  <div className="text-xs text-amber-300 font-semibold pt-0.5">
+                  <h3 className="text-sm sm:text-base font-bold font-sans text-white truncate max-w-full">{movie.title}</h3>
+                  <p className="text-[11px] sm:text-xs text-white/70 truncate max-w-full">{theatre.name}</p>
+                  <div className="text-[11px] sm:text-xs text-amber-300 font-semibold truncate max-w-full">
                     Seats: <strong className="text-white">{selectedSeats.join(', ')}</strong> ({selectedTier})
                   </div>
-                  <div className="text-[11px] text-white/50">{show.date || '2026-07-28'} • {show.time} ({show.screenName || 'Screen 1'})</div>
+                  <div className="text-[10px] sm:text-[11px] text-white/50 truncate max-w-full">{show.date || '2026-07-28'} • {show.time} ({show.screenName || 'Screen 1'})</div>
                 </div>
               </div>
 
@@ -229,24 +229,24 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
 
               {appliedCoupon ? (
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-500/20 border border-amber-400/50 text-xs">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span className="font-bold text-amber-300">{appliedCoupon} Applied (-₹{discountAmount})</span>
+                    <span className="font-bold text-amber-300 truncate">{appliedCoupon} Applied (-₹{discountAmount})</span>
                   </div>
-                  <button onClick={removeCoupon} className="text-rose-400 hover:underline text-xs cursor-pointer font-bold">Remove</button>
+                  <button onClick={removeCoupon} className="text-rose-400 hover:underline text-xs cursor-pointer font-bold shrink-0 ml-2">Remove</button>
                 </div>
               ) : (
-                <form onSubmit={handleApplyCouponSubmit} className="relative flex items-center bg-white/5 border border-white/10 rounded-2xl p-1.5 focus-within:border-amber-400/80 transition-colors w-full overflow-hidden">
+                <form onSubmit={handleApplyCouponSubmit} className="flex flex-row items-center gap-1.5 bg-white/5 border border-white/10 rounded-2xl p-1.5 focus-within:border-amber-400/80 transition-colors w-full max-w-full overflow-hidden">
                   <input
                     type="text"
                     placeholder="Try 'PRIMESHOW50' or 'LUXURY200'"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="w-full bg-transparent px-3 py-1.5 text-xs text-white uppercase font-bold outline-none placeholder:normal-case placeholder:font-normal placeholder:text-white/40"
+                    className="flex-1 min-w-0 bg-transparent px-2.5 py-1 text-[11px] sm:text-xs text-white uppercase font-bold outline-none placeholder:normal-case placeholder:font-normal placeholder:text-white/40 truncate"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs cursor-pointer shrink-0 transition-colors"
+                    className="px-3.5 sm:px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-[11px] sm:text-xs cursor-pointer shrink-0 transition-colors"
                   >
                     Apply
                   </button>
@@ -287,18 +287,18 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
               </div>
             </div>
 
-            {/* Payment Method Options (Single Horizontal Scrollable Row) */}
+            {/* Payment Method Options (~3.5 to 4 Buttons Naturally Visible On Mobile Screen Width) */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider">
                 Select Payment Option
               </label>
 
-              {/* Single Horizontal Scrollable Row with Hidden Scrollbars */}
-              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none no-scrollbar py-1 w-full max-w-full">
+              {/* Single Horizontal Scrollable Row (~3.5 to 4 visible buttons) */}
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none no-scrollbar py-1 w-full max-w-full">
                 {[
-                  { id: 'UPI', label: 'Dynamic UPI & QR', icon: QrCode },
+                  { id: 'UPI', label: 'UPI & QR', icon: QrCode },
                   { id: 'NetBanking', label: 'Net Banking', icon: Building },
-                  { id: 'Card', label: 'Credit / Debit', icon: CreditCard },
+                  { id: 'Card', label: 'Cards', icon: CreditCard },
                   { id: 'Wallet', label: 'Wallets', icon: Wallet }
                 ].map((m) => {
                   const Icon = m.icon;
@@ -307,14 +307,14 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
                     <button
                       key={m.id}
                       onClick={() => setPaymentMethod(m.id)}
-                      className={`px-3.5 py-2.5 rounded-xl border text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                      className={`flex-1 min-w-[78px] xs:min-w-[88px] sm:min-w-[120px] px-2 sm:px-3 py-2 rounded-xl border text-[10px] sm:text-xs font-bold flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 transition-all cursor-pointer shrink-0 text-center ${
                         isActive
                           ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/25'
                           : 'glass-panel text-white/70 hover:text-white border-white/10 hover:bg-white/10'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-amber-400'}`} />
-                      <span>{m.label}</span>
+                      <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-black' : 'text-amber-400'}`} />
+                      <span className="truncate">{m.label}</span>
                     </button>
                   );
                 })}
