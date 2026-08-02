@@ -1337,74 +1337,76 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
-            {/* Interactive Visual Layout Grid */}
-            <div className="p-6 rounded-3xl bg-black/40 border border-white/10 space-y-6 overflow-x-auto">
-              <div className="w-full max-w-xl mx-auto text-center">
+            {/* Interactive Visual Layout Grid (Mobile Responsive & Auto-Scaling) */}
+            <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-4 overflow-hidden">
+              <div className="w-full max-w-xl mx-auto text-center shrink-0">
                 <div className="screen-curve mb-2"></div>
-                <span className="text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
+                <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
                   ▲ CINEMATIC SCREEN THIS WAY (FRONT) ▲
                 </span>
               </div>
 
-              <div className="space-y-4">
-                {seatRowsList.map((tierObj) => (
-                  <div key={tierObj.row} className="flex flex-col items-center">
-                    <div className="text-[11px] font-bold text-amber-400 mb-1.5 uppercase tracking-wider flex items-center gap-2">
-                      <span>Row {tierObj.row}: {tierObj.tier}</span>
-                      <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">₹{tierObj.price}</span>
-                      <button
-                        type="button"
-                        onClick={() => deleteRowFromScreenLayout(selectedScreenId, tierObj.row)}
-                        className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-2 cursor-pointer"
-                        title="Delete entire row"
-                      >
-                        [Delete Row {tierObj.row}]
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <span className="w-6 text-xs font-bold text-white/40 text-center">{tierObj.row}</span>
-
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
-                          const seatNum = idx + 1;
-                          const seatId = `${tierObj.row}${seatNum}`;
-                          const isBlocked = (currentLayout.blockedSeats || []).includes(seatId);
-                          const customStat = currentLayout.customStatuses?.[seatId];
-                          const isBooked = customStat === 'BOOKED';
-
-                          return (
-                            <button
-                              key={seatId}
-                              type="button"
-                              onClick={() => {
-                                if (isBlocked) {
-                                  setManualSeatStatusForScreen(selectedScreenId, seatId, 'AVAILABLE');
-                                } else if (isBooked) {
-                                  setManualSeatStatusForScreen(selectedScreenId, seatId, 'AVAILABLE');
-                                } else {
-                                  toggleBlockSeatForScreen(selectedScreenId, seatId);
-                                }
-                              }}
-                              className={`w-8 h-8 rounded-xl font-mono text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
-                                isBooked
-                                  ? 'bg-white/5 border border-white/5 text-white/30'
-                                  : isBlocked
-                                  ? 'bg-rose-500/30 border-2 border-rose-500 text-rose-300 shadow-lg shadow-rose-500/20'
-                                  : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/80 hover:text-white'
-                              }`}
-                              title={`Click to toggle status for ${seatId}`}
-                            >
-                              {isBooked ? '✕' : (isBlocked ? '🔒' : seatNum)}
-                            </button>
-                          );
-                        })}
+              <div className="w-full overflow-hidden flex flex-col items-center justify-center my-auto py-1">
+                <div className="w-full max-w-full flex flex-col items-center justify-center space-y-2.5 sm:space-y-4 scale-[0.84] xs:scale-[0.90] sm:scale-100 origin-center transition-transform">
+                  {seatRowsList.map((tierObj) => (
+                    <div key={tierObj.row} className="flex flex-col items-center w-full">
+                      <div className="text-[10px] sm:text-[11px] font-bold text-amber-400 mb-1 uppercase tracking-wider flex items-center gap-1.5 flex-wrap justify-center">
+                        <span>Row {tierObj.row}: {tierObj.tier}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[9px]">₹{tierObj.price}</span>
+                        <button
+                          type="button"
+                          onClick={() => deleteRowFromScreenLayout(selectedScreenId, tierObj.row)}
+                          className="text-rose-400 hover:text-rose-200 text-[10px] font-bold ml-1 cursor-pointer"
+                          title="Delete entire row"
+                        >
+                          [Delete]
+                        </button>
                       </div>
 
-                      <span className="w-6 text-xs font-bold text-white/40 text-center">{tierObj.row}</span>
+                      <div className="flex items-center justify-center gap-1 sm:gap-3 w-full">
+                        <span className="w-4 sm:w-6 text-[10px] sm:text-xs font-bold text-white/40 text-center shrink-0">{tierObj.row}</span>
+
+                        <div className="flex items-center gap-1 sm:gap-2.5">
+                          {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
+                            const seatNum = idx + 1;
+                            const seatId = `${tierObj.row}${seatNum}`;
+                            const isBlocked = (currentLayout.blockedSeats || []).includes(seatId);
+                            const customStat = currentLayout.customStatuses?.[seatId];
+                            const isBooked = customStat === 'BOOKED';
+
+                            return (
+                              <button
+                                key={seatId}
+                                type="button"
+                                onClick={() => {
+                                  if (isBlocked) {
+                                    setManualSeatStatusForScreen(selectedScreenId, seatId, 'AVAILABLE');
+                                  } else if (isBooked) {
+                                    setManualSeatStatusForScreen(selectedScreenId, seatId, 'AVAILABLE');
+                                  } else {
+                                    toggleBlockSeatForScreen(selectedScreenId, seatId);
+                                  }
+                                }}
+                                className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl font-mono text-[10px] sm:text-xs font-bold transition-all flex items-center justify-center cursor-pointer shrink-0 ${
+                                  isBooked
+                                    ? 'bg-white/5 border border-white/5 text-white/30'
+                                    : isBlocked
+                                    ? 'bg-rose-500/30 border-2 border-rose-500 text-rose-300 shadow-lg shadow-rose-500/20'
+                                    : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/80 hover:text-white'
+                                }`}
+                                title={`Click to toggle status for ${seatId}`}
+                              >
+                                {isBooked ? '✕' : (isBlocked ? '🔒' : seatNum)}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <span className="w-4 sm:w-6 text-[10px] sm:text-xs font-bold text-white/40 text-center shrink-0">{tierObj.row}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
