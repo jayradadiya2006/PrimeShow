@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Theater, Calendar, MapPin, Ticket, Search, Filter, Sparkles, Globe, X, RefreshCw } from 'lucide-react';
+import { Theater, Calendar, MapPin, Ticket, Search, Filter, Sparkles, Globe, X, RefreshCw, MoreVertical, SlidersHorizontal, Check } from 'lucide-react';
 import axios from 'axios';
 import { PlayBookingModal } from '../components/PlayBookingModal';
 
@@ -11,6 +11,7 @@ export const Plays = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLanguage, setActiveLanguage] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // Booking Modal State
   const [selectedPlay, setSelectedPlay] = useState(null);
@@ -130,7 +131,8 @@ export const Plays = () => {
     fetchPlays();
   };
 
-  const hasActiveFilters = activeLanguage !== 'All' || activeCategory !== 'All' || searchQuery.trim() !== '';
+  const activeFilterCount = (activeLanguage !== 'All' ? 1 : 0) + (activeCategory !== 'All' ? 1 : 0);
+  const hasActiveFilters = activeFilterCount > 0 || searchQuery.trim() !== '';
 
   return (
     <div className="min-h-screen bg-[#050508]/90 text-slate-900 dark:text-white pt-6 sm:pt-8 pb-20 font-sans">
@@ -154,28 +156,44 @@ export const Plays = () => {
           )}
         </div>
 
-        {/* Search & Clean Category Filter Chips Section */}
+        {/* Search & Filter Bar */}
         <div className="glass-panel p-4 md:p-6 rounded-2xl sm:rounded-3xl border border-slate-300 dark:border-white/10 mb-6 sm:mb-8 space-y-4 shadow-2xl">
           
-          {/* Reactive Search Input */}
-          <div className="relative">
-            <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400 dark:text-white/40" />
-            <input
-              type="text"
-              placeholder="Search play title, language, drama genre, or venue..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 rounded-xl sm:rounded-2xl glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-3.5 text-slate-400">
-                <X className="w-4 h-4" />
-              </button>
-            )}
+          {/* Reactive Search Input + Mobile Three-Dot / Filter Drawer Button */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-grow">
+              <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400 dark:text-white/40" />
+              <input
+                type="text"
+                placeholder="Search play title, language, drama genre, or venue..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-10 py-3 rounded-xl sm:rounded-2xl glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-3.5 text-slate-400">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Mobile Three-Dot / Filter Drawer Button */}
+            <button
+              onClick={() => setIsMobileFilterOpen(true)}
+              className="md:hidden p-3 rounded-xl bg-amber-500/20 text-amber-500 border border-amber-500/30 flex items-center justify-center gap-1 font-bold text-xs cursor-pointer transition-all shrink-0"
+              title="Open Filter Menu"
+            >
+              <MoreVertical className="w-5 h-5 text-amber-400" />
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-amber-500 text-black text-[10px] font-black flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* Languages & Drama Genre Filter Rows */}
-          <div className="space-y-4 pt-3 border-t border-slate-200 dark:border-white/10">
+          {/* Desktop Filter Rows (Hidden on mobile < 768px as requested) */}
+          <div className="hidden md:block space-y-4 pt-3 border-t border-slate-200 dark:border-white/10">
             
             {/* Language Selection */}
             <div>
@@ -225,6 +243,87 @@ export const Plays = () => {
 
           </div>
         </div>
+
+        {/* Mobile Slide-Out Filter Drawer Modal (md:hidden) */}
+        {isMobileFilterOpen && (
+          <div className="fixed inset-0 z-[150] md:hidden flex justify-end bg-black/80 backdrop-blur-md animate-fade-in">
+            <div className="w-5/6 max-w-xs h-full bg-[#0D0F14] border-l border-white/15 p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left">
+              <div>
+                <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+                    <span className="text-sm font-bold uppercase tracking-wider text-amber-400">Play Filters</span>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileFilterOpen(false)}
+                    className="p-2 rounded-full bg-white/10 text-white hover:bg-rose-500/20 hover:text-rose-400 transition-all cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Language Selection */}
+                  <div>
+                    <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2.5">Play Language</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {languages.map(lang => (
+                        <button
+                          key={lang}
+                          onClick={() => setActiveLanguage(lang)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            activeLanguage === lang
+                              ? 'bg-amber-500 text-black shadow-md'
+                              : 'bg-white/5 border border-white/10 text-white/70'
+                          }`}
+                        >
+                          {lang}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Drama Genre Selection */}
+                  <div>
+                    <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2.5">Drama Genre</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveCategory(cat)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            activeCategory === cat
+                              ? 'bg-cyan-500 text-black shadow-md'
+                              : 'bg-white/5 border border-white/10 text-white/70'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-white/10 space-y-2">
+                <button
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  Apply Filters ({filteredPlays.length} Plays)
+                </button>
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={handleResetFilters}
+                    className="w-full py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 text-xs font-bold cursor-pointer"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Plays Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

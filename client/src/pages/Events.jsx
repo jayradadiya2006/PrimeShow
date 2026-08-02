@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Calendar, MapPin, Ticket, Search, Filter, Clock, ArrowRight, X } from 'lucide-react';
+import { Sparkles, Calendar, MapPin, Ticket, Search, Filter, Clock, ArrowRight, X, MoreVertical, SlidersHorizontal, Check } from 'lucide-react';
 import axios from 'axios';
 import { EventBookingModal } from '../components/EventBookingModal';
 
@@ -10,6 +10,7 @@ export const Events = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // Booking Modal State
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -122,26 +123,37 @@ export const Events = () => {
             <p className="text-xs text-amber-600 dark:text-amber-300 font-semibold">Book tickets for stadium concerts, comedy shows, music festivals, and live performances</p>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400 dark:text-white/40" />
-            <input
-              type="text"
-              placeholder="Search event title, artist, or venue..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 rounded-full glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-3 text-slate-400">
-                <X className="w-4 h-4" />
-              </button>
-            )}
+          {/* Search Bar + Mobile Three-Dot / Filter Drawer Button */}
+          <div className="flex items-center gap-2 w-full md:w-80">
+            <div className="relative flex-grow">
+              <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400 dark:text-white/40" />
+              <input
+                type="text"
+                placeholder="Search event title, artist, or venue..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-10 py-2.5 rounded-full glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-3 text-slate-400">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Mobile Three-Dot / Filter Drawer Button */}
+            <button
+              onClick={() => setIsMobileFilterOpen(true)}
+              className="md:hidden p-2.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0 cursor-pointer"
+              title="Filter Event Categories"
+            >
+              <MoreVertical className="w-5 h-5 text-amber-400" />
+            </button>
           </div>
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="flex overflow-x-auto gap-2 pb-4 mb-8 text-xs font-semibold scrollbar-none">
+        {/* Desktop Category Filter Pills (Hidden on mobile < 768px as requested) */}
+        <div className="hidden md:flex overflow-x-auto gap-2 pb-4 mb-8 text-xs font-semibold scrollbar-none">
           {categories.map(cat => (
             <button
               key={cat}
@@ -156,6 +168,60 @@ export const Events = () => {
             </button>
           ))}
         </div>
+
+        {/* Mobile Slide-Out Filter Drawer Modal (md:hidden) */}
+        {isMobileFilterOpen && (
+          <div className="fixed inset-0 z-[150] md:hidden flex justify-end bg-black/80 backdrop-blur-md animate-fade-in">
+            <div className="w-5/6 max-w-xs h-full bg-[#0D0F14] border-l border-white/15 p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left">
+              <div>
+                <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+                    <span className="text-sm font-bold uppercase tracking-wider text-amber-400">Event Category</span>
+                  </div>
+                  <button
+                    onClick={() => setIsMobileFilterOpen(false)}
+                    className="p-2 rounded-full bg-white/10 text-white hover:bg-rose-500/20 hover:text-rose-400 transition-all cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2.5">Select Category</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {categories.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          setActiveCategory(cat);
+                          setIsMobileFilterOpen(false);
+                        }}
+                        className={`w-full text-left p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
+                          activeCategory === cat
+                            ? 'bg-amber-500 text-black shadow-md'
+                            : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10'
+                        }`}
+                      >
+                        <span>{cat}</span>
+                        {activeCategory === cat && <Check className="w-4 h-4" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-white/10">
+                <button
+                  onClick={() => setIsMobileFilterOpen(false)}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  Apply Category ({filteredEvents.length} Events)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
