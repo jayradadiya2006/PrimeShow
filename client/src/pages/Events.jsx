@@ -169,15 +169,15 @@ export const Events = () => {
           ))}
         </div>
 
-        {/* Mobile Slide-Out Filter Drawer Modal (Priority z-[99999] Top Overlay) */}
+        {/* Mobile Slide-Out Filter Drawer Modal (Strictly Positioned BELOW Fixed Navbars: top-[90px]) */}
         {isMobileFilterOpen && (
-          <div className="fixed inset-0 z-[99999] md:hidden flex justify-end bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="fixed top-[90px] bottom-0 left-0 right-0 z-[150] md:hidden flex justify-end bg-black/80 backdrop-blur-md animate-fade-in">
             {/* Backdrop click dismiss */}
             <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)}></div>
 
-            <div className="relative w-5/6 max-w-xs h-full bg-[#0D0F14] border-l border-white/15 p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[100000] animate-slide-left">
+            <div className="relative w-5/6 max-w-xs h-full bg-[#0D0F14] border-l border-white/15 p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left">
               <div>
-                <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6 pt-2">
+                <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-5 h-5 text-amber-400" />
                     <span className="text-sm font-bold uppercase tracking-wider text-amber-400">Event Category</span>
@@ -188,7 +188,7 @@ export const Events = () => {
                     title="Close Filters"
                     aria-label="Close Filters"
                   >
-                    <X className="w-6 h-6 text-white" />
+                    <X className="w-5 h-5 text-white" />
                   </button>
                 </div>
 
@@ -216,7 +216,7 @@ export const Events = () => {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-white/10 mb-4">
+              <div className="pt-6 border-t border-white/10 mb-6">
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
                   className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
