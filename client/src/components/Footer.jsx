@@ -26,59 +26,59 @@ export const Footer = ({ setActiveTab }) => {
   return (
     <footer className="relative z-10 w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border-t border-slate-200 dark:border-slate-800 transition-colors duration-300 font-sans">
       
-      {/* 1. Live Running Marquee / Ticker Bar */}
-      <div className="w-full bg-red-600 dark:bg-red-700 text-white py-2.5 overflow-hidden whitespace-nowrap shadow-inner">
-        <div className="inline-block animate-marquee tracking-wide font-semibold text-xs sm:text-sm">
-          <span className="mx-6 text-white font-bold">🔥 FLASH OFFER: Get 20% Instant Discount on Movie Tickets with UPI Payment!</span>
-          <span className="mx-6 text-white font-bold">🎬 Upcoming Blockbusters Releases This Friday - Book Passes Now!</span>
-          <span className="mx-6 text-white font-bold">🎟️ Instant QR Verification & Seamless Entry Pass Generation!</span>
-          <span className="mx-6 text-white font-bold">🎭 Live Plays & Standup Comedy Shows Open in Your City!</span>
-          <span className="mx-6 text-white font-bold">🔥 FLASH OFFER: Get 20% Instant Discount on Movie Tickets with UPI Payment!</span>
-          <span className="mx-6 text-white font-bold">🎬 Upcoming Blockbusters Releases This Friday - Book Passes Now!</span>
+      {/* 1. Live Running Marquee / Ticker Bar (Compact & Sleek Height + Scaled Text) */}
+      <div className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 dark:from-red-900/90 dark:via-red-800/90 dark:to-red-900/90 text-white py-1.5 sm:py-2 overflow-hidden whitespace-nowrap shadow-inner border-y border-white/10">
+        <div className="inline-block animate-marquee tracking-wide font-semibold text-[10px] xs:text-xs sm:text-sm">
+          <span className="mx-4 sm:mx-8 text-white font-bold">🔥 FLASH OFFER: Get 20% Instant Discount on Movie Tickets with UPI Payment!</span>
+          <span className="mx-4 sm:mx-8 text-white font-bold">🎬 IMXN 4K & IMAX 3D Releases This Friday - Book Passes Now!</span>
+          <span className="mx-4 sm:mx-8 text-white font-bold">🎟️ Instant QR Verification & Seamless Entry Pass Generation!</span>
+          <span className="mx-4 sm:mx-8 text-white font-bold">🎭 Live Plays & Standup Comedy Shows Open in Your City!</span>
+          <span className="mx-4 sm:mx-8 text-white font-bold">⭐ 4.9/5 User Rating • 100% Guaranteed Real-Time Seat Lock</span>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-14">
         
-        {/* 2. Top Feature Highlights Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 pb-10 border-b border-slate-200 dark:border-slate-800">
-          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-start gap-4 shadow-sm hover:border-red-500/30 transition-all">
-            <div className="p-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
-              <Film className="w-6 h-6 text-red-600 dark:text-red-400" />
+        {/* 2. Top Feature & Trust Badges Section (Single-Row Mobile Scrollable Line) */}
+        <div className="flex flex-row overflow-x-auto scrollbar-none no-scrollbar gap-2.5 sm:gap-4 lg:grid lg:grid-cols-4 pb-6 md:pb-10 border-b border-slate-200 dark:border-slate-800 w-full max-w-full py-1">
+          
+          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 sm:gap-3.5 shadow-sm hover:border-red-500/30 transition-all">
+            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
+              <Film className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">IMAX & 4DX Native</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">Experience cinema with native 70mm laser and 3D soundscapes.</p>
-            </div>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-start gap-4 shadow-sm hover:border-red-500/30 transition-all">
-            <div className="p-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
-              <Shield className="w-6 h-6 text-red-600 dark:text-red-400" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">100% Guaranteed Seats</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">Instant ticket confirmation with real-time seat locking API.</p>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">IMXN 4K & 3D Native</h4>
+              <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-2">70mm laser & 360 sound</p>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-start gap-4 shadow-sm hover:border-red-500/30 transition-all">
-            <div className="p-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
-              <Award className="w-6 h-6 text-red-600 dark:text-red-400" />
+          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 sm:gap-3.5 shadow-sm hover:border-red-500/30 transition-all">
+            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Exclusive Rewards</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">Earn points on every booking and redeem for gourmet dining.</p>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">100% Seat Guarantee</h4>
+              <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-2">Real-time seat locking API</p>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-start gap-4 shadow-sm hover:border-red-500/30 transition-all">
-            <div className="p-3 rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
-              <HelpCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 sm:gap-3.5 shadow-sm hover:border-red-500/30 transition-all">
+            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+              <Award className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1">24/7 VIP Concierge</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">Dedicated support hotline for private screenings & bookings.</p>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">⭐ 4.9/5 User Rating</h4>
+              <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-2">Over 100k+ verified reviews</p>
+            </div>
+          </div>
+
+          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 sm:gap-3.5 shadow-sm hover:border-red-500/30 transition-all">
+            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shrink-0">
+              <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">24/7 VIP Support</h4>
+              <p className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 leading-tight line-clamp-2">Dedicated booking hotline</p>
             </div>
           </div>
         </div>
