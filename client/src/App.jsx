@@ -26,10 +26,21 @@ import { Profile } from './pages/Profile';
 import { Settings } from './pages/Settings';
 
 import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { AdminErrorBoundary } from './components/AdminErrorBoundary';
 
 const MainAppContent = () => {
   const { user, selectedCity } = useAuth();
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path.includes('/admin') || search.includes('admin') || hash.includes('admin')) return 'admin';
+      if (path.includes('/settings') || search.includes('settings') || hash.includes('settings')) return 'settings';
+      if (path.includes('/profile') || search.includes('profile') || hash.includes('profile')) return 'profile-info';
+    }
+    return 'home';
+  });
   const [selectedMovieId, setSelectedMovieId] = useState('mov_1');
   const [selectedTheatreId, setSelectedTheatreId] = useState('th_1');
 
@@ -183,9 +194,11 @@ const MainAppContent = () => {
           <Settings onReturnHome={() => setActiveTab('home')} />
         )}
 
-        {/* Admin Dashboard Panel */}
+        {/* Admin Dashboard Panel (Protected by Error Boundary) */}
         {activeTab === 'admin' && (
-          <AdminDashboard onReturnHome={() => setActiveTab('home')} />
+          <AdminErrorBoundary onReturnHome={() => setActiveTab('home')}>
+            <AdminDashboard onReturnHome={() => setActiveTab('home')} />
+          </AdminErrorBoundary>
         )}
       </main>
 
