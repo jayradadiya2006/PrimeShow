@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Clock, Calendar, Film, Play, Sparkles, MapPin, ChevronRight, CheckCircle2, Send, MessageSquare, User, Video, Shield, Award, AlertCircle } from 'lucide-react';
+import { Star, Clock, Calendar, Film, Play, Sparkles, MapPin, ChevronRight, CheckCircle2, Send, MessageSquare, User, Video, Shield, Award, AlertCircle, ArrowLeft, ChevronDown, ChevronUp, Ticket } from 'lucide-react';
 import { CastCarousel } from '../components/CastCarousel';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
@@ -12,6 +12,10 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const [selectedCityFilter, setSelectedCityFilter] = useState('All');
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   
+  // Read More / Read Less States
+  const [isAboutReadMore, setIsAboutReadMore] = useState(false);
+  const [expandedReviewIds, setExpandedReviewIds] = useState([]);
+
   // Reviews state
   const [userRating, setUserRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
@@ -39,14 +43,14 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
         id: 'rev_1',
         userName: 'Aarav Sharma',
         rating: 5,
-        comment: 'Mind-blowing visuals! James Cameron has outdone himself again. The native 3D in IMAX was so immersive.',
+        comment: 'Mind-blowing visuals! James Cameron has outdone himself again. The native 3D in IMAX was so immersive and high frame rate sequence was unbelievable.',
         createdAt: '2 days ago'
       },
       {
         id: 'rev_2',
         userName: 'Vikram Mehta',
         rating: 5,
-        comment: 'The sound design of Hans Zimmer and director execution is unmatched. Absolutely legendary film experience.',
+        comment: 'The sound design of Hans Zimmer and director execution is unmatched. Absolutely legendary film experience that must be watched on IMAX screen.',
         createdAt: '3 days ago'
       }
     ]);
@@ -64,7 +68,6 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
         return { date: dStr, label: dayLabel, day: dayFormatted };
       });
     }
-    // Fallback default if no show dates specified
     const today = new Date();
     return [0, 1, 2].map(offset => {
       const d = new Date(today);
@@ -108,6 +111,12 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
     setTimeout(() => setReviewSubmitted(false), 4000);
   };
 
+  const toggleReviewExpand = (revId) => {
+    setExpandedReviewIds(prev => 
+      prev.includes(revId) ? prev.filter(id => id !== revId) : [...prev, revId]
+    );
+  };
+
   const handleShowClick = (theatre, show) => {
     selectShowForBooking(movie, theatre, show);
     if (typeof onOpenSeatPicker === 'function') {
@@ -117,145 +126,206 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
     }
   };
 
+  const handleScrollToShowtimes = () => {
+    const el = document.getElementById('showtimes-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const youtubeEmbedUrl = getYouTubeEmbedUrl(movie.trailerUrl);
+  const synopsisText = movie.synopsis || movie.description || 'Experience the epic cinematic journey with high-definition Dolby Atmos soundscapes and IMAX 3D visual effects.';
+  const isLongSynopsis = synopsisText.length > 140;
+
+  // Filter out any empty/dummy cast members
+  const validCast = Array.isArray(movie.cast) ? movie.cast.filter(c => c && (c.name || typeof c === 'string')) : [];
 
   return (
     <div className="min-h-screen bg-[#050508] text-white pb-20 font-sans">
       
-      {/* Hero Banner Header */}
-      <div className="relative w-full h-[65vh] min-h-[450px] overflow-hidden bg-black">
-        <img
-          src={movie.banner || movie.poster}
-          alt={movie.title}
-          className="w-full h-full object-cover opacity-50 scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050508] via-[#050508]/60 to-transparent"></div>
+      {/* 1. Prominent Top Sub-Header Bar (Strictly Below First Navbar, Clean Back Button & Title) */}
+      <div className="bg-[#0A0D14]/90 backdrop-blur-md border-b border-white/10 px-4 sm:px-8 py-3 sticky top-[56px] sm:top-[64px] z-30 flex items-center justify-between gap-3 shadow-lg">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBackToMovies}
+            className="p-2 rounded-xl bg-white/10 hover:bg-amber-500 hover:text-black text-white transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold shrink-0"
+            title="Return to Home"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Back to Home</span>
+          </button>
 
-        {/* Back Button */}
+          <h2 className="text-sm sm:text-lg font-bold font-sans text-white truncate max-w-[200px] sm:max-w-md">
+            {movie.title}
+          </h2>
+        </div>
+
         <button
-          onClick={onBackToMovies}
-          className="absolute top-6 left-6 px-4 py-2 rounded-2xl glass-panel text-xs font-bold text-white/90 hover:text-white hover:bg-white/20 transition-all flex items-center gap-2 border border-white/10 z-20 cursor-pointer"
+          onClick={handleScrollToShowtimes}
+          className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-md hover:brightness-110 transition-all flex items-center gap-1 cursor-pointer shrink-0"
         >
-          ← Back to Movies
+          <Ticket className="w-3.5 h-3.5" />
+          <span>Book Now</span>
         </button>
+      </div>
 
-        {/* Floating Poster & Movie Meta Overlays */}
-        <div className="absolute bottom-8 left-0 right-0 max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row items-end md:items-end gap-6 z-10">
+      {/* 2. Hero Banner Header & Left-Aligned Movie Information */}
+      <div className="relative w-full overflow-hidden bg-black border-b border-white/10">
+        
+        {/* Backdrop Banner Image */}
+        <div className="relative w-full h-[40vh] sm:h-[55vh] min-h-[280px]">
           <img
-            src={movie.poster}
+            src={movie.banner || movie.poster}
             alt={movie.title}
-            className="w-36 h-52 sm:w-48 sm:h-72 rounded-3xl object-cover border-2 border-white/20 shadow-2xl shrink-0"
+            className="w-full h-full object-cover opacity-40 scale-105"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050508] via-[#050508]/70 to-transparent"></div>
+        </div>
 
-          <div className="space-y-3 flex-1 text-left">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-xs font-bold uppercase tracking-wider">
-                {movie.parentalRating || 'UA'}
-              </span>
-              <span className="px-3 py-1 rounded-full bg-red-600/30 text-red-300 border border-red-500/40 text-xs font-bold uppercase tracking-wider">
-                {movie.status || 'Now Showing'}
-              </span>
-              <span className="text-xs text-white/60">Released: {movie.releaseDate || '2026'}</span>
-            </div>
+        {/* Floating Left-Aligned Movie Poster & Meta Overview */}
+        <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-24 sm:-mt-36 relative z-10 pb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6">
+            
+            {/* Movie Poster (Left-Aligned, Adjusted Downward for Mobile) */}
+            <img
+              src={movie.poster}
+              alt={movie.title}
+              className="w-28 sm:w-44 aspect-[2/3] rounded-2xl sm:rounded-3xl object-cover border-2 border-white/20 shadow-2xl shrink-0"
+            />
 
-            <h1 className="text-3xl sm:text-5xl font-black font-serif text-white tracking-tight leading-none">
-              {movie.title}
-            </h1>
-
-            {movie.tagline && (
-              <p className="text-sm text-amber-300/90 font-medium italic">{movie.tagline}</p>
-            )}
-
-            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-white/80">
-              <span className="flex items-center gap-1.5 text-amber-400">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <strong className="text-sm">{movie.rating || 9.2}</strong> ({((movie.votesCount || 25000)/1000).toFixed(1)}k votes)
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
-                {movie.duration || '2h 30m'}
-              </span>
-              <span>•</span>
-              <span>Director: {movie.director || 'James Cameron'}</span>
-              {movie.producer && (
-                <>
-                  <span>•</span>
-                  <span>Producer: {movie.producer}</span>
-                </>
-              )}
-            </div>
-
-            {/* Genres & Formats */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              {Array.isArray(movie.genres) && movie.genres.map((g, i) => (
-                <span key={i} className="px-2.5 py-0.5 rounded-lg bg-white/10 text-white/80 text-[11px] font-medium border border-white/10">
-                  {g}
+            {/* Movie Details (Left-Aligned) */}
+            <div className="space-y-2 sm:space-y-3 flex-1 text-left">
+              
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] sm:text-xs font-bold uppercase">
+                  {movie.parentalRating || 'UA'}
                 </span>
-              ))}
-              {Array.isArray(movie.formats) && movie.formats.map((f, i) => (
-                <span key={i} className="px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 text-[11px] font-bold border border-amber-500/30">
-                  {f}
+                <span className="px-2.5 py-0.5 rounded-full bg-red-600/30 text-red-300 border border-red-500/40 text-[10px] sm:text-xs font-bold uppercase">
+                  {movie.status || 'Now Showing'}
                 </span>
-              ))}
-            </div>
-
-            {/* Trailer CTA Button */}
-            {movie.trailerUrl && (
-              <div className="pt-2">
-                <button
-                  onClick={() => setIsTrailerOpen(true)}
-                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-red-600/30 cursor-pointer"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>Watch Trailer</span>
-                </button>
+                <span className="text-[11px] sm:text-xs text-white/60">Release: {movie.releaseDate || '2026'}</span>
               </div>
-            )}
+
+              {/* Title */}
+              <h1 className="text-2xl sm:text-4xl font-black font-serif text-white tracking-tight leading-tight">
+                {movie.title}
+              </h1>
+
+              {movie.tagline && (
+                <p className="text-xs sm:text-sm text-amber-300/90 font-medium italic">{movie.tagline}</p>
+              )}
+
+              {/* Ratings, Duration, Director, Producer */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-semibold text-white/80">
+                <span className="flex items-center gap-1 text-amber-400">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <strong className="text-xs sm:text-sm">{movie.rating || 9.2}</strong> ({((movie.votesCount || 25000)/1000).toFixed(1)}k votes)
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
+                  {movie.duration || '2h 30m'}
+                </span>
+              </div>
+
+              {/* Director & Producer Meta */}
+              <div className="text-xs text-white/70 space-x-3 pt-0.5">
+                <span>Director: <strong className="text-white">{movie.director || 'James Cameron'}</strong></span>
+                {movie.producer && (
+                  <span>• Producer: <strong className="text-white">{movie.producer}</strong></span>
+                )}
+              </div>
+
+              {/* Genres & Formats (Single Horizontal Line with Horizontal Scroll on Mobile) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none pt-1">
+                {Array.isArray(movie.genres) && movie.genres.map((g, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-lg bg-white/10 text-white/90 text-[10px] sm:text-xs font-semibold border border-white/10 shrink-0">
+                    {g}
+                  </span>
+                ))}
+                {Array.isArray(movie.formats) && movie.formats.map((f, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-[10px] sm:text-xs font-bold border border-amber-500/30 shrink-0">
+                    {f}
+                  </span>
+                ))}
+              </div>
+
+              {/* Trailer CTA Button */}
+              {movie.trailerUrl && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => setIsTrailerOpen(true)}
+                    className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-red-600/30 cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Watch Trailer</span>
+                  </button>
+                </div>
+              )}
+
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Details Body */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-10 space-y-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-6 sm:pt-10 space-y-8 sm:space-y-12">
         
-        {/* Synopsis / Description */}
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-3">
-          <h3 className="text-xl font-bold font-sans text-white flex items-center gap-2">
-            <Film className="w-5 h-5 text-amber-400" />
+        {/* 3. About Movie Section (With Read More / Read Less Toggle) */}
+        <div className="glass-panel p-5 sm:p-8 rounded-3xl border border-white/10 space-y-3">
+          <h3 className="text-base sm:text-xl font-bold font-sans text-white flex items-center gap-2">
+            <Film className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             <span>About The Movie</span>
           </h3>
-          <p className="text-sm text-white/70 leading-relaxed max-w-4xl">
-            {movie.synopsis || movie.description || 'Experience the epic cinematic journey with high-definition Dolby Atmos soundscapes and IMAX 3D visual effects.'}
-          </p>
+          
+          <div className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-4xl">
+            <p>
+              {isLongSynopsis && !isAboutReadMore 
+                ? `${synopsisText.slice(0, 140)}...`
+                : synopsisText
+              }
+              {isLongSynopsis && (
+                <button
+                  onClick={() => setIsAboutReadMore(!isAboutReadMore)}
+                  className="text-amber-400 font-bold text-xs cursor-pointer ml-2 hover:underline inline-flex items-center gap-0.5"
+                >
+                  <span>{isAboutReadMore ? 'Read Less' : 'Read More'}</span>
+                  {isAboutReadMore ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              )}
+            </p>
+          </div>
+
+          <div className="pt-2 border-t border-white/10 flex flex-wrap gap-4 text-xs text-white/60">
+            <div><span className="text-amber-400/80 font-semibold">Director:</span> {movie.director || 'James Cameron'}</div>
+            {movie.producer && <div><span className="text-amber-400/80 font-semibold">Producer:</span> {movie.producer}</div>}
+            {movie.language && <div><span className="text-amber-400/80 font-semibold">Language:</span> {movie.language}</div>}
+          </div>
         </div>
 
-        {/* Dynamic Cast & Crew Section */}
-        {movie.cast && movie.cast.length > 0 && (
+        {/* 4. Conditional Cast & Crew Section (Rendered ONLY IF cast data exists from Admin) */}
+        {validCast.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-xl font-bold font-sans text-white flex items-center gap-2">
-              <User className="w-5 h-5 text-amber-400" />
-              <span>Cast & Star Performers</span>
-            </h3>
-            <CastCarousel cast={movie.cast} />
+            <CastCarousel cast={validCast} director={movie.director} />
           </div>
         )}
 
-        {/* Dynamic Date-Scoped Theatre Showtimes & Booking Section */}
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+        {/* 5. Select Showtimes & Theatre Section */}
+        <div id="showtimes-section" className="space-y-6 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
             <div>
-              <h3 className="text-2xl font-bold font-sans text-white">Select Showtimes & Theatre</h3>
+              <h3 className="text-lg sm:text-2xl font-bold font-sans text-white">Select Showtimes & Theatre</h3>
               <p className="text-xs text-amber-300">Showing available dates & theatres configured by Admin</p>
             </div>
 
             {/* Date Selector Chips */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
               {availableDates.map((d) => (
                 <button
                   key={d.date}
                   onClick={() => setSelectedDate(d.date)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                     currentDateSelection === d.date
                       ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
                       : 'glass-panel text-white/70 hover:text-white hover:bg-white/10 border border-white/10'
@@ -272,10 +342,10 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
           <div className="space-y-4">
             {filteredTheatres.length > 0 ? (
               filteredTheatres.map((theatre) => (
-                <div key={theatre.id} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 shadow-xl">
+                <div key={theatre.id} className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 space-y-4 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <div>
-                      <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                      <h4 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
                         <span>{theatre.name}</span>
                       </h4>
@@ -292,22 +362,22 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
                   </div>
 
                   {/* Show Time Slots Buttons */}
-                  <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1">
                     {theatre.shows?.map((show) => (
                       <button
                         key={show.id}
                         onClick={() => handleShowClick(theatre, show)}
-                        className="px-5 py-3 rounded-2xl glass-panel hover:bg-amber-500 hover:text-black text-amber-400 border border-amber-400/40 font-bold transition-all text-center group cursor-pointer shadow-md hover:scale-105"
+                        className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl glass-panel hover:bg-amber-500 hover:text-black text-amber-400 border border-amber-400/40 font-bold transition-all text-center group cursor-pointer shadow-md hover:scale-105"
                       >
-                        <div className="text-sm font-extrabold group-hover:text-black">{show.time}</div>
-                        <div className="text-[10px] text-white/60 group-hover:text-black font-medium">{show.format || 'IMAX 3D'} • ₹{show.price}</div>
+                        <div className="text-xs sm:text-sm font-extrabold group-hover:text-black">{show.time}</div>
+                        <div className="text-[9px] sm:text-[10px] text-white/60 group-hover:text-black font-medium">{show.format || 'IMAX 3D'} • ₹{show.price}</div>
                       </button>
                     ))}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-8 rounded-3xl glass-panel border border-white/10 text-center space-y-2">
+              <div className="p-6 sm:p-8 rounded-3xl glass-panel border border-white/10 text-center space-y-2">
                 <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
                 <h4 className="text-base font-bold text-white">No Theatre Schedules Configured for {currentDateSelection}</h4>
                 <p className="text-xs text-white/60">This movie is not scheduled for screening on this specific date. Please select another date above or check back later for Admin updates.</p>
@@ -316,15 +386,15 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
           </div>
         </div>
 
-        {/* User Reviews & Ratings Section */}
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6">
-          <h3 className="text-xl font-bold font-sans text-white flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-amber-400" />
+        {/* 6. User Reviews Section Optimization (Compact Size & Read More Toggle) */}
+        <div className="glass-panel p-5 sm:p-8 rounded-3xl border border-white/10 space-y-5">
+          <h3 className="text-base sm:text-xl font-bold font-sans text-white flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             <span>Audience Reviews & Ratings</span>
           </h3>
 
           {/* Add Review Form */}
-          <form onSubmit={handleReviewSubmit} className="space-y-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+          <form onSubmit={handleReviewSubmit} className="space-y-3 p-3.5 sm:p-4 rounded-2xl bg-white/5 border border-white/10">
             <h4 className="text-xs font-bold text-amber-300 uppercase">Write Your Review</h4>
             <div className="flex items-center gap-2">
               <span className="text-xs text-white/70 font-semibold">Your Rating:</span>
@@ -334,54 +404,92 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
                     key={star}
                     type="button"
                     onClick={() => setUserRating(star)}
-                    className="p-1 cursor-pointer"
+                    className="p-0.5 cursor-pointer"
                   >
-                    <Star className={`w-5 h-5 ${star <= userRating ? 'fill-amber-400 text-amber-400' : 'text-white/30'}`} />
+                    <Star className={`w-4 h-4 sm:w-5 sm:h-5 ${star <= userRating ? 'fill-amber-400 text-amber-400' : 'text-white/30'}`} />
                   </button>
                 ))}
               </div>
             </div>
 
             <textarea
-              rows={3}
+              rows={2}
               required
               placeholder="Share your thoughts about the movie..."
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
-              className="w-full p-3 rounded-xl glass-input text-xs text-white"
+              className="w-full p-2.5 rounded-xl glass-input text-xs text-white placeholder-white/40"
             ></textarea>
 
-            <button
-              type="submit"
-              className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
-            >
-              Post Review
-            </button>
-
-            {reviewSubmitted && (
-              <span className="ml-3 text-xs text-emerald-400 font-bold">Review posted successfully!</span>
-            )}
+            <div className="flex items-center justify-between">
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+              >
+                Post Review
+              </button>
+              {reviewSubmitted && (
+                <span className="text-xs text-emerald-400 font-bold">Posted!</span>
+              )}
+            </div>
           </form>
 
-          {/* Reviews List */}
-          <div className="space-y-4 pt-2">
-            {reviewsList.map((rev) => (
-              <div key={rev.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-white">{rev.userName}</span>
-                  <div className="flex items-center gap-1 text-amber-400 text-xs font-bold">
-                    <Star className="w-3.5 h-3.5 fill-amber-400" />
-                    <span>{rev.rating} / 5</span>
+          {/* Compact Reviews List with Read More toggle */}
+          <div className="space-y-3 pt-1">
+            {reviewsList.map((rev) => {
+              const isExpanded = expandedReviewIds.includes(rev.id);
+              const isLongComment = rev.comment.length > 80;
+
+              return (
+                <div key={rev.id} className="p-3.5 sm:p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm font-bold text-white">{rev.userName}</span>
+                    <div className="flex items-center gap-1 text-amber-400 text-xs font-bold">
+                      <Star className="w-3.5 h-3.5 fill-amber-400" />
+                      <span>{rev.rating} / 5</span>
+                    </div>
                   </div>
+                  
+                  <p className="text-xs text-white/70 leading-relaxed">
+                    {isLongComment && !isExpanded
+                      ? `${rev.comment.slice(0, 80)}...`
+                      : rev.comment
+                    }
+                    {isLongComment && (
+                      <button
+                        onClick={() => toggleReviewExpand(rev.id)}
+                        className="text-amber-400 font-bold text-[11px] cursor-pointer ml-1.5 hover:underline inline-block"
+                      >
+                        {isExpanded ? 'Read Less' : 'Read More'}
+                      </button>
+                    )}
+                  </p>
+
+                  <span className="text-[10px] text-white/40 block">{rev.createdAt}</span>
                 </div>
-                <p className="text-xs text-white/70 leading-relaxed">{rev.comment}</p>
-                <span className="text-[10px] text-white/40 block">{rev.createdAt}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
       </div>
+
+      {/* 7. Clean Compact Footer at the Bottom */}
+      <footer className="mt-16 border-t border-white/10 bg-[#07090E] py-8 text-center text-xs text-white/50 space-y-3">
+        <div className="flex items-center justify-center gap-2 text-amber-400 font-bold text-sm">
+          <span>PrimeShow Ultra Luxury Cinema</span>
+        </div>
+        <div className="flex flex-wrap justify-center gap-4 text-[11px] text-white/60">
+          <button onClick={onBackToMovies} className="hover:text-amber-400 cursor-pointer">Home</button>
+          <span>•</span>
+          <button onClick={handleScrollToShowtimes} className="hover:text-amber-400 cursor-pointer">Select Showtimes</button>
+          <span>•</span>
+          <span className="hover:text-amber-400 cursor-pointer">Privacy Policy</span>
+          <span>•</span>
+          <span className="hover:text-amber-400 cursor-pointer">Terms & Conditions</span>
+        </div>
+        <p className="text-[10px] text-white/40">© 2026 PrimeShow Entertainment Ltd. All rights reserved.</p>
+      </footer>
 
       {/* Trailer Video Player Modal */}
       {isTrailerOpen && (

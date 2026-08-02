@@ -426,27 +426,29 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
         </div>
       )}
 
-      {/* Secondary Category Navigation Bar (Compact Mobile Height & Font Size, Intact Desktop View) */}
-      <div className="bg-slate-200/90 dark:bg-[#07090e]/90 backdrop-blur-md border-b border-slate-300/80 dark:border-white/5 px-2.5 sm:px-4 md:px-8 py-1 sm:py-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 sm:gap-2 md:gap-3 z-40">
-        {navCategories.map((cat) => {
-          const Icon = cat.icon;
-          const isActive = activeTab === cat.id;
-          return (
-            <button
-              key={cat.id}
-              onClick={() => setActiveTab(cat.id)}
-              className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 shrink-0 cursor-pointer ${
-                isActive
-                  ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
-                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-white/10'
-              }`}
-            >
-              <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? 'text-black' : 'text-amber-600 dark:text-amber-400'}`} />
-              <span>{cat.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Secondary Category Navigation Bar (Hidden on Movie Details page as requested) */}
+      {activeTab !== 'movie-detail' && (
+        <div className="bg-slate-200/90 dark:bg-[#07090e]/90 backdrop-blur-md border-b border-slate-300/80 dark:border-white/5 px-2.5 sm:px-4 md:px-8 py-1 sm:py-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 sm:gap-2 md:gap-3 z-40">
+          {navCategories.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = activeTab === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveTab(cat.id)}
+                className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 shrink-0 cursor-pointer ${
+                  isActive
+                    ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
+                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-white/10'
+                }`}
+              >
+                <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? 'text-black' : 'text-amber-600 dark:text-amber-400'}`} />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 };
