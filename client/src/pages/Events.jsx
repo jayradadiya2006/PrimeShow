@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Calendar, MapPin, Ticket, Search, Filter, Clock, ArrowRight, X, MoreVertical, SlidersHorizontal, Check } from 'lucide-react';
 import axios from 'axios';
 import { EventBookingModal } from '../components/EventBookingModal';
@@ -11,6 +11,8 @@ export const Events = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchContainerRef = useRef(null);
 
   // Booking Modal State
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -89,6 +91,17 @@ export const Events = () => {
     fetchEvents();
   }, []);
 
+  // Handle clicking outside of search dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const categories = ['All', 'Live Concert', 'Stand-up Comedy', 'Festival', 'Singing'];
 
   const filteredEvents = eventsList.filter(ev => {
@@ -103,9 +116,24 @@ export const Events = () => {
     return matchesCat && matchesSearch;
   });
 
+  const searchSuggestions = searchQuery.trim()
+    ? eventsList.filter(ev => {
+        const q = searchQuery.toLowerCase().trim();
+        return ev.title?.toLowerCase().includes(q) ||
+               ev.venue?.toLowerCase().includes(q) ||
+               ev.city?.toLowerCase().includes(q) ||
+               (ev.category && ev.category.toLowerCase().includes(q));
+      })
+    : [];
+
   const handleOpenBooking = (evt) => {
     setSelectedEvent(evt);
     setIsBookingModalOpen(true);
+  };
+
+  const handleSelectSuggestion = (evt) => {
+    setIsSearchFocused(false);
+    handleOpenBooking(evt);
   };
 
   const handleBookingSuccess = async () => {
@@ -125,19 +153,60 @@ export const Events = () => {
 
           {/* Search Bar + Mobile Three-Dot / Filter Drawer Button */}
           <div className="flex items-center gap-2 w-full md:w-80">
-            <div className="relative flex-grow">
+            <div className="relative flex-grow" ref={searchContainerRef}>
               <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400 dark:text-white/40" />
               <input
                 type="text"
                 placeholder="Search event title, artist, or venue..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchFocused(true);
+                }}
+                onFocus={() => setIsSearchFocused(true)}
                 className="w-full pl-10 pr-10 py-2.5 rounded-full glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-3 text-slate-400">
+                <button onClick={() => { setSearchQuery(''); setIsSearchFocused(false); }} className="absolute right-3.5 top-3 text-slate-400">
                   <X className="w-4 h-4" />
                 </button>
+              )}
+
+              {/* Auto-Complete Search Dropdown */}
+              {isSearchFocused && searchQuery.trim() !== '' && (
+                <div className="absolute top-full left-0 right-0 z-[200] mt-2 rounded-2xl bg-[#0D0F14]/95 backdrop-blur-xl border border-amber-400/30 p-2 shadow-2xl space-y-1 max-h-72 overflow-y-auto animate-fade-in">
+                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 border-b border-white/10 flex items-center justify-between">
+                    <span>Matching Events</span>
+                    <span>{searchSuggestions.length} found</span>
+                  </div>
+
+                  {searchSuggestions.length > 0 ? (
+                    searchSuggestions.map(evt => (
+                      <button
+                        key={evt.id}
+                        onClick={() => handleSelectSuggestion(evt)}
+                        className="w-full text-left p-2.5 rounded-xl hover:bg-amber-500/10 hover:border-amber-400/30 border border-transparent flex items-center justify-between gap-3 group transition-all cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={evt.image}
+                            alt={evt.title}
+                            className="w-10 h-10 rounded-lg object-cover shrink-0 shadow-md"
+                          />
+                          <div>
+                            <h4 className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{evt.title}</h4>
+                            <p className="text-[10px] text-white/50 line-clamp-1">{evt.category} • {evt.venue}</p>
+                          </div>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-white/50">
+                      No live events found matching "{searchQuery}"
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

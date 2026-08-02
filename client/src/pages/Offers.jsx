@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Tag, Copy, Check, ShieldCheck, Sparkles, RefreshCw, Search, X, MoreVertical, SlidersHorizontal } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Tag, Copy, Check, ShieldCheck, Sparkles, RefreshCw, Search, X, MoreVertical, SlidersHorizontal, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { OfferCarousel } from '../components/OfferCarousel';
 
@@ -12,6 +12,8 @@ export const Offers = ({ onSelectCategory }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeBankFilter, setActiveBankFilter] = useState('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchContainerRef = useRef(null);
 
   const fetchOffers = async () => {
     setLoading(true);
@@ -53,6 +55,17 @@ export const Offers = ({ onSelectCategory }) => {
     fetchOffers();
   }, []);
 
+  // Handle clicking outside of search dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleCopy = (code) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
@@ -72,6 +85,21 @@ export const Offers = ({ onSelectCategory }) => {
     return matchesBank && matchesSearch;
   });
 
+  const searchSuggestions = searchQuery.trim()
+    ? offersList.filter(o => {
+        const q = searchQuery.toLowerCase().trim();
+        return o.title?.toLowerCase().includes(q) ||
+               o.code?.toLowerCase().includes(q) ||
+               o.bank?.toLowerCase().includes(q) ||
+               o.description?.toLowerCase().includes(q);
+      })
+    : [];
+
+  const handleSelectSuggestion = (offer) => {
+    setIsSearchFocused(false);
+    handleCopy(offer.code);
+  };
+
   return (
     <div className="min-h-screen bg-[#050508]/90 text-slate-900 dark:text-white pt-6 sm:pt-8 pb-20 font-sans">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -88,20 +116,57 @@ export const Offers = ({ onSelectCategory }) => {
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {/* Search Bar */}
-            <div className="relative flex-grow sm:w-64">
+            {/* Search Bar + Dynamic Dropdown */}
+            <div className="relative flex-grow sm:w-72" ref={searchContainerRef}>
               <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400 dark:text-white/40" />
               <input
                 type="text"
                 placeholder="Search promo codes..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchFocused(true);
+                }}
+                onFocus={() => setIsSearchFocused(true)}
                 className="w-full pl-9 pr-8 py-2 rounded-full glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-2.5 text-slate-400">
+                <button onClick={() => { setSearchQuery(''); setIsSearchFocused(false); }} className="absolute right-3 top-2.5 text-slate-400">
                   <X className="w-3.5 h-3.5" />
                 </button>
+              )}
+
+              {/* Auto-Complete Search Dropdown */}
+              {isSearchFocused && searchQuery.trim() !== '' && (
+                <div className="absolute top-full left-0 right-0 z-[200] mt-2 rounded-2xl bg-[#0D0F14]/95 backdrop-blur-xl border border-amber-400/30 p-2 shadow-2xl space-y-1 max-h-72 overflow-y-auto animate-fade-in">
+                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 border-b border-white/10 flex items-center justify-between">
+                    <span>Matching Promos</span>
+                    <span>{searchSuggestions.length} found</span>
+                  </div>
+
+                  {searchSuggestions.length > 0 ? (
+                    searchSuggestions.map(offer => (
+                      <button
+                        key={offer.id}
+                        onClick={() => handleSelectSuggestion(offer)}
+                        className="w-full text-left p-2.5 rounded-xl hover:bg-amber-500/10 hover:border-amber-400/30 border border-transparent flex items-center justify-between gap-3 group transition-all cursor-pointer"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-xs text-amber-400">{offer.code}</span>
+                            <span className="text-[10px] text-white/50">{offer.bank}</span>
+                          </div>
+                          <h4 className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1 mt-0.5">{offer.title}</h4>
+                        </div>
+                        <div className="text-[10px] font-bold text-amber-400 shrink-0">Click to Copy</div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-white/50">
+                      No promos found matching "{searchQuery}"
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
