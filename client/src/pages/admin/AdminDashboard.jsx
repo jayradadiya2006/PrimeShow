@@ -1337,8 +1337,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
-            {/* Interactive Visual Layout Grid (Mobile Responsive & Auto-Scaling) */}
-            <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-4 overflow-hidden">
+            {/* Interactive Visual Layout Grid (Scrollable Container & Legible Font Sizes) */}
+            <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-4">
               <div className="w-full max-w-xl mx-auto text-center shrink-0">
                 <div className="screen-curve mb-2"></div>
                 <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
@@ -1346,27 +1346,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </span>
               </div>
 
-              <div className="w-full overflow-hidden flex flex-col items-center justify-center my-auto py-1">
-                <div className="w-full max-w-full flex flex-col items-center justify-center space-y-2.5 sm:space-y-4 scale-[0.84] xs:scale-[0.90] sm:scale-100 origin-center transition-transform">
+              <div className="w-full overflow-auto max-h-[55vh] sm:max-h-[62vh] p-2 sm:p-4 my-2 rounded-2xl bg-black/30 border border-white/10 flex flex-col items-center select-none">
+                <div className="min-w-max flex flex-col items-center justify-center space-y-3 sm:space-y-4 py-2 px-2">
                   {seatRowsList.map((tierObj) => (
                     <div key={tierObj.row} className="flex flex-col items-center w-full">
-                      <div className="text-[10px] sm:text-[11px] font-bold text-amber-400 mb-1 uppercase tracking-wider flex items-center gap-1.5 flex-wrap justify-center">
+                      <div className="text-xs font-bold text-amber-400 mb-1.5 uppercase tracking-wider flex items-center gap-2 flex-wrap justify-center">
                         <span>Row {tierObj.row}: {tierObj.tier}</span>
-                        <span className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[9px]">₹{tierObj.price}</span>
+                        <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">₹{tierObj.price}</span>
                         <button
                           type="button"
                           onClick={() => deleteRowFromScreenLayout(selectedScreenId, tierObj.row)}
-                          className="text-rose-400 hover:text-rose-200 text-[10px] font-bold ml-1 cursor-pointer"
+                          className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-1 cursor-pointer"
                           title="Delete entire row"
                         >
                           [Delete]
                         </button>
                       </div>
 
-                      <div className="flex items-center justify-center gap-1 sm:gap-3 w-full">
-                        <span className="w-4 sm:w-6 text-[10px] sm:text-xs font-bold text-white/40 text-center shrink-0">{tierObj.row}</span>
+                      <div className="flex items-center justify-center gap-2 sm:gap-3 w-full">
+                        <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
 
-                        <div className="flex items-center gap-1 sm:gap-2.5">
+                        <div className="flex items-center gap-1.5 sm:gap-2.5">
                           {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
                             const seatNum = idx + 1;
                             const seatId = `${tierObj.row}${seatNum}`;
@@ -1387,12 +1387,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                     toggleBlockSeatForScreen(selectedScreenId, seatId);
                                   }
                                 }}
-                                className={`w-6.5 h-6.5 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl font-mono text-[10px] sm:text-xs font-bold transition-all flex items-center justify-center cursor-pointer shrink-0 ${
+                                className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all flex items-center justify-center cursor-pointer shrink-0 ${
                                   isBooked
-                                    ? 'bg-white/5 border border-white/5 text-white/30'
+                                    ? 'bg-white/5 border border-white/5 text-white/30 cursor-not-allowed'
                                     : isBlocked
                                     ? 'bg-rose-500/30 border-2 border-rose-500 text-rose-300 shadow-lg shadow-rose-500/20'
-                                    : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/80 hover:text-white'
+                                    : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/90 hover:text-white'
                                 }`}
                                 title={`Click to toggle status for ${seatId}`}
                               >
@@ -1402,7 +1402,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           })}
                         </div>
 
-                        <span className="w-4 sm:w-6 text-[10px] sm:text-xs font-bold text-white/40 text-center shrink-0">{tierObj.row}</span>
+                        <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
                       </div>
                     </div>
                   ))}

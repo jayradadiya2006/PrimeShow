@@ -51,7 +51,7 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
       <div className="relative w-full max-w-4xl max-h-[96vh] glass-modal rounded-3xl p-4 sm:p-6 border border-white/15 shadow-2xl flex flex-col justify-between text-white overflow-hidden">
         
         {/* Header Bar with Movie Info Toggle */}
-        <div className="border-b border-white/10 pb-3 mb-2">
+        <div className="border-b border-white/10 pb-3 mb-2 shrink-0">
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-2">
@@ -96,22 +96,22 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
           </div>
         </div>
 
-        {/* Compact Seat Legends Grid (Mobile Optimized 4-Column Grid) */}
+        {/* Compact Seat Legends Grid */}
         <div className="grid grid-cols-4 gap-1 sm:gap-4 my-1.5 text-[10px] sm:text-xs bg-white/5 p-2 rounded-2xl border border-white/10 shrink-0">
-          <div className="flex items-center justify-center gap-1">
-            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-md bg-white/10 border border-white/20"></div>
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="w-4 h-4 rounded-md bg-white/10 border border-white/20"></div>
             <span className="text-white/70">Available</span>
           </div>
-          <div className="flex items-center justify-center gap-1">
-            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-md bg-amber-500 border border-amber-400 shadow-sm"></div>
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="w-4 h-4 rounded-md bg-amber-500 border border-amber-400 shadow-sm"></div>
             <span className="text-amber-300 font-bold">Selected</span>
           </div>
-          <div className="flex items-center justify-center gap-1">
-            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-md bg-white/5 border border-white/5 text-white/30 flex items-center justify-center text-[8px]">✕</div>
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="w-4 h-4 rounded-md bg-white/5 border border-white/5 text-white/30 flex items-center justify-center text-[9px]">✕</div>
             <span className="text-white/40">Sold</span>
           </div>
-          <div className="flex items-center justify-center gap-1">
-            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-md bg-rose-500/20 border border-rose-500/40 text-rose-300 flex items-center justify-center text-[8px]">🔒</div>
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="w-4 h-4 rounded-md bg-rose-500/20 border border-rose-500/40 text-rose-300 flex items-center justify-center text-[9px]">🔒</div>
             <span className="text-rose-300">Blocked</span>
           </div>
         </div>
@@ -124,20 +124,20 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
           </span>
         </div>
 
-        {/* Auto-Scaling Seat Grid (Fits 100% Mobile Screen Viewport Width Without Scrolling) */}
-        <div className="flex-1 flex flex-col justify-center items-center my-auto py-1 w-full overflow-hidden">
-          <div className="w-full max-w-full flex flex-col items-center justify-center space-y-2.5 sm:space-y-4 scale-[0.84] xs:scale-[0.90] sm:scale-100 origin-center transition-transform">
+        {/* Controlled Scrollable Container (Increased Seat Button & Font Sizes with Touch Scrolling) */}
+        <div className="w-full flex-1 overflow-auto max-h-[55vh] sm:max-h-[62vh] p-2 sm:p-4 my-2 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center select-none">
+          <div className="min-w-max flex flex-col items-center justify-center space-y-3 sm:space-y-4 py-2 px-2">
             {SEAT_ROWS.map((tierObj) => (
-              <div key={tierObj.row} className="flex flex-col items-center w-full">
-                <div className="text-[10px] sm:text-[11px] font-bold text-amber-400 mb-1 uppercase tracking-wider flex items-center gap-2">
+              <div key={tierObj.row} className="flex flex-col items-center">
+                <div className="text-xs font-bold text-amber-400 mb-1.5 uppercase tracking-wider flex items-center gap-2">
                   <span>{tierObj.tier}</span>
-                  <span className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[9px]">₹{tierObj.price}</span>
+                  <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">₹{tierObj.price}</span>
                 </div>
 
-                <div className="flex items-center justify-center gap-1 sm:gap-3 w-full">
-                  <span className="w-4 sm:w-6 text-[10px] sm:text-xs font-bold text-white/40 text-center shrink-0">{tierObj.row}</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
 
-                  <div className="flex items-center gap-1 sm:gap-2.5">
+                  <div className="flex items-center gap-1.5 sm:gap-2.5">
                     {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
                       const seatNum = idx + 1;
                       const seatId = `${tierObj.row}${seatNum}`;
@@ -148,14 +148,14 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
                           key={seatId}
                           disabled={status === 'booked' || status === 'blocked'}
                           onClick={() => toggleSeatSelection(seatId, tierObj.price, tierObj.tier)}
-                          className={`w-6.5 h-6.5 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl font-mono text-[10px] sm:text-xs font-bold transition-all duration-200 flex items-center justify-center cursor-pointer shrink-0 ${
+                          className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center cursor-pointer shrink-0 ${
                             status === 'selected'
-                              ? 'bg-amber-500 text-black border border-amber-300 shadow-lg shadow-amber-500/50 scale-110'
+                              ? 'bg-amber-500 text-black border-2 border-amber-300 shadow-lg shadow-amber-500/50 scale-110'
                               : status === 'booked'
                               ? 'bg-white/5 border border-white/5 text-white/20 cursor-not-allowed'
                               : status === 'blocked'
                               ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300 cursor-not-allowed'
-                              : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/80 hover:text-white hover:scale-105'
+                              : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/90 hover:text-white hover:scale-105'
                           }`}
                           title={status === 'blocked' ? `${seatId} - Blocked by Admin` : `${seatId} - ₹${tierObj.price}`}
                         >
@@ -165,7 +165,7 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
                     })}
                   </div>
 
-                  <span className="w-4 sm:w-6 text-[10px] sm:text-xs font-bold text-white/40 text-center shrink-0">{tierObj.row}</span>
+                  <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
                 </div>
               </div>
             ))}
