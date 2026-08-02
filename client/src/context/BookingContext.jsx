@@ -472,6 +472,26 @@ export const BookingProvider = ({ children }) => {
     return newBooking;
   };
 
+  const lockSeatsForShow = async (showId, seats) => {
+    if (!showId || !seats || seats.length === 0) return;
+    
+    // Immediately lock seats in global state map so Admin and user view them as booked/held
+    setShowBookedSeatsMap(prev => ({
+      ...prev,
+      [showId]: Array.from(new Set([...(prev[showId] || []), ...seats]))
+    }));
+
+    try {
+      const token = localStorage.getItem('primeshow_token');
+      await axios.post(`${API_BASE}/bookings/hold-seats`, {
+        showId,
+        seats
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {}
+  };
+
   const addMovieToGlobalStore = async (newMovieData) => {
     try {
       const token = localStorage.getItem('primeshow_token');
@@ -649,7 +669,8 @@ export const BookingProvider = ({ children }) => {
       confirmBooking,
       myBookings,
       setMyBookings,
-      showBookedSeatsMap
+      showBookedSeatsMap,
+      lockSeatsForShow
     }}>
       {children}
     </BookingContext.Provider>

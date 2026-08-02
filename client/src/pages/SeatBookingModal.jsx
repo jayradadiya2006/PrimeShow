@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { X, Sparkles, AlertCircle, Film, ShoppingBag, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Sparkles, AlertCircle, Film, ShoppingBag, Info, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { useBooking } from '../context/BookingContext';
 
-export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
-  const { activeBooking, toggleSeatSelection, showBookedSeatsMap, getScreenLayout } = useBooking();
+export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProceedToCheckout }) => {
+  const { activeBooking, toggleSeatSelection, showBookedSeatsMap, getScreenLayout, lockSeatsForShow } = useBooking();
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
+  const [isLocking, setIsLocking] = useState(false);
 
   if (!isOpen || !activeBooking.movie) return null;
 
@@ -45,6 +46,27 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
   };
 
   const subtotal = calculateSubtotal();
+
+  // Smooth Payment Transition & Real-Time Seat Hold
+  const handleProceedToPayment = async () => {
+    if (selectedSeats.length === 0) return;
+
+    setIsLocking(true);
+
+    // 1. Temporarily Lock / Hold seats in real-time store & backend
+    if (lockSeatsForShow) {
+      await lockSeatsForShow(showId, selectedSeats);
+    }
+
+    setIsLocking(false);
+
+    // 2. Smoothly open Payment Gateway / Checkout Modal
+    if (typeof onProceedToPayment === 'function') {
+      onProceedToPayment();
+    } else if (typeof onProceedToCheckout === 'function') {
+      onProceedToCheckout();
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[250] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-2xl animate-fade-in font-sans">
@@ -124,7 +146,7 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
           </span>
         </div>
 
-        {/* Controlled Scrollable Container (Increased Seat Button & Font Sizes with Touch Scrolling) */}
+        {/* Controlled Scrollable Container */}
         <div className="w-full flex-1 overflow-auto max-h-[55vh] sm:max-h-[62vh] p-2 sm:p-4 my-2 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center select-none">
           <div className="min-w-max flex flex-col items-center justify-center space-y-3 sm:space-y-4 py-2 px-2">
             {SEAT_ROWS.map((tierObj) => (
@@ -172,7 +194,7 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
           </div>
         </div>
 
-        {/* Footer Summary & Proceed Button */}
+        {/* Footer Summary & Enabled Proceed to Payment Button */}
         <div className="border-t border-white/10 pt-3 mt-1 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <div className="space-y-0.5 text-center sm:text-left">
             <div className="text-[11px] text-white/60">
@@ -184,16 +206,25 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToCheckout }) => {
           </div>
 
           <button
-            disabled={selectedSeats.length === 0}
-            onClick={onProceedToCheckout}
-            className={`w-full sm:w-auto px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+            disabled={selectedSeats.length === 0 || isLocking}
+            onClick={handleProceedToPayment}
+            className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
               selectedSeats.length > 0
-                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black shadow-xl shadow-amber-500/30 scale-105'
-                : 'bg-white/10 text-white/40 border border-white/10 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-yellow-400 text-black shadow-xl shadow-amber-500/40 scale-105 active:scale-95 cursor-pointer opacity-100'
+                : 'bg-white/10 text-white/40 border border-white/10 cursor-not-allowed opacity-50'
             }`}
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>Proceed to Payment (₹{subtotal})</span>
+            {isLocking ? (
+              <>
+                <div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
+                <span>Locking Seats...</span>
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-4 h-4" />
+                <span>Proceed to Payment (₹{subtotal})</span>
+              </>
+            )}
           </button>
         </div>
 
