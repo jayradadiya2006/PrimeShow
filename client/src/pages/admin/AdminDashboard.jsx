@@ -14,7 +14,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const { 
     moviesList, addMovieToGlobalStore, updateMovieInGlobalStore, deleteMovieFromGlobalStore,
     addShowDateToMovie, deleteShowDateFromMovie, addShowSlotToMovieTheatre, deleteShowSlotFromMovieTheatre, deleteTheatreFromMovieDate,
-    screenLayoutsMap, getScreenLayout, updateScreenRowsConfig, toggleBlockSeatForScreen, setManualSeatStatusForScreen, addRowToScreenLayout, deleteRowFromScreenLayout, showBookedSeatsMap
+    screenLayoutsMap, getScreenLayout, updateScreenRowsConfig, toggleBlockSeatForScreen, setManualSeatStatusForScreen, addRowToScreenLayout, deleteRowFromScreenLayout, showBookedSeatsMap,
+    heroSlidesList, addHeroSlide, updateHeroSlide, deleteHeroSlide
   } = useBooking();
   const [activeTab, setActiveTab] = useState('analytics');
 
@@ -97,6 +98,74 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [castName, setCastName] = useState('');
   const [castRole, setCastRole] = useState('');
   const [castPhoto, setCastPhoto] = useState('');
+
+  // Hero Section Slideshow Management State
+  const [heroForm, setHeroForm] = useState({
+    title: '',
+    tagline: '',
+    badge: 'BLOCKBUSTER',
+    rating: 9.4,
+    votesCount: 42800,
+    duration: '3h 12m',
+    languages: 'English, Hindi, Tamil, Telugu',
+    genres: 'Sci-Fi, Action, Adventure',
+    price: 480,
+    banner: '',
+    movieId: 'mov_1'
+  });
+  const [editingHeroSlideId, setEditingHeroSlideId] = useState(null);
+
+  const handleSaveHeroSlide = (e) => {
+    e.preventDefault();
+    if (!heroForm.title || !heroForm.banner) return;
+
+    const payload = {
+      ...heroForm,
+      rating: Number(heroForm.rating),
+      price: Number(heroForm.price),
+      languages: typeof heroForm.languages === 'string' ? heroForm.languages.split(',').map(s => s.trim()) : heroForm.languages,
+      genres: typeof heroForm.genres === 'string' ? heroForm.genres.split(',').map(s => s.trim()) : heroForm.genres
+    };
+
+    if (editingHeroSlideId) {
+      updateHeroSlide(editingHeroSlideId, payload);
+      setActionSuccess('Hero slide updated & synced live with User home page!');
+    } else {
+      addHeroSlide(payload);
+      setActionSuccess('New Hero slide added to homepage slideshow!');
+    }
+
+    setHeroForm({
+      title: '', tagline: '', badge: 'BLOCKBUSTER', rating: 9.4, votesCount: 42800,
+      duration: '3h 12m', languages: 'English, Hindi, Tamil, Telugu', genres: 'Sci-Fi, Action',
+      price: 480, banner: '', movieId: 'mov_1'
+    });
+    setEditingHeroSlideId(null);
+    setTimeout(() => setActionSuccess(''), 4000);
+  };
+
+  const handleEditHeroSlideClick = (slide) => {
+    setEditingHeroSlideId(slide.id);
+    setHeroForm({
+      title: slide.title || '',
+      tagline: slide.tagline || '',
+      badge: slide.badge || 'BLOCKBUSTER',
+      rating: slide.rating || 9.4,
+      votesCount: slide.votesCount || 42800,
+      duration: slide.duration || '2h 45m',
+      languages: Array.isArray(slide.languages) ? slide.languages.join(', ') : slide.languages || 'English, Hindi',
+      genres: Array.isArray(slide.genres) ? slide.genres.join(', ') : slide.genres || 'Action',
+      price: slide.price || 480,
+      banner: slide.banner || '',
+      movieId: slide.movieId || 'mov_1'
+    });
+  };
+
+  const handleDeleteHeroSlideClick = (slideId) => {
+    deleteHeroSlide(slideId);
+    setActionSuccess('Hero slide removed from slideshow!');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
 
   // Offers Form State
   const [offerTitle, setOfferTitle] = useState('');
@@ -722,6 +791,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const adminNavItems = [
     { id: 'analytics', label: 'Analytics Overview', icon: TrendingUp },
+    { id: 'hero', label: 'Hero Slideshow & Banners', icon: Image },
     { id: 'movies', label: 'Movie & Cast Management', icon: Film },
     { id: 'theatres', label: 'Theatre & Showtimes CRUD', icon: Building },
     { id: 'events', label: 'Events & Festivals CRUD', icon: Sparkles },
@@ -899,6 +969,199 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   {supportMessages.filter(m => m.status === 'pending').length}
                 </div>
                 <div className="text-[10px] text-rose-400 font-semibold mt-1">Requires Response</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Hero Section Slideshow Management (Full CRUD) */}
+        {activeTab === 'hero' && (
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-3xl font-bold font-sans text-white">Hero Section Slideshow Management</h1>
+              <p className="text-xs text-cyan-300">Create, update, or remove featured movie banners and slideshow items for the homepage.</p>
+            </div>
+
+            {/* Create / Edit Hero Slide Form */}
+            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
+              <h3 className="text-lg font-bold font-sans text-white">
+                {editingHeroSlideId ? 'Edit Hero Slide Banner' : 'Add New Hero Slide Banner'}
+              </h3>
+
+              <form onSubmit={handleSaveHeroSlide} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Movie Title *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Avatar: Fire and Ash"
+                      value={heroForm.title}
+                      onChange={(e) => setHeroForm({ ...heroForm, title: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Tagline / Synopsis</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Native IMAX 3D Experience"
+                      value={heroForm.tagline}
+                      onChange={(e) => setHeroForm({ ...heroForm, tagline: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Feature Badge</label>
+                    <select
+                      value={heroForm.badge}
+                      onChange={(e) => setHeroForm({ ...heroForm, badge: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                    >
+                      <option value="BLOCKBUSTER">BLOCKBUSTER</option>
+                      <option value="TRENDING">TRENDING</option>
+                      <option value="CRITICS CHOICE">CRITICS CHOICE</option>
+                      <option value="POPULAR">POPULAR</option>
+                      <option value="EXCLUSIVE">EXCLUSIVE</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Rating (e.g. 9.4)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={heroForm.rating}
+                      onChange={(e) => setHeroForm({ ...heroForm, rating: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Ticket Price Rate (₹)</label>
+                    <input
+                      type="number"
+                      value={heroForm.price}
+                      onChange={(e) => setHeroForm({ ...heroForm, price: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Languages (comma separated)</label>
+                    <input
+                      type="text"
+                      placeholder="English, Hindi, Tamil, Telugu"
+                      value={heroForm.languages}
+                      onChange={(e) => setHeroForm({ ...heroForm, languages: e.target.value })}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Banner Image URL & Uploader */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-cyan-300">Banner Image URL / File *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Banner Image URL (https://...)"
+                      value={heroForm.banner}
+                      onChange={(e) => setHeroForm({ ...heroForm, banner: e.target.value })}
+                      className="flex-1 p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                    <label className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1.5">
+                      <span>Browse File</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setHeroForm({ ...heroForm, banner: reader.result });
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs cursor-pointer shadow-lg shadow-cyan-500/20"
+                  >
+                    {editingHeroSlideId ? 'Update Slide & Sync Live' : '+ Add Slide to Slideshow'}
+                  </button>
+                  {editingHeroSlideId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingHeroSlideId(null);
+                        setHeroForm({
+                          title: '', tagline: '', badge: 'BLOCKBUSTER', rating: 9.4, votesCount: 42800,
+                          duration: '3h 12m', languages: 'English, Hindi, Tamil, Telugu', genres: 'Sci-Fi, Action',
+                          price: 480, banner: '', movieId: 'mov_1'
+                        });
+                      }}
+                      className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* Configured Hero Slides Cards List */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
+                Current Active Hero Banners ({heroSlidesList.length} Slides)
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {heroSlidesList.map((slide) => (
+                  <div key={slide.id} className="glass-panel rounded-3xl p-4 border border-white/10 space-y-3 relative overflow-hidden group">
+                    <div className="relative h-40 rounded-2xl overflow-hidden border border-white/10">
+                      <img src={slide.banner} alt={slide.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                      <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-black uppercase">
+                        {slide.badge || 'BLOCKBUSTER'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-base font-bold text-white truncate">{slide.title}</h4>
+                      <p className="text-xs text-amber-300 italic truncate">{slide.tagline}</p>
+                      <div className="text-[11px] text-white/60 mt-1">
+                        ⭐ {slide.rating || 9.0} • ₹{slide.price || 480} • {Array.isArray(slide.languages) ? slide.languages.join(', ') : slide.languages}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => handleEditHeroSlideClick(slide)}
+                        className="p-2 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black transition-colors cursor-pointer"
+                        title="Edit Slide"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteHeroSlideClick(slide.id)}
+                        className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                        title="Delete Slide"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

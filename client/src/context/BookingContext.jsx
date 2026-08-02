@@ -4,6 +4,54 @@ import axios from 'axios';
 const BookingContext = createContext();
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
+const DEFAULT_HERO_SLIDES = [
+  {
+    id: 'hero_1',
+    movieId: 'mov_1',
+    title: 'Avatar: Fire and Ash',
+    tagline: 'Enter the Uncharted Regions of Pandora in Native IMAX 3D',
+    badge: 'BLOCKBUSTER',
+    rating: 9.4,
+    votesCount: 42800,
+    duration: '3h 12m',
+    genres: ['Sci-Fi', 'Action', 'Adventure'],
+    languages: ['English', 'Hindi', 'Tamil', 'Telugu'],
+    price: 480,
+    banner: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+    synopsis: 'Jake Sully and Neytiri encounter the Ash People, a volcanic Na\'vi clan whose aggressive nature challenges their perception of Pandora.'
+  },
+  {
+    id: 'hero_2',
+    movieId: 'mov_3',
+    title: 'Kalki 2898 AD: Chapter II',
+    tagline: 'The Epic Battle of the Millennia Unleashed',
+    badge: 'TRENDING',
+    rating: 9.1,
+    votesCount: 65200,
+    duration: '3h 05m',
+    genres: ['Action', 'Sci-Fi', 'Mythology'],
+    languages: ['Hindi', 'Telugu', 'Tamil'],
+    price: 420,
+    banner: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=1920&q=80',
+    synopsis: 'Set in a post-apocalyptic world in the year 2898 AD, the modern avatar of Vishnu descends to protect humanity from dark forces.'
+  },
+  {
+    id: 'hero_3',
+    movieId: 'mov_2',
+    title: 'Dune: Part Two',
+    tagline: 'Long Live The Fighters of Arrakis',
+    badge: 'CRITICS CHOICE',
+    rating: 9.3,
+    votesCount: 89400,
+    duration: '2h 46m',
+    genres: ['Sci-Fi', 'Adventure', 'Drama'],
+    languages: ['English', 'Hindi'],
+    price: 380,
+    banner: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80',
+    synopsis: 'Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.'
+  }
+];
+
 const MOCK_MOVIES = [
   {
     id: 'mov_1',
@@ -642,6 +690,36 @@ export const BookingProvider = ({ children }) => {
     }));
   };
 
+  // Hero Section Slideshow Dynamic Store & Persistent LocalStorage
+  const [heroSlidesList, setHeroSlidesList] = useState(() => {
+    const saved = localStorage.getItem('primeshow_hero_slides_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return DEFAULT_HERO_SLIDES;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('primeshow_hero_slides_v1', JSON.stringify(heroSlidesList));
+  }, [heroSlidesList]);
+
+  const addHeroSlide = (slideObj) => {
+    const newSlide = {
+      id: `hero_${Date.now()}`,
+      ...slideObj
+    };
+    setHeroSlidesList(prev => [newSlide, ...prev]);
+    return newSlide;
+  };
+
+  const updateHeroSlide = (slideId, updatedFields) => {
+    setHeroSlidesList(prev => prev.map(s => s.id === slideId ? { ...s, ...updatedFields } : s));
+  };
+
+  const deleteHeroSlide = (slideId) => {
+    setHeroSlidesList(prev => prev.filter(s => s.id !== slideId));
+  };
+
   return (
     <BookingContext.Provider value={{
       moviesList,
@@ -670,7 +748,11 @@ export const BookingProvider = ({ children }) => {
       myBookings,
       setMyBookings,
       showBookedSeatsMap,
-      lockSeatsForShow
+      lockSeatsForShow,
+      heroSlidesList,
+      addHeroSlide,
+      updateHeroSlide,
+      deleteHeroSlide
     }}>
       {children}
     </BookingContext.Provider>
