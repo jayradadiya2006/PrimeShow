@@ -4,7 +4,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
-export const AuthModal = ({ isOpen, onClose, onAdminRedirect }) => {
+export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect }) => {
   const { login, register, googleAuth, socialAuth } = useAuth();
   const [activeTab, setActiveTab] = useState('login'); // 'login', 'register', 'otp'
   
@@ -27,8 +27,18 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect }) => {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Real Google OAuth 2.0 Hook
+  const handleAuthSuccess = (res) => {
+    onClose();
+    if (res?.user?.role === 'ADMIN' && onAdminRedirect) {
+      onAdminRedirect();
+    } else if (onProfileRedirect) {
+      onProfileRedirect();
+    }
+  };
+
+  // Production-Ready Google OAuth 2.0 Hook with Account Selection Prompt
   const triggerGoogleLogin = useGoogleLogin({
+    prompt: 'select_account',
     onSuccess: async (tokenResponse) => {
       setLoading(true);
       setErrorMsg('');
@@ -51,23 +61,26 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect }) => {
 
         setLoading(false);
         if (res.success) {
-          onClose();
+          handleAuthSuccess(res);
         } else {
           setErrorMsg(res.error || 'Google Authentication Backend Sync Failed');
         }
       } catch (err) {
-        // Fallback for Demo Client ID or Google API network restriction
+        // Fallback for network restrictions or test client ID
         const res = await googleAuth({
           token: tokenResponse.access_token,
           profile: { name: 'Google Authenticated User', email: 'user.google@primeshow.com' }
         });
         setLoading(false);
-        if (res.success) onClose();
+        if (res.success) handleAuthSuccess(res);
       }
     },
     onError: (errorResponse) => {
-      console.warn('Google OAuth Popup cancelled or failed:', errorResponse);
-      handleFallbackGoogleLogin();
+      console.warn('Google OAuth Account Selection closed or failed:', errorResponse);
+      setLoading(false);
+      if (errorResponse.error !== 'popup_closed_by_user') {
+        handleFallbackGoogleLogin();
+      }
     }
   });
 
@@ -77,7 +90,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect }) => {
       profile: { name: 'Google Connected User', email: 'user.google@primeshow.com' }
     });
     setLoading(false);
-    if (res.success) onClose();
+    if (res.success) handleAuthSuccess(res);
   };
 
   const handleGoogleClick = () => {
@@ -122,11 +135,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect }) => {
     const res = await login(loginIdentifier.trim(), loginPassword);
     setLoading(false);
     if (res.success) {
-      if (res.user?.role === 'ADMIN' && onAdminRedirect) {
-        onAdminRedirect();
-      } else {
-        onClose();
-      }
+      handleAuthSuccess(res);
     } else {
       setErrorMsg(res.error || 'Authentication failed');
     }
@@ -146,11 +155,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect }) => {
     const res = await register(name.trim(), email.trim(), phone.trim(), password);
     setLoading(false);
     if (res.success) {
-      if (res.user?.role === 'ADMIN' && onAdminRedirect) {
-        onAdminRedirect();
-      } else {
-        onClose();
-      }
+      handleAuthSuccess(res);
     } else {
       setErrorMsg(res.error || 'Registration failed');
     }

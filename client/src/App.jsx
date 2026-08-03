@@ -217,6 +217,10 @@ const MainAppContent = () => {
             setIsAuthOpen(false);
             setActiveTab('admin');
           }}
+          onProfileRedirect={() => {
+            setIsAuthOpen(false);
+            setActiveTab('profile-info');
+          }}
         />
       )}
 

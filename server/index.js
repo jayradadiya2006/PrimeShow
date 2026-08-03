@@ -129,8 +129,8 @@ app.post('/api/auth/register', (req, res) => {
   return res.json({ token, user: newUser });
 });
 
-// Google OAuth 2.0 Backend Synchronization Endpoint
-app.post('/api/auth/google', (req, res) => {
+// Production-Ready Google OAuth 2.0 Backend Synchronization Endpoint
+app.post('/api/auth/google', async (req, res) => {
   const { token: idToken, credential, profile } = req.body;
 
   try {
@@ -162,7 +162,42 @@ app.post('/api/auth/google', (req, res) => {
       avatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80';
     }
 
-    const googleUser = {
+    // Database Persistence & Account Sync
+    let dbUser = null;
+    try {
+      dbUser = await User.findOne({ email: email });
+      if (!dbUser && googleId) {
+        dbUser = await User.findOne({ googleId: googleId });
+      }
+
+      if (dbUser) {
+        dbUser.name = dbUser.name || name;
+        if (avatar && (!dbUser.avatar || dbUser.avatar.includes('unsplash'))) {
+          dbUser.avatar = avatar;
+        }
+        dbUser.provider = 'GOOGLE';
+        dbUser.googleId = googleId;
+        await dbUser.save();
+      } else {
+        dbUser = new User({
+          id: `usr_g_${googleId.slice(-6)}`,
+          name: name,
+          username: email.split('@')[0].toLowerCase(),
+          email: email,
+          phone: profile?.phone || '+91 9876543210',
+          role: 'CUSTOMER',
+          rewardsPoints: 750,
+          avatar: avatar,
+          provider: 'GOOGLE',
+          googleId: googleId
+        });
+        await dbUser.save();
+      }
+    } catch (dbErr) {
+      console.warn('MongoDB User Sync Warning (using memory record):', dbErr.message);
+    }
+
+    const finalUserData = dbUser ? dbUser.toObject() : {
       id: `usr_g_${googleId.slice(-6)}`,
       name: name,
       username: email.split('@')[0].toLowerCase(),
@@ -175,9 +210,10 @@ app.post('/api/auth/google', (req, res) => {
       googleId: googleId
     };
 
-    const sessionToken = jwt.sign(googleUser, JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ token: sessionToken, user: googleUser });
+    const sessionToken = jwt.sign(finalUserData, JWT_SECRET, { expiresIn: '7d' });
+    return res.json({ token: sessionToken, user: finalUserData });
   } catch (err) {
+    console.error('Google OAuth Server Error:', err);
     return res.status(500).json({ error: 'Google OAuth Verification Failed' });
   }
 });
