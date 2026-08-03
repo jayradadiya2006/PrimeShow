@@ -52,13 +52,15 @@ app.get(['/', '/api/health'], (req, res) => {
 // -------------------------------------------------------------
 
 app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
+  const { email, phone, identifier, password } = req.body;
+  const userIdentifier = email || phone || identifier;
+
+  if (!userIdentifier || !password) {
+    return res.status(400).json({ error: 'Email or phone number and password required' });
   }
 
   // Demo Admin Login
-  if (email === 'admin@primeshow.com' && password === 'admin123') {
+  if ((userIdentifier === 'admin@primeshow.com' || userIdentifier === 'admin') && password === 'admin123') {
     const adminUser = {
       id: 'admin_1',
       name: 'Admin Command Desk',
@@ -78,16 +80,17 @@ app.post('/api/auth/login', (req, res) => {
     return res.json({ token, user: adminUser });
   }
 
-  // Regular Customer Login
-  const customerName = email.split('@')[0].toUpperCase();
+  // Regular Customer Login (Supports Email or Phone)
+  const isEmail = userIdentifier.includes('@');
+  const customerName = isEmail ? userIdentifier.split('@')[0].toUpperCase() : `CUSTOMER (${userIdentifier})`;
   const customerUser = {
     id: `usr_${Math.floor(1000 + Math.random() * 9000)}`,
     name: customerName,
-    username: email.split('@')[0].toLowerCase(),
-    email,
-    phone: '+91 9876543210',
+    username: isEmail ? userIdentifier.split('@')[0].toLowerCase() : `usr_${userIdentifier}`,
+    email: isEmail ? userIdentifier : 'user@primeshow.com',
+    phone: isEmail ? '+91 9876543210' : userIdentifier,
     altPhone: '+91 9123456789',
-    whatsappPhone: '+91 9876543210',
+    whatsappPhone: isEmail ? '+91 9876543210' : userIdentifier,
     gender: 'Male',
     city: 'Mumbai',
     dob: '1998-05-15',

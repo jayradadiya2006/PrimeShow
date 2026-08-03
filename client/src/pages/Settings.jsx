@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { 
   Settings as SettingsIcon, Sun, Moon, Laptop, Bell, Shield, Lock, 
-  MapPin, Check, ArrowLeft, Smartphone, Key, Sliders, Save, CheckCircle2, User, HelpCircle
+  MapPin, Check, ArrowLeft, Smartphone, Key, Sliders, Save, CheckCircle2, User, HelpCircle, LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Settings = ({ onReturnHome }) => {
-  const { user, themePreference, setThemePreference, effectiveTheme, selectedCity, changeCity, updateUserProfile } = useAuth();
+  const { user, logout, themePreference, setThemePreference, effectiveTheme, selectedCity, changeCity, updateUserProfile } = useAuth();
 
   // Notification Toggles State
   const [bookingAlerts, setBookingAlerts] = useState(true);
@@ -301,6 +301,29 @@ export const Settings = ({ onReturnHome }) => {
               {savingPass ? 'Updating Password...' : 'Change Password'}
             </button>
           </form>
+        </div>
+
+        {/* 5. Account Session & Mobile Logout Section */}
+        <div className="glass-panel rounded-3xl p-6 border border-rose-500/30 bg-rose-500/5 space-y-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-rose-500/20">
+            <LogOut className="w-5 h-5 text-rose-500" />
+            <h2 className="text-base font-bold text-rose-400">Account Session & Mobile Logout</h2>
+          </div>
+          
+          <p className="text-xs text-slate-600 dark:text-white/60">
+            Signing out will end your active session on this device and clear secure local storage tokens.
+          </p>
+
+          <button
+            onClick={() => {
+              logout();
+              if (onReturnHome) onReturnHome();
+            }}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 via-rose-500 to-rose-600 hover:from-rose-500 hover:to-rose-400 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+          >
+            <LogOut className="w-4 h-4 text-white" />
+            <span>Sign Out of PrimeShow Account</span>
+          </button>
         </div>
 
       </div>

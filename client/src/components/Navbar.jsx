@@ -220,7 +220,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                 className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <User className="w-3.5 h-3.5" />
-                <span>Sign In</span>
+                <span>Login / Register</span>
               </button>
             ) : (
               <button
@@ -348,7 +348,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                   <ChevronDown className="w-4 h-4 text-white/40 -rotate-90" />
                 </button>
 
-                {/* 2. Profile */}
+                {/* 2. Profile / Login */}
                 <button
                   onClick={() => {
                     if (user) {
@@ -365,8 +365,8 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                       <User className="w-5 h-5" />
                     </div>
                     <div>
-                      <span>Profile</span>
-                      <div className="text-[11px] font-normal text-white/50">{user ? user.name : 'Sign In / Register'}</div>
+                      <span>{user ? 'My Profile' : 'Login / Register'}</span>
+                      <div className="text-[11px] font-normal text-white/50">{user ? user.name : 'Sign In or Create Account'}</div>
                     </div>
                   </div>
                   <ChevronDown className="w-4 h-4 text-white/40 -rotate-90" />
