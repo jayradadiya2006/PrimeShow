@@ -129,6 +129,59 @@ app.post('/api/auth/register', (req, res) => {
   return res.json({ token, user: newUser });
 });
 
+// Google OAuth 2.0 Backend Synchronization Endpoint
+app.post('/api/auth/google', (req, res) => {
+  const { token: idToken, credential, profile } = req.body;
+
+  try {
+    let name = profile?.name;
+    let email = profile?.email;
+    let avatar = profile?.picture || profile?.avatar;
+    let googleId = profile?.sub || profile?.googleId || `g_${Date.now()}`;
+
+    // Decode JWT credential if present
+    if (!email && credential) {
+      try {
+        const decoded = jwt.decode(credential);
+        if (decoded) {
+          name = decoded.name || name;
+          email = decoded.email || email;
+          avatar = decoded.picture || avatar;
+          googleId = decoded.sub || googleId;
+        }
+      } catch (e) {}
+    }
+
+    if (!email) {
+      email = `google.user_${Date.now()}@primeshow.com`;
+    }
+    if (!name) {
+      name = email.split('@')[0].toUpperCase();
+    }
+    if (!avatar) {
+      avatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80';
+    }
+
+    const googleUser = {
+      id: `usr_g_${googleId.slice(-6)}`,
+      name: name,
+      username: email.split('@')[0].toLowerCase(),
+      email: email,
+      phone: profile?.phone || '+91 9876543210',
+      role: 'CUSTOMER',
+      rewardsPoints: 750,
+      avatar: avatar,
+      provider: 'GOOGLE',
+      googleId: googleId
+    };
+
+    const sessionToken = jwt.sign(googleUser, JWT_SECRET, { expiresIn: '7d' });
+    return res.json({ token: sessionToken, user: googleUser });
+  } catch (err) {
+    return res.status(500).json({ error: 'Google OAuth Verification Failed' });
+  }
+});
+
 // -------------------------------------------------------------
 // NOTIFICATION SYSTEM ENDPOINTS
 // -------------------------------------------------------------
