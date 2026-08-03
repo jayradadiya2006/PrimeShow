@@ -82,6 +82,22 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect }) => {
 
   const handleGoogleClick = () => {
     setErrorMsg('');
+    const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const isConfigured = rawClientId && 
+      rawClientId !== 'your_google_client_id_here.apps.googleusercontent.com' && 
+      !rawClientId.includes('primeshowdemo') &&
+      !rawClientId.includes('unconfigured');
+
+    if (!isConfigured) {
+      console.warn(
+        '[PrimeShow Auth Notice] Google Client ID is not configured yet in .env file. ' +
+        'Please set VITE_GOOGLE_CLIENT_ID in client/.env. Demo Google account login activated.'
+      );
+      setErrorMsg('Google Client ID is not configured yet. Set VITE_GOOGLE_CLIENT_ID in your .env file to enable live OAuth.');
+      handleFallbackGoogleLogin();
+      return;
+    }
+
     try {
       triggerGoogleLogin();
     } catch (e) {
