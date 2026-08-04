@@ -54,7 +54,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
   };
 
-  // Mobile OTP Handlers (Supports Firebase Real-Time Phone Auth + SMS Gateway Fallback)
+  // Mobile OTP Handlers (Pure Client-Side Firebase SDK Dispatch)
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     setErrorMsg('');
@@ -66,34 +66,37 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
 
     setLoading(true);
-    const formattedPhoneNumber = `${countryCode}${cleanDigits}`;
+    const fullPhoneNumber = `${countryCode}${cleanDigits}`;
 
-    // 1. Client-Side Direct Firebase Phone Auth Handler (0 Cold-Start Delay)
-    if (isFirebaseConfigured && auth) {
-      try {
-        setStatusMsg('Initializing Google Firebase reCAPTCHA...');
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: (response) => {
-              console.log('📱 reCAPTCHA verified successfully:', response);
-            },
-            'expired-callback': () => {
-              console.warn('⚠️ reCAPTCHA verification expired');
-              setErrorMsg('reCAPTCHA verification expired. Please try sending OTP again.');
-              if (window.recaptchaVerifier) {
-                window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
-              }
+    // 1. Pure Client-Side Direct Firebase Phone Auth Handler (0 Cold-Start Delay)
+    try {
+      setStatusMsg('Sending SMS OTP via Firebase...');
+      
+      // Initialize reCAPTCHA Verifier
+      if (!window.recaptchaVerifier && auth) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: (response) => {
+            console.log('📱 reCAPTCHA verified successfully');
+          },
+          'expired-callback': () => {
+            console.warn('⚠️ reCAPTCHA verification expired');
+            if (window.recaptchaVerifier) {
+              window.recaptchaVerifier.render().then(widgetId => {
+                if (window.grecaptcha) window.grecaptcha.reset(widgetId);
+              });
             }
-          });
-        }
+          }
+        });
+      }
 
-        const appVerifier = window.recaptchaVerifier;
-        console.log(`📱 Initiating Client-Side Firebase Phone Auth for ${formattedPhoneNumber}...`);
-        setStatusMsg('Sending SMS OTP via Firebase...');
-        const result = await signInWithPhoneNumber(auth, formattedPhoneNumber, appVerifier);
-        
-        console.log('✅ Firebase OTP SMS dispatched successfully!');
+      const appVerifier = window.recaptchaVerifier;
+      console.log(`📱 Triggering Client-Side Firebase Phone Auth for ${fullPhoneNumber}...`);
+
+      if (auth && appVerifier) {
+        const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
+        console.log('✅ Firebase OTP SMS dispatched instantly to client!');
+        window.confirmationResult = result;
         setConfirmationResult(result);
         setOtpSent(true);
         setResendTimer(30);
@@ -103,24 +106,28 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
           otpInputRefs.current[0]?.focus();
         }, 150);
         return;
-      } catch (firebaseErr) {
-        console.warn('[Firebase Phone Auth Exception] signInWithPhoneNumber failed, using SMS Gateway fallback:', firebaseErr);
-        if (firebaseErr.code === 'auth/invalid-phone-number') {
-          setLoading(false);
-          setStatusMsg('');
-          return setErrorMsg('Invalid phone number format for SMS delivery.');
-        } else if (firebaseErr.code === 'auth/too-many-requests') {
-          setLoading(false);
-          setStatusMsg('');
-          return setErrorMsg('Too many SMS requests for this phone number. Please wait an hour or use SMS Gateway fallback.');
-        }
       }
-    } else {
-      console.info('[PrimeShow Auth Notice] Firebase configuration missing in .env. Using PrimeShow REST API SMS Gateway fallback.');
+    } catch (firebaseErr) {
+      console.error('❌ Firebase Phone Auth Exception:', firebaseErr);
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.render().then(widgetId => {
+          if (window.grecaptcha) window.grecaptcha.reset(widgetId);
+        });
+      }
+
+      if (firebaseErr.code === 'auth/invalid-phone-number') {
+        setLoading(false);
+        setStatusMsg('');
+        return setErrorMsg('Invalid phone number format for SMS delivery.');
+      } else if (firebaseErr.code === 'auth/too-many-requests') {
+        setLoading(false);
+        setStatusMsg('');
+        return setErrorMsg('Too many SMS requests for this phone number. Please try again later.');
+      }
     }
 
-    // 2. Gateway Fallback Handler (with automatic 3x retries & Render cold-start status)
-    const res = await sendMobileOtp(otpPhone, countryCode, setStatusMsg);
+    // 2. Fallback SMS Gateway Dispatch if Firebase SDK is unconfigured
+    const res = await sendMobileOtp(otpPhone, countryCode);
     setLoading(false);
     setStatusMsg('');
 
@@ -180,15 +187,17 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     setErrorMsg('');
     setLoading(true);
 
-    // Firebase Confirmation Flow
-    if (confirmationResult) {
+    const activeConfirmation = confirmationResult || window.confirmationResult;
+
+    // 1. Client-Side Firebase OTP Verification
+    if (activeConfirmation) {
       try {
         console.log(`📱 Verifying Firebase OTP code: ${codeToVerify}...`);
-        const userCredential = await confirmationResult.confirm(codeToVerify);
+        const userCredential = await activeConfirmation.confirm(codeToVerify);
         const firebaseUser = userCredential.user;
         console.log('✅ Firebase OTP verified successfully for user:', firebaseUser.phoneNumber || firebaseUser.uid);
         
-        // Sync with backend API
+        // 2. Post-Verification Only: Call Render backend for user session & DB record
         const res = await verifyMobileOtp(otpPhone, codeToVerify, countryCode);
         setLoading(false);
 

@@ -276,16 +276,12 @@ export const AuthProvider = ({ children }) => {
       attempt++;
       try {
         if (onProgressStatus) {
-          if (attempt === 1) {
-            onProgressStatus('Dispatching verification OTP...');
-          } else {
-            onProgressStatus(`Connecting to server... (Waking up Render backend, attempt ${attempt}/${maxRetries})`);
-          }
+          onProgressStatus('Sending SMS OTP...');
         }
-        console.log(`📱 [Attempt ${attempt}/${maxRetries}] Calling backend endpoint: ${API_BASE}/auth/send-otp for ${formattedPhone}...`);
+        console.log(`📱 [Attempt ${attempt}/${maxRetries}] Requesting OTP endpoint: ${API_BASE}/auth/send-otp for ${formattedPhone}...`);
         
         const res = await apiClient.post('/auth/send-otp', { phone, countryCode }, {
-          timeout: 45000 // 45 seconds timeout per attempt
+          timeout: 45000
         });
         
         console.log('✅ Send OTP Response:', res.data);
@@ -296,24 +292,22 @@ export const AuthProvider = ({ children }) => {
         const isColdStart = !err.response || err.code === 'ECONNABORTED' || err.code === 'ERR_NETWORK' || [502, 503, 504].includes(err.response?.status);
         
         if (isColdStart && attempt < maxRetries) {
-          const delayMs = attempt * 3000; // 3s, 6s backoff
+          const delayMs = attempt * 2000;
           if (onProgressStatus) {
-            onProgressStatus(`Server is waking up... Retrying automatically in ${delayMs / 1000}s`);
+            onProgressStatus('Connecting to server...');
           }
           await new Promise(resolve => setTimeout(resolve, delayMs));
         } else {
           const errorText = err.response?.data?.error || err.message;
           return { 
             success: false, 
-            error: isColdStart 
-              ? 'Server cold-start timed out. Please click Resend OTP in a moment.' 
-              : (errorText || 'Failed to dispatch verification OTP')
+            error: errorText || 'Failed to dispatch verification OTP'
           };
         }
       }
     }
 
-    return { success: false, error: 'Failed to connect to backend server after multiple attempts.' };
+    return { success: false, error: 'Failed to dispatch verification OTP. Please check your connection or try again.' };
   };
 
   const verifyMobileOtp = async (phone, otp, countryCode = '+91') => {
