@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield, AlertTriangle, RotateCcw, Check, Globe } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect }) => {
-  const { login, register, googleAuth, socialAuth } = useAuth();
+  const { login, register, googleAuth, socialAuth, sendMobileOtp, verifyMobileOtp } = useAuth();
   const [activeTab, setActiveTab] = useState('login'); // 'login', 'register', 'otp'
   
   // Dual Input Login State (Email or Phone + Password)
@@ -19,13 +19,28 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // OTP State
+  // Mobile OTP State
+  const [countryCode, setCountryCode] = useState('+91');
   const [otpPhone, setOtpPhone] = useState('');
-  const [otpCode, setOtpCode] = useState('');
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
+  const [debugOtpCode, setDebugOtpCode] = useState('');
+  const otpInputRefs = useRef([]);
 
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Countdown timer effect for Resend OTP
+  useEffect(() => {
+    let interval = null;
+    if (otpSent && resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [otpSent, resendTimer]);
 
   const handleAuthSuccess = (res) => {
     onClose();
@@ -34,6 +49,93 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     } else if (onProfileRedirect) {
       onProfileRedirect();
     }
+  };
+
+  // Mobile OTP Handlers
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    setErrorMsg('');
+    
+    const cleanDigits = otpPhone.replace(/\D/g, '');
+    if (!cleanDigits || cleanDigits.length < 10) {
+      return setErrorMsg('Please enter a valid 10-digit mobile phone number');
+    }
+
+    setLoading(true);
+    const res = await sendMobileOtp(otpPhone, countryCode);
+    setLoading(false);
+
+    if (res.success) {
+      setOtpSent(true);
+      setResendTimer(30);
+      if (res.debugOtp) setDebugOtpCode(res.debugOtp);
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 150);
+    } else {
+      setErrorMsg(res.error || 'Failed to dispatch verification OTP');
+    }
+  };
+
+  const handleOtpDigitChange = (index, value) => {
+    const cleanVal = value.replace(/\D/g, '').slice(-1);
+    const newDigits = [...otpDigits];
+    newDigits[index] = cleanVal;
+    setOtpDigits(newDigits);
+
+    if (cleanVal && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+
+    // Trigger auto-verification when all 6 boxes filled
+    if (cleanVal && newDigits.every(d => d !== '')) {
+      triggerOtpVerification(newDigits.join(''));
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData.length > 0) {
+      const newDigits = [...otpDigits];
+      for (let i = 0; i < 6; i++) {
+        newDigits[i] = pastedData[i] || '';
+      }
+      setOtpDigits(newDigits);
+      const focusIdx = Math.min(pastedData.length, 5);
+      otpInputRefs.current[focusIdx]?.focus();
+
+      if (pastedData.length === 6) {
+        triggerOtpVerification(pastedData);
+      }
+    }
+  };
+
+  const triggerOtpVerification = async (codeToVerify) => {
+    setErrorMsg('');
+    setLoading(true);
+    const res = await verifyMobileOtp(otpPhone, codeToVerify, countryCode);
+    setLoading(false);
+    if (res.success) {
+      handleAuthSuccess(res);
+    } else {
+      setErrorMsg(res.error || 'Invalid 6-digit OTP code. Please check and try again.');
+    }
+  };
+
+  const handleManualVerifySubmit = (e) => {
+    e.preventDefault();
+    const fullCode = otpDigits.join('');
+    if (fullCode.length < 6) {
+      return setErrorMsg('Please enter complete 6-digit OTP code');
+    }
+    triggerOtpVerification(fullCode);
   };
 
   // Production-Ready Google OAuth 2.0 Hook with Account Selection Prompt
@@ -203,20 +305,6 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
   };
 
-  const handleSendOtp = (e) => {
-    e.preventDefault();
-    if (!otpPhone) return setErrorMsg('Please enter mobile number');
-    setOtpSent(true);
-    setErrorMsg('');
-  };
-
-  const handleVerifyOtp = (e) => {
-    e.preventDefault();
-    if (otpCode.length < 4) return setErrorMsg('Enter valid 4-digit OTP code');
-    login(otpPhone || '9876543210', 'password123');
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
       <div className="relative w-full max-w-md glass-modal rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl text-white">
@@ -304,49 +392,123 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
           </form>
         )}
 
-        {/* Tab 2: Mobile OTP */}
+        {/* Tab 2: Real-Time Mobile OTP Verification System */}
         {activeTab === 'otp' && (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-fade-in">
             {!otpSent ? (
               <form onSubmit={handleSendOtp} className="space-y-4">
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-white/40" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 98765 43210"
-                    value={otpPhone}
-                    onChange={(e) => setOtpPhone(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-xs text-white placeholder-white/40"
-                  />
+                <div className="text-xs text-white/60 text-center mb-1">
+                  Enter your 10-digit mobile number to receive a secure SMS verification code.
                 </div>
+
+                <div className="flex gap-2">
+                  {/* Country Code Selection Dropdown */}
+                  <div className="relative w-28 shrink-0">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="w-full h-full py-3 px-2 rounded-xl glass-input text-xs text-white bg-slate-900/80 border border-white/15 focus:border-amber-400 appearance-none cursor-pointer text-center font-bold"
+                    >
+                      <option value="+91" className="bg-slate-900 text-white">🇮🇳 +91</option>
+                      <option value="+1" className="bg-slate-900 text-white">🇺🇸 +1</option>
+                      <option value="+44" className="bg-slate-900 text-white">🇬🇧 +44</option>
+                      <option value="+971" className="bg-slate-900 text-white">🇦🇪 +971</option>
+                    </select>
+                  </div>
+
+                  {/* Phone Input with 10-digit validation */}
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-white/40" />
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      placeholder="98765 43210"
+                      value={otpPhone}
+                      onChange={(e) => setOtpPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-xs text-white placeholder-white/40 font-mono tracking-wider"
+                    />
+                  </div>
+                </div>
+
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-bold text-xs cursor-pointer"
+                  disabled={loading}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                 >
-                  Send Verification OTP
+                  {loading ? 'Sending SMS OTP...' : 'Send Verification OTP'}
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-300 text-xs text-center">
-                  OTP sent to {otpPhone}. Enter code: <strong>1234</strong>
+              <form onSubmit={handleManualVerifySubmit} className="space-y-4 animate-fade-in">
+                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-center text-xs space-y-1">
+                  <div className="text-white/70">OTP dispatched to <span className="font-bold text-amber-300 font-mono">{countryCode} {otpPhone}</span></div>
+                  {debugOtpCode && (
+                    <div className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-mono text-[11px] font-bold">
+                      [SMS Gateway Code: {debugOtpCode}]
+                    </div>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  maxLength={4}
-                  required
-                  placeholder="Enter 4-Digit OTP"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  className="w-full text-center tracking-widest text-lg py-3 rounded-xl glass-input text-amber-300 font-bold"
-                />
+
+                {/* 6-Digit Sleek OTP Input Grid with Auto-Focus & Paste */}
+                <div className="space-y-2">
+                  <label className="block text-[11px] text-center text-white/50 uppercase tracking-widest font-semibold">
+                    Enter 6-Digit Code
+                  </label>
+                  <div className="flex justify-between gap-1.5 sm:gap-2">
+                    {otpDigits.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={el => otpInputRefs.current[index] = el}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpDigitChange(index, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                        onPaste={handleOtpPaste}
+                        className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-bold font-mono rounded-xl border transition-all glass-input ${
+                          digit ? 'border-amber-400 bg-amber-400/10 text-amber-300 shadow-lg shadow-amber-500/20' : 'border-white/15 text-white'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-bold text-xs cursor-pointer"
+                  disabled={loading || otpDigits.join('').length < 6}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                 >
-                  Verify & Sign In
+                  {loading ? 'Verifying OTP...' : 'Verify OTP & Sign In'}
                 </button>
+
+                {/* Resend OTP Timer & Change Phone controls */}
+                <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setOtpDigits(['', '', '', '', '', '']);
+                      setErrorMsg('');
+                    }}
+                    className="text-white/60 hover:text-white transition-colors cursor-pointer text-[11px]"
+                  >
+                    ← Change Mobile Number
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={resendTimer > 0 || loading}
+                    onClick={handleSendOtp}
+                    className={`font-semibold transition-colors text-[11px] flex items-center gap-1 cursor-pointer ${
+                      resendTimer > 0 ? 'text-white/40 cursor-not-allowed' : 'text-amber-400 hover:text-amber-300'
+                    }`}
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>{resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}</span>
+                  </button>
+                </div>
               </form>
             )}
           </div>
