@@ -7,7 +7,7 @@ import axios from 'axios';
 import { useBooking } from '../context/BookingContext';
 import { PrivateTheatreModal } from '../components/PrivateTheatreModal';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) => {
   const { moviesList } = useBooking();
