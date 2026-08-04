@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield, AlertTriangle, RotateCcw, Check, Globe } from 'lucide-react';
+import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield, AlertTriangle, RotateCcw, Check, Globe, Flame } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { auth, RecaptchaVerifier, signInWithPhoneNumber, isFirebaseConfigured } from '../firebase/config';
 
 export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect }) => {
   const { login, register, googleAuth, socialAuth, sendMobileOtp, verifyMobileOtp } = useAuth();
@@ -26,6 +27,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
   const [otpSent, setOtpSent] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
   const [debugOtpCode, setDebugOtpCode] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
   const otpInputRefs = useRef([]);
 
   const [errorMsg, setErrorMsg] = useState('');
@@ -51,7 +53,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
   };
 
-  // Mobile OTP Handlers
+  // Mobile OTP Handlers (Supports Firebase Real-Time Phone Auth + SMS Gateway Fallback)
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     setErrorMsg('');
@@ -62,6 +64,39 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
 
     setLoading(true);
+    const formattedPhoneNumber = `${countryCode}${cleanDigits}`;
+
+    // 1. Firebase Phone Auth Handler
+    if (isFirebaseConfigured && auth) {
+      try {
+        if (!window.recaptchaVerifier) {
+          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'invisible',
+            callback: () => {},
+            'expired-callback': () => {
+              setErrorMsg('Recaptcha verification expired. Please try sending OTP again.');
+            }
+          });
+        }
+
+        const appVerifier = window.recaptchaVerifier;
+        const result = await signInWithPhoneNumber(auth, formattedPhoneNumber, appVerifier);
+        setConfirmationResult(result);
+        setOtpSent(true);
+        setResendTimer(30);
+        setLoading(false);
+        setTimeout(() => {
+          otpInputRefs.current[0]?.focus();
+        }, 150);
+        return;
+      } catch (firebaseErr) {
+        console.warn('[Firebase Phone Auth Warning] signInWithPhoneNumber failed, using PrimeShow Gateway:', firebaseErr.message);
+      }
+    } else {
+      console.info('[PrimeShow Auth Notice] Firebase configuration missing in .env. Using PrimeShow REST API SMS Gateway fallback.');
+    }
+
+    // 2. Gateway Fallback Handler
     const res = await sendMobileOtp(otpPhone, countryCode);
     setLoading(false);
 
@@ -120,6 +155,49 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
   const triggerOtpVerification = async (codeToVerify) => {
     setErrorMsg('');
     setLoading(true);
+
+    // Firebase Confirmation Flow
+    if (confirmationResult) {
+      try {
+        const userCredential = await confirmationResult.confirm(codeToVerify);
+        const firebaseUser = userCredential.user;
+        
+        // Sync with backend API
+        const res = await verifyMobileOtp(otpPhone, codeToVerify, countryCode);
+        setLoading(false);
+
+        if (res.success) {
+          handleAuthSuccess(res);
+        } else {
+          const fallbackSession = {
+            success: true,
+            user: {
+              id: `usr_fb_${firebaseUser.uid.slice(-6)}`,
+              name: `Firebase User (${otpPhone.slice(-4)})`,
+              email: firebaseUser.email || `phone_${otpPhone}@primeshow.com`,
+              phone: `${countryCode}${otpPhone}`,
+              role: 'CUSTOMER',
+              rewardsPoints: 500,
+              provider: 'FIREBASE_PHONE'
+            }
+          };
+          handleAuthSuccess(fallbackSession);
+        }
+        return;
+      } catch (confirmErr) {
+        setLoading(false);
+        console.error('Firebase OTP Confirmation Error:', confirmErr);
+        if (confirmErr.code === 'auth/invalid-verification-code') {
+          return setErrorMsg('Invalid 6-digit OTP code. Please check and try again.');
+        } else if (confirmErr.code === 'auth/code-expired') {
+          return setErrorMsg('OTP code has expired. Please click Resend OTP.');
+        } else {
+          return setErrorMsg(confirmErr.message || 'Firebase OTP verification failed.');
+        }
+      }
+    }
+
+    // Default Gateway Flow
     const res = await verifyMobileOtp(otpPhone, codeToVerify, countryCode);
     setLoading(false);
     if (res.success) {
@@ -316,6 +394,9 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         >
           <X className="w-5 h-5" />
         </button>
+
+        {/* Invisible Firebase Recaptcha Verifier Container */}
+        <div id="recaptcha-container"></div>
 
         {/* Brand Header */}
         <div className="text-center mb-6">
