@@ -1,3 +1,6 @@
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,21 +19,19 @@ export const isFirebaseConfigured = Boolean(
 
 let app = null;
 let auth = null;
-let RecaptchaVerifier = null;
-let signInWithPhoneNumber = null;
 
-try {
-  const firebaseApp = await import(/* @vite-ignore */ 'firebase/app').catch(() => null);
-  const firebaseAuth = await import(/* @vite-ignore */ 'firebase/auth').catch(() => null);
-
-  if (firebaseApp && firebaseAuth && isFirebaseConfigured) {
-    app = !firebaseApp.getApps().length ? firebaseApp.initializeApp(firebaseConfig) : firebaseApp.getApp();
-    auth = firebaseAuth.getAuth(app);
-    RecaptchaVerifier = firebaseAuth.RecaptchaVerifier;
-    signInWithPhoneNumber = firebaseAuth.signInWithPhoneNumber;
+if (isFirebaseConfigured) {
+  try {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+  } catch (err) {
+    console.warn('[PrimeShow Firebase Warning] Failed to initialize Firebase:', err.message);
   }
-} catch (e) {
-  console.info('[PrimeShow Auth Notice] Firebase SDK setup note. Using PrimeShow REST API SMS Gateway fallback.');
+} else {
+  console.info(
+    '[PrimeShow Auth Notice] Firebase configuration keys missing in .env file. ' +
+    'Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID in client/.env for live Firebase Phone Auth.'
+  );
 }
 
 export { app, auth, RecaptchaVerifier, signInWithPhoneNumber };

@@ -72,15 +72,24 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         if (!window.recaptchaVerifier) {
           window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             size: 'invisible',
-            callback: () => {},
+            callback: (response) => {
+              console.log('📱 reCAPTCHA verified successfully:', response);
+            },
             'expired-callback': () => {
-              setErrorMsg('Recaptcha verification expired. Please try sending OTP again.');
+              console.warn('⚠️ reCAPTCHA verification expired');
+              setErrorMsg('reCAPTCHA verification expired. Please try sending OTP again.');
+              if (window.recaptchaVerifier) {
+                window.recaptchaVerifier.render().then(widgetId => grecaptcha.reset(widgetId));
+              }
             }
           });
         }
 
         const appVerifier = window.recaptchaVerifier;
+        console.log(`📱 Initiating Firebase Phone Auth for ${formattedPhoneNumber}...`);
         const result = await signInWithPhoneNumber(auth, formattedPhoneNumber, appVerifier);
+        
+        console.log('✅ Firebase OTP SMS dispatched successfully!');
         setConfirmationResult(result);
         setOtpSent(true);
         setResendTimer(30);
@@ -90,7 +99,14 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         }, 150);
         return;
       } catch (firebaseErr) {
-        console.warn('[Firebase Phone Auth Warning] signInWithPhoneNumber failed, using PrimeShow Gateway:', firebaseErr.message);
+        console.warn('[Firebase Phone Auth Exception] signInWithPhoneNumber failed:', firebaseErr);
+        if (firebaseErr.code === 'auth/invalid-phone-number') {
+          setLoading(false);
+          return setErrorMsg('Invalid phone number format for SMS delivery.');
+        } else if (firebaseErr.code === 'auth/too-many-requests') {
+          setLoading(false);
+          return setErrorMsg('Too many SMS requests for this phone number. Please wait an hour or use SMS Gateway fallback.');
+        }
       }
     } else {
       console.info('[PrimeShow Auth Notice] Firebase configuration missing in .env. Using PrimeShow REST API SMS Gateway fallback.');
@@ -159,8 +175,10 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     // Firebase Confirmation Flow
     if (confirmationResult) {
       try {
+        console.log(`📱 Verifying Firebase OTP code: ${codeToVerify}...`);
         const userCredential = await confirmationResult.confirm(codeToVerify);
         const firebaseUser = userCredential.user;
+        console.log('✅ Firebase OTP verified successfully for user:', firebaseUser.phoneNumber || firebaseUser.uid);
         
         // Sync with backend API
         const res = await verifyMobileOtp(otpPhone, codeToVerify, countryCode);
@@ -186,7 +204,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         return;
       } catch (confirmErr) {
         setLoading(false);
-        console.error('Firebase OTP Confirmation Error:', confirmErr);
+        console.error('❌ Firebase OTP Confirmation Error:', confirmErr);
         if (confirmErr.code === 'auth/invalid-verification-code') {
           return setErrorMsg('Invalid 6-digit OTP code. Please check and try again.');
         } else if (confirmErr.code === 'auth/code-expired') {
