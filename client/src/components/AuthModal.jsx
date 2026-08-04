@@ -30,6 +30,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
   const [confirmationResult, setConfirmationResult] = useState(null);
   const otpInputRefs = useRef([]);
 
+  const [statusMsg, setStatusMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -57,6 +58,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     setErrorMsg('');
+    setStatusMsg('');
     
     const cleanDigits = otpPhone.replace(/\D/g, '');
     if (!cleanDigits || cleanDigits.length < 10) {
@@ -66,9 +68,10 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     setLoading(true);
     const formattedPhoneNumber = `${countryCode}${cleanDigits}`;
 
-    // 1. Firebase Phone Auth Handler
+    // 1. Client-Side Direct Firebase Phone Auth Handler (0 Cold-Start Delay)
     if (isFirebaseConfigured && auth) {
       try {
+        setStatusMsg('Initializing Google Firebase reCAPTCHA...');
         if (!window.recaptchaVerifier) {
           window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
             size: 'invisible',
@@ -86,7 +89,8 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         }
 
         const appVerifier = window.recaptchaVerifier;
-        console.log(`📱 Initiating Firebase Phone Auth for ${formattedPhoneNumber}...`);
+        console.log(`📱 Initiating Client-Side Firebase Phone Auth for ${formattedPhoneNumber}...`);
+        setStatusMsg('Sending SMS OTP via Firebase...');
         const result = await signInWithPhoneNumber(auth, formattedPhoneNumber, appVerifier);
         
         console.log('✅ Firebase OTP SMS dispatched successfully!');
@@ -94,17 +98,20 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         setOtpSent(true);
         setResendTimer(30);
         setLoading(false);
+        setStatusMsg('');
         setTimeout(() => {
           otpInputRefs.current[0]?.focus();
         }, 150);
         return;
       } catch (firebaseErr) {
-        console.warn('[Firebase Phone Auth Exception] signInWithPhoneNumber failed:', firebaseErr);
+        console.warn('[Firebase Phone Auth Exception] signInWithPhoneNumber failed, using SMS Gateway fallback:', firebaseErr);
         if (firebaseErr.code === 'auth/invalid-phone-number') {
           setLoading(false);
+          setStatusMsg('');
           return setErrorMsg('Invalid phone number format for SMS delivery.');
         } else if (firebaseErr.code === 'auth/too-many-requests') {
           setLoading(false);
+          setStatusMsg('');
           return setErrorMsg('Too many SMS requests for this phone number. Please wait an hour or use SMS Gateway fallback.');
         }
       }
@@ -112,9 +119,10 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
       console.info('[PrimeShow Auth Notice] Firebase configuration missing in .env. Using PrimeShow REST API SMS Gateway fallback.');
     }
 
-    // 2. Gateway Fallback Handler
-    const res = await sendMobileOtp(otpPhone, countryCode);
+    // 2. Gateway Fallback Handler (with automatic 3x retries & Render cold-start status)
+    const res = await sendMobileOtp(otpPhone, countryCode, setStatusMsg);
     setLoading(false);
+    setStatusMsg('');
 
     if (res.success) {
       setOtpSent(true);
@@ -530,12 +538,25 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                   </div>
                 </div>
 
+                {statusMsg && loading && (
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-center text-xs text-amber-300 animate-pulse font-medium">
+                    ⚡ {statusMsg}
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Sending SMS OTP...' : 'Send Verification OTP'}
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                      <span>{statusMsg || 'Dispatching SMS OTP...'}</span>
+                    </>
+                  ) : (
+                    'Send Verification OTP'
+                  )}
                 </button>
               </form>
             ) : (

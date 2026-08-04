@@ -266,20 +266,54 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const sendMobileOtp = async (phone, countryCode = '+91') => {
-    try {
-      console.log(`📱 Calling backend endpoint: ${API_BASE}/auth/send-otp for ${countryCode}${phone}...`);
-      const res = await apiClient.post('/auth/send-otp', { phone, countryCode });
-      console.log('✅ Send OTP Response:', res.data);
-      return { success: true, message: res.data.message, debugOtp: res.data.debugOtp };
-    } catch (err) {
-      console.error('❌ Send OTP API Error:', err.response?.status, err.response?.data || err.message);
-      let errorText = err.response?.data?.error || err.message;
-      if (!err.response || err.code === 'ECONNABORTED' || err.code === 'ERR_NETWORK') {
-        errorText = 'Server is waking up (Render cold-start). Please try sending OTP again in a few seconds.';
+  const sendMobileOtp = async (phone, countryCode = '+91', onProgressStatus = null) => {
+    const cleanDigits = phone.replace(/\D/g, '');
+    const formattedPhone = `${countryCode}${cleanDigits}`;
+    const maxRetries = 3;
+    let attempt = 0;
+
+    while (attempt < maxRetries) {
+      attempt++;
+      try {
+        if (onProgressStatus) {
+          if (attempt === 1) {
+            onProgressStatus('Dispatching verification OTP...');
+          } else {
+            onProgressStatus(`Connecting to server... (Waking up Render backend, attempt ${attempt}/${maxRetries})`);
+          }
+        }
+        console.log(`📱 [Attempt ${attempt}/${maxRetries}] Calling backend endpoint: ${API_BASE}/auth/send-otp for ${formattedPhone}...`);
+        
+        const res = await apiClient.post('/auth/send-otp', { phone, countryCode }, {
+          timeout: 45000 // 45 seconds timeout per attempt
+        });
+        
+        console.log('✅ Send OTP Response:', res.data);
+        return { success: true, message: res.data.message, debugOtp: res.data.debugOtp };
+      } catch (err) {
+        console.warn(`⚠️ [Attempt ${attempt}/${maxRetries}] Send OTP Error:`, err.response?.status, err.message);
+        
+        const isColdStart = !err.response || err.code === 'ECONNABORTED' || err.code === 'ERR_NETWORK' || [502, 503, 504].includes(err.response?.status);
+        
+        if (isColdStart && attempt < maxRetries) {
+          const delayMs = attempt * 3000; // 3s, 6s backoff
+          if (onProgressStatus) {
+            onProgressStatus(`Server is waking up... Retrying automatically in ${delayMs / 1000}s`);
+          }
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        } else {
+          const errorText = err.response?.data?.error || err.message;
+          return { 
+            success: false, 
+            error: isColdStart 
+              ? 'Server cold-start timed out. Please click Resend OTP in a moment.' 
+              : (errorText || 'Failed to dispatch verification OTP')
+          };
+        }
       }
-      return { success: false, error: errorText || 'Failed to dispatch verification OTP' };
     }
+
+    return { success: false, error: 'Failed to connect to backend server after multiple attempts.' };
   };
 
   const verifyMobileOtp = async (phone, otp, countryCode = '+91') => {
