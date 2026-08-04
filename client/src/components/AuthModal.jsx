@@ -54,7 +54,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
   };
 
-  // Mobile OTP Handlers (Pure Client-Side Firebase SDK Dispatch)
+  // Mobile OTP Handler (PURE CLIENT-SIDE FIREBASE SDK DISPATCH - ZERO BACKEND HTTP CALLS)
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     setErrorMsg('');
@@ -68,12 +68,11 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     setLoading(true);
     const fullPhoneNumber = `${countryCode}${cleanDigits}`;
 
-    // 1. Pure Client-Side Direct Firebase Phone Auth Handler (0 Cold-Start Delay)
     try {
       setStatusMsg('Sending SMS OTP via Firebase...');
       
       // Initialize reCAPTCHA Verifier
-      if (!window.recaptchaVerifier && auth) {
+      if (!window.recaptchaVerifier) {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
           size: 'invisible',
           callback: (response) => {
@@ -91,24 +90,26 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
       }
 
       const appVerifier = window.recaptchaVerifier;
-      console.log(`📱 Triggering Client-Side Firebase Phone Auth for ${fullPhoneNumber}...`);
+      console.log(`📱 Executing Client-Side Firebase SDK signInWithPhoneNumber for ${fullPhoneNumber}...`);
 
-      if (auth && appVerifier) {
-        const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
-        console.log('✅ Firebase OTP SMS dispatched instantly to client!');
-        window.confirmationResult = result;
-        setConfirmationResult(result);
-        setOtpSent(true);
-        setResendTimer(30);
-        setLoading(false);
-        setStatusMsg('');
-        setTimeout(() => {
-          otpInputRefs.current[0]?.focus();
-        }, 150);
-        return;
-      }
+      const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
+      console.log('✅ Firebase OTP SMS dispatched directly from browser!');
+      
+      window.confirmationResult = result;
+      setConfirmationResult(result);
+      setOtpSent(true);
+      setResendTimer(30);
+      setLoading(false);
+      setStatusMsg('');
+      
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 150);
     } catch (firebaseErr) {
-      console.error('❌ Firebase Phone Auth Exception:', firebaseErr);
+      console.error('❌ Firebase Phone Auth Error:', firebaseErr);
+      setLoading(false);
+      setStatusMsg('');
+
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.render().then(widgetId => {
           if (window.grecaptcha) window.grecaptcha.reset(widgetId);
@@ -116,30 +117,14 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
       }
 
       if (firebaseErr.code === 'auth/invalid-phone-number') {
-        setLoading(false);
-        setStatusMsg('');
         return setErrorMsg('Invalid phone number format for SMS delivery.');
       } else if (firebaseErr.code === 'auth/too-many-requests') {
-        setLoading(false);
-        setStatusMsg('');
         return setErrorMsg('Too many SMS requests for this phone number. Please try again later.');
+      } else if (firebaseErr.code === 'auth/captcha-check-failed') {
+        return setErrorMsg('reCAPTCHA verification failed. Please try again.');
+      } else {
+        return setErrorMsg(firebaseErr.message || 'Failed to dispatch SMS OTP via Firebase.');
       }
-    }
-
-    // 2. Fallback SMS Gateway Dispatch if Firebase SDK is unconfigured
-    const res = await sendMobileOtp(otpPhone, countryCode);
-    setLoading(false);
-    setStatusMsg('');
-
-    if (res.success) {
-      setOtpSent(true);
-      setResendTimer(30);
-      if (res.debugOtp) setDebugOtpCode(res.debugOtp);
-      setTimeout(() => {
-        otpInputRefs.current[0]?.focus();
-      }, 150);
-    } else {
-      setErrorMsg(res.error || 'Failed to dispatch verification OTP');
     }
   };
 
