@@ -2,36 +2,21 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDemoDummyApiKeyForPrimeShow2026',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'primeshow-app.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'primeshow-app',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'primeshow-app.appspot.com',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789012',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789012:web:abcdef1234567890'
 };
 
+// Initialize Firebase App & Auth unconditionally so auth is NEVER null
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+export const auth = getAuth(app);
+
 export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey && 
-  firebaseConfig.apiKey !== 'your_firebase_api_key_here' &&
-  firebaseConfig.projectId &&
-  firebaseConfig.appId
+  import.meta.env.VITE_FIREBASE_API_KEY && 
+  import.meta.env.VITE_FIREBASE_API_KEY !== 'your_firebase_api_key_here'
 );
 
-let app = null;
-let auth = null;
-
-if (isFirebaseConfigured) {
-  try {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-  } catch (err) {
-    console.warn('[PrimeShow Firebase Warning] Failed to initialize Firebase:', err.message);
-  }
-} else {
-  console.info(
-    '[PrimeShow Auth Notice] Firebase configuration keys missing in .env file. ' +
-    'Set VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID in client/.env for live Firebase Phone Auth.'
-  );
-}
-
-export { app, auth, RecaptchaVerifier, signInWithPhoneNumber };
+export { app, RecaptchaVerifier, signInWithPhoneNumber };
