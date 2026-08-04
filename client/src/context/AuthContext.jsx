@@ -6,6 +6,41 @@ const rawApiBase = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'unde
 const cleanBase = rawApiBase.replace(/\/+$/, '');
 const API_BASE = cleanBase.endsWith('/api') ? cleanBase : `${cleanBase}/api`;
 
+// Axios Instance configured for Render cold-starts (60s timeout + automatic retry)
+const apiClient = axios.create({
+  baseURL: API_BASE,
+  timeout: 60000, // 60 seconds timeout to handle Render free-tier cold starts
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Automatic retry interceptor for Network Errors and Timeouts (up to 2 retries)
+apiClient.interceptors.response.use(null, async (error) => {
+  const config = error.config;
+  if (!config) return Promise.reject(error);
+  
+  if (config._retryCount === undefined) {
+    config._retryCount = 0;
+  }
+
+  const isNetworkOrTimeout = 
+    !error.response || 
+    error.code === 'ECONNABORTED' || 
+    error.code === 'ERR_NETWORK' || 
+    [502, 503, 504].includes(error.response?.status);
+
+  if (isNetworkOrTimeout && config._retryCount < 2) {
+    config._retryCount += 1;
+    console.warn(`⏳ [Render Server Cold-Start] Network timeout/error detected. Retrying request (${config._retryCount}/2) in 2 seconds...`);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    return apiClient(config);
+  }
+
+  return Promise.reject(error);
+});
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('primeshow_user');
@@ -40,12 +75,26 @@ export const AuthProvider = ({ children }) => {
   // Notifications Stream State
   const [notifications, setNotifications] = useState([]);
 
+  // Silent background health-check ping on mount to wake up Render free-tier early
+  useEffect(() => {
+    const wakeUpRenderServer = async () => {
+      try {
+        console.log('⚡ [Render Wake-Up Ping] Pinging backend server on app mount...');
+        await apiClient.get('/health', { timeout: 30000 });
+        console.log('✅ [Render Server Active] Backend instance is awake and ready!');
+      } catch (e) {
+        console.info('⚡ [Render Wake-Up Ping] Server warming up in background...');
+      }
+    };
+    wakeUpRenderServer();
+  }, []);
+
   // Fetch support messages & notifications
   const fetchStreamData = async () => {
     try {
       const [msgRes, notifRes] = await Promise.all([
-        axios.get(`${API_BASE}/support/messages`),
-        axios.get(`${API_BASE}/notifications`)
+        apiClient.get('/support/messages'),
+        apiClient.get('/notifications')
       ]);
       setSupportMessages(msgRes.data);
       setNotifications(notifRes.data);
@@ -132,7 +181,7 @@ export const AuthProvider = ({ children }) => {
     const identifierKey = isEmail ? 'email' : (isPhone ? 'phone' : 'email');
 
     try {
-      const res = await axios.post(`${API_BASE}/auth/login`, { [identifierKey]: emailOrPhone, email: emailOrPhone, password });
+      const res = await apiClient.post('/auth/login', { [identifierKey]: emailOrPhone, email: emailOrPhone, password });
       const { token: userToken, user: userData } = res.data;
       
       let mergedUser = userData;
@@ -182,7 +231,7 @@ export const AuthProvider = ({ children }) => {
 
   const googleAuth = async (oauthPayload) => {
     try {
-      const res = await axios.post(`${API_BASE}/auth/google`, oauthPayload);
+      const res = await apiClient.post('/auth/google', oauthPayload);
       const { token: userToken, user: userData } = res.data;
 
       setToken(userToken);
@@ -220,26 +269,23 @@ export const AuthProvider = ({ children }) => {
   const sendMobileOtp = async (phone, countryCode = '+91') => {
     try {
       console.log(`📱 Calling backend endpoint: ${API_BASE}/auth/send-otp for ${countryCode}${phone}...`);
-      const res = await axios.post(`${API_BASE}/auth/send-otp`, { phone, countryCode }, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const res = await apiClient.post('/auth/send-otp', { phone, countryCode });
       console.log('✅ Send OTP Response:', res.data);
       return { success: true, message: res.data.message, debugOtp: res.data.debugOtp };
     } catch (err) {
       console.error('❌ Send OTP API Error:', err.response?.status, err.response?.data || err.message);
-      const errorText = err.response?.data?.error || err.message || 'Failed to dispatch verification OTP';
-      return { success: false, error: errorText };
+      let errorText = err.response?.data?.error || err.message;
+      if (!err.response || err.code === 'ECONNABORTED' || err.code === 'ERR_NETWORK') {
+        errorText = 'Server is waking up (Render cold-start). Please try sending OTP again in a few seconds.';
+      }
+      return { success: false, error: errorText || 'Failed to dispatch verification OTP' };
     }
   };
 
   const verifyMobileOtp = async (phone, otp, countryCode = '+91') => {
     try {
       console.log(`📱 Calling backend endpoint: ${API_BASE}/auth/verify-otp for code ${otp}...`);
-      const res = await axios.post(`${API_BASE}/auth/verify-otp`, { phone, otp, countryCode }, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const res = await apiClient.post('/auth/verify-otp', { phone, otp, countryCode });
       console.log('✅ Verify OTP Response:', res.data);
       const { token: userToken, user: userData } = res.data;
 
@@ -252,7 +298,10 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData };
     } catch (err) {
       console.error('❌ Verify OTP API Error:', err.response?.status, err.response?.data || err.message);
-      const errorText = err.response?.data?.error || err.message || 'OTP verification failed';
+      let errorText = err.response?.data?.error || err.message;
+      if (!err.response || err.code === 'ECONNABORTED' || err.code === 'ERR_NETWORK') {
+        errorText = 'Server is waking up (Render cold-start). Please try again in a few seconds.';
+      }
       if (otp === '1234' || otp === '123456') {
         const fallbackUser = {
           id: 'usr_otp_' + Date.now(),
@@ -270,7 +319,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('primeshow_user', JSON.stringify(fallbackUser));
         return { success: true, user: fallbackUser };
       }
-      return { success: false, error: errorText };
+      return { success: false, error: errorText || 'OTP verification failed' };
     }
   };
 
