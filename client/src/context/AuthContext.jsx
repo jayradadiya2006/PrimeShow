@@ -2,7 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
+const rawApiBase = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
+const cleanBase = rawApiBase.replace(/\/+$/, '');
+const API_BASE = cleanBase.endsWith('/api') ? cleanBase : `${cleanBase}/api`;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
@@ -217,17 +219,28 @@ export const AuthProvider = ({ children }) => {
 
   const sendMobileOtp = async (phone, countryCode = '+91') => {
     try {
-      const res = await axios.post(`${API_BASE}/auth/send-otp`, { phone, countryCode });
+      console.log(`📱 Calling backend endpoint: ${API_BASE}/auth/send-otp for ${countryCode}${phone}...`);
+      const res = await axios.post(`${API_BASE}/auth/send-otp`, { phone, countryCode }, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      console.log('✅ Send OTP Response:', res.data);
       return { success: true, message: res.data.message, debugOtp: res.data.debugOtp };
     } catch (err) {
-      const errorText = err.response?.data?.error || 'Failed to dispatch verification OTP';
+      console.error('❌ Send OTP API Error:', err.response?.status, err.response?.data || err.message);
+      const errorText = err.response?.data?.error || err.message || 'Failed to dispatch verification OTP';
       return { success: false, error: errorText };
     }
   };
 
   const verifyMobileOtp = async (phone, otp, countryCode = '+91') => {
     try {
-      const res = await axios.post(`${API_BASE}/auth/verify-otp`, { phone, otp, countryCode });
+      console.log(`📱 Calling backend endpoint: ${API_BASE}/auth/verify-otp for code ${otp}...`);
+      const res = await axios.post(`${API_BASE}/auth/verify-otp`, { phone, otp, countryCode }, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      console.log('✅ Verify OTP Response:', res.data);
       const { token: userToken, user: userData } = res.data;
 
       setToken(userToken);
@@ -238,7 +251,8 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user: userData };
     } catch (err) {
-      const errorText = err.response?.data?.error || 'OTP verification failed';
+      console.error('❌ Verify OTP API Error:', err.response?.status, err.response?.data || err.message);
+      const errorText = err.response?.data?.error || err.message || 'OTP verification failed';
       if (otp === '1234' || otp === '123456') {
         const fallbackUser = {
           id: 'usr_otp_' + Date.now(),

@@ -9,14 +9,33 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'primeshow_ultra_secret_key_2026';
 
-// Bulletproof CORS Setup for Vercel and Local Cross-Origin Requests
+const allowedOrigins = [
+  'https://prime-show-tau.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+// STEP 1: CORS Middleware MUST be the VERY FIRST middleware in Express
+app.use(cors({
+  origin: (origin, callback) => {
+    // Dynamic origin reflection allows credentials: true without wildcard CORS errors
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
+
+app.options('*', cors());
+
+// Header fallback middleware for any custom requests
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
@@ -28,25 +47,6 @@ app.use((req, res, next) => {
     return res.status(200).end();
   }
   next();
-});
-
-app.use(cors({
-  origin: (origin, callback) => {
-    // Dynamic origin reflection allows credentials: true without CORS wildcard errors
-    callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
-}));
-
-app.options('*', (req, res) => {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-  res.status(200).end();
 });
 
 app.use(express.json({ limit: '50mb' }));
@@ -76,10 +76,10 @@ app.get(['/', '/api/health'], (req, res) => {
 });
 
 // -------------------------------------------------------------
-// AUTHENTICATION ENDPOINTS
+// AUTHENTICATION ENDPOINTS (Supports both /api/auth and /auth)
 // -------------------------------------------------------------
 
-app.post('/api/auth/login', (req, res) => {
+app.post(['/api/auth/login', '/auth/login'], (req, res) => {
   const { email, phone, identifier, password } = req.body;
   const userIdentifier = email || phone || identifier;
 
@@ -130,7 +130,7 @@ app.post('/api/auth/login', (req, res) => {
   return res.json({ token, user: customerUser });
 });
 
-app.post('/api/auth/register', (req, res) => {
+app.post(['/api/auth/register', '/auth/register'], (req, res) => {
   const { name, email, phone, password } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email and password are required' });
@@ -158,7 +158,7 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 // Production-Ready Google OAuth 2.0 Backend Synchronization Endpoint
-app.post('/api/auth/google', async (req, res) => {
+app.post(['/api/auth/google', '/auth/google'], async (req, res) => {
   const { token: idToken, credential, profile } = req.body;
 
   try {
@@ -260,8 +260,8 @@ const normalizePhone = (phone, countryCode = '+91') => {
   return `${countryCode}${digitsOnly}`;
 };
 
-// Send Mobile OTP Endpoint (/api/auth/send-otp)
-app.post('/api/auth/send-otp', async (req, res) => {
+// Send Mobile OTP Endpoint (/api/auth/send-otp & /auth/send-otp)
+app.post(['/api/auth/send-otp', '/auth/send-otp'], async (req, res) => {
   const { phone, countryCode = '+91' } = req.body;
 
   if (!phone) {
@@ -313,8 +313,8 @@ app.post('/api/auth/send-otp', async (req, res) => {
   });
 });
 
-// Verify Mobile OTP Endpoint (/api/auth/verify-otp)
-app.post('/api/auth/verify-otp', async (req, res) => {
+// Verify Mobile OTP Endpoint (/api/auth/verify-otp & /auth/verify-otp)
+app.post(['/api/auth/verify-otp', '/auth/verify-otp'], async (req, res) => {
   const { phone, otp, countryCode = '+91' } = req.body;
 
   if (!phone || !otp) {
@@ -1165,6 +1165,19 @@ app.post('/api/activities/book', (req, res) => {
   bookings.unshift(newBooking);
 
   res.status(201).json(newBooking);
+});
+
+// Global 404 Fallback for unmapped API routes (returns JSON with CORS headers instead of HTML 404)
+app.use((req, res) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.status(404).json({
+    error: 'API Endpoint Not Found',
+    path: req.originalUrl,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.listen(PORT, async () => {
