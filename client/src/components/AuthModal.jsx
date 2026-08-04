@@ -26,7 +26,6 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
-  const [debugOtpCode, setDebugOtpCode] = useState('');
   const [confirmationResult, setConfirmationResult] = useState(null);
   const otpInputRefs = useRef([]);
 
@@ -54,7 +53,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
   };
 
-  // Mobile OTP Handler (Supports Pure Client-Side Firebase SDK + Seamless Demo Fallback)
+  // Mobile OTP Handler (REAL FIREBASE SMS DISPATCH VIA CLIENT SDK)
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
     setErrorMsg('');
@@ -68,83 +67,66 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     setLoading(true);
     const fullPhoneNumber = `${countryCode}${cleanDigits}`;
 
-    // 1. Pure Client-Side Firebase SDK Real SMS Dispatch (if VITE_FIREBASE_API_KEY is configured)
-    if (isFirebaseConfigured && auth) {
-      try {
-        setStatusMsg('Sending SMS OTP via Firebase...');
-        
-        // Initialize reCAPTCHA Verifier
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            size: 'invisible',
-            callback: (response) => {
-              console.log('📱 reCAPTCHA verified successfully');
-            },
-            'expired-callback': () => {
-              console.warn('⚠️ reCAPTCHA verification expired');
-              if (window.recaptchaVerifier) {
-                window.recaptchaVerifier.render().then(widgetId => {
-                  if (window.grecaptcha) window.grecaptcha.reset(widgetId);
-                });
-              }
+    try {
+      setStatusMsg('Sending SMS OTP via Firebase...');
+      
+      // Initialize reCAPTCHA Verifier
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: (response) => {
+            console.log('📱 reCAPTCHA verified successfully');
+          },
+          'expired-callback': () => {
+            console.warn('⚠️ reCAPTCHA verification expired');
+            if (window.recaptchaVerifier) {
+              window.recaptchaVerifier.render().then(widgetId => {
+                if (window.grecaptcha) window.grecaptcha.reset(widgetId);
+              });
             }
-          });
-        }
-
-        const appVerifier = window.recaptchaVerifier;
-        console.log(`📱 Executing Client-Side Firebase SDK signInWithPhoneNumber for ${fullPhoneNumber}...`);
-
-        const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
-        console.log('✅ Firebase OTP SMS dispatched directly from browser!');
-        
-        window.confirmationResult = result;
-        setConfirmationResult(result);
-        setOtpSent(true);
-        setResendTimer(30);
-        setLoading(false);
-        setStatusMsg('');
-        
-        setTimeout(() => {
-          otpInputRefs.current[0]?.focus();
-        }, 150);
-        return;
-      } catch (firebaseErr) {
-        console.warn('⚠️ Firebase Phone Auth Notice (switching to Instant Client Demo Mode):', firebaseErr.code || firebaseErr.message);
-        if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.render().then(widgetId => {
-            if (window.grecaptcha) window.grecaptcha.reset(widgetId);
-          });
-        }
-
-        if (firebaseErr.code === 'auth/invalid-phone-number') {
-          setLoading(false);
-          setStatusMsg('');
-          return setErrorMsg('Invalid phone number format for SMS delivery.');
-        } else if (firebaseErr.code === 'auth/too-many-requests') {
-          setLoading(false);
-          setStatusMsg('');
-          return setErrorMsg('Too many SMS requests for this phone number. Please try again later.');
-        } else if (firebaseErr.code !== 'auth/api-key-not-valid') {
-          setLoading(false);
-          setStatusMsg('');
-          return setErrorMsg(firebaseErr.message || 'Failed to dispatch SMS OTP via Firebase.');
-        }
+          }
+        });
       }
-    } else {
-      console.info('[PrimeShow Auth Notice] VITE_FIREBASE_API_KEY missing in .env / Vercel. Utilizing instant Client Demo SMS mode.');
+
+      const appVerifier = window.recaptchaVerifier;
+      console.log(`📱 Executing real Firebase signInWithPhoneNumber for ${fullPhoneNumber}...`);
+
+      const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
+      console.log('✅ Real SMS dispatched successfully via Firebase!');
+      
+      window.confirmationResult = result;
+      setConfirmationResult(result);
+      setOtpSent(true);
+      setResendTimer(30);
+      setLoading(false);
+      setStatusMsg('');
+      
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 150);
+    } catch (firebaseErr) {
+      console.error('❌ Real Firebase SMS Dispatch Error:', firebaseErr);
+      setLoading(false);
+      setStatusMsg('');
+
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.render().then(widgetId => {
+          if (window.grecaptcha) window.grecaptcha.reset(widgetId);
+        });
+      }
+
+      if (firebaseErr.code === 'auth/invalid-phone-number') {
+        return setErrorMsg('Invalid phone number format for SMS delivery.');
+      } else if (firebaseErr.code === 'auth/too-many-requests') {
+        return setErrorMsg('Too many SMS requests for this phone number. Please try again later.');
+      } else if (firebaseErr.code === 'auth/api-key-not-valid') {
+        return setErrorMsg('Firebase API Key is missing or invalid in Vercel environment variables.');
+      } else if (firebaseErr.code === 'auth/captcha-check-failed') {
+        return setErrorMsg('reCAPTCHA verification failed. Please try again.');
+      } else {
+        return setErrorMsg(firebaseErr.message || 'Failed to send SMS OTP via Firebase.');
+      }
     }
-
-    // 2. Instant Client Demo Mode (Zero Backend HTTP Delay when VITE_FIREBASE_API_KEY is not set)
-    const generatedCode = '123456';
-    setDebugOtpCode(generatedCode);
-    setOtpSent(true);
-    setResendTimer(30);
-    setLoading(false);
-    setStatusMsg('');
-
-    setTimeout(() => {
-      otpInputRefs.current[0]?.focus();
-    }, 150);
   };
 
   const handleOtpDigitChange = (index, value) => {
@@ -576,11 +558,6 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
               <form onSubmit={handleManualVerifySubmit} className="space-y-4 animate-fade-in">
                 <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-center text-xs space-y-1">
                   <div className="text-white/70">OTP dispatched to <span className="font-bold text-amber-300 font-mono">{countryCode} {otpPhone}</span></div>
-                  {debugOtpCode && (
-                    <div className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-mono text-[11px] font-bold">
-                      [SMS Gateway Code: {debugOtpCode}]
-                    </div>
-                  )}
                 </div>
 
                 {/* 6-Digit Sleek OTP Input Grid with Auto-Focus & Paste */}
