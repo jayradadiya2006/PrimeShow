@@ -18,7 +18,8 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'primeshow-89717',
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'primeshow-89717.firebasestorage.app',
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '299682593375',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:299682593375:web:a53bcfb4f53cd09f6b39ea'
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:299682593375:web:a53bcfb4f53cd09f6b39ea',
+  measurementId: 'G-G25BKQP30F'
 };
 
 // Initialize Firebase App & Auth

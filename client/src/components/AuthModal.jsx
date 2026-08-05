@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield, AlertTriangle, RotateCcw, Check, Globe, Flame } from 'lucide-react';
+import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield, AlertTriangle, RotateCcw, Check, Globe, Flame, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -440,27 +440,38 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
-      <div className="relative w-full max-w-md glass-modal rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/90 dark:bg-[#06080C]/95 backdrop-blur-2xl overflow-y-auto animate-fade-in">
+      <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/95 rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl shadow-amber-500/10 text-white font-sans">
         
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Top Header Controls: Clean Back to Home Button & Close Icon */}
+        <div className="flex items-center justify-between mb-6 pb-2 border-b border-white/10">
+          <button
+            onClick={onClose}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-amber-500 hover:text-black text-amber-300 text-xs font-bold transition-all duration-200 border border-amber-400/20 shadow-md cursor-pointer group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+            <span>Back to Home</span>
+          </button>
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-colors cursor-pointer"
+            title="Close Auth View"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Invisible Firebase Recaptcha Verifier Container */}
         <div id="recaptcha-container"></div>
 
-        {/* Brand Header */}
+        {/* Brand Header with Modern Typography */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 text-black font-black font-serif text-2xl mb-3 shadow-lg shadow-amber-500/20">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-300 text-black font-extrabold font-serif text-2xl mb-3 shadow-lg shadow-amber-500/25 ring-2 ring-amber-400/30">
             P
           </div>
-          <h3 className="text-2xl font-bold font-serif text-white">Welcome to PrimeShow</h3>
-          <p className="text-xs text-amber-300/80 font-sans mt-1">Ultra-Luxury Cinema Booking Suite</p>
+          <h3 className="text-2xl font-extrabold tracking-tight text-white font-sans">Welcome to PrimeShow</h3>
+          <p className="text-xs text-amber-300/90 font-medium tracking-wide mt-1">Ultra-Luxury Cinema Booking & Entertainment Suite</p>
         </div>
 
         {/* Mode Switcher Tabs */}
