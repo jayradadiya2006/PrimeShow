@@ -36,7 +36,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   const [altPhone, setAltPhone] = useState(user?.altPhone || '');
   const [whatsappPhone, setWhatsappPhone] = useState(user?.whatsappPhone || '');
   const [dob, setDob] = useState(user?.dob || '1998-05-15');
-  const [currentAvatar, setCurrentAvatar] = useState(user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80");
+  const [currentAvatar, setCurrentAvatar] = useState(user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/adventurer/svg?seed=Felix&backgroundColor=b6e3f4");
 
   const [savedMsg, setSavedMsg] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -58,7 +58,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
       setAltPhone(user.altPhone || '');
       setWhatsappPhone(user.whatsappPhone || user.phone || '');
       setDob(user.dob || '1998-05-15');
-      if (user.avatar) setCurrentAvatar(user.avatar);
+      if (user.profilePicture || user.avatar) setCurrentAvatar(user.profilePicture || user.avatar);
     }
   }, [user, isEditing]);
 
@@ -70,22 +70,26 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
     { 
       id: 'men', 
       label: 'Men', 
-      url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80' 
+      desc: '3D Male Cartoon',
+      url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix&backgroundColor=b6e3f4' 
     },
     { 
       id: 'female', 
       label: 'Female', 
-      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' 
+      desc: '3D Female Cartoon',
+      url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Samantha&backgroundColor=ffdfbf' 
     },
     { 
       id: 'kids', 
       label: 'Kids', 
-      url: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=300&q=80' 
+      desc: 'Cute Kid 3D Cartoon',
+      url: 'https://api.dicebear.com/7.x/big-smile/svg?seed=Buddy&backgroundColor=c0aede' 
     },
     { 
       id: 'others', 
       label: 'Others', 
-      url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=300&q=80' 
+      desc: 'Neutral 3D Cartoon',
+      url: 'https://api.dicebear.com/7.x/bottts/svg?seed=PrimeHero&backgroundColor=d1d4f9' 
     }
   ];
 
