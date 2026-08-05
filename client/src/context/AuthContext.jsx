@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { 
+  auth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut as firebaseSignOut, 
+  onAuthStateChanged,
+  updateProfile
+} from '../firebase/config';
 
 const AuthContext = createContext();
 const rawApiBase = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
@@ -50,6 +58,30 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => {
     return localStorage.getItem('primeshow_token') || null;
   });
+
+  // Global Firebase Auth State Change Listener
+  useEffect(() => {
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const userObj = {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'PrimeShow Member',
+          email: firebaseUser.email || '',
+          phone: firebaseUser.phoneNumber || '',
+          role: firebaseUser.email === 'admin@primeshow.com' ? 'ADMIN' : 'CUSTOMER',
+          rewardsPoints: 500,
+          provider: 'FIREBASE_EMAIL'
+        };
+        setUser(userObj);
+        setToken(firebaseUser.accessToken || `firebase_token_${firebaseUser.uid}`);
+        localStorage.setItem('primeshow_user', JSON.stringify(userObj));
+        localStorage.setItem('primeshow_token', firebaseUser.accessToken || `firebase_token_${firebaseUser.uid}`);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const [selectedCity, setSelectedCity] = useState(() => {
     return localStorage.getItem('primeshow_selected_city') || 'Mumbai';
@@ -420,7 +452,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      if (auth) {
+        await firebaseSignOut(auth);
+      }
+    } catch (e) {
+      console.warn('Firebase SignOut Warning:', e);
+    }
     setUser(null);
     setToken(null);
     localStorage.removeItem('primeshow_token');

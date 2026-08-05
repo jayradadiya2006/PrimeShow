@@ -1,5 +1,14 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { 
+  getAuth, 
+  RecaptchaVerifier, 
+  signInWithPhoneNumber,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile
+} from 'firebase/auth';
 
 // Read API Key from Vite / Next / Process environment variables
 const rawApiKey = 
@@ -26,4 +35,13 @@ export const isFirebaseConfigured = Boolean(
   !rawApiKey.includes('your_')
 );
 
-export { app, RecaptchaVerifier, signInWithPhoneNumber };
+export { 
+  app, 
+  RecaptchaVerifier, 
+  signInWithPhoneNumber,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile
+};

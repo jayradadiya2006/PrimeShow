@@ -149,21 +149,32 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                   Account & Settings Menu
                 </div>
 
-                {!user ? (
-                  <button
-                    onClick={() => { onOpenAuth(); setIsSettingsOpen(false); }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-slate-800 dark:text-white hover:bg-amber-500/20 hover:text-amber-600 dark:hover:text-amber-300 font-bold flex items-center gap-2.5 cursor-pointer"
-                  >
-                    <User className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                    <span>Login / Register</span>
-                  </button>
+                {user ? (
+                  <div className="p-2 mb-1 rounded-xl bg-amber-500/10 border border-amber-400/20">
+                    <div className="flex items-center gap-2.5 px-1 py-1">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-black font-extrabold flex items-center justify-center text-xs shrink-0 shadow-md">
+                        {user.email ? user.email.charAt(0).toUpperCase() : (user.name ? user.name.charAt(0).toUpperCase() : 'U')}
+                      </div>
+                      <div className="truncate flex-1 min-w-0">
+                        <div className="font-bold text-slate-900 dark:text-white truncate text-xs">{user.name || 'Member'}</div>
+                        <div className="text-[11px] text-amber-600 dark:text-amber-300 font-mono truncate">{user.email || user.phone || 'Firebase User'}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { logout(); setIsSettingsOpen(false); setActiveTab('home'); }}
+                      className="mt-2 w-full text-left px-3 py-1.5 rounded-lg text-rose-600 dark:text-rose-300 hover:bg-rose-500/20 font-bold flex items-center gap-2 transition-colors cursor-pointer text-xs"
+                    >
+                      <LogOut className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
+                      <span>Logout ({user.email ? (user.email.length > 16 ? user.email.slice(0, 14) + '...' : user.email) : 'Account'})</span>
+                    </button>
+                  </div>
                 ) : (
                   <button
-                    onClick={() => { logout(); setIsSettingsOpen(false); setActiveTab('home'); }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-rose-600 dark:text-rose-300 hover:bg-rose-500/20 font-bold flex items-center gap-2.5 cursor-pointer"
+                    onClick={() => { onOpenAuth(); setIsSettingsOpen(false); }}
+                    className="w-full text-left px-3 py-2.5 mb-1 rounded-xl text-slate-800 dark:text-white hover:bg-amber-500/20 hover:text-amber-600 dark:hover:text-amber-300 font-bold flex items-center gap-2.5 transition-colors cursor-pointer"
                   >
-                    <LogOut className="w-4 h-4 text-rose-500 dark:text-rose-400" />
-                    <span>Sign Out</span>
+                    <User className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                    <span>Login / Register (Email & OTP)</span>
                   </button>
                 )}
 

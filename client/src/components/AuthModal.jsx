@@ -3,7 +3,15 @@ import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield, AlertTriang
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { auth, RecaptchaVerifier, signInWithPhoneNumber, isFirebaseConfigured } from '../firebase/config';
+import { 
+  auth, 
+  RecaptchaVerifier, 
+  signInWithPhoneNumber, 
+  isFirebaseConfigured,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile
+} from '../firebase/config';
 
 export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect }) => {
   const { login, register, googleAuth, socialAuth, sendMobileOtp, verifyMobileOtp } = useAuth();
@@ -321,6 +329,26 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
 
   if (!isOpen) return null;
 
+  const handleFirebaseError = (err) => {
+    console.error('Firebase Auth Exception:', err);
+    const code = err.code || err.message || '';
+    if (code.includes('auth/invalid-email')) {
+      return 'Invalid email address format. Please check your email address.';
+    } else if (code.includes('auth/user-not-found')) {
+      return 'No account found with this email. Please register a new account.';
+    } else if (code.includes('auth/wrong-password') || code.includes('auth/invalid-credential')) {
+      return 'Incorrect email or password. Please check your credentials.';
+    } else if (code.includes('auth/email-already-in-use')) {
+      return 'This email address is already registered. Please sign in instead.';
+    } else if (code.includes('auth/weak-password')) {
+      return 'Password is too weak. Please use at least 6 characters.';
+    } else if (code.includes('auth/too-many-requests')) {
+      return 'Too many failed login attempts. Please wait a few minutes and try again.';
+    } else {
+      return err.message || 'Authentication failed. Please check your inputs.';
+    }
+  };
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -333,9 +361,45 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
 
     setLoading(true);
+
+    // 1. Try Firebase Email Login SDK first if identifier is an email
+    if (auth && loginIdentifier.includes('@')) {
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, loginIdentifier.trim(), loginPassword);
+        const fbUser = userCredential.user;
+        const loggedUser = {
+          id: fbUser.uid,
+          name: fbUser.displayName || fbUser.email.split('@')[0],
+          email: fbUser.email,
+          role: fbUser.email === 'admin@primeshow.com' ? 'ADMIN' : 'CUSTOMER',
+          rewardsPoints: 500,
+          provider: 'FIREBASE_EMAIL'
+        };
+        setLoading(false);
+        setLoginIdentifier('');
+        setLoginPassword('');
+        handleAuthSuccess({ success: true, user: loggedUser });
+        return;
+      } catch (fbErr) {
+        console.warn('Firebase Email Sign-In Error:', fbErr.code);
+        if (
+          fbErr.code === 'auth/wrong-password' || 
+          fbErr.code === 'auth/user-not-found' || 
+          fbErr.code === 'auth/invalid-credential' ||
+          fbErr.code === 'auth/invalid-email'
+        ) {
+          setLoading(false);
+          return setErrorMsg(handleFirebaseError(fbErr));
+        }
+      }
+    }
+
+    // 2. Fallback to API / local login
     const res = await login(loginIdentifier.trim(), loginPassword);
     setLoading(false);
     if (res.success) {
+      setLoginIdentifier('');
+      setLoginPassword('');
       handleAuthSuccess(res);
     } else {
       setErrorMsg(res.error || 'Authentication failed');
@@ -348,14 +412,58 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
 
     if (!name.trim()) return setErrorMsg('Full Name is required');
     if (!email.trim() || !email.includes('@')) return setErrorMsg('Please enter a valid Email Address');
-    if (!phone.trim()) return setErrorMsg('Mobile Phone Number is required');
     if (password.length < 6) return setErrorMsg('Password must be at least 6 characters');
     if (password !== confirmPassword) return setErrorMsg('Passwords do not match');
 
     setLoading(true);
+
+    // 1. Firebase Email Registration via SDK
+    if (auth) {
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        const fbUser = userCredential.user;
+        if (name.trim()) {
+          try { await updateProfile(fbUser, { displayName: name.trim() }); } catch (pErr) {}
+        }
+        const registeredUser = {
+          id: fbUser.uid,
+          name: name.trim() || fbUser.email.split('@')[0],
+          email: fbUser.email,
+          phone: phone.trim() || '+91 9876543210',
+          role: email.trim() === 'admin@primeshow.com' ? 'ADMIN' : 'CUSTOMER',
+          rewardsPoints: 500,
+          provider: 'FIREBASE_EMAIL'
+        };
+        setLoading(false);
+        setName('');
+        setEmail('');
+        setPhone('');
+        setPassword('');
+        setConfirmPassword('');
+        handleAuthSuccess({ success: true, user: registeredUser });
+        return;
+      } catch (fbErr) {
+        console.warn('Firebase Email Registration Error:', fbErr.code);
+        if (
+          fbErr.code === 'auth/email-already-in-use' || 
+          fbErr.code === 'auth/invalid-email' || 
+          fbErr.code === 'auth/weak-password'
+        ) {
+          setLoading(false);
+          return setErrorMsg(handleFirebaseError(fbErr));
+        }
+      }
+    }
+
+    // 2. Fallback API Registration
     const res = await register(name.trim(), email.trim(), phone.trim(), password);
     setLoading(false);
     if (res.success) {
+      setName('');
+      setEmail('');
+      setPhone('');
+      setPassword('');
+      setConfirmPassword('');
       handleAuthSuccess(res);
     } else {
       setErrorMsg(res.error || 'Registration failed');
