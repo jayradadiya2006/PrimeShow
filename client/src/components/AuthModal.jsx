@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Lock, Mail, User, Phone, Sparkles, CheckCircle2, Shield, AlertTriangle, RotateCcw, Check, Globe, Flame } from 'lucide-react';
-import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -247,113 +246,40 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     triggerOtpVerification(fullCode);
   };
 
-  // Production-Ready Google OAuth 2.0 Hook with Account Selection Prompt
-  const triggerGoogleLogin = useGoogleLogin({
-    prompt: 'select_account',
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      setErrorMsg('');
-      try {
-        // Fetch User Info from Google OpenID Userinfo Endpoint
-        const userInfoRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-        });
-        
-        const googleProfile = userInfoRes.data;
-        const res = await googleAuth({
-          token: tokenResponse.access_token,
-          profile: {
-            name: googleProfile.name,
-            email: googleProfile.email,
-            picture: googleProfile.picture,
-            sub: googleProfile.sub
-          }
-        });
-
-        setLoading(false);
-        if (res.success) {
-          handleAuthSuccess(res);
-        } else {
-          setErrorMsg(res.error || 'Google Authentication Backend Sync Failed');
-        }
-      } catch (err) {
-        // Fallback for network restrictions or test client ID
-        const res = await googleAuth({
-          token: tokenResponse.access_token,
-          profile: { name: 'Google Authenticated User', email: 'user.google@primeshow.com' }
-        });
-        setLoading(false);
-        if (res.success) handleAuthSuccess(res);
-      }
-    },
-    onError: (errorResponse) => {
-      console.warn('Google OAuth Account Selection closed or failed:', errorResponse);
-      setLoading(false);
-      if (errorResponse.error !== 'popup_closed_by_user') {
-        handleFallbackGoogleLogin();
-      }
-    }
-  });
-
-  const handleFallbackGoogleLogin = async () => {
-    setLoading(true);
-    const res = await googleAuth({
-      profile: { name: 'Google Connected User', email: 'user.google@primeshow.com' }
-    });
-    setLoading(false);
-    if (res.success) handleAuthSuccess(res);
-  };
-
+  // Pure Firebase Native Google Auth Popup (Zero Standalone Client ID Dependency)
   const handleGoogleClick = async () => {
     setErrorMsg('');
     setLoading(true);
 
-    // 1. Direct Firebase Google Auth Popup (Zero Standalone Client ID Dependency)
-    if (auth) {
-      try {
-        console.log('📱 Executing Firebase Google Auth Popup (signInWithPopup)...');
-        const userCredential = await signInWithPopup(auth, googleProvider);
-        const fbUser = userCredential.user;
-        console.log('✅ Firebase Google Auth Popup successful:', fbUser.displayName || fbUser.email);
-        
-        const googleUser = {
-          id: fbUser.uid,
-          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Google User',
-          email: fbUser.email || 'user.google@primeshow.com',
-          avatar: fbUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
-          role: fbUser.email === 'admin@primeshow.com' ? 'ADMIN' : 'CUSTOMER',
-          rewardsPoints: 750,
-          provider: 'GOOGLE_FIREBASE'
-        };
+    try {
+      console.log('📱 Triggering Native Firebase Google Auth Popup (signInWithPopup)...');
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const fbUser = userCredential.user;
+      console.log('✅ Firebase Google Auth Popup successful:', fbUser.displayName || fbUser.email);
+      
+      const googleUser = {
+        id: fbUser.uid,
+        name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Google User',
+        email: fbUser.email || 'user.google@primeshow.com',
+        avatar: fbUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
+        role: fbUser.email === 'admin@primeshow.com' ? 'ADMIN' : 'CUSTOMER',
+        rewardsPoints: 750,
+        provider: 'GOOGLE_FIREBASE'
+      };
 
-        setLoading(false);
-        handleAuthSuccess({ success: true, user: googleUser });
+      setLoading(false);
+      handleAuthSuccess({ success: true, user: googleUser });
+    } catch (fbErr) {
+      console.error('❌ Firebase Google Auth Popup Error:', fbErr);
+      setLoading(false);
+      if (fbErr.code === 'auth/popup-closed-by-user') {
         return;
-      } catch (fbErr) {
-        console.warn('⚠️ Firebase Google Popup Notice:', fbErr.code || fbErr.message);
-        if (fbErr.code === 'auth/popup-closed-by-user') {
-          setLoading(false);
-          return;
-        }
+      } else if (fbErr.code === 'auth/api-key-not-valid') {
+        return setErrorMsg('Firebase API Key is missing or invalid in Vercel environment variables.');
+      } else {
+        return setErrorMsg(fbErr.message || 'Failed to sign in with Google via Firebase.');
       }
     }
-
-    // 2. Standalone Google OAuth Fallback
-    const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const isConfigured = rawClientId && 
-      rawClientId !== 'your_google_client_id_here.apps.googleusercontent.com' && 
-      !rawClientId.includes('primeshowdemo') &&
-      !rawClientId.includes('unconfigured');
-
-    if (isConfigured) {
-      try {
-        triggerGoogleLogin();
-        return;
-      } catch (e) {}
-    }
-
-    // 3. Graceful Fallback
-    handleFallbackGoogleLogin();
   };
 
   if (!isOpen) return null;
