@@ -104,8 +104,41 @@ export const AuthProvider = ({ children }) => {
   // Support messages stream state
   const [supportMessages, setSupportMessages] = useState([]);
 
-  // Notifications Stream State
-  const [notifications, setNotifications] = useState([]);
+  // Notifications Stream State with LocalStorage Persistence
+  const DEFAULT_NOTIFICATIONS = [
+    {
+      id: 'notif_default_1',
+      title: '🎟️ Flat 50% Off IMAX 3D Weekend Screening!',
+      message: 'Use promo code PRIMESHOW50 at checkout to get 50% flat discount on all IMAX 3D & VIP Recliner screenings.',
+      type: 'Offer',
+      read: false,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'notif_default_2',
+      title: '🌟 ColdPlay World Tour Booking Open',
+      message: 'Exclusive VIP stadium pass tickets for Coldplay Music of the Spheres live in Mumbai are now open for booking.',
+      type: 'Info',
+      read: false,
+      createdAt: new Date(Date.now() - 3600000).toISOString()
+    }
+  ];
+
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('primeshow_notifications_v2');
+      return saved ? JSON.parse(saved) : DEFAULT_NOTIFICATIONS;
+    } catch (e) {
+      return DEFAULT_NOTIFICATIONS;
+    }
+  });
+
+  // Sync Notifications to LocalStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('primeshow_notifications_v2', JSON.stringify(notifications));
+    } catch (e) {}
+  }, [notifications]);
 
   // Silent background health-check ping on mount to wake up Render free-tier early
   useEffect(() => {
@@ -121,7 +154,7 @@ export const AuthProvider = ({ children }) => {
     wakeUpRenderServer();
   }, []);
 
-  // Fetch support messages & notifications
+  // Fetch support messages & notifications from Backend API
   const fetchStreamData = async () => {
     try {
       const [msgRes, notifRes] = await Promise.all([
@@ -129,13 +162,22 @@ export const AuthProvider = ({ children }) => {
         apiClient.get('/notifications')
       ]);
       setSupportMessages(msgRes.data);
-      setNotifications(notifRes.data);
+      if (Array.isArray(notifRes.data) && notifRes.data.length > 0) {
+        setNotifications(prev => {
+          const readMap = {};
+          prev.forEach(n => { if (n.read) readMap[n.id] = true; });
+          return notifRes.data.map(n => ({
+            ...n,
+            read: readMap[n.id] !== undefined ? readMap[n.id] : Boolean(n.read)
+          }));
+        });
+      }
     } catch (err) {}
   };
 
   useEffect(() => {
     fetchStreamData();
-    const interval = setInterval(fetchStreamData, 4000);
+    const interval = setInterval(fetchStreamData, 3000);
     return () => clearInterval(interval);
   }, []);
 
