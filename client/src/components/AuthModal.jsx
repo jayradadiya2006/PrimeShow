@@ -437,35 +437,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     }
   };
 
-  const handleAppleAuth = async () => {
-    setErrorMsg('');
-    setLoading(true);
-    const res = await socialAuth('apple', { name: 'Apple ID User', email: 'user.apple@icloud.com' });
-    setLoading(false);
-    if (res.success) {
-      onClose();
-    } else {
-      setErrorMsg(res.error || 'Apple Sign-In Failed');
-    }
-  };
 
-  const handleQuickDemoCustomer = async () => {
-    setLoginIdentifier('user@primeshow.com');
-    setLoginPassword('password123');
-    await login('user@primeshow.com', 'password123');
-    onClose();
-  };
-
-  const handleQuickDemoAdmin = async () => {
-    setLoginIdentifier('admin@primeshow.com');
-    setLoginPassword('admin123');
-    const res = await login('admin@primeshow.com', 'admin123');
-    if (res.success && onAdminRedirect) {
-      onAdminRedirect();
-    } else {
-      onClose();
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
@@ -760,51 +732,18 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
           </form>
         )}
 
-        {/* Social & System Auth Options (SSO: Google Sign-In & Apple Auth) */}
+        {/* Primary Social Auth: Firebase Google Sign-In */}
         <div className="mt-6 pt-4 border-t border-white/10">
-          <div className="text-[10px] text-center text-white/40 uppercase tracking-wider mb-3">Or continue with social identity</div>
-          <div className="grid grid-cols-2 gap-2">
-            <button 
-              type="button"
-              onClick={handleGoogleClick}
-              disabled={loading}
-              className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 12.5s.7 2.8 1.9 5.2l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/></svg>
-              <span>{loading ? 'Connecting...' : 'Google'}</span>
-            </button>
-            <button 
-              type="button"
-              onClick={handleAppleAuth}
-              className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.09c.66-.8 1.11-1.92.99-3.04-1 .04-2.17.67-2.88 1.5-.64.74-1.2 1.93-1.05 3.03 1.12.09 2.28-.69 2.94-1.49z"/></svg>
-              <span>Apple ID</span>
-            </button>
-          </div>
-        </div>
-
-        {/* One-Click Quick Fill Demo Buttons */}
-        <div className="mt-6 pt-4 border-t border-white/10 bg-amber-500/5 p-3 rounded-2xl border border-amber-400/20 text-center">
-          <div className="text-[10px] font-bold text-amber-300 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>Instant Demo Access</span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={handleQuickDemoCustomer}
-              className="py-1.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-[11px] font-bold transition-all cursor-pointer"
-            >
-              Sign In as Customer
-            </button>
-            <button
-              onClick={handleQuickDemoAdmin}
-              className="py-1.5 px-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 text-[11px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer"
-            >
-              <Shield className="w-3 h-3 text-cyan-400" />
-              <span>Sign In as Admin</span>
-            </button>
-          </div>
+          <div className="text-[10px] text-center text-white/40 uppercase tracking-wider mb-3">Or continue with Google identity</div>
+          <button 
+            type="button"
+            onClick={handleGoogleClick}
+            disabled={loading}
+            className="w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-semibold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md active:scale-95"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 12.5s.7 2.8 1.9 5.2l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/></svg>
+            <span>{loading ? 'Connecting with Google...' : 'Sign in with Google'}</span>
+          </button>
         </div>
 
       </div>
