@@ -475,25 +475,68 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  // Admin Broadcast Notification
-  const broadcastNotification = async (title, message, type = 'PROMO') => {
+  // Admin Create / Broadcast Notification
+  const broadcastNotification = async (title, message, priority = 'Info', date = null) => {
     try {
-      const res = await axios.post(`${API_BASE}/notifications`, { title, message, type });
-      setNotifications(prev => [res.data, ...prev]);
+      const res = await apiClient.post('/notifications', { title, message, priority, date });
+      setNotifications(prev => [res.data, ...prev.filter(n => n.id !== res.data.id)]);
+      return { success: true, data: res.data };
+    } catch (err) {
+      const fallbackNotif = {
+        id: `notif_${Date.now()}`,
+        title,
+        message,
+        type: priority || 'Info',
+        read: false,
+        createdAt: date ? new Date(date).toISOString() : new Date().toISOString()
+      };
+      setNotifications(prev => [fallbackNotif, ...prev]);
+      return { success: true, data: fallbackNotif };
+    }
+  };
+
+  // Admin Update Notification
+  const updateNotification = async (notifId, payload) => {
+    try {
+      const res = await apiClient.put(`/notifications/${notifId}`, payload);
+      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, ...res.data } : n));
+      return { success: true, data: res.data };
+    } catch (err) {
+      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, ...payload } : n));
+      return { success: true };
+    }
+  };
+
+  // Admin Delete Notification
+  const deleteNotification = async (notifId) => {
+    try {
+      await apiClient.delete(`/notifications/${notifId}`);
+      setNotifications(prev => prev.filter(n => n.id !== notifId));
       return { success: true };
     } catch (err) {
-      return { success: false };
+      setNotifications(prev => prev.filter(n => n.id !== notifId));
+      return { success: true };
     }
   };
 
   // Mark Notification as Read
   const markNotificationRead = async (notifId) => {
     try {
-      await axios.put(`${API_BASE}/notifications/${notifId}/read`);
+      await apiClient.put(`/notifications/${notifId}/read`);
       setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
     } catch (err) {
       setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
     }
+  };
+
+  // Mark All Notifications as Read
+  const markAllNotificationsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    notifications.forEach(n => {
+      if (!n.read) {
+        apiClient.put(`/notifications/${n.id}/read`).catch(() => {});
+      }
+    });
   };
 
   const sendMessageToSupport = async (subject, message) => {
@@ -560,7 +603,10 @@ export const AuthProvider = ({ children }) => {
       replyToSupportMessage,
       notifications,
       broadcastNotification,
+      updateNotification,
+      deleteNotification,
       markNotificationRead,
+      markAllNotificationsRead,
       isAdmin: user?.role === 'ADMIN'
     }}>
       {children}

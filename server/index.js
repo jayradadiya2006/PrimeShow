@@ -400,37 +400,104 @@ app.post(['/api/auth/verify-otp', '/auth/verify-otp'], async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// NOTIFICATION SYSTEM ENDPOINTS
+// NOTIFICATION SYSTEM CRUD ENDPOINTS
 // -------------------------------------------------------------
 
-app.get('/api/notifications', (req, res) => {
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const dbNotifs = await Notification.find().sort({ createdAt: -1 });
+    if (dbNotifs && dbNotifs.length > 0) {
+      return res.json(dbNotifs);
+    }
+  } catch (err) {
+    console.warn('⚠️ Error fetching notifications from MongoDB:', err.message);
+  }
   res.json(notifications);
 });
 
-app.post('/api/notifications', (req, res) => {
-  const { title, message, type } = req.body;
+app.post('/api/notifications', async (req, res) => {
+  const { title, message, type, priority, date } = req.body;
   if (!title || !message) {
     return res.status(400).json({ error: 'Title and message required' });
   }
 
+  const notifType = priority || type || 'SYSTEM';
   const newNotif = {
     id: `notif_${Date.now()}`,
-    title,
-    message,
-    type: type || 'SYSTEM',
+    title: title.trim(),
+    message: message.trim(),
+    type: notifType,
     read: false,
-    createdAt: new Date().toISOString()
+    createdAt: date ? new Date(date) : new Date()
   };
+
+  try {
+    await Notification.create(newNotif);
+  } catch (err) {
+    console.warn('⚠️ Notification DB create warning:', err.message);
+  }
 
   notifications.unshift(newNotif);
   res.status(201).json(newNotif);
 });
 
-app.put('/api/notifications/:id/read', (req, res) => {
-  const notif = notifications.find(n => n.id === req.params.id);
-  if (!notif) return res.status(404).json({ error: 'Notification not found' });
-  notif.read = true;
-  res.json(notif);
+app.put('/api/notifications/:id', async (req, res) => {
+  const { title, message, type, priority, date, read } = req.body;
+  const notifId = req.params.id;
+
+  const notifIndex = notifications.findIndex(n => n.id === notifId);
+  const updateData = {};
+  if (title !== undefined) updateData.title = title.trim();
+  if (message !== undefined) updateData.message = message.trim();
+  if (type || priority) updateData.type = priority || type;
+  if (date !== undefined) updateData.createdAt = new Date(date);
+  if (read !== undefined) updateData.read = Boolean(read);
+
+  if (notifIndex !== -1) {
+    notifications[notifIndex] = {
+      ...notifications[notifIndex],
+      ...updateData
+    };
+  }
+
+  try {
+    await Notification.findOneAndUpdate({ id: notifId }, { $set: updateData }, { new: true });
+  } catch (err) {
+    console.warn('⚠️ Notification DB update warning:', err.message);
+  }
+
+  const updated = notifIndex !== -1 ? notifications[notifIndex] : { id: notifId, ...updateData };
+  res.json(updated);
+});
+
+app.put('/api/notifications/:id/read', async (req, res) => {
+  const notifId = req.params.id;
+  const notif = notifications.find(n => n.id === notifId);
+  if (notif) notif.read = true;
+
+  try {
+    await Notification.findOneAndUpdate({ id: notifId }, { $set: { read: true } });
+  } catch (err) {}
+
+  res.json(notif || { id: notifId, read: true });
+});
+
+app.delete('/api/notifications/:id', async (req, res) => {
+  const notifId = req.params.id;
+  const notifIndex = notifications.findIndex(n => n.id === notifId);
+  let deletedItem = null;
+
+  if (notifIndex !== -1) {
+    deletedItem = notifications.splice(notifIndex, 1)[0];
+  }
+
+  try {
+    await Notification.deleteOne({ id: notifId });
+  } catch (err) {
+    console.warn('⚠️ Notification DB delete warning:', err.message);
+  }
+
+  res.json({ message: 'Notification deleted successfully', id: notifId, notification: deletedItem });
 });
 
 // -------------------------------------------------------------

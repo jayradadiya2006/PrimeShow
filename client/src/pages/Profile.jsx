@@ -11,7 +11,7 @@ import { useBooking } from '../context/BookingContext';
 export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   const { 
     user, updateUserProfile, themePreference, setThemePreference, effectiveTheme, 
-    supportMessages, sendMessageToSupport, notifications, markNotificationRead,
+    supportMessages, sendMessageToSupport, notifications, markNotificationRead, markAllNotificationsRead,
     wishlist, toggleWishlist 
   } = useAuth();
   const { myBookings, moviesList, selectShowForBooking } = useBooking();
@@ -638,58 +638,87 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
           </div>
         )}
 
-        {/* Tab 2: Admin Notification Stream System */}
+        {/* Tab 2: Dynamic Admin Notification Stream System */}
         {activeTab === 'notifications' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
-                <h2 className="text-xl font-bold font-sans text-white">System Notifications</h2>
-                <p className="text-xs text-white/60">Live updates and promotional announcements broadcasted by Admin Command.</p>
+                <h2 className="text-xl font-bold font-sans text-white">System & Broadcast Notifications</h2>
+                <p className="text-xs text-white/60">Real-time alerts, offers, and official announcements broadcasted from Admin Command.</p>
               </div>
-              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-xs font-bold">
-                {unreadNotifCount} Unread
-              </span>
+
+              <div className="flex items-center gap-3">
+                {unreadNotifCount > 0 && (
+                  <button
+                    onClick={markAllNotificationsRead}
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Mark All as Read
+                  </button>
+                )}
+                <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-xs font-bold">
+                  {unreadNotifCount} Unread
+                </span>
+              </div>
             </div>
 
-            {notifications.length > 0 ? (
+            {(notifications || []).length > 0 ? (
               <div className="space-y-4">
-                {notifications.map(n => (
-                  <div 
-                    key={n.id} 
-                    className={`glass-panel p-5 rounded-2xl border transition-all flex items-start justify-between gap-4 ${
-                      !n.read 
-                        ? 'border-amber-400/50 bg-amber-500/10 shadow-lg shadow-amber-500/10' 
-                        : 'border-white/10 opacity-80'
-                    }`}
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        {!n.read && <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>}
-                        <h4 className="text-sm font-bold text-white">{n.title}</h4>
-                        <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-bold uppercase text-amber-300">
-                          {n.type || 'NOTICE'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-white/80 leading-relaxed">{n.message}</p>
-                      <div className="text-[10px] text-white/40 pt-1">
-                        {new Date(n.createdAt).toLocaleString()}
-                      </div>
-                    </div>
+                {(notifications || []).map(n => {
+                  const typeLabel = n.type || n.priority || 'Info';
+                  let priorityBadge = 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40';
+                  if (typeLabel.toLowerCase().includes('alert')) {
+                    priorityBadge = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+                  } else if (typeLabel.toLowerCase().includes('offer') || typeLabel.toLowerCase().includes('promo')) {
+                    priorityBadge = 'bg-amber-500/20 text-amber-300 border-amber-400/40';
+                  }
 
-                    {!n.read && (
-                      <button
-                        onClick={() => markNotificationRead(n.id)}
-                        className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all shrink-0 cursor-pointer"
-                      >
-                        Mark Read
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  return (
+                    <div 
+                      key={n.id} 
+                      className={`glass-panel p-5 rounded-3xl border transition-all flex flex-col sm:flex-row items-start justify-between gap-4 ${
+                        !n.read 
+                          ? 'border-amber-400/60 bg-amber-500/10 shadow-lg shadow-amber-500/10' 
+                          : 'border-white/10 opacity-80'
+                      }`}
+                    >
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {!n.read && <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>}
+                          <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${priorityBadge}`}>
+                            {typeLabel}
+                          </span>
+                          <h4 className="text-base font-bold text-white leading-tight">{n.title}</h4>
+                        </div>
+
+                        <p className="text-xs text-white/80 leading-relaxed">{n.message}</p>
+
+                        <div className="flex items-center gap-3 text-[10px] text-white/40 pt-1">
+                          <span>📅 {new Date(n.createdAt || Date.now()).toLocaleString()}</span>
+                          <span>•</span>
+                          <span className={n.read ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
+                            {n.read ? '✓ Read' : '● Unread'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {!n.read && (
+                        <button
+                          onClick={() => markNotificationRead(n.id)}
+                          className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all shrink-0 cursor-pointer"
+                        >
+                          Mark Read
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <div className="glass-panel p-12 rounded-3xl text-center text-white/50">
-                No notifications broadcasted yet. Check back soon!
+              <div className="glass-panel p-12 rounded-3xl text-center text-white/50 space-y-2">
+                <Bell className="w-10 h-10 text-amber-400/40 mx-auto" />
+                <h4 className="text-base font-bold text-white">No System Notifications</h4>
+                <p className="text-xs text-white/60">You have no active notifications at this time.</p>
               </div>
             )}
           </div>

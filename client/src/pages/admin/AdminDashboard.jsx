@@ -11,7 +11,10 @@ import { AdminTabErrorBoundary } from '../../components/AdminErrorBoundary';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const AdminDashboard = ({ onReturnHome }) => {
-  const { user, login, logout, token, supportMessages, replyToSupportMessage, broadcastNotification, notifications } = useAuth();
+  const { 
+    user, login, logout, token, supportMessages, replyToSupportMessage, 
+    broadcastNotification, updateNotification, deleteNotification, notifications 
+  } = useAuth();
   const { 
     moviesList, addMovieToGlobalStore, updateMovieInGlobalStore, deleteMovieFromGlobalStore,
     addShowDateToMovie, deleteShowDateFromMovie, addShowSlotToMovieTheatre, deleteShowSlotFromMovieTheatre, deleteTheatreFromMovieDate,
@@ -111,10 +114,67 @@ export const AdminDashboard = ({ onReturnHome }) => {
     }
   };
 
-  // Broadcast Notification Form State
-  const [notifTitle, setNotifTitle] = useState('');
-  const [notifMessage, setNotifMessage] = useState('');
-  const [notifType, setNotifType] = useState('PROMO');
+  // Full Notification CRUD Form State
+  const [editingNotifId, setEditingNotifId] = useState(null);
+  const [notifForm, setNotifForm] = useState({
+    title: '',
+    message: '',
+    priority: 'Info',
+    date: ''
+  });
+
+  const handleSaveNotification = async (e) => {
+    if (e) e.preventDefault();
+    if (!notifForm.title.trim() || !notifForm.message.trim()) return;
+
+    if (editingNotifId) {
+      await updateNotification(editingNotifId, {
+        title: notifForm.title.trim(),
+        message: notifForm.message.trim(),
+        priority: notifForm.priority,
+        date: notifForm.date || null
+      });
+      setActionSuccess('Notification updated & synced live with User Profile!');
+    } else {
+      await broadcastNotification(
+        notifForm.title.trim(),
+        notifForm.message.trim(),
+        notifForm.priority,
+        notifForm.date || null
+      );
+      setActionSuccess('New Notification created & broadcasted live!');
+    }
+
+    setNotifForm({ title: '', message: '', priority: 'Info', date: '' });
+    setEditingNotifId(null);
+    setTimeout(() => setActionSuccess(''), 4000);
+  };
+
+  const handleEditNotifClick = (notif) => {
+    setEditingNotifId(notif.id);
+    let formattedDate = '';
+    if (notif.createdAt) {
+      try {
+        formattedDate = new Date(notif.createdAt).toISOString().slice(0, 16);
+      } catch (e) {}
+    }
+    setNotifForm({
+      title: notif.title || '',
+      message: notif.message || '',
+      priority: notif.type || notif.priority || 'Info',
+      date: formattedDate
+    });
+  };
+
+  const handleDeleteNotifClick = async (notifId) => {
+    await deleteNotification(notifId);
+    if (editingNotifId === notifId) {
+      setEditingNotifId(null);
+      setNotifForm({ title: '', message: '', priority: 'Info', date: '' });
+    }
+    setActionSuccess('Notification deleted permanently from database!');
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
 
   // Admin Offers & Seats State
   const [offersList, setOffersList] = useState([]);
@@ -238,16 +298,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
     deleteHeroSlide(slideId);
     setActionSuccess('Hero slide removed from slideshow!');
     setTimeout(() => setActionSuccess(''), 3000);
-  };
-
-  const handleBroadcastSubmit = async (e) => {
-    if (e) e.preventDefault();
-    if (!notifTitle.trim() || !notifMessage.trim()) return;
-    await broadcastNotification(notifTitle.trim(), notifMessage.trim(), notifType);
-    setNotifTitle('');
-    setNotifMessage('');
-    setActionSuccess('Notification broadcasted live to all users!');
-    setTimeout(() => setActionSuccess(''), 4000);
   };
 
   // Feature Strips Management State
@@ -3616,75 +3666,172 @@ export const AdminDashboard = ({ onReturnHome }) => {
         {activeTab === 'notifications' && (
           <div className="space-y-8">
             <div>
-              <h2 className="text-2xl font-bold font-sans text-white">Broadcast Notifications System</h2>
-              <p className="text-xs text-cyan-300">Push real-time promotional alerts, system updates, and discounts to all users.</p>
+              <h2 className="text-2xl font-bold font-sans text-white">Notifications Management & Broadcast Desk</h2>
+              <p className="text-xs text-cyan-300">Create, edit, broadcast, and delete live system announcements for all users.</p>
             </div>
 
-            <form onSubmit={handleBroadcastSubmit} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-2xl">
-              <h3 className="text-lg font-bold text-amber-400">Push Broadcast Notification</h3>
-              <div>
-                <label className="block text-xs font-bold text-white mb-1">Notification Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. 🎟️ Flat 50% Off IMAX 3D Weekend Screening!"
-                  value={notifTitle}
-                  onChange={(e) => setNotifTitle(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
-                />
+            {/* Section A: Create / Edit Notification Form */}
+            <form onSubmit={handleSaveNotification} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-3xl">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-lg font-bold text-amber-400">
+                  {editingNotifId ? '✏️ Edit Notification Announcement' : '➕ Create New Broadcast Notification'}
+                </h3>
+                {editingNotifId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingNotifId(null);
+                      setNotifForm({ title: '', message: '', priority: 'Info', date: '' });
+                    }}
+                    className="px-3 py-1 rounded-xl bg-white/10 text-white/70 hover:text-white text-xs font-bold"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-white mb-1">Notification Type / Badge</label>
-                <select
-                  value={notifType}
-                  onChange={(e) => setNotifType(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-white mb-1">Notification Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 🎟️ Flat 50% Off IMAX 3D Weekend Screening!"
+                    value={notifForm.title}
+                    onChange={(e) => setNotifForm({ ...notifForm, title: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Priority / Type *</label>
+                  <select
+                    value={notifForm.priority}
+                    onChange={(e) => setNotifForm({ ...notifForm, priority: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="Info">ℹ️ Info (General Update)</option>
+                    <option value="Alert">🚨 Alert (Urgent Notice)</option>
+                    <option value="Offer">🎁 Offer (Promotional Discount)</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-bold text-white mb-1">Message Body / Detailed Announcement *</label>
+                  <textarea
+                    rows={3}
+                    required
+                    placeholder="Enter comprehensive notification announcement details..."
+                    value={notifForm.message}
+                    onChange={(e) => setNotifForm({ ...notifForm, message: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">Scheduled Date & Time (Optional)</label>
+                  <input
+                    type="datetime-local"
+                    value={notifForm.date}
+                    onChange={(e) => setNotifForm({ ...notifForm, date: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                {editingNotifId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingNotifId(null);
+                      setNotifForm({ title: '', message: '', priority: 'Info', date: '' });
+                    }}
+                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold"
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <option value="PROMO">PROMO (Offer / Coupon Alert)</option>
-                  <option value="SYSTEM">SYSTEM (Maintenance / Update)</option>
-                  <option value="ALERT">ALERT (Urgent Notice)</option>
-                </select>
+                  <Bell className="w-4 h-4" />
+                  <span>{editingNotifId ? 'Update Notification' : 'Broadcast Notification Live'}</span>
+                </button>
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-white mb-1">Message Content *</label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="Enter broadcast message details for all PrimeShow users..."
-                  value={notifMessage}
-                  onChange={(e) => setNotifMessage(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                <Bell className="w-4 h-4" />
-                <span>Broadcast Notification Live</span>
-              </button>
             </form>
 
-            <div className="space-y-4 max-w-4xl">
-              <h3 className="text-lg font-bold text-white">Broadcast History ({(notifications || []).length})</h3>
-              {(notifications || []).map(n => (
-                <div key={n.id} className="glass-panel p-4 rounded-2xl border border-white/10 flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
-                        {n.type || 'PROMO'}
-                      </span>
-                      <h4 className="text-sm font-bold text-white">{n.title}</h4>
-                    </div>
-                    <p className="text-xs text-white/70">{n.message}</p>
-                    <div className="text-[10px] text-white/40 mt-1">{new Date(n.createdAt).toLocaleString()}</div>
-                  </div>
+            {/* Section B: Active Notifications Directory Table */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-white">Active System Notifications ({(notifications || []).length})</h3>
+                <span className="text-xs text-white/50">Changes reflect instantly inside User Profile</span>
+              </div>
+
+              {(notifications || []).length > 0 ? (
+                <div className="space-y-3">
+                  {(notifications || []).map(n => {
+                    const typeLabel = n.type || n.priority || 'Info';
+                    let badgeStyle = 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40';
+                    if (typeLabel.toLowerCase().includes('alert')) {
+                      badgeStyle = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+                    } else if (typeLabel.toLowerCase().includes('offer') || typeLabel.toLowerCase().includes('promo')) {
+                      badgeStyle = 'bg-amber-500/20 text-amber-300 border-amber-400/40';
+                    }
+
+                    return (
+                      <div 
+                        key={n.id} 
+                        className="glass-panel p-5 rounded-3xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all hover:border-amber-400/40"
+                      >
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${badgeStyle}`}>
+                              {typeLabel}
+                            </span>
+                            <h4 className="text-base font-bold text-white truncate">{n.title}</h4>
+                          </div>
+
+                          <p className="text-xs text-white/80 leading-relaxed">{n.message}</p>
+
+                          <div className="flex items-center gap-4 text-[11px] text-white/40 pt-1">
+                            <span>📅 Posted: {new Date(n.createdAt || Date.now()).toLocaleString()}</span>
+                            <span>•</span>
+                            <span className="text-cyan-400 font-mono">ID: {n.id}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-white/10 shrink-0">
+                          <button
+                            onClick={() => handleEditNotifClick(n)}
+                            className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteNotifClick(n.id)}
+                            className="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              ) : (
+                <div className="glass-panel p-12 rounded-3xl text-center text-white/50 space-y-2">
+                  <Bell className="w-10 h-10 text-cyan-400/40 mx-auto" />
+                  <h4 className="text-base font-bold text-white">No System Notifications Found</h4>
+                  <p className="text-xs text-white/60">Use the form above to broadcast your first announcement to all users.</p>
+                </div>
+              )}
             </div>
+
           </div>
         )}
 

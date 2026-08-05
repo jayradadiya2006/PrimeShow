@@ -130,22 +130,6 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Desktop Notification Bell Icon with Unread Count Badge */}
-          <div className="relative hidden md:block z-[100]">
-            <button
-              onClick={() => setActiveTab('profile-notifications')}
-              className="p-2.5 rounded-full bg-slate-200/60 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white/80 transition-all cursor-pointer relative"
-              title="Notifications"
-            >
-              <Bell className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-              {(notifications || []).filter(n => !n.read).length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
-                  {(notifications || []).filter(n => !n.read).length}
-                </span>
-              )}
-            </button>
-          </div>
-
           {/* Desktop Settings Dropdown (hidden on mobile, moved into Mobile Drawer) */}
           <div className="relative hidden md:block z-[100]">
             <button
@@ -239,7 +223,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             )}
           </div>
 
-          {/* Desktop User Account / Profile CTA Button (hidden on mobile) */}
+          {/* Desktop User Account / Profile Avatar Button (hidden on mobile) */}
           <div className="hidden md:block">
             {!user ? (
               <button
@@ -252,16 +236,14 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             ) : (
               <button
                 onClick={() => setActiveTab('profile-info')}
-                className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 hover:border-amber-500 dark:hover:border-amber-400/40 transition-all group cursor-pointer"
+                className="flex items-center p-1 rounded-full bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 hover:border-amber-500 dark:hover:border-amber-400/50 transition-all group cursor-pointer"
+                title="View Profile"
               >
                 <img
                   src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
                   alt={user.name}
-                  className="w-7 h-7 rounded-full object-cover border border-amber-400/50"
+                  className="w-8 h-8 rounded-full object-cover border border-amber-400/60 group-hover:scale-105 transition-transform"
                 />
-                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-300">
-                  {user.name.split(' ')[0]}
-                </span>
               </button>
             )}
           </div>
