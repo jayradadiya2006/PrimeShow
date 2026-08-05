@@ -11,7 +11,7 @@ import { AdminTabErrorBoundary } from '../../components/AdminErrorBoundary';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const AdminDashboard = ({ onReturnHome }) => {
-  const { user, login, logout, token, supportMessages, replyToSupportMessage, broadcastNotification } = useAuth();
+  const { user, login, logout, token, supportMessages, replyToSupportMessage, broadcastNotification, notifications } = useAuth();
   const { 
     moviesList, addMovieToGlobalStore, updateMovieInGlobalStore, deleteMovieFromGlobalStore,
     addShowDateToMovie, deleteShowDateFromMovie, addShowSlotToMovieTheatre, deleteShowSlotFromMovieTheatre, deleteTheatreFromMovieDate,
@@ -238,6 +238,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
     deleteHeroSlide(slideId);
     setActionSuccess('Hero slide removed from slideshow!');
     setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleBroadcastSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!notifTitle.trim() || !notifMessage.trim()) return;
+    await broadcastNotification(notifTitle.trim(), notifMessage.trim(), notifType);
+    setNotifTitle('');
+    setNotifMessage('');
+    setActionSuccess('Notification broadcasted live to all users!');
+    setTimeout(() => setActionSuccess(''), 4000);
   };
 
   // Feature Strips Management State
@@ -3599,6 +3609,82 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* Tab 11: Broadcast Notifications System */}
+        {activeTab === 'notifications' && (
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-2xl font-bold font-sans text-white">Broadcast Notifications System</h2>
+              <p className="text-xs text-cyan-300">Push real-time promotional alerts, system updates, and discounts to all users.</p>
+            </div>
+
+            <form onSubmit={handleBroadcastSubmit} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-2xl">
+              <h3 className="text-lg font-bold text-amber-400">Push Broadcast Notification</h3>
+              <div>
+                <label className="block text-xs font-bold text-white mb-1">Notification Title *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 🎟️ Flat 50% Off IMAX 3D Weekend Screening!"
+                  value={notifTitle}
+                  onChange={(e) => setNotifTitle(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-white mb-1">Notification Type / Badge</label>
+                <select
+                  value={notifType}
+                  onChange={(e) => setNotifType(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                >
+                  <option value="PROMO">PROMO (Offer / Coupon Alert)</option>
+                  <option value="SYSTEM">SYSTEM (Maintenance / Update)</option>
+                  <option value="ALERT">ALERT (Urgent Notice)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-white mb-1">Message Content *</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Enter broadcast message details for all PrimeShow users..."
+                  value={notifMessage}
+                  onChange={(e) => setNotifMessage(e.target.value)}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Bell className="w-4 h-4" />
+                <span>Broadcast Notification Live</span>
+              </button>
+            </form>
+
+            <div className="space-y-4 max-w-4xl">
+              <h3 className="text-lg font-bold text-white">Broadcast History ({(notifications || []).length})</h3>
+              {(notifications || []).map(n => (
+                <div key={n.id} className="glass-panel p-4 rounded-2xl border border-white/10 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                        {n.type || 'PROMO'}
+                      </span>
+                      <h4 className="text-sm font-bold text-white">{n.title}</h4>
+                    </div>
+                    <p className="text-xs text-white/70">{n.message}</p>
+                    <div className="text-[10px] text-white/40 mt-1">{new Date(n.createdAt).toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

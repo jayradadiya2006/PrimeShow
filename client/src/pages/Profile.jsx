@@ -11,9 +11,10 @@ import { useBooking } from '../context/BookingContext';
 export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   const { 
     user, updateUserProfile, themePreference, setThemePreference, effectiveTheme, 
-    supportMessages, sendMessageToSupport, notifications, markNotificationRead 
+    supportMessages, sendMessageToSupport, notifications, markNotificationRead,
+    wishlist, toggleWishlist 
   } = useAuth();
-  const { myBookings } = useBooking();
+  const { myBookings, moviesList, selectShowForBooking } = useBooking();
   const [activeTab, setActiveTab] = useState(initialTab || 'profile-info');
 
   useEffect(() => {
@@ -744,6 +745,138 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
                 No past bookings found. Book your first luxury screening today!
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tab: Movie Wishlist & Saved Favorites */}
+        {activeTab === 'wishlist' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-xl font-bold font-sans text-white">Saved Movie Wishlist</h2>
+                <p className="text-xs text-white/60">Movies you have liked and saved for quick ticket booking.</p>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center gap-1">
+                <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
+                <span>{(wishlist || []).length} Saved</span>
+              </span>
+            </div>
+
+            {moviesList.filter(m => (wishlist || []).includes(m.id)).length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {moviesList.filter(m => (wishlist || []).includes(m.id)).map(movie => (
+                  <div key={movie.id} className="glass-panel rounded-3xl border border-white/10 overflow-hidden flex flex-col justify-between group hover:border-amber-400/50 transition-all shadow-xl">
+                    <div className="relative aspect-[2/3] overflow-hidden">
+                      <img 
+                        src={movie.poster} 
+                        alt={movie.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <button
+                        onClick={() => toggleWishlist(movie.id)}
+                        className="absolute top-3 right-3 p-2 rounded-full bg-black/60 backdrop-blur-md text-rose-500 hover:scale-110 transition-transform cursor-pointer"
+                        title="Remove from Wishlist"
+                      >
+                        <Heart className="w-4 h-4 fill-rose-500" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-amber-300 text-xs font-bold">
+                        ★ {movie.rating || 9.0}
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h4 className="font-bold text-base text-white line-clamp-1">{movie.title}</h4>
+                        <p className="text-xs text-white/60 mt-0.5">{movie.duration} • {movie.genres?.join(', ')}</p>
+                      </div>
+
+                      <div className="pt-2 border-t border-white/10 flex items-center justify-between gap-2">
+                        <button
+                          onClick={() => {
+                            if (movie.theatres?.[0]?.shows?.[0]) {
+                              selectShowForBooking(movie, movie.theatres[0], movie.theatres[0].shows[0]);
+                            }
+                          }}
+                          className="w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+                        >
+                          Book Tickets
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="glass-panel p-12 rounded-3xl text-center text-white/50 space-y-2">
+                <Heart className="w-10 h-10 text-rose-500/50 mx-auto" />
+                <h4 className="text-base font-bold text-white">Your Wishlist is Empty</h4>
+                <p className="text-xs text-white/60">Click the Heart icon on any movie card to save it here for fast booking!</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab: Rewards & Wallet */}
+        {activeTab === 'rewards' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-xl font-bold font-sans text-white">Rewards & VIP Wallet</h2>
+                <p className="text-xs text-white/60">Track your loyalty points, cashback balance, and exclusive vouchers.</p>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-xs font-bold">
+                ★ {user.rewardsPoints || 1250} PTS Balance
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="glass-panel p-6 rounded-3xl border border-amber-400/40 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 shadow-xl space-y-3">
+                <div className="text-amber-400 text-xs font-bold uppercase tracking-wider">Reward Points Balance</div>
+                <div className="text-3xl font-extrabold text-white">★ {user.rewardsPoints || 1250}</div>
+                <p className="text-[11px] text-white/60">Earn 50 points on every movie ticket booking transaction!</p>
+              </div>
+
+              <div className="glass-panel p-6 rounded-3xl border border-emerald-400/40 bg-gradient-to-br from-emerald-500/10 via-slate-900 to-slate-950 shadow-xl space-y-3">
+                <div className="text-emerald-400 text-xs font-bold uppercase tracking-wider">PrimeShow Wallet Balance</div>
+                <div className="text-3xl font-extrabold text-white">₹ 450.00</div>
+                <p className="text-[11px] text-white/60">Instant cashback refund available for ticket bookings.</p>
+              </div>
+
+              <div className="glass-panel p-6 rounded-3xl border border-purple-400/40 bg-gradient-to-br from-purple-500/10 via-slate-900 to-slate-950 shadow-xl space-y-3">
+                <div className="text-purple-400 text-xs font-bold uppercase tracking-wider">Loyalty Club Tier</div>
+                <div className="text-2xl font-extrabold text-white">GOLD VIP MEMBER</div>
+                <p className="text-[11px] text-white/60">Free gourmet food upgrade & zero cancellation fee unlocked.</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <h3 className="text-lg font-bold text-white">Active Promo Vouchers</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="glass-panel p-4 rounded-2xl border border-amber-400/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold text-xs">PRIMESHOW50</span>
+                    <span className="text-[10px] text-emerald-400 font-bold">50% OFF</span>
+                  </div>
+                  <p className="text-xs text-white/80">Flat 50% Discount on IMAX 3D recliners up to ₹250.</p>
+                </div>
+
+                <div className="glass-panel p-4 rounded-2xl border border-amber-400/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold text-xs">LUXURY200</span>
+                    <span className="text-[10px] text-emerald-400 font-bold">₹200 CASHBACK</span>
+                  </div>
+                  <p className="text-xs text-white/80">Flat ₹200 Cashback for HDFC & ICICI Credit Cards.</p>
+                </div>
+
+                <div className="glass-panel p-4 rounded-2xl border border-amber-400/30 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold text-xs">ADMINVIP</span>
+                    <span className="text-[10px] text-emerald-400 font-bold">₹500 PASS</span>
+                  </div>
+                  <p className="text-xs text-white/80">VIP Admin ₹500 Pass for private lounge bookings.</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

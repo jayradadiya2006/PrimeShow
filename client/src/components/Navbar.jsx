@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal }) => {
-  const { user, logout, selectedCity } = useAuth();
+  const { user, logout, selectedCity, notifications } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -129,6 +129,22 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
           >
             <Search className="w-4 h-4" />
           </button>
+
+          {/* Desktop Notification Bell Icon with Unread Count Badge */}
+          <div className="relative hidden md:block z-[100]">
+            <button
+              onClick={() => setActiveTab('profile-notifications')}
+              className="p-2.5 rounded-full bg-slate-200/60 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white/80 transition-all cursor-pointer relative"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+              {(notifications || []).filter(n => !n.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white font-black text-[9px] rounded-full flex items-center justify-center animate-pulse">
+                  {(notifications || []).filter(n => !n.read).length}
+                </span>
+              )}
+            </button>
+          </div>
 
           {/* Desktop Settings Dropdown (hidden on mobile, moved into Mobile Drawer) */}
           <div className="relative hidden md:block z-[100]">
