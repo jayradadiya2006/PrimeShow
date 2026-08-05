@@ -114,38 +114,59 @@ export const AdminDashboard = ({ onReturnHome }) => {
     }
   };
 
-  // Full Notification CRUD Form State
+  // Full Notification CRUD Form State (Explicit Top-Level State Variables)
   const [editingNotifId, setEditingNotifId] = useState(null);
-  const [notifForm, setNotifForm] = useState({
-    title: '',
-    message: '',
-    priority: 'Info',
-    date: ''
-  });
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState('Info');
+  const [notifDate, setNotifDate] = useState('');
+
+  const notifForm = {
+    title: notifTitle,
+    message: notifMessage,
+    priority: notifType,
+    date: notifDate
+  };
+
+  const setNotifForm = (updater) => {
+    let updatedObj;
+    if (typeof updater === 'function') {
+      updatedObj = updater({ title: notifTitle, message: notifMessage, priority: notifType, date: notifDate });
+    } else {
+      updatedObj = updater;
+    }
+    if (updatedObj.title !== undefined) setNotifTitle(updatedObj.title);
+    if (updatedObj.message !== undefined) setNotifMessage(updatedObj.message);
+    if (updatedObj.priority !== undefined) setNotifType(updatedObj.priority);
+    if (updatedObj.date !== undefined) setNotifDate(updatedObj.date);
+  };
 
   const handleSaveNotification = async (e) => {
     if (e) e.preventDefault();
-    if (!notifForm.title.trim() || !notifForm.message.trim()) return;
+    if (!notifTitle.trim() || !notifMessage.trim()) return;
 
     if (editingNotifId) {
       await updateNotification(editingNotifId, {
-        title: notifForm.title.trim(),
-        message: notifForm.message.trim(),
-        priority: notifForm.priority,
-        date: notifForm.date || null
+        title: notifTitle.trim(),
+        message: notifMessage.trim(),
+        priority: notifType,
+        date: notifDate || null
       });
       setActionSuccess('Notification updated & synced live with User Profile!');
     } else {
       await broadcastNotification(
-        notifForm.title.trim(),
-        notifForm.message.trim(),
-        notifForm.priority,
-        notifForm.date || null
+        notifTitle.trim(),
+        notifMessage.trim(),
+        notifType,
+        notifDate || null
       );
       setActionSuccess('New Notification created & broadcasted live!');
     }
 
-    setNotifForm({ title: '', message: '', priority: 'Info', date: '' });
+    setNotifTitle('');
+    setNotifMessage('');
+    setNotifType('Info');
+    setNotifDate('');
     setEditingNotifId(null);
     setTimeout(() => setActionSuccess(''), 4000);
   };
@@ -158,19 +179,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
         formattedDate = new Date(notif.createdAt).toISOString().slice(0, 16);
       } catch (e) {}
     }
-    setNotifForm({
-      title: notif.title || '',
-      message: notif.message || '',
-      priority: notif.type || notif.priority || 'Info',
-      date: formattedDate
-    });
+    setNotifTitle(notif.title || '');
+    setNotifMessage(notif.message || '');
+    setNotifType(notif.type || notif.priority || 'Info');
+    setNotifDate(formattedDate);
   };
 
   const handleDeleteNotifClick = async (notifId) => {
     await deleteNotification(notifId);
     if (editingNotifId === notifId) {
       setEditingNotifId(null);
-      setNotifForm({ title: '', message: '', priority: 'Info', date: '' });
+      setNotifTitle('');
+      setNotifMessage('');
+      setNotifType('Info');
+      setNotifDate('');
     }
     setActionSuccess('Notification deleted permanently from database!');
     setTimeout(() => setActionSuccess(''), 3000);
@@ -3681,7 +3703,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     type="button"
                     onClick={() => {
                       setEditingNotifId(null);
-                      setNotifForm({ title: '', message: '', priority: 'Info', date: '' });
+                      setNotifTitle('');
+                      setNotifMessage('');
+                      setNotifType('Info');
+                      setNotifDate('');
                     }}
                     className="px-3 py-1 rounded-xl bg-white/10 text-white/70 hover:text-white text-xs font-bold"
                   >
@@ -3697,8 +3722,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     type="text"
                     required
                     placeholder="e.g. 🎟️ Flat 50% Off IMAX 3D Weekend Screening!"
-                    value={notifForm.title}
-                    onChange={(e) => setNotifForm({ ...notifForm, title: e.target.value })}
+                    value={notifTitle}
+                    onChange={(e) => setNotifTitle(e.target.value)}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white"
                   />
                 </div>
@@ -3706,8 +3731,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <div>
                   <label className="block text-xs font-bold text-white mb-1">Priority / Type *</label>
                   <select
-                    value={notifForm.priority}
-                    onChange={(e) => setNotifForm({ ...notifForm, priority: e.target.value })}
+                    value={notifType}
+                    onChange={(e) => setNotifType(e.target.value)}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
                   >
                     <option value="Info">ℹ️ Info (General Update)</option>
@@ -3722,8 +3747,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     rows={3}
                     required
                     placeholder="Enter comprehensive notification announcement details..."
-                    value={notifForm.message}
-                    onChange={(e) => setNotifForm({ ...notifForm, message: e.target.value })}
+                    value={notifMessage}
+                    onChange={(e) => setNotifMessage(e.target.value)}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white"
                   ></textarea>
                 </div>
@@ -3732,8 +3757,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <label className="block text-xs font-bold text-white mb-1">Scheduled Date & Time (Optional)</label>
                   <input
                     type="datetime-local"
-                    value={notifForm.date}
-                    onChange={(e) => setNotifForm({ ...notifForm, date: e.target.value })}
+                    value={notifDate}
+                    onChange={(e) => setNotifDate(e.target.value)}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white"
                   />
                 </div>
@@ -3745,7 +3770,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     type="button"
                     onClick={() => {
                       setEditingNotifId(null);
-                      setNotifForm({ title: '', message: '', priority: 'Info', date: '' });
+                      setNotifTitle('');
+                      setNotifMessage('');
+                      setNotifType('Info');
+                      setNotifDate('');
                     }}
                     className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold"
                   >
