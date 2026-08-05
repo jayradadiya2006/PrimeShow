@@ -12,19 +12,13 @@ import {
   signInWithPopup
 } from 'firebase/auth';
 
-// Read API Key from Vite / Next / Process environment variables
-const rawApiKey = 
-  import.meta.env.VITE_FIREBASE_API_KEY || 
-  import.meta.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
-  (typeof process !== 'undefined' && process.env?.VITE_FIREBASE_API_KEY);
-
 const firebaseConfig = {
-  apiKey: rawApiKey || 'AIzaSyB3F-PrimeShowWebApiKey2026SecureAuth',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'primeshow-app.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'primeshow-app',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'primeshow-app.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789012',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789012:web:abcdef1234567890'
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyBsKOJrdix1ufjlOx2RjCpd1Tn1bzGwLGY',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'primeshow-89717.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'primeshow-89717',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'primeshow-89717.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '299682593375',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:299682593375:web:a53bcfb4f53cd09f6b39ea'
 };
 
 // Initialize Firebase App & Auth
@@ -35,11 +29,20 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-export const isFirebaseConfigured = Boolean(
-  rawApiKey && 
-  rawApiKey !== 'your_firebase_api_key_here' && 
-  !rawApiKey.includes('your_')
-);
+// Native Direct Google Sign-In Helper Function
+export const handleGoogleSignIn = async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  } catch (error) {
+    console.error("Google Sign-In Error:", error);
+    throw error;
+  }
+};
+
+export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('your_'));
 
 export { 
   app, 

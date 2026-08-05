@@ -11,7 +11,8 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   googleProvider,
-  signInWithPopup
+  signInWithPopup,
+  handleGoogleSignIn
 } from '../firebase/config';
 
 export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect }) => {
@@ -246,15 +247,14 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
     triggerOtpVerification(fullCode);
   };
 
-  // Pure Firebase Native Google Auth Popup (Zero Standalone Client ID Dependency)
+  // Direct Firebase Native Google Sign-In Handler
   const handleGoogleClick = async () => {
     setErrorMsg('');
     setLoading(true);
 
     try {
-      console.log('📱 Triggering Native Firebase Google Auth Popup (signInWithPopup)...');
-      const userCredential = await signInWithPopup(auth, googleProvider);
-      const fbUser = userCredential.user;
+      console.log('📱 Triggering Native Firebase Google Auth Popup (handleGoogleSignIn)...');
+      const fbUser = await handleGoogleSignIn();
       console.log('✅ Firebase Google Auth Popup successful:', fbUser.displayName || fbUser.email);
       
       const googleUser = {
@@ -270,7 +270,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
       setLoading(false);
       handleAuthSuccess({ success: true, user: googleUser });
     } catch (fbErr) {
-      console.error('❌ Firebase Google Auth Popup Error:', fbErr);
+      console.error('❌ Firebase Google Auth Error:', fbErr);
       setLoading(false);
       if (fbErr.code === 'auth/popup-closed-by-user') {
         return;
