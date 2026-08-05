@@ -7,7 +7,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 
 // Read API Key from Vite / Next / Process environment variables
@@ -29,6 +31,10 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 
+// Initialize Firebase Google Auth Provider
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
 export const isFirebaseConfigured = Boolean(
   rawApiKey && 
   rawApiKey !== 'your_firebase_api_key_here' && 
@@ -43,5 +49,7 @@ export {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
 };
