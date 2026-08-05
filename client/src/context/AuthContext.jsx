@@ -511,7 +511,13 @@ export const AuthProvider = ({ children }) => {
   // Update & Persist User Profile Fields
   const updateUserProfile = (updatedFields) => {
     setUser(prevUser => {
-      const newUser = { ...(prevUser || {}), ...updatedFields };
+      const avatarUrl = updatedFields.avatar || updatedFields.profilePicture || prevUser?.avatar || prevUser?.profilePicture;
+      const newUser = { 
+        ...(prevUser || {}), 
+        ...updatedFields,
+        avatar: avatarUrl,
+        profilePicture: avatarUrl
+      };
       localStorage.setItem('primeshow_user', JSON.stringify(newUser));
       return newUser;
     });

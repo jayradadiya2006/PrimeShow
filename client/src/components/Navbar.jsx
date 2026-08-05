@@ -240,7 +240,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                 title="View Profile"
               >
                 <img
-                  src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
+                  src={user.avatar || user.profilePicture || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
                   alt={user.name}
                   className="w-8 h-8 rounded-full object-cover border border-amber-400/60 group-hover:scale-105 transition-transform"
                 />

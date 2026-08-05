@@ -62,16 +62,40 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
     }
   }, [user, isEditing]);
 
-  // Profile Picture Upload Modal State
+  // Profile Picture Upload Modal & Default Avatar Selector State
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [customAvatarUrl, setCustomAvatarUrl] = useState('');
 
-  const avatarPresets = [
-    { name: 'Glamour VIP', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' },
-    { name: 'Director Suite', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80' },
-    { name: 'Cinema Fan', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' },
-    { name: 'Star Club', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80' }
+  const defaultAvatars = [
+    { 
+      id: 'men', 
+      label: 'Men', 
+      url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80' 
+    },
+    { 
+      id: 'female', 
+      label: 'Female', 
+      url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' 
+    },
+    { 
+      id: 'kids', 
+      label: 'Kids', 
+      url: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=300&q=80' 
+    },
+    { 
+      id: 'others', 
+      label: 'Others', 
+      url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=300&q=80' 
+    }
   ];
+
+  const handleSaveAvatar = (url) => {
+    setCurrentAvatar(url);
+    updateUserProfile({ avatar: url, profilePicture: url });
+    setIsAvatarModalOpen(false);
+    setSavedMsg('Profile picture updated & saved successfully!');
+    setTimeout(() => setSavedMsg(''), 4000);
+  };
 
   // WhatsApp-Style Support Chat State
   const [supportSubject, setSupportSubject] = useState('General Support');
@@ -124,14 +148,6 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
     setIsEditing(false);
     setShowPasswordFields(false);
     setSavedMsg('Profile information updated & saved successfully!');
-    setTimeout(() => setSavedMsg(''), 4000);
-  };
-
-  const handleSaveAvatar = (url) => {
-    setCurrentAvatar(url);
-    updateUserProfile({ avatar: url });
-    setIsAvatarModalOpen(false);
-    setSavedMsg('Profile picture updated successfully!');
     setTimeout(() => setSavedMsg(''), 4000);
   };
 
@@ -402,8 +418,52 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
             )}
 
             {isEditing ? (
-              /* EDIT MODE FORM FOR ALL 11 FIELDS */
+              /* EDIT MODE FORM FOR ALL 11 FIELDS + AVATAR SELECTOR */
               <form onSubmit={handleSaveProfile} className="space-y-6">
+                
+                {/* DEFAULT AVATAR SELECTOR (Men, Female, Kids, Others) */}
+                <div className="p-5 rounded-2xl glass-panel border border-amber-400/30 space-y-3 bg-amber-500/5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-amber-400" /> Default Profile Avatar Options
+                    </label>
+                    <span className="text-[10px] text-white/50">Click any avatar to select instantly</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {defaultAvatars.map((av) => {
+                      const isSelected = currentAvatar === av.url;
+                      return (
+                        <button
+                          key={av.id}
+                          type="button"
+                          onClick={() => handleSaveAvatar(av.url)}
+                          className={`p-3.5 rounded-2xl glass-panel border transition-all flex flex-col items-center gap-2 cursor-pointer group relative ${
+                            isSelected
+                              ? 'border-amber-400 bg-amber-500/20 ring-2 ring-amber-400/50 shadow-lg shadow-amber-500/20'
+                              : 'border-white/10 hover:border-amber-400/50 hover:bg-white/5'
+                          }`}
+                        >
+                          <div className="relative">
+                            <img 
+                              src={av.url} 
+                              alt={av.label} 
+                              className="w-14 h-14 rounded-full object-cover border border-amber-400/60 group-hover:scale-105 transition-transform" 
+                            />
+                            {isSelected && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-black flex items-center justify-center shadow-md">
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              </div>
+                            )}
+                          </div>
+                          <span className={`text-xs font-extrabold ${isSelected ? 'text-amber-300' : 'text-white/80 group-hover:text-white'}`}>
+                            {av.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {/* Full Name */}
                   <div>
@@ -1042,25 +1102,67 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
 
       </div>
 
-      {/* Profile Picture Device Gallery Upload Modal */}
+      {/* Profile Picture Device Gallery Upload & Default Avatar Selector Modal */}
       {isAvatarModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
-          <div className="relative w-full max-w-md glass-modal rounded-3xl p-6 border border-amber-400/40 shadow-2xl text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-fade-in">
+          <div className="relative w-full max-w-lg glass-modal rounded-3xl p-6 sm:p-8 border border-amber-400/40 shadow-2xl text-white space-y-6">
             <button
               onClick={() => setIsAvatarModalOpen(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-xl font-bold font-sans text-white mb-1">Update Profile Picture</h3>
-            <p className="text-xs text-amber-300 mb-6">Upload an image directly from your device gallery or choose a preset</p>
+            <div>
+              <h3 className="text-xl font-bold font-sans text-white mb-1">Update Profile Picture</h3>
+              <p className="text-xs text-amber-300">Choose a default avatar character or upload from your device gallery</p>
+            </div>
 
-            {/* Direct Device Gallery File Input Button */}
-            <div className="mb-6">
+            {/* 1. DEFAULT AVATAR OPTIONS (Men, Female, Kids, Others) */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-white uppercase tracking-wider">
+                Default Avatar Options
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {defaultAvatars.map((av) => {
+                  const isSelected = currentAvatar === av.url;
+                  return (
+                    <button
+                      key={av.id}
+                      type="button"
+                      onClick={() => handleSaveAvatar(av.url)}
+                      className={`p-3.5 rounded-2xl glass-panel border transition-all flex flex-col items-center gap-2 cursor-pointer group relative ${
+                        isSelected
+                          ? 'border-amber-400 bg-amber-500/20 ring-2 ring-amber-400/50 shadow-lg shadow-amber-500/20'
+                          : 'border-white/10 hover:border-amber-400/50 hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="relative">
+                        <img 
+                          src={av.url} 
+                          alt={av.label} 
+                          className="w-14 h-14 rounded-full object-cover border border-amber-400/60 group-hover:scale-105 transition-transform" 
+                        />
+                        {isSelected && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-black flex items-center justify-center shadow-md">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        )}
+                      </div>
+                      <span className={`text-xs font-extrabold ${isSelected ? 'text-amber-300' : 'text-white/80 group-hover:text-white'}`}>
+                        {av.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Direct Device Gallery File Input Button */}
+            <div>
               <label className="w-full p-4 rounded-2xl glass-panel border-2 border-dashed border-amber-400/50 hover:border-amber-400 flex flex-col items-center justify-center gap-2 cursor-pointer group transition-all">
-                <Upload className="w-8 h-8 text-amber-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-bold text-amber-300">Click to Select Photo from Gallery</span>
+                <Upload className="w-7 h-7 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-bold text-amber-300">Click to Select Photo from Device Gallery</span>
                 <span className="text-[10px] text-white/50">Supports JPG, PNG, WEBP, GIF</span>
                 <input
                   type="file"
@@ -1071,21 +1173,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
               </label>
             </div>
 
-            {/* Presets Grid */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {avatarPresets.map((preset) => (
-                <button
-                  key={preset.name}
-                  onClick={() => handleSaveAvatar(preset.url)}
-                  className="p-3 rounded-2xl glass-panel border border-white/10 hover:border-amber-400 flex flex-col items-center gap-2 group transition-all cursor-pointer"
-                >
-                  <img src={preset.url} alt={preset.name} className="w-14 h-14 rounded-full object-cover border border-amber-400/60 group-hover:scale-105 transition-transform" />
-                  <span className="text-xs font-bold text-white group-hover:text-amber-300">{preset.name}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Custom URL Input */}
+            {/* 3. Custom URL Input */}
             <div className="pt-4 border-t border-white/10">
               <label className="block text-xs font-bold text-white mb-2">Or Paste Custom Image URL</label>
               <div className="flex gap-2">
@@ -1097,6 +1185,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
                   className="flex-1 px-3 py-2 rounded-xl glass-input text-xs text-white"
                 />
                 <button
+                  type="button"
                   onClick={() => {
                     if (customAvatarUrl) handleSaveAvatar(customAvatarUrl);
                   }}
