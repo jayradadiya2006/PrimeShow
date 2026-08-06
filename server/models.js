@@ -15,7 +15,8 @@ const UserSchema = new mongoose.Schema({
   dob: { type: String, default: '1998-05-15' },
   role: { type: String, enum: ['ADMIN', 'CUSTOMER'], default: 'CUSTOMER' },
   rewardsPoints: { type: Number, default: 500 },
-  avatar: { type: String, default: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80' },
+  avatar: { type: String, default: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a' },
+  profilePicture: { type: String, default: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a' },
   provider: { type: String, default: 'LOCAL' },
   googleId: { type: String, default: '' }
 }, { timestamps: true });

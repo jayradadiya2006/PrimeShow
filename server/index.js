@@ -399,6 +399,43 @@ app.post(['/api/auth/verify-otp', '/auth/verify-otp'], async (req, res) => {
   return res.json({ token: sessionToken, user: finalUserData });
 });
 
+// Profile Update & Avatar Persistence Endpoint (/api/users/profile & /users/profile)
+app.put(['/api/users/profile', '/users/profile'], async (req, res) => {
+  const { id, email, phone, avatar, profilePicture, name, username, gender, city, dob } = req.body;
+  const avatarUrl = profilePicture || avatar;
+
+  try {
+    let dbUser = null;
+    if (id) {
+      dbUser = await User.findOne({ id: id });
+    }
+    if (!dbUser && email) {
+      dbUser = await User.findOne({ email: email });
+    }
+    if (!dbUser && phone) {
+      dbUser = await User.findOne({ phone: phone });
+    }
+
+    if (dbUser) {
+      if (avatarUrl) {
+        dbUser.avatar = avatarUrl;
+        dbUser.profilePicture = avatarUrl;
+      }
+      if (name) dbUser.name = name;
+      if (username) dbUser.username = username;
+      if (gender) dbUser.gender = gender;
+      if (city) dbUser.city = city;
+      if (dob) dbUser.dob = dob;
+      await dbUser.save();
+      return res.json({ success: true, user: dbUser.toObject() });
+    }
+  } catch (err) {
+    console.warn('MongoDB profile update warning:', err.message);
+  }
+
+  return res.json({ success: true, message: 'Profile updated in active session' });
+});
+
 // -------------------------------------------------------------
 // NOTIFICATION SYSTEM CRUD ENDPOINTS
 // -------------------------------------------------------------

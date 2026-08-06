@@ -58,7 +58,8 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
       setAltPhone(user.altPhone || '');
       setWhatsappPhone(user.whatsappPhone || user.phone || '');
       setDob(user.dob || '1998-05-15');
-      if (user.profilePicture || user.avatar) setCurrentAvatar(user.profilePicture || user.avatar);
+      const savedPic = user.profilePicture || user.avatar;
+      if (savedPic) setCurrentAvatar(savedPic);
     }
   }, [user, isEditing]);
 
@@ -145,7 +146,8 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
       altPhone: altPhone.trim(),
       whatsappPhone: whatsappPhone.trim(),
       dob,
-      avatar: currentAvatar
+      avatar: currentAvatar,
+      profilePicture: currentAvatar
     };
 
     updateUserProfile(updatedData);

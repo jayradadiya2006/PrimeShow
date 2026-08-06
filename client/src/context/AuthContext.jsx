@@ -51,27 +51,49 @@ apiClient.interceptors.response.use(null, async (error) => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('primeshow_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('primeshow_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        const avatarUrl = parsed.profilePicture || parsed.avatar;
+        return {
+          ...parsed,
+          avatar: avatarUrl || 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a',
+          profilePicture: avatarUrl || 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a'
+        };
+      }
+    } catch (e) {}
+    return null;
   });
 
   const [token, setToken] = useState(() => {
     return localStorage.getItem('primeshow_token') || null;
   });
 
-  // Global Firebase Auth State Change Listener
+  // Global Firebase Auth State Change Listener (Preserves stored avatar and profilePicture)
   useEffect(() => {
     if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
+        let existingUser = {};
+        try {
+          const saved = localStorage.getItem('primeshow_user');
+          if (saved) existingUser = JSON.parse(saved);
+        } catch (e) {}
+
+        const savedAvatar = existingUser.profilePicture || existingUser.avatar || firebaseUser.photoURL || 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a';
+
         const userObj = {
+          ...existingUser,
           id: firebaseUser.uid,
-          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'PrimeShow Member',
-          email: firebaseUser.email || '',
-          phone: firebaseUser.phoneNumber || '',
-          role: firebaseUser.email === 'admin@primeshow.com' ? 'ADMIN' : 'CUSTOMER',
-          rewardsPoints: 500,
-          provider: 'FIREBASE_EMAIL'
+          name: existingUser.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'PrimeShow Member',
+          email: firebaseUser.email || existingUser.email || '',
+          phone: firebaseUser.phoneNumber || existingUser.phone || '',
+          role: (firebaseUser.email === 'admin@primeshow.com' || existingUser.email === 'admin@primeshow.com') ? 'ADMIN' : (existingUser.role || 'CUSTOMER'),
+          rewardsPoints: existingUser.rewardsPoints || 500,
+          provider: 'FIREBASE_EMAIL',
+          avatar: savedAvatar,
+          profilePicture: savedAvatar
         };
         setUser(userObj);
         setToken(firebaseUser.accessToken || `firebase_token_${firebaseUser.uid}`);
@@ -508,19 +530,42 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('primeshow_user');
   };
 
-  // Update & Persist User Profile Fields
-  const updateUserProfile = (updatedFields) => {
+  // Update & Persist User Profile Fields across Database, Firebase & LocalStorage
+  const updateUserProfile = async (updatedFields) => {
+    const avatarUrl = updatedFields.avatar || updatedFields.profilePicture;
+    let updatedUserObj = null;
+
     setUser(prevUser => {
-      const avatarUrl = updatedFields.avatar || updatedFields.profilePicture || prevUser?.avatar || prevUser?.profilePicture;
-      const newUser = { 
+      const finalAvatar = avatarUrl || prevUser?.profilePicture || prevUser?.avatar || 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a';
+      updatedUserObj = { 
         ...(prevUser || {}), 
         ...updatedFields,
-        avatar: avatarUrl,
-        profilePicture: avatarUrl
+        avatar: finalAvatar,
+        profilePicture: finalAvatar
       };
-      localStorage.setItem('primeshow_user', JSON.stringify(newUser));
-      return newUser;
+      try {
+        localStorage.setItem('primeshow_user', JSON.stringify(updatedUserObj));
+      } catch (e) {}
+      return updatedUserObj;
     });
+
+    // Firebase photoURL update if Firebase Auth user is active
+    try {
+      if (auth && auth.currentUser && avatarUrl) {
+        await updateProfile(auth.currentUser, { photoURL: avatarUrl });
+      }
+    } catch (err) {
+      console.info('⚡ Firebase updateProfile sync note:', err.message);
+    }
+
+    // Backend database update
+    try {
+      if (updatedUserObj) {
+        await apiClient.put('/users/profile', updatedUserObj);
+      }
+    } catch (err) {
+      console.info('⚡ Backend profile sync note:', err.message);
+    }
   };
 
   // Admin Create / Broadcast Notification
