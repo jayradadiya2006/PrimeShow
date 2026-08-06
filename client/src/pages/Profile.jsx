@@ -36,7 +36,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   const [altPhone, setAltPhone] = useState(user?.altPhone || '');
   const [whatsappPhone, setWhatsappPhone] = useState(user?.whatsappPhone || '');
   const [dob, setDob] = useState(user?.dob || '1998-05-15');
-  const [currentAvatar, setCurrentAvatar] = useState(user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/adventurer/svg?seed=Felix&backgroundColor=b6e3f4");
+  const [currentAvatar, setCurrentAvatar] = useState(user?.profilePicture || user?.avatar || "https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a");
 
   const [savedMsg, setSavedMsg] = useState('');
   const [validationError, setValidationError] = useState('');
@@ -70,26 +70,26 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
     { 
       id: 'men', 
       label: 'Men', 
-      desc: '3D Male Cartoon',
-      url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Felix&backgroundColor=b6e3f4' 
+      desc: '3D Anime Male Character',
+      url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a' 
     },
     { 
       id: 'female', 
       label: 'Female', 
-      desc: '3D Female Cartoon',
-      url: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Samantha&backgroundColor=ffdfbf' 
+      desc: '3D Anime Female Character',
+      url: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Isabella&backgroundColor=831843' 
     },
     { 
       id: 'kids', 
       label: 'Kids', 
-      desc: 'Cute Kid 3D Cartoon',
-      url: 'https://api.dicebear.com/7.x/big-smile/svg?seed=Buddy&backgroundColor=c0aede' 
+      desc: 'Cute Kid Anime Character',
+      url: 'https://api.dicebear.com/7.x/open-peeps/svg?seed=Leo&backgroundColor=78350f' 
     },
     { 
       id: 'others', 
       label: 'Others', 
-      desc: 'Neutral 3D Cartoon',
-      url: 'https://api.dicebear.com/7.x/bottts/svg?seed=PrimeHero&backgroundColor=d1d4f9' 
+      desc: 'Sleek Neutral 3D Avatar',
+      url: 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=CyberUser&backgroundColor=312e81' 
     }
   ];
 
