@@ -7,6 +7,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useBooking } from '../../context/BookingContext';
 import { AdminTabErrorBoundary } from '../../components/AdminErrorBoundary';
+import { GUJARAT_CITIES } from '../../constants/cities';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
@@ -1792,12 +1793,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <div>
                   <label className="block text-xs font-bold text-cyan-300 mb-1">Target City / Hub *</label>
                   <select value={movieForm.city || 'Surat'} onChange={e => setMovieForm({...movieForm, city: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black">
-                    <option value="All">All Cities</option>
-                    <option value="Surat">Surat</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Rajkot">Rajkot</option>
-                    <option value="Vadodara">Vadodara</option>
-                    <option value="Bhavnagar">Bhavnagar</option>
+                    <option value="All">All Cities (Statewide)</option>
+                    {GUJARAT_CITIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1996,11 +1995,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <div>
                     <label className="block text-[11px] font-bold text-white/70 mb-1">City *</label>
                     <select value={schedCity || 'Surat'} onChange={e => setSchedCity(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black">
-                      <option value="Surat">Surat</option>
-                      <option value="Ahmedabad">Ahmedabad</option>
-                      <option value="Rajkot">Rajkot</option>
-                      <option value="Vadodara">Vadodara</option>
-                      <option value="Bhavnagar">Bhavnagar</option>
+                      {GUJARAT_CITIES.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -2707,11 +2704,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     onChange={(e) => setTheatreForm({ ...theatreForm, city: e.target.value })}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
                   >
-                    <option value="Surat">Surat</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Rajkot">Rajkot</option>
-                    <option value="Vadodara">Vadodara</option>
-                    <option value="Bhavnagar">Bhavnagar</option>
+                    {GUJARAT_CITIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -3048,11 +3043,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
                   >
-                    <option value="Surat">Surat</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Rajkot">Rajkot</option>
-                    <option value="Vadodara">Vadodara</option>
-                    <option value="Bhavnagar">Bhavnagar</option>
+                    <option value="All">All Cities</option>
+                    {GUJARAT_CITIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -3277,11 +3271,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     onChange={(e) => setPlayForm({ ...playForm, city: e.target.value })}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
                   >
-                    <option value="Surat">Surat</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Rajkot">Rajkot</option>
-                    <option value="Vadodara">Vadodara</option>
-                    <option value="Bhavnagar">Bhavnagar</option>
+                    <option value="All">All Cities</option>
+                    {GUJARAT_CITIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -3509,11 +3502,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     onChange={(e) => setActivityForm({ ...activityForm, city: e.target.value })}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
                   >
-                    <option value="Surat">Surat</option>
-                    <option value="Ahmedabad">Ahmedabad</option>
-                    <option value="Rajkot">Rajkot</option>
-                    <option value="Vadodara">Vadodara</option>
-                    <option value="Bhavnagar">Bhavnagar</option>
+                    <option value="All">All Cities</option>
+                    {GUJARAT_CITIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
 

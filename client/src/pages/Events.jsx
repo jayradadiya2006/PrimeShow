@@ -375,8 +375,8 @@ export const Events = () => {
         {filteredEvents.length === 0 && (
           <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6 max-w-lg mx-auto">
             <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No live events available in {selectedCity || 'your city'} right now</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60">We couldn't find any events listed for {selectedCity || 'this location'}. Try choosing a different city from the top navbar.</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No active shows in {selectedCity || 'this city'} currently</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60">No active shows in {selectedCity || 'this city'} currently. Switch city to explore more.</p>
           </div>
         )}
       </div>

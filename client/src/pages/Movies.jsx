@@ -417,8 +417,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
         {filteredMovies.length === 0 && (
           <div className="text-center py-16 sm:py-20 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
             <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-1">No movies available in {selectedCity || 'your city'} right now</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60 mb-4">We couldn't find any movie screenings for {selectedCity || 'this location'}. Try switching your city or resetting filters.</p>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-1">No active shows in {selectedCity || 'this city'} currently</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60 mb-4">No active shows in {selectedCity || 'this city'} currently. Switch city to explore more.</p>
             <button
               onClick={handleResetFilters}
               className="px-5 py-2 rounded-full bg-amber-500 text-black font-extrabold text-xs shadow-md hover:bg-amber-400 transition-all cursor-pointer"
