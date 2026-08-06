@@ -6,14 +6,11 @@ export const CityModal = ({ isOpen, onClose }) => {
   const { selectedCity, changeCity } = useAuth();
 
   const CITIES = [
-    { name: 'Mumbai', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=300&q=80', active: true },
-    { name: 'Delhi NCR', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=300&q=80', active: true },
-    { name: 'Bengaluru', image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=300&q=80', active: true },
-    { name: 'Hyderabad', image: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?auto=format&fit=crop&w=300&q=80', active: true },
-    { name: 'Chennai', image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=300&q=80', active: true },
-    { name: 'Pune', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&q=80', active: true },
-    { name: 'Ahmedabad', image: 'https://images.unsplash.com/photo-1608447714925-599debaa036e?auto=format&fit=crop&w=300&q=80', active: true },
-    { name: 'Kolkata', image: 'https://images.unsplash.com/photo-1558431382-27e303142255?auto=format&fit=crop&w=300&q=80', active: true }
+    { name: 'Surat', image: 'https://images.unsplash.com/photo-1608447714925-599debaa036e?auto=format&fit=crop&w=400&q=80', tag: 'Default Hub' },
+    { name: 'Ahmedabad', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=400&q=80', tag: 'Multiplex Hub' },
+    { name: 'Rajkot', image: 'https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=400&q=80', tag: 'Royal City' },
+    { name: 'Vadodara', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=400&q=80', tag: 'Cultural Hub' },
+    { name: 'Bhavnagar', image: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=400&q=80', tag: 'Coastal City' }
   ];
 
   if (!isOpen) return null;
@@ -41,7 +38,7 @@ export const CityModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* City Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {CITIES.map((city) => {
             const isSelected = selectedCity === city.name;
             return (

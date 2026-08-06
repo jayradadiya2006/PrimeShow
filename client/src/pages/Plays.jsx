@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Theater, Calendar, MapPin, Ticket, Search, Filter, Sparkles, Globe, X, RefreshCw, MoreVertical, SlidersHorizontal, Check, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { PlayBookingModal } from '../components/PlayBookingModal';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const Plays = () => {
+  const { selectedCity } = useAuth();
   const [playsList, setPlaysList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,68 +29,84 @@ export const Plays = () => {
     } catch (err) {
       setPlaysList([
         {
-          id: 'pl_1',
-          title: 'Gujjubhai Banya Dabang',
+          id: 'pl_surat_1',
+          title: 'Gujjubhai Banya Dabang - Surat Premiere',
           language: 'Gujarati',
           category: 'Comedy Drama',
           badge: 'HOT SELLER',
-          venue: 'Royal Opera House, Mumbai',
-          city: 'Mumbai',
+          venue: 'Sardar Patel Smarak Bhavan, Surat',
+          city: 'Surat',
           date: '14 FEB 2027',
           time: '08:00 PM',
           price: 600,
           totalCapacity: 1200,
           availableSeats: 340,
           image: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80',
-          description: 'Siddharth Randeria returns as the hilarious Gujjubhai in an action-packed Gujarati family comedy play that will leave you in splits!'
+          description: 'Siddharth Randeria returns as the hilarious Gujjubhai in an action-packed Gujarati family comedy play in Surat.'
         },
         {
-          id: 'pl_2',
+          id: 'pl_ahmedabad_1',
           title: 'Mughal-E-Azam: The Grand Musical',
           language: 'Hindi',
           category: 'Musical Drama',
           badge: 'PREMIERE',
-          venue: 'NCPA Theatre, Nariman Point, Mumbai',
-          city: 'Mumbai',
-          date: '20 FEB 2027',
+          venue: 'Town Hall, Ellisbridge, Ahmedabad',
+          city: 'Ahmedabad',
+          date: '28 FEB 2027',
           time: '07:30 PM',
           price: 1500,
-          totalCapacity: 1500,
-          availableSeats: 210,
-          image: 'https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?auto=format&fit=crop&w=800&q=80',
-          description: 'Feroz Abbas Khan\'s iconic Broadway-style Indian musical featuring live singing, Manish Malhotra costumes, and breathtaking Kathak dance performances.'
+          totalCapacity: 2500,
+          availableSeats: 620,
+          image: 'https://images.unsplash.com/photo-1469488865564-c2de10f69f96?auto=format&fit=crop&w=800&q=80',
+          description: 'Feroz Abbas Khan\'s broadway-style grand musical adaptation featuring original live singing, Manish Malhotra costumes, and mesmerising choreography.'
         },
         {
-          id: 'pl_3',
-          title: 'Hamlet: Shakespeare Masterpiece',
-          language: 'English',
-          category: 'Classic Tragedy',
-          badge: 'CRITICS CHOICE',
-          venue: 'Kashinath Ghanekar Natyagruha, Thane',
-          city: 'Mumbai',
-          date: '02 MAR 2027',
-          time: '06:00 PM',
-          price: 800,
-          totalCapacity: 900,
-          availableSeats: 450,
-          image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
-          description: 'A gripping modern theatrical adaptation of William Shakespeare\'s psychological revenge masterpiece directed by award-winning theater veterans.'
-        },
-        {
-          id: 'pl_4',
-          title: 'Sahi Re Sahi - Legendary Comedy',
-          language: 'Marathi',
+          id: 'pl_rajkot_1',
+          title: 'Kathiyawadi Hasya Rangbhoomi',
+          language: 'Gujarati',
           category: 'Comedy',
-          badge: 'HOUSEFULL SOON',
-          venue: 'Vishnudas Bhave Natyagruh, Navi Mumbai',
-          city: 'Mumbai',
-          date: '10 MAR 2027',
+          badge: 'SUPERHIT',
+          venue: 'Hemu Gadhvi Hall, Rajkot',
+          city: 'Rajkot',
+          date: '08 MAR 2027',
           time: '08:30 PM',
+          price: 450,
+          totalCapacity: 1000,
+          availableSeats: 290,
+          image: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80',
+          description: 'A hilarious social satire play bringing authentic Kathiyawadi humor and stellar stage performances.'
+        },
+        {
+          id: 'pl_vadodara_1',
+          title: 'Vadodara Sanskriti Natak Special',
+          language: 'Gujarati',
+          category: 'Drama',
+          badge: 'MUST WATCH',
+          venue: 'Sir Sayajirao Gaekwad Auditorium, Vadodara',
+          city: 'Vadodara',
+          date: '15 MAR 2027',
+          time: '07:00 PM',
           price: 500,
-          totalCapacity: 1100,
-          availableSeats: 180,
-          image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
-          description: 'Bharat Jadhav plays quadruple roles in Maharashtra\'s record-breaking theatrical comedy extravaganza about mistaken identities and hilarious chaos.'
+          totalCapacity: 1200,
+          availableSeats: 410,
+          image: 'https://images.unsplash.com/photo-1469488865564-c2de10f69f96?auto=format&fit=crop&w=800&q=80',
+          description: 'An emotional family drama highlighting traditional values, modern relationships, and artistic theatrical design.'
+        },
+        {
+          id: 'pl_bhavnagar_1',
+          title: 'Bhavnagar Lok Sahitya & Drama Night',
+          language: 'Gujarati',
+          category: 'Cultural',
+          badge: 'CLASSIC',
+          venue: 'Yashwantrai Parmar Hall, Bhavnagar',
+          city: 'Bhavnagar',
+          date: '22 MAR 2027',
+          time: '08:00 PM',
+          price: 350,
+          totalCapacity: 800,
+          availableSeats: 220,
+          image: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80',
+          description: 'A poignant theatrical production celebrating historic folklore and classical Gujarati stagecraft.'
         }
       ]);
     } finally {
@@ -112,7 +130,7 @@ export const Plays = () => {
   }, []);
 
   const languages = ['All', 'Gujarati', 'Hindi', 'English', 'Marathi'];
-  const categories = ['All', 'Comedy', 'Drama', 'Musical', 'Classic'];
+  const categories = ['All', 'Comedy Drama', 'Musical Drama', 'Historical', 'Thriller'];
 
   const handleResetFilters = () => {
     setActiveLanguage('All');
@@ -121,6 +139,7 @@ export const Plays = () => {
   };
 
   const filteredPlays = playsList.filter(pl => {
+    const matchesCity = !selectedCity || selectedCity === 'All' || pl.city === selectedCity || pl.city === 'All' || (Array.isArray(pl.cities) && pl.cities.includes(selectedCity));
     const matchesLang = activeLanguage === 'All' || pl.language?.toLowerCase() === activeLanguage.toLowerCase();
     const matchesCat = activeCategory === 'All' || (pl.category && pl.category.toLowerCase().includes(activeCategory.toLowerCase()));
     
@@ -132,7 +151,7 @@ export const Plays = () => {
                           pl.description?.toLowerCase().includes(q) ||
                           (pl.category && pl.category.toLowerCase().includes(q));
 
-    return matchesLang && matchesCat && matchesSearch;
+    return matchesCity && matchesLang && matchesCat && matchesSearch;
   });
 
   const searchSuggestions = searchQuery.trim()
@@ -464,10 +483,10 @@ export const Plays = () => {
         </div>
 
         {filteredPlays.length === 0 && (
-          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
+          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6 max-w-lg mx-auto">
             <Theater className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No plays match your filter criteria</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60">Try choosing a different language or drama genre.</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No live drama or plays in {selectedCity || 'your city'} right now</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60">We couldn't find any plays listed for {selectedCity || 'this location'}. Try switching your city or selecting another language.</p>
           </div>
         )}
       </div>

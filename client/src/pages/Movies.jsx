@@ -3,8 +3,11 @@ import { MovieCard } from '../components/MovieCard';
 import { useBooking } from '../context/BookingContext';
 import { Filter, Search, Sparkles, X, RefreshCw, MoreVertical, SlidersHorizontal, Check, ArrowRight, Film } from 'lucide-react';
 
+import { useAuth } from '../context/AuthContext';
+
 export const Movies = ({ onSelectMovie, onBookNow }) => {
   const { moviesList } = useBooking();
+  const { selectedCity } = useAuth();
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [selectedFormat, setSelectedFormat] = useState('All');
@@ -36,6 +39,18 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
   };
 
   const filteredMovies = moviesList.filter(movie => {
+    // City filtering match
+    if (selectedCity && selectedCity !== 'All') {
+      const mCity = movie.city;
+      const mCities = Array.isArray(movie.cities) ? movie.cities : [];
+      const tCities = Array.isArray(movie.theatres) ? movie.theatres.map(t => t.city) : [];
+      const allCities = [mCity, ...mCities, ...tCities].filter(Boolean);
+
+      if (allCities.length > 0 && !allCities.includes('All') && !allCities.includes(selectedCity)) {
+        return false;
+      }
+    }
+
     // Genre match
     if (selectedGenre !== 'All') {
       const gList = Array.isArray(movie.genres) 
@@ -402,13 +417,13 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
         {filteredMovies.length === 0 && (
           <div className="text-center py-16 sm:py-20 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
             <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-1">No movies match your filter criteria</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60 mb-4">Try clearing your search query or choosing another genre/language.</p>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-1">No movies available in {selectedCity || 'your city'} right now</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60 mb-4">We couldn't find any movie screenings for {selectedCity || 'this location'}. Try switching your city or resetting filters.</p>
             <button
               onClick={handleResetFilters}
               className="px-5 py-2 rounded-full bg-amber-500 text-black font-extrabold text-xs shadow-md hover:bg-amber-400 transition-all cursor-pointer"
             >
-              Show All Movies
+              Reset Filters
             </button>
           </div>
         )}

@@ -24,36 +24,69 @@ export const Theatres = ({ onSelectTheatre }) => {
       } catch (err) {
         setTheatresList([
           {
-            id: 'th_1',
-            name: 'PVR Director\'s Cut, Palladium Mall',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            address: '4th Floor, High Street Phoenix, Lower Parel, Mumbai',
+            id: 'th_surat_1',
+            name: 'INOX VR Mall, Dumas Road',
+            city: 'Surat',
+            state: 'Gujarat',
+            address: 'Dumas Road, Magdalla, Surat',
             facilities: ['VIP Recliners', 'IMAX 3D', 'Dolby Atmos 360', 'Gourmet In-Seat Dining', 'Valet Parking'],
-            screensCount: 6,
-            totalSeats: 200,
+            screensCount: 7,
+            totalSeats: 280,
             image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80'
           },
           {
-            id: 'th_2',
-            name: 'INOX Megaplex, Inorbit Mall',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            address: '3rd Floor, Link Road, Malad West, Mumbai',
-            facilities: ['IMAX 3D', 'ScreenX 270°', 'MX4D Motion Seats', 'Live Food Counters'],
-            screensCount: 11,
-            totalSeats: 350,
+            id: 'th_surat_2',
+            name: 'PVR Rahul Raj Mall',
+            city: 'Surat',
+            state: 'Gujarat',
+            address: 'Piplod Main Road, Surat',
+            facilities: ['4DX Motion Seats', 'Dolby Atmos', 'Executive Lounges'],
+            screensCount: 6,
+            totalSeats: 220,
             image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80'
           },
           {
-            id: 'th_3',
-            name: 'Cinepolis VIP, Orion Mall',
-            city: 'Bengaluru',
-            state: 'Karnataka',
-            address: 'Dr. Rajkumar Road, Rajajinagar, Bengaluru',
-            facilities: ['Plush Recliners', 'Dolby Atmos', 'Butler Service', 'Private Lounge'],
-            screensCount: 8,
-            totalSeats: 240,
+            id: 'th_ahmedabad_1',
+            name: 'PVR Acropolis Mall, Thaltej',
+            city: 'Ahmedabad',
+            state: 'Gujarat',
+            address: 'SG Highway, Thaltej, Ahmedabad',
+            facilities: ['IMAX 3D', 'Play House', '4DX'],
+            screensCount: 9,
+            totalSeats: 340,
+            image: 'https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=800&q=80'
+          },
+          {
+            id: 'th_rajkot_1',
+            name: 'Cinepolis Crystal Mall',
+            city: 'Rajkot',
+            state: 'Gujarat',
+            address: 'Kalawad Road, Rajkot',
+            facilities: ['VIP Recliners', 'Dolby 7.1 Sound'],
+            screensCount: 5,
+            totalSeats: 190,
+            image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80'
+          },
+          {
+            id: 'th_vadodara_1',
+            name: 'Inox Seven Seas Mall',
+            city: 'Vadodara',
+            state: 'Gujarat',
+            address: 'Fatehgunj, Vadodara',
+            facilities: ['Dolby Atmos', 'Executive Lounge'],
+            screensCount: 6,
+            totalSeats: 210,
+            image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80'
+          },
+          {
+            id: 'th_bhavnagar_1',
+            name: 'Himalaya Multiplex',
+            city: 'Bhavnagar',
+            state: 'Gujarat',
+            address: 'Subhashnagar, Bhavnagar',
+            facilities: ['Digital 4K', 'Snack Bar'],
+            screensCount: 4,
+            totalSeats: 160,
             image: 'https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=800&q=80'
           }
         ]);
@@ -79,7 +112,7 @@ export const Theatres = ({ onSelectTheatre }) => {
   const citiesList = ['All', ...new Set(theatresList.map(t => t.city))];
 
   const filteredTheatres = theatresList.filter(t => {
-    const matchesCity = activeCityFilter === 'All' || t.city === activeCityFilter;
+    const matchesCity = !selectedCity || selectedCity === 'All' || t.city === selectedCity || (activeCityFilter !== 'All' && t.city === activeCityFilter);
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q || 
                           t.name?.toLowerCase().includes(q) || 
@@ -329,10 +362,10 @@ export const Theatres = ({ onSelectTheatre }) => {
         </div>
 
         {filteredTheatres.length === 0 && (
-          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
+          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6 max-w-lg mx-auto">
             <PlaySquare className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No multiplexes match your search</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60">Try searching for another city, location, or facility name.</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No multiplexes found in {selectedCity || 'your city'} right now</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60">We couldn't find any theatres listed for {selectedCity || 'this location'}. Try selecting another city from the navbar top menu.</p>
           </div>
         )}
       </div>

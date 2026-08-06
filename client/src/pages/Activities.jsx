@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Search, Filter, MapPin, Clock, Check, Ticket, Sparkles, X, RefreshCw, MoreVertical, SlidersHorizontal, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { ActivityBookingModal } from '../components/ActivityBookingModal';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const Activities = () => {
+  const { selectedCity } = useAuth();
   const [activitiesList, setActivitiesList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,34 +28,29 @@ export const Activities = () => {
     } catch (err) {
       setActivitiesList([
         {
-          id: 'act_1',
-          title: 'Imagicaa Water Park & Snow World',
+          id: 'act_surat_1',
+          title: 'Amaazia Water Park & Snow World',
           category: 'Water Park',
           badge: 'UNLIMITED ACCESS',
-          location: 'Khopoli, Mumbai-Pune Expressway',
-          city: 'Mumbai',
+          location: 'Opp. BRTS Bus Stop, Dumbhal, Surat',
+          city: 'Surat',
           validity: 'Full Day Pass (10:30 AM - 07:00 PM)',
-          price: 1299,
+          price: 999,
           totalCapacity: 3000,
           availableSeats: 850,
-          benefits: ['Unlimited Water Rides', 'Free Snow World Access', 'Wave Pool Entry', 'Complimentary Buffet Lunch'],
+          benefits: ['Unlimited Water Slides', 'Free Snow World Access', 'Wave Pool Entry', 'Complimentary Buffet Lunch'],
           image: 'https://images.unsplash.com/photo-1582650625119-3a31f8fa2699?auto=format&fit=crop&w=800&q=80',
-          description: 'Experience India\'s premier international water park featuring high-thrill slides, lazy rivers, wave pools, and sub-zero snow world adventures!'
+          description: 'Surat\'s premier international water park featuring high-thrill slides, wave pools, lazy rivers, and sub-zero snow world!'
         },
         {
-          id: 'act_2',
-          title: 'Bounce Inc Trampoline Park & Ninja Course',
-          category: 'Trampoline Park',
-          badge: 'BEST VALUE',
-          location: 'Inorbit Mall, Malad West, Mumbai',
-          city: 'Mumbai',
-          validity: '2-Hour All-Access Pass',
+          id: 'act_ahmedabad_1',
+          title: 'Shott Go-Karting & VR Gaming Arena',
+          category: 'Arcade Zone',
+          badge: 'HIGH SPEED',
+          location: 'Sindhu Bhavan Road, Ahmedabad',
+          city: 'Ahmedabad',
+          validity: '3-Hour All-Access Pass',
           price: 899,
-          totalCapacity: 500,
-          availableSeats: 120,
-          benefits: ['Free Grip Socks', 'Freestyle Trampoline Arena', 'Slam Dunk & Dodgeball', 'Ninja Warrior Obstacle Course'],
-          image: 'https://images.unsplash.com/photo-1526676037777-05a232554f77?auto=format&fit=crop&w=800&q=80',
-          description: 'Wall-to-wall trampolines, foam pits, cliff jumping, and high-energy indoor ninja courses for adrenaline junkies of all ages!'
         },
         {
           id: 'act_3',
@@ -368,10 +365,10 @@ export const Activities = () => {
         </div>
 
         {filteredActivities.length === 0 && (
-          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
+          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6 max-w-lg mx-auto">
             <Heart className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No activities match your query</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60">Try searching with a different activity category or location.</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No sports or gaming activities in {selectedCity || 'your city'} right now</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60">We couldn't find any activities listed for {selectedCity || 'this location'}. Try switching your city from the navbar top menu.</p>
           </div>
         )}
       </div>

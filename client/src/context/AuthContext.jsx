@@ -106,8 +106,16 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const [selectedCity, setSelectedCity] = useState(() => {
-    return localStorage.getItem('primeshow_selected_city') || 'Mumbai';
+    return localStorage.getItem('selectedCity') || localStorage.getItem('primeshow_selected_city') || 'Surat';
   });
+
+  const changeCity = (city) => {
+    setSelectedCity(city);
+    try {
+      localStorage.setItem('selectedCity', city);
+      localStorage.setItem('primeshow_selected_city', city);
+    } catch (e) {}
+  };
 
   // Wishlist State
   const [wishlist, setWishlist] = useState(() => {
@@ -211,11 +219,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('primeshow_selected_city', selectedCity);
   }, [selectedCity]);
-
-  const changeCity = (city) => {
-    setSelectedCity(city);
-    localStorage.setItem('primeshow_selected_city', city);
-  };
 
   const toggleWishlist = (movieId) => {
     setWishlist(prev => {

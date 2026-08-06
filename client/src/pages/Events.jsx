@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Calendar, MapPin, Ticket, Search, Filter, Clock, ArrowRight, X, MoreVertical, SlidersHorizontal, Check } from 'lucide-react';
 import axios from 'axios';
 import { EventBookingModal } from '../components/EventBookingModal';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const Events = () => {
+  const { selectedCity } = useAuth();
   const [eventsList, setEventsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,60 +28,74 @@ export const Events = () => {
     } catch (err) {
       setEventsList([
         {
-          id: 'ev_1',
-          title: 'Coldplay: Music of the Spheres World Tour',
+          id: 'ev_surat_1',
+          title: 'Surat International Live Music Fest',
           category: 'Live Concert',
-          venue: 'DY Patil Stadium, Mumbai',
-          city: 'Mumbai',
-          date: '18 JAN 2027',
+          venue: 'Pandit Dindayal Upadhyay Indoor Stadium, Surat',
+          city: 'Surat',
+          date: '18 FEB 2027',
           time: '07:00 PM',
-          price: 3500,
-          totalCapacity: 50000,
-          availableSeats: 12400,
+          price: 1499,
+          totalCapacity: 15000,
+          availableSeats: 3200,
           image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
-          description: 'Experience Coldplay live in Mumbai performing classics like Yellow, Fix You, Viva La Vida, and Higher Power in an immersive LED wristband stadium experience.'
+          description: 'Experience Surat\'s biggest live music night featuring top Bollywood singers and acoustic band performances.'
         },
         {
-          id: 'ev_2',
-          title: 'Zakir Khan Live - Tathastu Special',
+          id: 'ev_ahmedabad_1',
+          title: 'Ahmedabad Standup Comedy Night',
           category: 'Stand-up Comedy',
-          venue: 'Siri Fort Auditorium, Delhi NCR',
-          city: 'Delhi NCR',
-          date: '04 FEB 2027',
+          venue: 'Tagore Hall, Paldi, Ahmedabad',
+          city: 'Ahmedabad',
+          date: '25 FEB 2027',
           time: '08:00 PM',
-          price: 999,
-          totalCapacity: 2500,
-          availableSeats: 480,
+          price: 799,
+          totalCapacity: 2000,
+          availableSeats: 450,
           image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
-          description: 'India\'s beloved Sakht Launda, Zakir Khan, returns with his brand-new 90-minute stand-up special filled with relatable storytelling, laughter, and poetry.'
+          description: 'Live standup comedy special packed with hilarious Gujarati and Hindi observational humor.'
         },
         {
-          id: 'ev_3',
-          title: 'Sunburn Goa EDM Music Festival 2026',
+          id: 'ev_rajkot_1',
+          title: 'Rajkot Royal Cultural Evening',
           category: 'Festival',
-          venue: 'Vagator Beach, Goa',
-          city: 'Goa',
-          date: '28 DEC 2026',
-          time: '04:00 PM onwards',
-          price: 4999,
-          totalCapacity: 30000,
-          availableSeats: 8200,
+          venue: 'Race Course Ground, Rajkot',
+          city: 'Rajkot',
+          date: '04 MAR 2027',
+          time: '06:30 PM',
+          price: 599,
+          totalCapacity: 5000,
+          availableSeats: 1200,
           image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
-          description: 'Asia\'s biggest electronic dance music festival featuring international headliner DJs, laser shows, pyrotechnics, and beach vibes across 3 massive stages.'
+          description: 'A grand celebration of Kathiyawadi folk art, royal music, and traditional dance performances.'
         },
         {
-          id: 'ev_4',
-          title: 'Arijit Singh Live in Concert - Soulful Night',
-          category: 'Singing',
-          venue: 'Jawaharlal Nehru Stadium, Delhi NCR',
-          city: 'Delhi NCR',
-          date: '15 MAR 2027',
-          time: '06:30 PM',
-          price: 2500,
-          totalCapacity: 40000,
-          availableSeats: 9500,
+          id: 'ev_vadodara_1',
+          title: 'Vadodara EDM Music Fest 2027',
+          category: 'Festival',
+          venue: 'Navlakhi Ground, Vadodara',
+          city: 'Vadodara',
+          date: '12 MAR 2027',
+          time: '05:00 PM',
+          price: 1199,
+          totalCapacity: 8000,
+          availableSeats: 2100,
           image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80',
-          description: 'An unforgettable evening with Arijit Singh performing his hit romantic and soulful melodies backed by a 50-piece symphony orchestra.'
+          description: 'Electronic dance music celebration with laser lights, pyrotechnics, and top DJs.'
+        },
+        {
+          id: 'ev_bhavnagar_1',
+          title: 'Bhavnagar Heritage Musical Night',
+          category: 'Singing',
+          venue: 'Yashwantrai Parmar Auditorium, Bhavnagar',
+          city: 'Bhavnagar',
+          date: '20 MAR 2027',
+          time: '07:30 PM',
+          price: 499,
+          totalCapacity: 1500,
+          availableSeats: 380,
+          image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
+          description: 'Classical & Sufi vocal evening celebrating Gujarat\'s rich musical heritage.'
         }
       ]);
     } finally {
@@ -105,6 +121,7 @@ export const Events = () => {
   const categories = ['All', 'Live Concert', 'Stand-up Comedy', 'Festival', 'Singing'];
 
   const filteredEvents = eventsList.filter(ev => {
+    const matchesCity = !selectedCity || selectedCity === 'All' || ev.city === selectedCity || ev.city === 'All' || (Array.isArray(ev.cities) && ev.cities.includes(selectedCity));
     const matchesCat = activeCategory === 'All' || ev.category === activeCategory;
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q || 
@@ -113,7 +130,7 @@ export const Events = () => {
                           ev.city?.toLowerCase().includes(q) ||
                           ev.description?.toLowerCase().includes(q) ||
                           (ev.category && ev.category.toLowerCase().includes(q));
-    return matchesCat && matchesSearch;
+    return matchesCity && matchesCat && matchesSearch;
   });
 
   const searchSuggestions = searchQuery.trim()
@@ -356,10 +373,10 @@ export const Events = () => {
         </div>
 
         {filteredEvents.length === 0 && (
-          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
+          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6 max-w-lg mx-auto">
             <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No live events match your filter</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60">Try searching with a different category or search keyword.</p>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No live events available in {selectedCity || 'your city'} right now</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60">We couldn't find any events listed for {selectedCity || 'this location'}. Try choosing a different city from the top navbar.</p>
           </div>
         )}
       </div>

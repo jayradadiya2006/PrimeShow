@@ -469,8 +469,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   // Theatre CRUD State
   const [theatreForm, setTheatreForm] = useState({
     name: '',
-    city: 'Mumbai',
-    state: 'Maharashtra',
+    city: 'Surat',
     address: '',
     logo: '',
     image: '',
@@ -496,8 +495,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
     title: '',
     category: 'Live Concert',
     venue: '',
-    city: 'Mumbai',
-    date: '18 JAN 2027',
+    city: 'Surat',
+    date: '18 FEB 2027',
     time: '07:00 PM',
     price: 1500,
     totalCapacity: 5000,
@@ -515,7 +514,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     category: 'Comedy Drama',
     badge: 'HOT SELLER',
     venue: '',
-    city: 'Mumbai',
+    city: 'Surat',
     date: '14 FEB 2027',
     time: '08:00 PM',
     price: 600,
@@ -532,7 +531,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     category: 'Water Park',
     badge: 'UNLIMITED ACCESS',
     location: '',
-    city: 'Mumbai',
+    city: 'Surat',
     validity: 'Full Day Pass (10:00 AM - 07:00 PM)',
     price: 1299,
     totalCapacity: 2000,
@@ -1790,6 +1789,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <label className="block text-xs font-bold text-cyan-300 mb-1">Formats (e.g. IMAX 3D, Dolby Atmos)</label>
                   <input type="text" value={movieForm.formats} onChange={e => setMovieForm({...movieForm, formats: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
                 </div>
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Target City / Hub *</label>
+                  <select value={movieForm.city || 'Surat'} onChange={e => setMovieForm({...movieForm, city: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black">
+                    <option value="All">All Cities</option>
+                    <option value="Surat">Surat</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                    <option value="Rajkot">Rajkot</option>
+                    <option value="Vadodara">Vadodara</option>
+                    <option value="Bhavnagar">Bhavnagar</option>
+                  </select>
+                </div>
               </div>
 
               {/* YouTube Trailer Link */}
@@ -1985,7 +1995,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-white/70 mb-1">City *</label>
-                    <input type="text" required value={schedCity} onChange={e => setSchedCity(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                    <select value={schedCity || 'Surat'} onChange={e => setSchedCity(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black">
+                      <option value="Surat">Surat</option>
+                      <option value="Ahmedabad">Ahmedabad</option>
+                      <option value="Rajkot">Rajkot</option>
+                      <option value="Vadodara">Vadodara</option>
+                      <option value="Bhavnagar">Bhavnagar</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-white/70 mb-1">Address</label>
@@ -2686,14 +2702,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 <div>
                   <label className="block text-xs font-bold text-white mb-1">City *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Mumbai, Delhi NCR, Bengaluru"
-                    value={theatreForm.city}
+                  <select
+                    value={theatreForm.city || 'Surat'}
                     onChange={(e) => setTheatreForm({ ...theatreForm, city: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
-                  />
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                  >
+                    <option value="Surat">Surat</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                    <option value="Rajkot">Rajkot</option>
+                    <option value="Vadodara">Vadodara</option>
+                    <option value="Bhavnagar">Bhavnagar</option>
+                  </select>
                 </div>
 
                 <div>
@@ -3024,14 +3043,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 <div>
                   <label className="block text-xs font-bold text-white mb-1">City *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Mumbai, Delhi NCR, Goa"
-                    value={eventForm.city}
+                  <select
+                    value={eventForm.city || 'Surat'}
                     onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
-                  />
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                  >
+                    <option value="Surat">Surat</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                    <option value="Rajkot">Rajkot</option>
+                    <option value="Vadodara">Vadodara</option>
+                    <option value="Bhavnagar">Bhavnagar</option>
+                  </select>
                 </div>
 
                 <div>
@@ -3250,14 +3272,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 <div>
                   <label className="block text-xs font-bold text-white mb-1">City *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Mumbai, Ahmedabad, Pune"
-                    value={playForm.city}
+                  <select
+                    value={playForm.city || 'Surat'}
                     onChange={(e) => setPlayForm({ ...playForm, city: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
-                  />
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                  >
+                    <option value="Surat">Surat</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                    <option value="Rajkot">Rajkot</option>
+                    <option value="Vadodara">Vadodara</option>
+                    <option value="Bhavnagar">Bhavnagar</option>
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">
@@ -3479,14 +3504,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 <div>
                   <label className="block text-xs font-bold text-white mb-1">City *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Mumbai, Lonavala, Pune"
-                    value={activityForm.city}
+                  <select
+                    value={activityForm.city || 'Surat'}
                     onChange={(e) => setActivityForm({ ...activityForm, city: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
-                  />
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                  >
+                    <option value="Surat">Surat</option>
+                    <option value="Ahmedabad">Ahmedabad</option>
+                    <option value="Rajkot">Rajkot</option>
+                    <option value="Vadodara">Vadodara</option>
+                    <option value="Bhavnagar">Bhavnagar</option>
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">
