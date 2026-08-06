@@ -6,6 +6,7 @@ import {
   Activity, 
   Gamepad2, 
   Tag, 
+  Gift,
   Mail, 
   Phone, 
   MapPin, 
@@ -16,7 +17,10 @@ import {
   ChevronDown,
   ChevronUp,
   Send,
-  CheckCircle2
+  CheckCircle2,
+  Info,
+  FileText,
+  Lock
 } from 'lucide-react';
 
 export const Footer = ({ setActiveTab }) => {
@@ -58,7 +62,7 @@ export const Footer = ({ setActiveTab }) => {
   return (
     <footer className="relative z-10 w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 border-t border-slate-200 dark:border-slate-800 transition-colors duration-300 font-sans">
       
-      {/* 1. Live Running Marquee / Ticker Bar (Compact & Sleek Height + Scaled Text) */}
+      {/* 1. Live Running Marquee / Ticker Bar */}
       <div className="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 dark:from-red-900/90 dark:via-red-800/90 dark:to-red-900/90 text-white py-1.5 sm:py-2 overflow-hidden whitespace-nowrap shadow-inner border-y border-white/10">
         <div className="inline-block animate-marquee tracking-wide font-semibold text-[10px] xs:text-xs sm:text-sm">
           <span className="mx-4 sm:mx-8 text-white font-bold">🔥 FLASH OFFER: Get 20% Instant Discount on Movie Tickets with UPI Payment!</span>
@@ -71,7 +75,7 @@ export const Footer = ({ setActiveTab }) => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 space-y-6 md:space-y-10">
         
-        {/* 2. Top Feature & Trust Badges Section (Single-Row Mobile Scrollable Line) */}
+        {/* 2. Top Feature & Trust Badges Section */}
         <div className="flex flex-row overflow-x-auto scrollbar-none no-scrollbar gap-2.5 sm:gap-4 lg:grid lg:grid-cols-4 pb-6 md:pb-8 border-b border-slate-200 dark:border-slate-800 w-full max-w-full py-1">
           
           <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center gap-2.5 sm:gap-3.5 shadow-sm hover:border-red-500/30 transition-all">
@@ -155,7 +159,7 @@ export const Footer = ({ setActiveTab }) => {
           </form>
         </div>
 
-        {/* 4. Main Navigation Matrix (Desktop: Expanded Grid | Mobile: Collapsible Accordion) */}
+        {/* 4. Main Navigation Matrix */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-8 lg:gap-10 pt-4">
           
           {/* Column 1 & 2: Brand Info & Description */}
@@ -207,9 +211,8 @@ export const Footer = ({ setActiveTab }) => {
             </div>
           </div>
 
-          {/* Column 3: Categories (Desktop Expanded | Mobile Accordion Toggle) */}
+          {/* Column 3: Categories (Movies, Theatres, Events, Plays, Activities, Offers, Gift Cards) */}
           <div className="border-b md:border-b-0 border-slate-200 dark:border-slate-800 pb-2 md:pb-0">
-            {/* Mobile Header Toggle */}
             <button
               onClick={() => toggleAccordion('categories')}
               className="w-full py-2 md:py-0 flex items-center justify-between md:block text-left text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white md:border-b border-slate-200 dark:border-slate-800 md:pb-2 cursor-pointer"
@@ -220,46 +223,49 @@ export const Footer = ({ setActiveTab }) => {
               </span>
             </button>
 
-            {/* List Body */}
             <div className={`${openAccordions.categories ? 'block py-2 animate-fade-in' : 'hidden'} md:block md:pt-4`}>
               <ul className="space-y-2 sm:space-y-2.5 text-xs font-medium">
                 <li>
                   <button onClick={() => handleNavClick('movies')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
-                    <Film className="w-3.5 h-3.5 text-red-600 dark:text-red-500"/> <span className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400">Latest Movies</span>
+                    <Film className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Movies</span>
                   </button>
                 </li>
                 <li>
                   <button onClick={() => handleNavClick('theatres')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
-                    <Tv className="w-3.5 h-3.5 text-red-600 dark:text-red-500"/> <span className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400">Theater Shows</span>
-                  </button>
-                </li>
-                <li>
-                  <button onClick={() => handleNavClick('plays')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
-                    <Calendar className="w-3.5 h-3.5 text-red-600 dark:text-red-500"/> <span className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400">Live Drama & Plays</span>
+                    <Tv className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Theatres</span>
                   </button>
                 </li>
                 <li>
                   <button onClick={() => handleNavClick('events')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
-                    <Activity className="w-3.5 h-3.5 text-red-600 dark:text-red-500"/> <span className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400">Concerts & Events</span>
+                    <Activity className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Events</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => handleNavClick('plays')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                    <Calendar className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Plays</span>
                   </button>
                 </li>
                 <li>
                   <button onClick={() => handleNavClick('activities')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
-                    <Gamepad2 className="w-3.5 h-3.5 text-red-600 dark:text-red-500"/> <span className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400">Gaming & Sports</span>
+                    <Gamepad2 className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Activities</span>
                   </button>
                 </li>
                 <li>
                   <button onClick={() => handleNavClick('offers')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
-                    <Tag className="w-3.5 h-3.5 text-red-600 dark:text-red-500"/> <span className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400">Exclusive Offers</span>
+                    <Tag className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Offers</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => handleNavClick('gift-cards')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                    <Gift className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Gift Cards</span>
                   </button>
                 </li>
               </ul>
             </div>
           </div>
 
-          {/* Column 4: Quick Links & Support (Desktop Expanded | Mobile Accordion Toggle) */}
+          {/* Column 4: Customer Support (About Us, Contact Us / Support, FAQs, Privacy Policy, Terms & Conditions) */}
           <div className="border-b md:border-b-0 border-slate-200 dark:border-slate-800 pb-2 md:pb-0">
-            {/* Mobile Header Toggle */}
             <button
               onClick={() => toggleAccordion('support')}
               className="w-full py-2 md:py-0 flex items-center justify-between md:block text-left text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white md:border-b border-slate-200 dark:border-slate-800 md:pb-2 cursor-pointer"
@@ -270,21 +276,39 @@ export const Footer = ({ setActiveTab }) => {
               </span>
             </button>
 
-            {/* List Body */}
             <div className={`${openAccordions.support ? 'block py-2 animate-fade-in' : 'hidden'} md:block md:pt-4`}>
               <ul className="space-y-2 sm:space-y-2.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                <li><button onClick={() => handleNavClick('profile-bookings')} className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">My Booked Passes</button></li>
-                <li><button onClick={() => handleNavClick('profile-bookings')} className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">Verify Ticket QR</button></li>
-                <li><button onClick={() => handleNavClick('profile-support')} className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">Help & FAQ Desk</button></li>
-                <li><button onClick={() => handleNavClick('corporate')} className="text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">Terms & Privacy</button></li>
-                <li><button onClick={() => handleNavClick('admin')} className="text-red-600 dark:text-red-400 font-bold hover:underline transition-colors cursor-pointer">Admin Login Panel</button></li>
+                <li>
+                  <button onClick={() => handleNavClick('corporate')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                    <Info className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>About Us</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => handleNavClick('profile-support')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                    <Phone className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Contact Us / Support</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => handleNavClick('profile-support')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                    <HelpCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>FAQs</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => handleNavClick('corporate')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                    <Lock className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Privacy Policy</span>
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => handleNavClick('corporate')} className="flex items-center space-x-2 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer">
+                    <FileText className="w-3.5 h-3.5 text-red-600 dark:text-red-500 shrink-0"/> <span>Terms & Conditions</span>
+                  </button>
+                </li>
               </ul>
             </div>
           </div>
 
-          {/* Column 5: Social Media & Security Badge (Desktop Expanded | Mobile Accordion Toggle) */}
+          {/* Column 5: Social Media & Security Badge */}
           <div className="pb-2 md:pb-0">
-            {/* Mobile Header Toggle */}
             <button
               onClick={() => toggleAccordion('connect')}
               className="w-full py-2 md:py-0 flex items-center justify-between md:block text-left text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white md:border-b border-slate-200 dark:border-slate-800 md:pb-2 cursor-pointer"
@@ -295,7 +319,6 @@ export const Footer = ({ setActiveTab }) => {
               </span>
             </button>
 
-            {/* List Body */}
             <div className={`${openAccordions.connect ? 'block py-2 animate-fade-in' : 'hidden'} md:block md:pt-4`}>
               <p className="text-xs text-slate-600 dark:text-slate-300 mb-3 leading-relaxed font-medium">
                 Follow our social channels for daily show updates & celebrity events.
