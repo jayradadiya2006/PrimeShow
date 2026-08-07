@@ -629,19 +629,31 @@ export const AdminDashboard = ({ onReturnHome }) => {
     }
   };
 
-  // Fetch Admin Registered Users with Search & Pagination
+  // Fetch Admin Registered Users with Search & Pagination (Supports direct DB fetch & fallbacks)
   const fetchAdminUsers = async (page = 1, search = '') => {
     setUsersLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/admin/users`, {
-        params: { page, limit: 10, search }
-      });
-      setUsersList(res.data.users || []);
-      setUserTotalCount(res.data.totalUsers || 0);
-      setUserTotalPages(res.data.totalPages || 1);
-      setUserCurrentPage(res.data.currentPage || 1);
+      let res;
+      try {
+        res = await axios.get(`${API_BASE}/admin/users`, {
+          params: { page, limit: 10, search }
+        });
+      } catch (e1) {
+        // Fallback route alias
+        res = await axios.get(`${API_BASE}/users`, {
+          params: { page, limit: 10, search }
+        });
+      }
+
+      if (res && res.data) {
+        const fetchedList = Array.isArray(res.data) ? res.data : (res.data.users || []);
+        setUsersList(fetchedList);
+        setUserTotalCount(res.data.totalUsers !== undefined ? res.data.totalUsers : fetchedList.length);
+        setUserTotalPages(res.data.totalPages !== undefined ? res.data.totalPages : Math.ceil(fetchedList.length / 10) || 1);
+        setUserCurrentPage(res.data.currentPage || page);
+      }
     } catch (err) {
-      console.warn('Failed to fetch admin users:', err);
+      console.warn('Failed to fetch admin users from database:', err);
     } finally {
       setUsersLoading(false);
     }
@@ -653,7 +665,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setIsUserActivityLoading(true);
     setUserActivitySubTab('bookings');
     try {
-      const res = await axios.get(`${API_BASE}/admin/users/${u.id || u.email}/activity`);
+      let res;
+      try {
+        res = await axios.get(`${API_BASE}/admin/users/${u.id || u.email}/activity`);
+      } catch (e1) {
+        res = await axios.get(`${API_BASE}/admin/users/${u.id || u.email}/history`);
+      }
       setUserActivityData(res.data);
     } catch (err) {
       console.warn('Failed to fetch user activity:', err);
@@ -664,6 +681,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   useEffect(() => {
     fetchAdminData();
+    fetchAdminUsers(1, '');
   }, []);
 
   useEffect(() => {
