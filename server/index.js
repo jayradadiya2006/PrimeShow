@@ -171,12 +171,11 @@ const allowedOrigins = [
 
 // STEP 1: CORS Middleware MUST be the VERY FIRST middleware in Express
 app.use(cors({
-  origin: (origin, callback) => {
-    // Dynamic origin reflection allows credentials: true without wildcard CORS errors
+  origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(null, true);
+      callback(null, true); // Allow all during development/testing
     }
   },
   credentials: true,
@@ -184,13 +183,18 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
+// Handle preflight requests explicitly across all endpoints
 app.options('*', cors());
 
 // Header fallback middleware for any custom requests
 app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -1474,8 +1478,13 @@ app.post('/api/activities/book', (req, res) => {
 // ADMIN USER MANAGEMENT & ACTIVITY TRACKING ENDPOINTS
 // -------------------------------------------------------------
 
-// Search & Paginated Users List from Database & Memory Cache
-app.get(['/api/admin/users', '/admin/users'], async (req, res) => {
+// Search & Paginated Users List from Database & Memory Cache (Supports multiple route aliases)
+app.get([
+  '/api/admin/users', 
+  '/admin/users',
+  '/api/users',
+  '/users'
+], async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.max(1, parseInt(req.query.limit) || 10);
