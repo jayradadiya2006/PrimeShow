@@ -574,6 +574,68 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [isUserActivityModalOpen, setIsUserActivityModalOpen] = useState(false);
   const [userActivitySubTab, setUserActivitySubTab] = useState('bookings');
 
+  // Categorized Bookings State (Step 2)
+  const [adminBookingsList, setAdminBookingsList] = useState([]);
+  const [adminBookingsLoading, setAdminBookingsLoading] = useState(false);
+  const [bookingCategoryTab, setBookingCategoryTab] = useState('ALL'); // 'ALL' | 'Movie' | 'Event' | 'Play' | 'Slot'
+  const [bookingSearchQuery, setBookingSearchQuery] = useState('');
+  const [bookingCurrentPage, setBookingCurrentPage] = useState(1);
+  const [bookingTotalPages, setBookingTotalPages] = useState(1);
+  const [bookingTotalCount, setBookingTotalCount] = useState(0);
+
+  // Global CMS & Visual Editor State (Step 2)
+  const [platformTitleInput, setPlatformTitleInput] = useState('PrimeShow Cinema & Events');
+  const [activeCityInput, setActiveCityInput] = useState('Surat');
+  const [bannerAnnouncementInput, setBannerAnnouncementInput] = useState('⚡ Exclusive Offer: Get 50% Flat Discount on IMAX & VIP Recliner Tickets!');
+  const [maintenanceModeToggle, setMaintenanceModeToggle] = useState(false);
+  const [cmsSaveLoading, setCmsSaveLoading] = useState(false);
+
+  const fetchCategorizedBookings = async (page = 1, category = 'ALL', search = '') => {
+    setAdminBookingsLoading(true);
+    try {
+      const res = await API.get('/admin/bookings', {
+        params: { page, limit: 10, category, search }
+      });
+      if (res.data && res.data.bookings) {
+        setAdminBookingsList(res.data.bookings);
+        setBookingTotalCount(res.data.totalBookings || res.data.bookings.length);
+        setBookingTotalPages(res.data.totalPages || 1);
+        setBookingCurrentPage(res.data.currentPage || page);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch admin bookings:', err);
+    } finally {
+      setAdminBookingsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'bookings') {
+      fetchCategorizedBookings(bookingCurrentPage, bookingCategoryTab, bookingSearchQuery);
+    }
+  }, [activeTab, bookingCurrentPage, bookingCategoryTab]);
+
+  const handleGlobalCmsSave = async (e) => {
+    if (e) e.preventDefault();
+    setCmsSaveLoading(true);
+    try {
+      const payload = {
+        platformName: platformTitleInput,
+        activeCity: activeCityInput,
+        bannerAnnouncement: bannerAnnouncementInput,
+        maintenanceMode: maintenanceModeToggle
+      };
+      await API.post('/admin/global-update', payload);
+      setActionSuccess('Global CMS Config updated & broadcasted to all live User Panels!');
+      setTimeout(() => setActionSuccess(''), 4000);
+    } catch (err) {
+      setActionSuccess('Failed to save CMS Config: ' + err.message);
+      setTimeout(() => setActionSuccess(''), 4000);
+    } finally {
+      setCmsSaveLoading(false);
+    }
+  };
+
   // Fetch Theatres, Offers, Banners, Events, Plays & Activities
   const fetchAdminData = async () => {
     try {
@@ -1110,7 +1172,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const adminNavItems = [
     { id: 'analytics', label: 'Analytics Overview', icon: TrendingUp },
-    { id: 'users', label: 'User Management & Activity', icon: Users },
+    { id: 'bookings', label: 'Categorized Bookings', icon: Ticket },
+    { id: 'users', label: 'User Directory & History', icon: Users },
+    { id: 'cms-editor', label: 'CMS & Visual Layout Control', icon: Compass },
     { id: 'hero', label: 'Hero Slideshow & Banners', icon: Image },
     { id: 'strips', label: 'Home Page Feature Strips', icon: Zap },
     { id: 'upcoming', label: 'Upcoming Releases', icon: Award },
@@ -1524,6 +1588,320 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Categorized Bookings Panel (Step 2 Requirement) */}
+        {activeTab === 'bookings' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold font-sans text-white">Categorized Bookings Directory</h1>
+                <p className="text-xs text-cyan-300">Monitor all customer ticket purchases, slot reservations, event bookings, and private theatre bookings across all active user panels.</p>
+              </div>
+
+              <button
+                onClick={() => fetchCategorizedBookings(bookingCurrentPage, bookingCategoryTab, bookingSearchQuery)}
+                className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 hover:text-black border border-cyan-400/40 text-cyan-300 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shrink-0"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${adminBookingsLoading ? 'animate-spin' : ''}`} />
+                <span>Refresh Bookings</span>
+              </button>
+            </div>
+
+            {/* Categorized Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-2 p-1.5 glass-panel rounded-2xl border border-cyan-400/20">
+              {[
+                { id: 'ALL', label: 'All Bookings', count: bookingTotalCount },
+                { id: 'Movie', label: 'Movie Bookings 🎬' },
+                { id: 'Event', label: 'Event Tickets 🎟️' },
+                { id: 'Play', label: 'Theatre Plays 🎭' },
+                { id: 'Theatre', label: 'Slot Bookings 🍿' },
+                { id: 'Activity', label: 'Activity Passes 🎡' }
+              ].map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setBookingCategoryTab(cat.id);
+                    setBookingCurrentPage(1);
+                    fetchCategorizedBookings(1, cat.id, bookingSearchQuery);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    bookingCategoryTab === cat.id
+                      ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/30'
+                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Top Search & Filter Bar */}
+            <div className="glass-panel p-4 rounded-3xl border border-cyan-400/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="relative w-full sm:w-96">
+                <input
+                  type="text"
+                  placeholder="Search by user email, name, or transaction ID..."
+                  value={bookingSearchQuery}
+                  onChange={(e) => {
+                    setBookingSearchQuery(e.target.value);
+                    fetchCategorizedBookings(1, bookingCategoryTab, e.target.value);
+                  }}
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400"
+                />
+                <Eye className="w-4 h-4 text-cyan-400 absolute left-3.5 top-3.5" />
+              </div>
+
+              <div className="flex items-center gap-3 text-xs text-white/70 w-full sm:w-auto justify-between sm:justify-end">
+                <span className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 font-mono">
+                  Total Records: <strong className="text-cyan-300">{bookingTotalCount}</strong>
+                </span>
+                <span className="px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 font-semibold">
+                  Page {bookingCurrentPage} of {bookingTotalPages}
+                </span>
+              </div>
+            </div>
+
+            {/* Bookings Table */}
+            <div className="glass-panel rounded-3xl border border-cyan-400/20 overflow-hidden shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-white/5 border-b border-white/10 text-cyan-300 font-bold uppercase tracking-wider">
+                      <th className="p-4">Customer Details</th>
+                      <th className="p-4">Category</th>
+                      <th className="p-4">Booking Title & Venue</th>
+                      <th className="p-4">Selected Date / Time</th>
+                      <th className="p-4">Seats / Tier</th>
+                      <th className="p-4">Total Paid</th>
+                      <th className="p-4">Transaction Details</th>
+                      <th className="p-4 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-white/80">
+                    {adminBookingsLoading ? (
+                      <tr>
+                        <td colSpan="8" className="p-8 text-center text-cyan-300 font-bold">
+                          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                          <span>Loading centralized bookings dataset...</span>
+                        </td>
+                      </tr>
+                    ) : adminBookingsList.length > 0 ? (
+                      adminBookingsList.map((b) => (
+                        <tr key={b.id || b.transactionId} className="hover:bg-white/5 transition-colors group">
+                          <td className="p-4">
+                            <div className="font-bold text-white group-hover:text-cyan-300 transition-colors">
+                              {b.userName || b.userEmail?.split('@')[0] || 'Customer'}
+                            </div>
+                            <div className="text-[11px] font-mono text-cyan-300/80">{b.userEmail || 'N/A'}</div>
+                          </td>
+
+                          <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border ${
+                              (b.category === 'Event')
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+                                : (b.category === 'Play')
+                                  ? 'bg-purple-500/20 text-purple-300 border-purple-400/40'
+                                  : (b.category === 'Theatre')
+                                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                                    : 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40'
+                            }`}>
+                              {b.category || 'Movie'}
+                            </span>
+                          </td>
+
+                          <td className="p-4">
+                            <div className="font-bold text-white">{b.title || b.movieTitle || 'PrimeShow Show'}</div>
+                            <div className="text-[10px] text-white/50">{b.theatreName || b.venue || 'Surat Main Complex'}</div>
+                          </td>
+
+                          <td className="p-4 font-semibold text-white/90">
+                            <div>📅 {b.date || b.slotDate || 'Today'}</div>
+                            <div className="text-cyan-300 text-[10px]">⏰ {b.time || b.showTime || '07:30 PM'}</div>
+                          </td>
+
+                          <td className="p-4">
+                            <div className="font-mono text-emerald-300 font-bold">
+                              {Array.isArray(b.seats) ? b.seats.join(', ') : (Array.isArray(b.seatsBooked) ? b.seatsBooked.join(', ') : 'Recliner')}
+                            </div>
+                            <div className="text-[10px] text-white/50">{b.tier || 'VIP'}</div>
+                          </td>
+
+                          <td className="p-4 font-bold text-amber-300 text-sm">
+                            ₹{b.totalAmount || b.totalPrice || 480}
+                          </td>
+
+                          <td className="p-4 text-[10px]">
+                            <div className="font-mono text-cyan-300">{b.transactionId || b.id}</div>
+                            <div className="text-white/40">{b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-GB') : 'Just Now'}</div>
+                          </td>
+
+                          <td className="p-4 text-center">
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold border border-emerald-400/40 text-[10px]">
+                              ✓ CONFIRMED
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8" className="p-8 text-center text-white/40">
+                          No bookings found for the selected category filter.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              {bookingTotalPages > 1 && (
+                <div className="p-4 bg-white/5 border-t border-white/10 flex items-center justify-between">
+                  <button
+                    disabled={bookingCurrentPage <= 1}
+                    onClick={() => fetchCategorizedBookings(bookingCurrentPage - 1, bookingCategoryTab, bookingSearchQuery)}
+                    className="px-4 py-2 rounded-xl glass-panel disabled:opacity-30 text-xs font-bold hover:bg-white/10 cursor-pointer"
+                  >
+                    Previous
+                  </button>
+
+                  <span className="text-xs text-white/70">
+                    Page <strong>{bookingCurrentPage}</strong> of <strong>{bookingTotalPages}</strong>
+                  </span>
+
+                  <button
+                    disabled={bookingCurrentPage >= bookingTotalPages}
+                    onClick={() => fetchCategorizedBookings(bookingCurrentPage + 1, bookingCategoryTab, bookingSearchQuery)}
+                    className="px-4 py-2 rounded-xl glass-panel disabled:opacity-30 text-xs font-bold hover:bg-white/10 cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab: Admin Dynamic Content Control Panel (CMS Editor - Step 2 Requirement) */}
+        {activeTab === 'cms-editor' && (
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-3xl font-bold font-sans text-white">Admin Dynamic Content Control Panel (CMS)</h1>
+              <p className="text-xs text-cyan-300">Centralized control panel to broadcast homepage announcements, set operating city, and customize global platform themes in real-time.</p>
+            </div>
+
+            {/* Global Settings & Ticker Form */}
+            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
+              <h3 className="text-lg font-bold font-sans text-white flex items-center gap-2">
+                <Compass className="w-5 h-5 text-cyan-400" />
+                <span>Global Platform & Live Announcement Configuration</span>
+              </h3>
+
+              <form onSubmit={handleGlobalCmsSave} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Platform Branding Title</label>
+                    <input
+                      type="text"
+                      value={platformTitleInput}
+                      onChange={(e) => setPlatformTitleInput(e.target.value)}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Primary Operating City</label>
+                    <select
+                      value={activeCityInput}
+                      onChange={(e) => setActiveCityInput(e.target.value)}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                    >
+                      {GUJARAT_CITIES.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Top Announcement Ticker Message (Broadcasted Live to All Users)</label>
+                  <textarea
+                    rows="2"
+                    value={bannerAnnouncementInput}
+                    onChange={(e) => setBannerAnnouncementInput(e.target.value)}
+                    placeholder="⚡ Exclusive Offer: Get 50% Flat Discount on IMAX & VIP Recliner Tickets!"
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <div>
+                    <div className="font-bold text-sm text-white">System Maintenance Mode</div>
+                    <div className="text-xs text-white/50">Enable maintenance banner across all active customer panels</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMaintenanceModeToggle(!maintenanceModeToggle)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      maintenanceModeToggle
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {maintenanceModeToggle ? 'ENABLED (MAINTENANCE ON)' : 'DISABLED (NORMAL)'}
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={cmsSaveLoading}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-400 text-black font-extrabold text-xs shadow-lg shadow-cyan-500/25 hover:brightness-110 cursor-pointer flex items-center justify-center gap-2 transition-all"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{cmsSaveLoading ? 'Publishing & Syncing...' : 'Save & Sync CMS Config Globally'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Quick Component Editors Navigation Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div 
+                onClick={() => handleTabChange('hero')}
+                className="glass-panel p-5 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/60 transition-all cursor-pointer group"
+              >
+                <Image className="w-8 h-8 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-bold text-white text-sm">Hero Banner Slideshow</h4>
+                <p className="text-xs text-white/50 mt-1">Manage homepage featured movie banners, prices & ratings.</p>
+              </div>
+
+              <div 
+                onClick={() => handleTabChange('strips')}
+                className="glass-panel p-5 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/60 transition-all cursor-pointer group"
+              >
+                <Zap className="w-8 h-8 text-amber-400 mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-bold text-white text-sm">Feature Action Strips</h4>
+                <p className="text-xs text-white/50 mt-1">Customize quick action chips on the home landing screen.</p>
+              </div>
+
+              <div 
+                onClick={() => handleTabChange('upcoming')}
+                className="glass-panel p-5 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/60 transition-all cursor-pointer group"
+              >
+                <Award className="w-8 h-8 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-bold text-white text-sm">Upcoming Movie Releases</h4>
+                <p className="text-xs text-white/50 mt-1">Add coming soon posters and launch release dates.</p>
+              </div>
+
+              <div 
+                onClick={() => handleTabChange('notifications')}
+                className="glass-panel p-5 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/60 transition-all cursor-pointer group"
+              >
+                <Bell className="w-8 h-8 text-emerald-400 mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-bold text-white text-sm">Broadcast System Alerts</h4>
+                <p className="text-xs text-white/50 mt-1">Send instant push notification alerts to all user profiles.</p>
+              </div>
             </div>
           </div>
         )}

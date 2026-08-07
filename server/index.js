@@ -1546,6 +1546,84 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
   }
 });
 
+// Admin Categorized Bookings Fetch Endpoint (Supports Category Filter & Pagination)
+app.get(['/api/admin/bookings', '/admin/bookings', '/api/bookings'], async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 15;
+    const category = req.query.category || 'ALL'; // 'ALL' | 'Movie' | 'Event' | 'Play' | 'Theatre' | 'Activity'
+    const search = (req.query.search || '').trim().toLowerCase();
+
+    let combinedList = [...bookings, ...privateTheatreBookings];
+
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const queryFilter = {};
+        if (category !== 'ALL') {
+          queryFilter.category = category;
+        }
+        if (search) {
+          queryFilter.$or = [
+            { userEmail: { $regex: search, $options: 'i' } },
+            { userName: { $regex: search, $options: 'i' } },
+            { movieTitle: { $regex: search, $options: 'i' } },
+            { title: { $regex: search, $options: 'i' } },
+            { transactionId: { $regex: search, $options: 'i' } }
+          ];
+        }
+
+        const dbBookings = await Booking.find(queryFilter)
+          .sort({ createdAt: -1 })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .lean();
+
+        const totalDbCount = await Booking.countDocuments(queryFilter);
+
+        if (dbBookings && dbBookings.length > 0) {
+          return res.status(200).json({
+            success: true,
+            bookings: dbBookings,
+            totalBookings: totalDbCount,
+            totalPages: Math.ceil(totalDbCount / limit) || 1,
+            currentPage: page
+          });
+        }
+      } catch (dbErr) {
+        console.warn('Admin Bookings DB Fetch Warning:', dbErr.message);
+      }
+    }
+
+    if (category !== 'ALL') {
+      combinedList = combinedList.filter(b => (b.category || 'Movie').toUpperCase() === category.toUpperCase());
+    }
+    if (search) {
+      combinedList = combinedList.filter(b =>
+        (b.userEmail && b.userEmail.toLowerCase().includes(search)) ||
+        (b.userName && b.userName.toLowerCase().includes(search)) ||
+        (b.movieTitle && b.movieTitle.toLowerCase().includes(search)) ||
+        (b.title && b.title.toLowerCase().includes(search)) ||
+        (b.transactionId && b.transactionId.toLowerCase().includes(search))
+      );
+    }
+
+    const startIndex = (page - 1) * limit;
+    const paginated = combinedList.slice(startIndex, startIndex + limit);
+
+    return res.status(200).json({
+      success: true,
+      bookings: paginated,
+      totalBookings: combinedList.length,
+      totalPages: Math.ceil(combinedList.length / limit) || 1,
+      currentPage: page
+    });
+  } catch (err) {
+    console.error('Admin Bookings Error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Admin Overview Summary Statistics Endpoint (High-density query optimized)
 app.get(['/api/admin/overview', '/admin/overview'], async (req, res) => {
   try {
