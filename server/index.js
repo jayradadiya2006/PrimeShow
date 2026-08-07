@@ -1484,26 +1484,132 @@ app.put('/api/support/messages/:id/reply', (req, res) => {
   res.json(msg);
 });
 
-app.post('/api/bookings/create', (req, res) => {
-  const { showId, seats, tier, totalAmount, paymentMethod } = req.body;
+// Universal Booking Creation Pipeline (Movies, Events, Plays, Activities)
+app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bookings/book'], async (req, res) => {
+  try {
+    const { showId, movieId, movieTitle, theatreId, theatreName, screenName, date, slotDate, time, showTime, seats, seatsBooked, tier, totalAmount, paymentMethod, userEmail, userName, category } = req.body;
 
-  const orderId = `ORD-${Date.now()}`;
-  const transactionId = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
+    const orderId = `ORD-${Date.now()}`;
+    const transactionId = `TXN-${Math.floor(100000 + Math.random() * 900000)}`;
+    const finalEmail = (userEmail || 'guest@primeshow.com').toLowerCase().trim();
+    const finalName = userName || finalEmail.split('@')[0];
 
-  const newBooking = {
-    id: orderId,
-    transactionId,
-    showId: showId || 'sh_101',
-    seats: seats || ['C4'],
-    tier: tier || 'Recliner',
-    totalAmount: totalAmount || 480,
-    paymentMethod: paymentMethod || 'UPI (Instant)',
-    status: 'CONFIRMED',
-    createdAt: new Date().toISOString()
-  };
+    const newBooking = {
+      id: orderId,
+      transactionId,
+      showId: showId || 'sh_101',
+      movieId: movieId || 'mov_1',
+      movieTitle: movieTitle || title || 'PrimeShow Feature',
+      title: movieTitle || title || 'PrimeShow Feature',
+      theatreId: theatreId || 'th_1',
+      theatreName: theatreName || 'PVR Cinema',
+      screenName: screenName || 'Screen 1',
+      category: category || 'Movie',
+      date: date || slotDate || new Date().toISOString().slice(0, 10),
+      slotDate: slotDate || date || new Date().toISOString().slice(0, 10),
+      time: time || showTime || '07:30 PM',
+      showTime: showTime || time || '07:30 PM',
+      seats: Array.isArray(seats) ? seats : (seatsBooked || ['C4']),
+      seatsBooked: Array.isArray(seatsBooked) ? seatsBooked : (seats || ['C4']),
+      tier: tier || 'Recliner',
+      totalAmount: Number(totalAmount || 480),
+      paymentMethod: paymentMethod || 'UPI (Instant)',
+      userEmail: finalEmail,
+      userName: finalName,
+      status: 'CONFIRMED',
+      createdAt: new Date()
+    };
 
-  bookings.unshift(newBooking);
-  res.status(201).json(newBooking);
+    bookings.unshift(newBooking);
+
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const userDoc = await User.findOne({ email: finalEmail });
+        if (userDoc) {
+          newBooking.user = userDoc._id;
+        }
+        const doc = new Booking(newBooking);
+        await doc.save();
+      } catch (dbErr) {
+        console.warn('MongoDB Booking Save Warning:', dbErr.message);
+      }
+    }
+
+    await logUserActivity(finalEmail, finalName, 'BOOKED_TICKETS', `Booked ${newBooking.seats.join(', ')} for ${newBooking.title}`);
+    broadcastToAllClients('BOOKING_CREATED', newBooking);
+
+    res.status(201).json({ success: true, booking: newBooking });
+  } catch (err) {
+    console.error('Booking Creation Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Overview Summary Statistics Endpoint (High-density query optimized)
+app.get(['/api/admin/overview', '/admin/overview'], async (req, res) => {
+  try {
+    let totalUsers = globalRegisteredUsersMap.size;
+    let onlineUsers = Array.from(globalRegisteredUsersMap.values()).filter(u => u.isOnline).length;
+    let totalBookings = bookings.length + privateTheatreBookings.length;
+    let totalRevenue = bookings.reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
+
+    let categoryStats = {
+      movies: bookings.filter(b => !b.category || b.category === 'Movie').length,
+      events: bookings.filter(b => b.category === 'Event').length,
+      plays: bookings.filter(b => b.category === 'Play').length,
+      activities: bookings.filter(b => b.category === 'Activity').length,
+      privateTheatres: privateTheatreBookings.length
+    };
+
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const [dbUsersCount, dbOnlineCount, dbBookingsCount, dbRevAggregation, dbMovieCount, dbEventCount, dbPlayCount, dbActCount, dbPBCount] = await Promise.all([
+          User.countDocuments({}),
+          User.countDocuments({ isOnline: true }),
+          Booking.countDocuments({}),
+          Booking.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+          Booking.countDocuments({ category: 'Movie' }),
+          Booking.countDocuments({ category: 'Event' }),
+          Booking.countDocuments({ category: 'Play' }),
+          Booking.countDocuments({ category: 'Activity' }),
+          PrivateTheatreBooking.countDocuments({})
+        ]);
+
+        totalUsers = Math.max(totalUsers, dbUsersCount);
+        onlineUsers = Math.max(onlineUsers, dbOnlineCount);
+        totalBookings = Math.max(totalBookings, dbBookingsCount + dbPBCount);
+        if (dbRevAggregation.length > 0 && dbRevAggregation[0].total) {
+          totalRevenue = Math.max(totalRevenue, dbRevAggregation[0].total);
+        }
+        categoryStats = {
+          movies: dbMovieCount || categoryStats.movies,
+          events: dbEventCount || categoryStats.events,
+          plays: dbPlayCount || categoryStats.plays,
+          activities: dbActCount || categoryStats.activities,
+          privateTheatres: dbPBCount || categoryStats.privateTheatres
+        };
+      } catch (dbErr) {
+        console.warn('Overview Aggregation Warning:', dbErr.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        totalUsers,
+        onlineUsers,
+        totalBookings,
+        totalRevenue,
+        categoryStats
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Admin Overview Error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // -------------------------------------------------------------

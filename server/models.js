@@ -107,15 +107,22 @@ const TheatreSchema = new mongoose.Schema({
 const BookingSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   transactionId: { type: String },
+  userId: { type: String },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  category: { type: String, default: 'Movie' }, // 'Movie' | 'Theatre' | 'Event' | 'Play' | 'Activity'
+  title: { type: String },
+  movieTitle: { type: String },
   showId: { type: String },
   movieId: { type: String },
-  movieTitle: { type: String },
   theatreId: { type: String },
   theatreName: { type: String },
   screenName: { type: String },
   date: { type: String },
+  slotDate: { type: String },
   time: { type: String },
+  showTime: { type: String },
   seats: [{ type: String }],
+  seatsBooked: [{ type: String }],
   tier: { type: String },
   totalAmount: { type: Number },
   paymentMethod: { type: String },
@@ -124,6 +131,18 @@ const BookingSchema = new mongoose.Schema({
   status: { type: String, default: 'CONFIRMED' },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
+
+// Mongoose Indexes for Heavy Load Query Optimization
+UserSchema.index({ email: 1 });
+UserSchema.index({ createdAt: -1 });
+UserSchema.index({ lastLoginTime: -1 });
+
+BookingSchema.index({ userEmail: 1 });
+BookingSchema.index({ category: 1 });
+BookingSchema.index({ createdAt: -1 });
+
+UserActivityLogSchema.index({ userEmail: 1 });
+UserActivityLogSchema.index({ timestamp: -1 });
 
 const PrivateTheatreBookingSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -145,6 +164,9 @@ const PrivateTheatreBookingSchema = new mongoose.Schema({
   userName: { type: String },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
+
+PrivateTheatreBookingSchema.index({ userEmail: 1 });
+PrivateTheatreBookingSchema.index({ createdAt: -1 });
 
 const EventSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -252,7 +274,10 @@ const GlobalConfigSchema = new mongoose.Schema({
   activeCity: { type: String, default: 'Surat' },
   maintenanceMode: { type: Boolean, default: false },
   bannerAnnouncement: { type: String, default: '⚡ Exclusive Offer: Get 50% Flat Discount on IMAX & VIP Recliner Tickets!' },
+  homeBanners: [{ type: Object }],
   visualEditorLayout: { type: Object, default: {} },
+  notifications: [{ type: Object }],
+  activeOffers: [{ type: Object }],
   customThemeTokens: { type: Object, default: {} },
   broadcastAlert: { type: Object, default: null },
   updatedBy: { type: String, default: 'Admin Desk' }
