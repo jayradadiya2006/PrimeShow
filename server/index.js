@@ -1475,22 +1475,38 @@ app.post('/api/activities/book', (req, res) => {
 // -------------------------------------------------------------
 
 // Search & Paginated Users List from Database & Memory Cache (Supports multiple route aliases)
-app.get([
+const usersRoutePaths = [
   '/api/admin/users', 
   '/admin/users',
   '/api/users',
   '/users'
-], async (req, res) => {
+];
+
+app.options(usersRoutePaths, cors());
+
+app.get(usersRoutePaths, async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.max(1, parseInt(req.query.limit) || 10);
-    const search = (req.query.search || req.query.query || '').trim().toLowerCase();
+    const search = (req.query.search || req.query.query || '').trim();
+    const skip = (page - 1) * limit;
 
     const combinedUsersMap = new Map(globalRegisteredUsersMap);
 
     if (mongoose.connection.readyState === 1) {
       try {
-        const dbUsers = await User.find({}).sort({ updatedAt: -1, createdAt: -1 }).lean();
+        const queryFilter = search
+          ? {
+              $or: [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { phoneNumber: { $regex: search, $options: 'i' } },
+                { phone: { $regex: search, $options: 'i' } }
+              ]
+            }
+          : {};
+
+        const dbUsers = await User.find(queryFilter).sort({ updatedAt: -1, createdAt: -1 }).lean();
         dbUsers.forEach(u => {
           if (u.email) {
             const emailKey = u.email.toLowerCase();
@@ -1506,19 +1522,20 @@ app.get([
     let allUsersList = Array.from(combinedUsersMap.values());
 
     if (search) {
+      const searchLower = search.toLowerCase();
       allUsersList = allUsersList.filter(u =>
-        (u.name && u.name.toLowerCase().includes(search)) ||
-        (u.email && u.email.toLowerCase().includes(search)) ||
-        (u.phone && u.phone.toLowerCase().includes(search)) ||
-        (u.phoneNumber && u.phoneNumber.toLowerCase().includes(search)) ||
-        (u.city && u.city.toLowerCase().includes(search))
+        (u.name && u.name.toLowerCase().includes(searchLower)) ||
+        (u.email && u.email.toLowerCase().includes(searchLower)) ||
+        (u.phone && u.phone.toLowerCase().includes(searchLower)) ||
+        (u.phoneNumber && u.phoneNumber.toLowerCase().includes(searchLower)) ||
+        (u.city && u.city.toLowerCase().includes(searchLower))
       );
     }
 
     allUsersList.sort((a, b) => new Date(b.lastLoginTime || b.lastActive || b.createdAt) - new Date(a.lastLoginTime || a.lastActive || a.createdAt));
 
     const totalUsers = allUsersList.length;
-    const paginatedUsers = allUsersList.slice((page - 1) * limit, page * limit);
+    const paginatedUsers = allUsersList.slice(skip, skip + limit);
 
     const enrichedUsers = await Promise.all(
       paginatedUsers.map(async (u) => {
@@ -1562,7 +1579,8 @@ app.get([
       })
     );
 
-    res.json({
+    res.status(200).json({
+      success: true,
       users: enrichedUsers,
       totalUsers: totalUsers,
       totalPages: Math.ceil(totalUsers / limit) || 1,
@@ -1571,7 +1589,7 @@ app.get([
     });
   } catch (err) {
     console.error('Error fetching admin users:', err);
-    res.status(500).json({ error: 'Failed to retrieve registered users' });
+    res.status(500).json({ success: false, message: err.message || 'Failed to retrieve registered users' });
   }
 });
 
