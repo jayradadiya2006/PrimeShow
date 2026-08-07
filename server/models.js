@@ -246,6 +246,26 @@ const BlockedSeatSchema = new mongoose.Schema({
   blockedSeats: [{ type: String }]
 }, { timestamps: true });
 
+const GlobalConfigSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true, default: 'primary_config' },
+  platformName: { type: String, default: 'PrimeShow Cinema & Events' },
+  activeCity: { type: String, default: 'Surat' },
+  maintenanceMode: { type: Boolean, default: false },
+  bannerAnnouncement: { type: String, default: '⚡ Exclusive Offer: Get 50% Flat Discount on IMAX & VIP Recliner Tickets!' },
+  visualEditorLayout: { type: Object, default: {} },
+  customThemeTokens: { type: Object, default: {} },
+  broadcastAlert: { type: Object, default: null },
+  updatedBy: { type: String, default: 'Admin Desk' }
+}, { timestamps: true });
+
+const EditorLayoutSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  section: { type: String, required: true },
+  elements: [{ type: Object }],
+  enabled: { type: Boolean, default: true },
+  updatedBy: { type: String, default: 'Admin Desk' }
+}, { timestamps: true });
+
 const User = mongoose.model('User', UserSchema);
 const Movie = mongoose.model('Movie', MovieSchema);
 const Theatre = mongoose.model('Theatre', TheatreSchema);
@@ -259,6 +279,9 @@ const OfferBanner = mongoose.model('OfferBanner', OfferBannerSchema);
 const SupportMessage = mongoose.model('SupportMessage', SupportMessageSchema);
 const Notification = mongoose.model('Notification', NotificationSchema);
 const UserActivityLog = mongoose.model('UserActivityLog', UserActivityLogSchema);
+const BlockedSeat = mongoose.model('BlockedSeat', BlockedSeatSchema);
+const GlobalConfig = mongoose.model('GlobalConfig', GlobalConfigSchema);
+const EditorLayout = mongoose.model('EditorLayout', EditorLayoutSchema);
 
 module.exports = {
   User,
@@ -274,5 +297,7 @@ module.exports = {
   OfferBanner,
   SupportMessage,
   Notification,
-  BlockedSeat
+  BlockedSeat,
+  GlobalConfig,
+  EditorLayout
 };

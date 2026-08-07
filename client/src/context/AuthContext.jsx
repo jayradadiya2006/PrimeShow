@@ -221,6 +221,48 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user?.email]);
 
+  // STEP 3: Real-Time 1-Admin to N-Users Broadcast EventSource Listener
+  useEffect(() => {
+    let eventSource = null;
+    try {
+      const streamUrl = `${API_BASE}/events/stream`;
+      eventSource = new EventSource(streamUrl);
+
+      eventSource.addEventListener('NOTIFICATION_BROADCAST', (e) => {
+        try {
+          const parsed = JSON.parse(e.data);
+          if (parsed && parsed.data) {
+            setNotifications(prev => [parsed.data, ...prev]);
+          }
+        } catch (err) {}
+      });
+
+      eventSource.addEventListener('GLOBAL_CONFIG_UPDATED', (e) => {
+        try {
+          const parsed = JSON.parse(e.data);
+          if (parsed && parsed.data) {
+            console.log('⚡ [Real-Time Admin Sync]: Global config updated', parsed.data);
+          }
+        } catch (err) {}
+      });
+
+      eventSource.onmessage = (e) => {
+        try {
+          const parsed = JSON.parse(e.data);
+          if (parsed.type === 'NOTIFICATION_BROADCAST' && parsed.data) {
+            setNotifications(prev => [parsed.data, ...prev]);
+          }
+        } catch (err) {}
+      };
+    } catch (err) {
+      console.warn('Real-Time SSE Sync Note:', err.message);
+    }
+
+    return () => {
+      if (eventSource) eventSource.close();
+    };
+  }, []);
+
   // Sync Wishlist & City to LocalStorage
   useEffect(() => {
     localStorage.setItem('primeshow_wishlist', JSON.stringify(wishlist));

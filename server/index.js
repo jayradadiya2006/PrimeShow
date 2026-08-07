@@ -3,7 +3,21 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
-const { User, UserActivityLog, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat } = require('./models');
+const { User, UserActivityLog, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout } = require('./models');
+
+// Real-Time Multi-Client SSE Subscriber Set (1-Admin to N-Users Broadcast Pipeline)
+const sseClients = new Set();
+
+const broadcastToAllClients = (eventType, payload) => {
+  const dataString = JSON.stringify({ type: eventType, data: payload, timestamp: new Date().toISOString() });
+  sseClients.forEach(res => {
+    try {
+      res.write(`event: ${eventType}\ndata: ${dataString}\n\n`);
+    } catch (e) {
+      sseClients.delete(res);
+    }
+  });
+};
 
 const userActivityLogs = []; // in-memory fallback list
 
@@ -216,8 +230,137 @@ const authenticateToken = (req, res, next) => {
 
 // Health check and mock fallback endpoints for Render deployment
 app.get(['/', '/health', '/api/health'], (req, res) => res.status(200).send('OK'));
-app.all(['/api/notifications*', '/notifications*'], (req, res) => res.status(200).json({ success: true, data: [] }));
-app.all(['/api/messages*', '/messages*'], (req, res) => res.status(200).json({ success: true, data: [] }));
+
+// SSE Real-Time Stream Endpoint (1-Admin to N-User Broadcast Pipeline)
+app.get(['/api/events/stream', '/events/stream'], (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  sseClients.add(res);
+
+  res.write(`data: ${JSON.stringify({ type: 'CONNECTED', message: 'Real-time synchronization connected' })}\n\n`);
+
+  req.on('close', () => {
+    sseClients.delete(res);
+  });
+});
+
+// Admin Action Endpoint 1: Global Configuration & Visual Layout Insert / Update
+app.post(['/api/admin/global-update', '/admin/global-update'], async (req, res) => {
+  try {
+    const { key, platformName, activeCity, maintenanceMode, bannerAnnouncement, visualEditorLayout, customThemeTokens, broadcastAlert } = req.body;
+    
+    let configDoc = null;
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      configDoc = await GlobalConfig.findOneAndUpdate(
+        { key: key || 'primary_config' },
+        {
+          platformName,
+          activeCity,
+          maintenanceMode,
+          bannerAnnouncement,
+          visualEditorLayout,
+          customThemeTokens,
+          broadcastAlert,
+          updatedBy: 'Admin Command Desk'
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    const payload = configDoc ? configDoc.toObject() : req.body;
+
+    // Broadcast change immediately to all active user panels!
+    broadcastToAllClients('GLOBAL_CONFIG_UPDATED', payload);
+
+    return res.status(200).json({ success: true, message: 'Global config updated and broadcasted to all user panels', data: payload });
+  } catch (err) {
+    console.error('Global Update Error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Action Endpoint 2: Remove Tools / Features Globally
+app.delete(['/api/admin/global-delete/:id', '/admin/global-delete/:id'], async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mongoose = require('mongoose');
+
+    if (mongoose.connection.readyState === 1) {
+      await EditorLayout.deleteOne({ id });
+    }
+
+    broadcastToAllClients('GLOBAL_ELEMENT_DELETED', { id });
+
+    return res.status(200).json({ success: true, message: `Element ${id} deleted globally`, id });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Action Endpoint 3: Broadcast Notification to All Active Users
+app.post(['/api/admin/broadcast-notification', '/admin/broadcast-notification'], async (req, res) => {
+  try {
+    const { title, message, type } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ success: false, message: 'Title and message required' });
+    }
+
+    const newNotif = {
+      id: `notif_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      title,
+      message,
+      type: type || 'SYSTEM',
+      read: false,
+      createdAt: new Date().toISOString()
+    };
+
+    notifications.unshift(newNotif);
+
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const doc = new Notification(newNotif);
+        await doc.save();
+      } catch (e) {}
+    }
+
+    broadcastToAllClients('NOTIFICATION_BROADCAST', newNotif);
+
+    return res.status(200).json({ success: true, message: 'Notification broadcasted to all users', data: newNotif });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Action Endpoint 4: Fetch Global Configuration & Visual Editor Settings
+app.get(['/api/admin/global-config', '/admin/global-config'], async (req, res) => {
+  try {
+    let config = null;
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      config = await GlobalConfig.findOne({ key: 'primary_config' }).lean();
+    }
+    if (!config) {
+      config = {
+        key: 'primary_config',
+        platformName: 'PrimeShow Cinema & Events',
+        activeCity: 'Surat',
+        maintenanceMode: false,
+        bannerAnnouncement: '⚡ Exclusive Offer: Get 50% Flat Discount on IMAX & VIP Recliner Tickets!',
+        visualEditorLayout: {},
+        customThemeTokens: {},
+        broadcastAlert: null
+      };
+    }
+    return res.status(200).json({ success: true, config });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // -------------------------------------------------------------
 // AUTHENTICATION ENDPOINTS (Supports both /api/auth and /auth)
