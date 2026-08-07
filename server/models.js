@@ -18,7 +18,10 @@ const UserSchema = new mongoose.Schema({
   avatar: { type: String, default: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a' },
   profilePicture: { type: String, default: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a' },
   provider: { type: String, default: 'LOCAL' },
-  googleId: { type: String, default: '' }
+  googleId: { type: String, default: '' },
+  lastActive: { type: Date, default: Date.now },
+  wishlist: [{ type: String }],
+  claimedOffers: [{ type: String }]
 }, { timestamps: true });
 
 const MovieSchema = new mongoose.Schema({

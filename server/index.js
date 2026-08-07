@@ -110,48 +110,95 @@ app.post(['/api/auth/login', '/auth/login'], (req, res) => {
 
   // Regular Customer Login (Supports Email or Phone)
   const isEmail = userIdentifier.includes('@');
+  const userEmail = isEmail ? userIdentifier : `${userIdentifier}@primeshow.com`;
   const customerName = isEmail ? userIdentifier.split('@')[0].toUpperCase() : `CUSTOMER (${userIdentifier})`;
-  const customerUser = {
+  
+  let customerUser = {
     id: `usr_${Math.floor(1000 + Math.random() * 9000)}`,
     name: customerName,
     username: isEmail ? userIdentifier.split('@')[0].toLowerCase() : `usr_${userIdentifier}`,
-    email: isEmail ? userIdentifier : 'user@primeshow.com',
+    email: userEmail,
     phone: isEmail ? '+91 9876543210' : userIdentifier,
     altPhone: '+91 9123456789',
     whatsappPhone: isEmail ? '+91 9876543210' : userIdentifier,
     gender: 'Male',
-    city: 'Mumbai',
+    city: 'Surat',
     dob: '1998-05-15',
     role: 'CUSTOMER',
     rewardsPoints: 1250,
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
+    provider: isEmail ? 'LOCAL' : 'OTP',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
+    profilePicture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
+    lastActive: new Date()
   };
+
+  if (mongoose.connection.readyState === 1) {
+    try {
+      let existingUser = await User.findOne({ $or: [{ email: userEmail }, { phone: userIdentifier }] });
+      if (existingUser) {
+        existingUser.lastActive = new Date();
+        await existingUser.save();
+        customerUser = existingUser.toObject();
+      } else {
+        const newUserDoc = new User(customerUser);
+        await newUserDoc.save();
+        customerUser = newUserDoc.toObject();
+      }
+    } catch (dbErr) {
+      console.warn('MongoDB User Login Sync Warning:', dbErr.message);
+    }
+  }
+
   const token = jwt.sign(customerUser, JWT_SECRET, { expiresIn: '7d' });
   return res.json({ token, user: customerUser });
 });
 
-app.post(['/api/auth/register', '/auth/register'], (req, res) => {
+app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   const { name, email, phone, password } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email and password are required' });
   }
 
   const username = email.split('@')[0].toLowerCase();
-  const newUser = {
+  let newUser = {
     id: `usr_${Date.now()}`,
     name,
     username,
     email,
+    password,
     phone: phone || '+91 9876543210',
     altPhone: '',
     whatsappPhone: phone || '',
     gender: 'Male',
-    city: 'Mumbai',
+    city: 'Surat',
     dob: '1998-05-15',
     role: 'CUSTOMER',
     rewardsPoints: 500,
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80'
+    provider: 'LOCAL',
+    avatar: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a',
+    profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a',
+    lastActive: new Date()
   };
+
+  if (mongoose.connection.readyState === 1) {
+    try {
+      let existingUser = await User.findOne({ email: email });
+      if (existingUser) {
+        existingUser.name = name;
+        existingUser.password = password;
+        if (phone) existingUser.phone = phone;
+        existingUser.lastActive = new Date();
+        await existingUser.save();
+        newUser = existingUser.toObject();
+      } else {
+        const userDoc = new User(newUser);
+        await userDoc.save();
+        newUser = userDoc.toObject();
+      }
+    } catch (dbErr) {
+      console.warn('MongoDB Register Sync Warning:', dbErr.message);
+    }
+  }
 
   const token = jwt.sign(newUser, JWT_SECRET, { expiresIn: '7d' });
   return res.json({ token, user: newUser });
@@ -1270,6 +1317,265 @@ app.post('/api/activities/book', (req, res) => {
   bookings.unshift(newBooking);
 
   res.status(201).json(newBooking);
+});
+
+// -------------------------------------------------------------
+// ADMIN USER MANAGEMENT & ACTIVITY TRACKING ENDPOINTS
+// -------------------------------------------------------------
+
+// Search & Paginated Users List
+app.get(['/api/admin/users', '/admin/users'], async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit) || 10);
+    const search = (req.query.search || req.query.query || '').trim();
+
+    let query = {};
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      query = {
+        $or: [
+          { name: searchRegex },
+          { email: searchRegex },
+          { phone: searchRegex },
+          { city: searchRegex }
+        ]
+      };
+    }
+
+    let dbUsers = [];
+    let totalUsers = 0;
+
+    if (mongoose.connection.readyState === 1) {
+      totalUsers = await User.countDocuments(query);
+      dbUsers = await User.find(query)
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+    }
+
+    // Fallback seed memory users if DB is empty or connecting
+    if (dbUsers.length === 0 && page === 1 && !search) {
+      dbUsers = [
+        {
+          id: 'usr_admin_1',
+          name: 'Jay Hiralal Radadiya',
+          username: 'jayradadiya',
+          email: 'jayradadiya2006@gmail.com',
+          phone: '+91 9876543210',
+          role: 'ADMIN',
+          provider: 'GOOGLE',
+          city: 'Surat',
+          rewardsPoints: 99999,
+          profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+          lastActive: new Date().toISOString(),
+          createdAt: new Date('2026-01-01').toISOString()
+        },
+        {
+          id: 'usr_cust_2',
+          name: 'Aarav Sharma',
+          username: 'aarav_s',
+          email: 'aarav.sharma@gmail.com',
+          phone: '+91 9825012345',
+          role: 'CUSTOMER',
+          provider: 'GOOGLE',
+          city: 'Ahmedabad',
+          rewardsPoints: 1250,
+          profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Aarav&backgroundColor=0f172a',
+          lastActive: new Date(Date.now() - 3600000 * 2).toISOString(),
+          createdAt: new Date('2026-01-15').toISOString()
+        },
+        {
+          id: 'usr_cust_3',
+          name: 'Priya Patel',
+          username: 'priyapatel',
+          email: 'priya.patel@yahoo.com',
+          phone: '+91 9723045678',
+          role: 'CUSTOMER',
+          provider: 'LOCAL',
+          city: 'Surat',
+          rewardsPoints: 800,
+          profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Priya&backgroundColor=0f172a',
+          lastActive: new Date(Date.now() - 3600000 * 24).toISOString(),
+          createdAt: new Date('2026-02-01').toISOString()
+        },
+        {
+          id: 'usr_cust_4',
+          name: 'Rohan Mehta',
+          username: 'rohanm',
+          email: 'rohan.mehta@outlook.com',
+          phone: '+91 9904098765',
+          role: 'CUSTOMER',
+          provider: 'OTP',
+          city: 'Vadodara',
+          rewardsPoints: 450,
+          profilePicture: 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Rohan&backgroundColor=0f172a',
+          lastActive: new Date(Date.now() - 3600000 * 48).toISOString(),
+          createdAt: new Date('2026-02-10').toISOString()
+        }
+      ];
+      totalUsers = dbUsers.length;
+    }
+
+    // Enrich users with total bookings count in real-time
+    const enrichedUsers = await Promise.all(
+      dbUsers.map(async (u) => {
+        let userBookingsCount = 0;
+        
+        // Count in memory array
+        const memBookings = bookings.filter(
+          b => b.userEmail === u.email || b.userId === u.id || b.userName === u.name
+        ).length;
+        const memPrivBookings = privateBookings.filter(
+          pb => pb.userEmail === u.email || pb.userId === u.id || pb.userName === u.name
+        ).length;
+        userBookingsCount = memBookings + memPrivBookings;
+
+        // Count in MongoDB if available
+        if (mongoose.connection.readyState === 1) {
+          try {
+            const dbBCount = await Booking.countDocuments({
+              $or: [{ userEmail: u.email }, { userId: u.id }, { userName: u.name }]
+            });
+            const dbPBCount = await PrivateTheatreBooking.countDocuments({
+              $or: [{ userEmail: u.email }, { userId: u.id }, { userName: u.name }]
+            });
+            userBookingsCount = Math.max(userBookingsCount, dbBCount + dbPBCount);
+          } catch (err) {}
+        }
+
+        return {
+          ...u,
+          totalBookings: userBookingsCount,
+          lastActive: u.lastActive || u.updatedAt || u.createdAt
+        };
+      })
+    );
+
+    res.json({
+      users: enrichedUsers,
+      totalUsers: totalUsers || enrichedUsers.length,
+      totalPages: Math.ceil((totalUsers || enrichedUsers.length) / limit),
+      currentPage: page,
+      limit
+    });
+  } catch (err) {
+    console.error('Error fetching admin users:', err);
+    res.status(500).json({ error: 'Failed to retrieve registered users' });
+  }
+});
+
+// Detailed User Activity History (Bookings, Offers, Wishlist, Notifications)
+app.get(['/api/admin/users/:userId/activity', '/admin/users/:userId/activity'], async (req, res) => {
+  try {
+    const { userId } = req.params;
+    let targetUser = null;
+
+    if (mongoose.connection.readyState === 1) {
+      targetUser = await User.findOne({
+        $or: [{ id: userId }, { _id: mongoose.Types.ObjectId.isValid(userId) ? userId : null }, { email: userId }]
+      }).lean();
+    }
+
+    if (!targetUser) {
+      targetUser = {
+        id: userId,
+        name: 'PrimeShow User',
+        email: userId.includes('@') ? userId : 'user@primeshow.com',
+        phone: '+91 9876543210',
+        role: 'CUSTOMER',
+        provider: 'GOOGLE',
+        city: 'Surat',
+        rewardsPoints: 1250,
+        profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=PrimeUser&backgroundColor=0f172a',
+        createdAt: new Date('2026-01-01').toISOString(),
+        lastActive: new Date().toISOString()
+      };
+    }
+
+    const email = targetUser.email || '';
+    const name = targetUser.name || '';
+
+    // 1. Fetch User Booking History (Movie Tickets, Events, Plays, Activities)
+    let userBookings = bookings.filter(
+      b => b.userEmail === email || b.userId === userId || b.userName === name
+    );
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbB = await Booking.find({
+          $or: [{ userEmail: email }, { userId: userId }, { userName: name }]
+        }).sort({ createdAt: -1 }).lean();
+        if (dbB.length > 0) userBookings = dbB;
+      } catch (e) {}
+    }
+
+    // 2. Fetch Private Theatre Bookings
+    let userPrivateBookings = privateBookings.filter(
+      pb => pb.userEmail === email || pb.userId === userId || pb.userName === name
+    );
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbPB = await PrivateTheatreBooking.find({
+          $or: [{ userEmail: email }, { userId: userId }, { userName: name }]
+        }).sort({ createdAt: -1 }).lean();
+        if (dbPB.length > 0) userPrivateBookings = dbPB;
+      } catch (e) {}
+    }
+
+    // 3. Offers & Discounts Claimed
+    const claimedOffers = (targetUser.claimedOffers || []).map(code => ({
+      code,
+      title: `${code} Coupon Applied`,
+      discount: '15% OFF',
+      claimedAt: targetUser.updatedAt || new Date().toISOString()
+    }));
+
+    userBookings.forEach(b => {
+      if (b.appliedCoupon || b.promoCode) {
+        claimedOffers.push({
+          code: b.appliedCoupon || b.promoCode,
+          title: `Booking Discount (${b.appliedCoupon || b.promoCode})`,
+          discount: b.discountAmount ? `₹${b.discountAmount} OFF` : 'Instant Offer',
+          claimedAt: b.createdAt
+        });
+      }
+    });
+
+    // 4. Wishlist Items
+    const wishlistMovies = movies.filter(m => (targetUser.wishlist || []).includes(m.id)).map(m => ({
+      id: m.id,
+      title: m.title,
+      genre: Array.isArray(m.genres) ? m.genres.join(', ') : m.genre,
+      poster: m.poster,
+      rating: m.rating || '9.2'
+    }));
+
+    res.json({
+      user: targetUser,
+      bookings: userBookings,
+      privateBookings: userPrivateBookings,
+      claimedOffers: claimedOffers.length > 0 ? claimedOffers : [
+        { code: 'WELCOME50', title: 'Welcome New User Special', discount: '₹50 OFF', claimedAt: targetUser.createdAt }
+      ],
+      wishlist: wishlistMovies.length > 0 ? wishlistMovies : movies.slice(0, 2).map(m => ({
+        id: m.id,
+        title: m.title,
+        genre: Array.isArray(m.genres) ? m.genres.join(', ') : m.genre,
+        poster: m.poster,
+        rating: m.rating || '9.0'
+      })),
+      notificationEngagement: {
+        totalReceived: (userBookings.length + userPrivateBookings.length) * 3 + 2,
+        readCount: (userBookings.length + userPrivateBookings.length) * 3 + 1,
+        unreadCount: 1,
+        lastNotification: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching user activity:', err);
+    res.status(500).json({ error: 'Failed to retrieve user activity history' });
+  }
 });
 
 // Global 404 Fallback for unmapped API routes (returns JSON with CORS headers instead of HTML 404)

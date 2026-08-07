@@ -57,6 +57,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
         targetTab = 'offers';
       } else if (allParts.some(p => p.includes('notif'))) {
         targetTab = 'notifications';
+      } else if (allParts.some(p => p.includes('user') || p.includes('cust'))) {
+        targetTab = 'users';
       } else if (allParts.some(p => p.includes('support') || p.includes('chat'))) {
         targetTab = 'support';
       }
@@ -560,6 +562,19 @@ export const AdminDashboard = ({ onReturnHome }) => {
   });
   const [editingBannerId, setEditingBannerId] = useState(null);
 
+  // User Management & Activity Tracking State
+  const [usersList, setUsersList] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userCurrentPage, setUserCurrentPage] = useState(1);
+  const [userTotalPages, setUserTotalPages] = useState(1);
+  const [userTotalCount, setUserTotalCount] = useState(0);
+  const [selectedUserForActivity, setSelectedUserForActivity] = useState(null);
+  const [userActivityData, setUserActivityData] = useState(null);
+  const [isUserActivityLoading, setIsUserActivityLoading] = useState(false);
+  const [isUserActivityModalOpen, setIsUserActivityModalOpen] = useState(false);
+  const [userActivitySubTab, setUserActivitySubTab] = useState('bookings');
+
   // Fetch Theatres, Offers, Banners, Events, Plays & Activities
   const fetchAdminData = async () => {
     try {
@@ -614,9 +629,48 @@ export const AdminDashboard = ({ onReturnHome }) => {
     }
   };
 
+  // Fetch Admin Registered Users with Search & Pagination
+  const fetchAdminUsers = async (page = 1, search = '') => {
+    setUsersLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE}/admin/users`, {
+        params: { page, limit: 10, search }
+      });
+      setUsersList(res.data.users || []);
+      setUserTotalCount(res.data.totalUsers || 0);
+      setUserTotalPages(res.data.totalPages || 1);
+      setUserCurrentPage(res.data.currentPage || 1);
+    } catch (err) {
+      console.warn('Failed to fetch admin users:', err);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleViewUserActivity = async (u) => {
+    setSelectedUserForActivity(u);
+    setIsUserActivityModalOpen(true);
+    setIsUserActivityLoading(true);
+    setUserActivitySubTab('bookings');
+    try {
+      const res = await axios.get(`${API_BASE}/admin/users/${u.id || u.email}/activity`);
+      setUserActivityData(res.data);
+    } catch (err) {
+      console.warn('Failed to fetch user activity:', err);
+    } finally {
+      setIsUserActivityLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAdminData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchAdminUsers(userCurrentPage, userSearchQuery);
+    }
+  }, [activeTab, userCurrentPage]);
 
   useEffect(() => {
     fetchScopedSeats();
@@ -1039,6 +1093,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const adminNavItems = [
     { id: 'analytics', label: 'Analytics Overview', icon: TrendingUp },
+    { id: 'users', label: 'User Management & Activity', icon: Users },
     { id: 'hero', label: 'Hero Slideshow & Banners', icon: Image },
     { id: 'strips', label: 'Home Page Feature Strips', icon: Zap },
     { id: 'upcoming', label: 'Upcoming Releases', icon: Award },
@@ -1258,6 +1313,186 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
                 <div className="text-[10px] text-rose-400 font-semibold mt-1">Requires Response</div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 1.5: Users & Activity Tracking Management */}
+        {activeTab === 'users' && (
+          <div className="space-y-8 animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold font-sans text-white flex items-center gap-3">
+                  <Users className="w-8 h-8 text-cyan-400" />
+                  <span>User Management & Activity Tracking</span>
+                </h1>
+                <p className="text-xs text-cyan-300 mt-1">
+                  Monitor registered users, authentication deduplication, booking history, claimed offers, and activity metrics.
+                </p>
+              </div>
+
+              <button
+                onClick={() => fetchAdminUsers(userCurrentPage, userSearchQuery)}
+                className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 hover:text-black border border-cyan-400/40 text-cyan-300 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shrink-0"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${usersLoading ? 'animate-spin' : ''}`} />
+                <span>Refresh Users</span>
+              </button>
+            </div>
+
+            {/* Top Search & Filter Bar */}
+            <div className="glass-panel p-4 rounded-3xl border border-cyan-400/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="relative w-full sm:w-96">
+                <input
+                  type="text"
+                  placeholder="Search users by name, email, or phone..."
+                  value={userSearchQuery}
+                  onChange={(e) => {
+                    setUserSearchQuery(e.target.value);
+                    fetchAdminUsers(1, e.target.value);
+                  }}
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400"
+                />
+                <Eye className="w-4 h-4 text-cyan-400 absolute left-3.5 top-3.5" />
+              </div>
+
+              <div className="flex items-center gap-3 text-xs text-white/70 w-full sm:w-auto justify-between sm:justify-end">
+                <span className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 font-mono">
+                  Total Users: <strong className="text-cyan-300">{userTotalCount}</strong>
+                </span>
+                <span className="px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 font-semibold">
+                  Page {userCurrentPage} of {userTotalPages}
+                </span>
+              </div>
+            </div>
+
+            {/* Users Table */}
+            <div className="glass-panel rounded-3xl border border-cyan-400/20 overflow-hidden shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-white/5 border-b border-white/10 text-cyan-300 font-bold uppercase tracking-wider">
+                      <th className="p-4">User</th>
+                      <th className="p-4">Email & Contact</th>
+                      <th className="p-4">Auth Provider</th>
+                      <th className="p-4">City</th>
+                      <th className="p-4">Registered / Last Active</th>
+                      <th className="p-4 text-center">Total Bookings</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-white/80">
+                    {usersLoading ? (
+                      <tr>
+                        <td colSpan="7" className="p-8 text-center text-cyan-300 font-bold">
+                          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                          <span>Loading registered user database...</span>
+                        </td>
+                      </tr>
+                    ) : usersList.length > 0 ? (
+                      usersList.map((u) => (
+                        <tr key={u.id || u.email} className="hover:bg-white/5 transition-colors group">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={u.profilePicture || u.avatar || 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + u.name}
+                                alt={u.name}
+                                className="w-10 h-10 rounded-2xl object-cover border border-cyan-400/40 shadow-md shrink-0"
+                              />
+                              <div>
+                                <div className="font-bold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-1.5">
+                                  <span>{u.name}</span>
+                                  {u.role === 'ADMIN' && (
+                                    <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-extrabold">ADMIN</span>
+                                  )}
+                                </div>
+                                <div className="text-[10px] text-white/50">ID: {u.id || u.username || 'usr'}</div>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="p-4">
+                            <div className="font-mono text-cyan-300">{u.email}</div>
+                            <div className="text-[10px] text-white/50">{u.phone || 'N/A'}</div>
+                          </td>
+
+                          <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase ${
+                              u.provider === 'GOOGLE' 
+                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' 
+                                : u.provider === 'OTP' 
+                                  ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+                                  : 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40'
+                            }`}>
+                              {u.provider || 'LOCAL'}
+                            </span>
+                          </td>
+
+                          <td className="p-4 font-semibold text-white/90">
+                            {u.city || 'Surat'}
+                          </td>
+
+                          <td className="p-4 text-[11px]">
+                            <div className="text-white/80">
+                              Joined: {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Jan 2026'}
+                            </div>
+                            <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">
+                              Active: {u.lastActive ? new Date(u.lastActive).toLocaleDateString() + ' ' + new Date(u.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
+                            </div>
+                          </td>
+
+                          <td className="p-4 text-center">
+                            <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-400/40 text-xs">
+                              🎟️ {u.totalBookings || 0}
+                            </span>
+                          </td>
+
+                          <td className="p-4 text-right">
+                            <button
+                              onClick={() => handleViewUserActivity(u)}
+                              className="px-3.5 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1.5 ml-auto cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View Activity</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="p-8 text-center text-white/50">
+                          No users found matching query "{userSearchQuery}"
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              {userTotalPages > 1 && (
+                <div className="p-4 bg-white/5 border-t border-white/10 flex items-center justify-between">
+                  <button
+                    disabled={userCurrentPage <= 1}
+                    onClick={() => fetchAdminUsers(userCurrentPage - 1, userSearchQuery)}
+                    className="px-4 py-2 rounded-xl glass-panel disabled:opacity-30 text-xs font-bold hover:bg-white/10 cursor-pointer"
+                  >
+                    Previous
+                  </button>
+
+                  <span className="text-xs text-white/70">
+                    Page <strong>{userCurrentPage}</strong> of <strong>{userTotalPages}</strong>
+                  </span>
+
+                  <button
+                    disabled={userCurrentPage >= userTotalPages}
+                    onClick={() => fetchAdminUsers(userCurrentPage + 1, userSearchQuery)}
+                    className="px-4 py-2 rounded-xl glass-panel disabled:opacity-30 text-xs font-bold hover:bg-white/10 cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -3901,6 +4136,209 @@ export const AdminDashboard = ({ onReturnHome }) => {
         </AdminTabErrorBoundary>
       </main>
 
+      {/* Detailed User Activity History Modal */}
+      {isUserActivityModalOpen && selectedUserForActivity && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
+          <div className="relative w-full max-w-4xl glass-modal rounded-3xl p-6 border border-cyan-400/30 shadow-[0_0_50px_rgba(0,0,0,0.9)] text-white max-h-[90vh] flex flex-col my-auto overflow-hidden">
+            
+            {/* Header section */}
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-4">
+                <img
+                  src={selectedUserForActivity.profilePicture || selectedUserForActivity.avatar || 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + selectedUserForActivity.name}
+                  alt={selectedUserForActivity.name}
+                  className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-400/60 shadow-xl shrink-0"
+                />
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-xl font-bold font-sans text-white">{selectedUserForActivity.name}</h3>
+                    <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold border border-cyan-400/40 uppercase">
+                      {selectedUserForActivity.provider || 'LOCAL'} AUTH
+                    </span>
+                    {selectedUserForActivity.role === 'ADMIN' && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold border border-amber-400/40 uppercase">ADMIN</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-cyan-300 mt-0.5 font-mono">{selectedUserForActivity.email}</p>
+                  <p className="text-[11px] text-white/60 mt-0.5 flex items-center gap-3">
+                    <span>📞 {selectedUserForActivity.phone || 'N/A'}</span>
+                    <span>•</span>
+                    <span>📍 {selectedUserForActivity.city || 'Surat'}</span>
+                    <span>•</span>
+                    <span className="text-amber-300 font-bold">💎 {selectedUserForActivity.rewardsPoints || 500} Rewards Pts</span>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsUserActivityModalOpen(false)}
+                className="p-2 rounded-full bg-white/10 hover:bg-rose-500 text-white/80 hover:text-white transition-all cursor-pointer shrink-0 border border-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Sub-Tabs Selector */}
+            <div className="flex items-center gap-2 pt-4 pb-2 border-b border-white/10 shrink-0 overflow-x-auto">
+              <button
+                onClick={() => setUserActivitySubTab('bookings')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  userActivitySubTab === 'bookings'
+                    ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                    : 'glass-panel text-white/70 hover:text-white'
+                }`}
+              >
+                🎟️ Bookings History ({userActivityData?.bookings?.length || 0})
+              </button>
+
+              <button
+                onClick={() => setUserActivitySubTab('offers')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  userActivitySubTab === 'offers'
+                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
+                    : 'glass-panel text-white/70 hover:text-white'
+                }`}
+              >
+                💳 Offers & Coupons Claimed ({userActivityData?.claimedOffers?.length || 0})
+              </button>
+
+              <button
+                onClick={() => setUserActivitySubTab('wishlist')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  userActivitySubTab === 'wishlist'
+                    ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
+                    : 'glass-panel text-white/70 hover:text-white'
+                }`}
+              >
+                ❤️ Saved Wishlist ({userActivityData?.wishlist?.length || 0})
+              </button>
+
+              <button
+                onClick={() => setUserActivitySubTab('notifications')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  userActivitySubTab === 'notifications'
+                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20'
+                    : 'glass-panel text-white/70 hover:text-white'
+                }`}
+              >
+                🔔 Notification Engagement
+              </button>
+            </div>
+
+            {/* Sub-Tab Body */}
+            <div className="my-4 overflow-y-auto flex-1 pr-1 space-y-4 min-h-[250px]">
+              {isUserActivityLoading ? (
+                <div className="py-12 text-center text-cyan-300 font-bold">
+                  <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
+                  <span>Fetching activity log records...</span>
+                </div>
+              ) : (
+                <>
+                  {/* Sub-Tab 1: Bookings History */}
+                  {userActivitySubTab === 'bookings' && (
+                    <div className="space-y-3">
+                      {userActivityData?.bookings?.length > 0 ? (
+                        userActivityData.bookings.map((b, idx) => (
+                          <div key={b.id || idx} className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-cyan-400/40 transition-colors">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-cyan-300 text-sm">{b.movieTitle || b.activityTitle || b.eventTitle || 'Cinema Ticket'}</span>
+                                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
+                                  {b.status || 'CONFIRMED'}
+                                </span>
+                              </div>
+                              <p className="text-xs text-white/60 mt-1">
+                                {b.theatreName || b.location || 'PrimeShow Multiplex'} • Seats: <strong className="text-white">{Array.isArray(b.seats) ? b.seats.join(', ') : (b.seats || 'General')}</strong>
+                              </p>
+                              <p className="text-[10px] text-white/40 mt-0.5">
+                                Order ID: {b.id} • Date: {b.showDate || b.date || 'Today'} • Time: {b.showTime || b.time || '10:00 AM'}
+                              </p>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <div className="text-base font-bold text-amber-400">₹{b.totalAmount || b.totalPrice || 450}</div>
+                              <div className="text-[10px] text-white/50">{b.paymentMethod || 'UPI Paid'}</div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-8 text-center glass-panel rounded-2xl text-white/50 text-xs">
+                          No booking history recorded for this user yet.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Sub-Tab 2: Claimed Offers */}
+                  {userActivitySubTab === 'offers' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {userActivityData?.claimedOffers?.map((off, idx) => (
+                        <div key={idx} className="glass-panel p-4 rounded-2xl border border-amber-400/30 flex items-center justify-between">
+                          <div>
+                            <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-mono font-bold border border-amber-400/40">
+                              {off.code}
+                            </span>
+                            <h4 className="text-xs font-bold text-white mt-2">{off.title}</h4>
+                            <p className="text-[10px] text-white/50 mt-0.5">Claimed: {new Date(off.claimedAt).toLocaleDateString()}</p>
+                          </div>
+                          <span className="text-sm font-extrabold text-emerald-400">{off.discount}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Sub-Tab 3: Wishlist */}
+                  {userActivitySubTab === 'wishlist' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {userActivityData?.wishlist?.map((w, idx) => (
+                        <div key={idx} className="glass-panel p-3 rounded-2xl border border-white/10 flex items-center gap-3">
+                          <img src={w.poster} alt={w.title} className="w-12 h-16 rounded-xl object-cover border border-white/20 shrink-0" />
+                          <div>
+                            <h4 className="text-xs font-bold text-white">{w.title}</h4>
+                            <p className="text-[10px] text-white/60">{w.genre}</p>
+                            <span className="text-[10px] text-amber-400 font-bold mt-1 inline-block">★ {w.rating} / 10</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Sub-Tab 4: Notification Engagement */}
+                  {userActivitySubTab === 'notifications' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-2">
+                      <div className="glass-panel p-5 rounded-2xl border border-cyan-400/20 text-center">
+                        <div className="text-2xl font-bold text-white">{userActivityData?.notificationEngagement?.totalReceived || 0}</div>
+                        <div className="text-xs text-cyan-300 mt-1">Notifications Received</div>
+                      </div>
+
+                      <div className="glass-panel p-5 rounded-2xl border border-emerald-400/20 text-center">
+                        <div className="text-2xl font-bold text-emerald-400">{userActivityData?.notificationEngagement?.readCount || 0}</div>
+                        <div className="text-xs text-emerald-300 mt-1">Read & Engaged</div>
+                      </div>
+
+                      <div className="glass-panel p-5 rounded-2xl border border-amber-400/20 text-center">
+                        <div className="text-2xl font-bold text-amber-400">{userActivityData?.notificationEngagement?.unreadCount || 0}</div>
+                        <div className="text-xs text-amber-300 mt-1">Unread Alerts</div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-white/10 flex justify-end shrink-0">
+              <button
+                onClick={() => setIsUserActivityModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer transition-colors"
+              >
+                Close Activity Profile
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
