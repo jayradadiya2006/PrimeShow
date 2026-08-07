@@ -74,13 +74,15 @@ export const AuthProvider = ({ children }) => {
   const syncUserToBackend = async (userData) => {
     if (!userData || !userData.email) return;
     try {
-      await apiClient.post('/auth/user-sync', {
+      await apiClient.post('/user-sync', {
         id: userData.id,
         name: userData.name,
         email: userData.email,
         phone: userData.phone || '+91 9876543210',
+        phoneNumber: userData.phoneNumber || userData.phone || '+91 9876543210',
         profilePicture: userData.profilePicture || userData.avatar,
         avatar: userData.avatar || userData.profilePicture,
+        authProvider: userData.authProvider || userData.provider || 'LOCAL',
         provider: userData.provider || 'LOCAL',
         role: userData.role || 'CUSTOMER',
         city: userData.city || 'Surat',

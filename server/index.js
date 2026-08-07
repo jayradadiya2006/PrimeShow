@@ -354,15 +354,21 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
 });
 
 // Production-Ready Universal User Synchronization Endpoint (Google / Firebase / Local)
-app.post([
+const userSyncPaths = [
+  '/api/user-sync',
+  '/user-sync',
   '/api/auth/user-sync',
   '/auth/user-sync',
   '/api/auth/google-sync',
   '/auth/google-sync',
   '/api/auth/google',
   '/auth/google'
-], async (req, res) => {
-  const { credential, profile, user: clientUser } = req.body;
+];
+
+app.options(userSyncPaths, cors());
+
+app.post(userSyncPaths, async (req, res) => {
+  const { credential, profile, user: clientUser, authProvider } = req.body;
 
   try {
     let name = profile?.name || clientUser?.name || req.body.name;
@@ -383,7 +389,7 @@ app.post([
     }
 
     if (!email) {
-      return res.status(400).json({ error: 'User email is required for synchronization' });
+      return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
     const syncedUser = await upsertUserRecord({
@@ -393,16 +399,16 @@ app.post([
       avatar,
       profilePicture: avatar,
       googleId,
-      provider: googleId ? 'GOOGLE' : (req.body.provider || 'LOCAL')
+      provider: authProvider || (googleId ? 'GOOGLE' : (req.body.provider || 'LOCAL'))
     });
 
     await logUserActivity(syncedUser.email, syncedUser.name, 'LOGGED_IN', 'User session synchronized');
 
     const sessionToken = jwt.sign(syncedUser, JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ token: sessionToken, user: syncedUser });
+    return res.status(200).json({ success: true, message: 'User synced successfully', token: sessionToken, user: syncedUser });
   } catch (err) {
     console.error('User Sync Error:', err);
-    return res.status(500).json({ error: 'User Synchronization Failed' });
+    return res.status(500).json({ success: false, error: err.message || 'User Synchronization Failed' });
   }
 });
 
