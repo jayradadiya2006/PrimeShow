@@ -214,15 +214,10 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Health check endpoint for Render deployment
-app.get(['/', '/api/health'], (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'PrimeShow Node.js REST API Backend',
-    timestamp: new Date().toISOString(),
-    database: 'MongoDB Atlas'
-  });
-});
+// Health check and mock fallback endpoints for Render deployment
+app.get(['/', '/health', '/api/health'], (req, res) => res.status(200).send('OK'));
+app.all(['/api/notifications*', '/notifications*'], (req, res) => res.status(200).json({ success: true, data: [] }));
+app.all(['/api/messages*', '/messages*'], (req, res) => res.status(200).json({ success: true, data: [] }));
 
 // -------------------------------------------------------------
 // AUTHENTICATION ENDPOINTS (Supports both /api/auth and /auth)
@@ -368,38 +363,37 @@ const userSyncPaths = [
 app.options(userSyncPaths, cors());
 
 app.post(userSyncPaths, async (req, res) => {
-  const { credential, profile, user: clientUser, authProvider } = req.body;
-
   try {
-    let name = profile?.name || clientUser?.name || req.body.name;
-    let email = profile?.email || clientUser?.email || req.body.email;
-    let avatar = profile?.picture || profile?.avatar || clientUser?.profilePicture || clientUser?.avatar || req.body.profilePicture || req.body.avatar;
-    let googleId = profile?.sub || profile?.googleId || clientUser?.googleId || req.body.googleId;
+    const { name, email, profilePicture, authProvider, credential, profile, user: clientUser } = req.body;
+    let targetEmail = email || profile?.email || clientUser?.email;
+    let targetName = name || profile?.name || clientUser?.name;
+    let targetPicture = profilePicture || profile?.picture || profile?.avatar || clientUser?.profilePicture || clientUser?.avatar;
 
-    if (!email && credential) {
+    if (!targetEmail && credential) {
       try {
         const decoded = jwt.decode(credential);
         if (decoded) {
-          name = decoded.name || name;
-          email = decoded.email || email;
-          avatar = decoded.picture || avatar;
-          googleId = decoded.sub || googleId;
+          targetEmail = decoded.email || targetEmail;
+          targetName = decoded.name || targetName;
+          targetPicture = decoded.picture || targetPicture;
         }
       } catch (e) {}
     }
 
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+    if (!targetEmail) {
+      return res.status(400).json({ success: false, message: 'Email required' });
     }
 
     const syncedUser = await upsertUserRecord({
       ...req.body,
-      name,
-      email,
-      avatar,
-      profilePicture: avatar,
-      googleId,
-      provider: authProvider || (googleId ? 'GOOGLE' : (req.body.provider || 'LOCAL'))
+      name: targetName,
+      email: targetEmail,
+      profilePicture: targetPicture,
+      avatar: targetPicture,
+      authProvider: authProvider || 'google',
+      provider: authProvider || 'google',
+      isOnline: true,
+      lastLoginTime: new Date()
     });
 
     await logUserActivity(syncedUser.email, syncedUser.name, 'LOGGED_IN', 'User session synchronized');
@@ -407,8 +401,8 @@ app.post(userSyncPaths, async (req, res) => {
     const sessionToken = jwt.sign(syncedUser, JWT_SECRET, { expiresIn: '7d' });
     return res.status(200).json({ success: true, message: 'User synced successfully', token: sessionToken, user: syncedUser });
   } catch (err) {
-    console.error('User Sync Error:', err);
-    return res.status(500).json({ success: false, error: err.message || 'User Synchronization Failed' });
+    console.error("USER SYNC ERROR:", err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
