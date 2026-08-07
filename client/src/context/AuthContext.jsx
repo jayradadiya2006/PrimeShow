@@ -216,7 +216,7 @@ export const AuthProvider = ({ children }) => {
     wakeUpRenderServer();
   }, []);
 
-  // Fetch support messages & notifications from Backend API
+  // Fetch support messages & notifications from Backend API (Mount only, no infinite loop)
   const fetchStreamData = async () => {
     try {
       const [msgRes, notifRes] = await Promise.all([
@@ -237,11 +237,25 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {}
   };
 
+  // STEP 1: Execute fetchStreamData ONLY ONCE on mount (Kill infinite setInterval loop)
   useEffect(() => {
     fetchStreamData();
-    const interval = setInterval(fetchStreamData, 3000);
-    return () => clearInterval(interval);
   }, []);
+
+  // STEP 2: AUTO-SYNC REGISTERED/LOGGED-IN USER TO DATABASE
+  useEffect(() => {
+    if (user && user.email) {
+      apiClient.post('/user-sync', {
+        name: user.displayName || user.name || 'User',
+        email: user.email,
+        profilePicture: user.photoURL || user.profilePicture || user.avatar || '',
+        authProvider: user.provider || user.authProvider || 'google',
+        phoneNumber: user.phoneNumber || user.phone || ''
+      })
+      .then(res => console.log("User successfully synced to DB:", res.data))
+      .catch(err => console.error("Sync failed:", err));
+    }
+  }, [user?.email]);
 
   // Sync Wishlist & City to LocalStorage
   useEffect(() => {

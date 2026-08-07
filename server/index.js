@@ -364,10 +364,11 @@ app.options(userSyncPaths, cors());
 
 app.post(userSyncPaths, async (req, res) => {
   try {
-    const { name, email, profilePicture, authProvider, credential, profile, user: clientUser } = req.body;
+    const { name, email, profilePicture, authProvider, phoneNumber, credential, profile, user: clientUser } = req.body;
     let targetEmail = email || profile?.email || clientUser?.email;
     let targetName = name || profile?.name || clientUser?.name;
     let targetPicture = profilePicture || profile?.picture || profile?.avatar || clientUser?.profilePicture || clientUser?.avatar;
+    let targetPhone = phoneNumber || req.body.phone || clientUser?.phoneNumber || clientUser?.phone;
 
     if (!targetEmail && credential) {
       try {
@@ -381,17 +382,21 @@ app.post(userSyncPaths, async (req, res) => {
     }
 
     if (!targetEmail) {
-      return res.status(400).json({ success: false, message: 'Email required' });
+      return res.status(400).json({ success: false, message: 'Email missing' });
     }
+
+    const cleanEmail = targetEmail.toLowerCase().trim();
 
     const syncedUser = await upsertUserRecord({
       ...req.body,
-      name: targetName,
-      email: targetEmail,
+      name: targetName || cleanEmail.split('@')[0],
+      email: cleanEmail,
       profilePicture: targetPicture,
       avatar: targetPicture,
       authProvider: authProvider || 'google',
       provider: authProvider || 'google',
+      phoneNumber: targetPhone,
+      phone: targetPhone,
       isOnline: true,
       lastLoginTime: new Date()
     });
