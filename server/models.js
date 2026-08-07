@@ -19,9 +19,23 @@ const UserSchema = new mongoose.Schema({
   profilePicture: { type: String, default: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a' },
   provider: { type: String, default: 'LOCAL' },
   googleId: { type: String, default: '' },
+  isOnline: { type: Boolean, default: true },
+  lastLoginTime: { type: Date, default: Date.now },
+  lastLogoutTime: { type: Date },
   lastActive: { type: Date, default: Date.now },
   wishlist: [{ type: String }],
   claimedOffers: [{ type: String }]
+}, { timestamps: true });
+
+const UserActivityLogSchema = new mongoose.Schema({
+  id: { type: String, required: true },
+  userId: { type: String },
+  userEmail: { type: String, required: true },
+  userName: { type: String, default: 'User' },
+  action: { type: String, required: true },
+  details: { type: String, default: '' },
+  metadata: { type: Object, default: {} },
+  timestamp: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 const MovieSchema = new mongoose.Schema({
@@ -235,10 +249,11 @@ const Offer = mongoose.model('Offer', OfferSchema);
 const OfferBanner = mongoose.model('OfferBanner', OfferBannerSchema);
 const SupportMessage = mongoose.model('SupportMessage', SupportMessageSchema);
 const Notification = mongoose.model('Notification', NotificationSchema);
-const BlockedSeat = mongoose.model('BlockedSeat', BlockedSeatSchema);
+const UserActivityLog = mongoose.model('UserActivityLog', UserActivityLogSchema);
 
 module.exports = {
   User,
+  UserActivityLog,
   Movie,
   Theatre,
   Booking,

@@ -1374,9 +1374,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <tr className="bg-white/5 border-b border-white/10 text-cyan-300 font-bold uppercase tracking-wider">
                       <th className="p-4">User</th>
                       <th className="p-4">Email & Contact</th>
+                      <th className="p-4">Status</th>
                       <th className="p-4">Auth Provider</th>
                       <th className="p-4">City</th>
-                      <th className="p-4">Registered / Last Active</th>
+                      <th className="p-4">Last Login / Session</th>
                       <th className="p-4 text-center">Total Bookings</th>
                       <th className="p-4 text-right">Actions</th>
                     </tr>
@@ -1417,6 +1418,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           </td>
 
                           <td className="p-4">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1.5 w-max ${
+                              u.isOnline !== false
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                                : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            }`}>
+                              <span className={`w-2 h-2 rounded-full ${u.isOnline !== false ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`}></span>
+                              <span>{u.isOnline !== false ? '🟢 Online' : '🔴 Offline'}</span>
+                            </span>
+                          </td>
+
+                          <td className="p-4">
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase ${
                               u.provider === 'GOOGLE' 
                                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' 
@@ -1433,12 +1445,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           </td>
 
                           <td className="p-4 text-[11px]">
-                            <div className="text-white/80">
-                              Joined: {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Jan 2026'}
+                            <div className="text-emerald-300 font-semibold">
+                              Login: {u.lastLoginTime ? new Date(u.lastLoginTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(u.lastLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
                             </div>
-                            <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">
-                              Active: {u.lastActive ? new Date(u.lastActive).toLocaleDateString() + ' ' + new Date(u.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
-                            </div>
+                            {u.lastLogoutTime && (
+                              <div className="text-rose-300 text-[10px] mt-0.5">
+                                Logout: {new Date(u.lastLogoutTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(u.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            )}
                           </td>
 
                           <td className="p-4 text-center">
@@ -4192,6 +4206,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </button>
 
               <button
+                onClick={() => setUserActivitySubTab('timeline')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  userActivitySubTab === 'timeline'
+                    ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                    : 'glass-panel text-white/70 hover:text-white'
+                }`}
+              >
+                📜 Login & Session Timeline ({userActivityData?.logs?.length || 0})
+              </button>
+
+              <button
                 onClick={() => setUserActivitySubTab('offers')}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   userActivitySubTab === 'offers'
@@ -4199,7 +4224,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     : 'glass-panel text-white/70 hover:text-white'
                 }`}
               >
-                💳 Offers & Coupons Claimed ({userActivityData?.claimedOffers?.length || 0})
+                💳 Offers Claimed ({userActivityData?.claimedOffers?.length || 0})
               </button>
 
               <button
@@ -4211,17 +4236,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 }`}
               >
                 ❤️ Saved Wishlist ({userActivityData?.wishlist?.length || 0})
-              </button>
-
-              <button
-                onClick={() => setUserActivitySubTab('notifications')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  userActivitySubTab === 'notifications'
-                    ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
-                }`}
-              >
-                🔔 Notification Engagement
               </button>
             </div>
 
@@ -4269,21 +4283,48 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </div>
                   )}
 
-                  {/* Sub-Tab 2: Claimed Offers */}
-                  {userActivitySubTab === 'offers' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {userActivityData?.claimedOffers?.map((off, idx) => (
-                        <div key={idx} className="glass-panel p-4 rounded-2xl border border-amber-400/30 flex items-center justify-between">
-                          <div>
-                            <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-mono font-bold border border-amber-400/40">
-                              {off.code}
-                            </span>
-                            <h4 className="text-xs font-bold text-white mt-2">{off.title}</h4>
-                            <p className="text-[10px] text-white/50 mt-0.5">Claimed: {new Date(off.claimedAt).toLocaleDateString()}</p>
-                          </div>
-                          <span className="text-sm font-extrabold text-emerald-400">{off.discount}</span>
+                  {/* Sub-Tab 2: Login & Session Timeline */}
+                  {userActivitySubTab === 'timeline' && (
+                    <div className="space-y-3">
+                      {userActivityData?.logs?.length > 0 ? (
+                        userActivityData.logs.map((log, idx) => {
+                          const logTime = new Date(log.timestamp || log.createdAt);
+                          const formattedDate = logTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                          const formattedDay = logTime.toLocaleDateString('en-GB', { weekday: 'short' });
+                          const formattedTime = logTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                          
+                          const isLogin = log.action === 'LOGGED_IN';
+                          const isLogout = log.action === 'LOGGED_OUT';
+                          
+                          return (
+                            <div key={log.id || idx} className="glass-panel p-3.5 rounded-2xl border border-white/10 flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2.5 rounded-xl text-xs font-extrabold shrink-0 ${
+                                  isLogin ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-400/40' :
+                                  isLogout ? 'bg-rose-500/20 text-rose-400 border border-rose-400/40' :
+                                  'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                                }`}>
+                                  {isLogin ? '🟢 LOGIN' : isLogout ? '🔴 LOGOUT' : '⚡ EVENT'}
+                                </div>
+
+                                <div>
+                                  <div className="font-bold text-white text-xs">{log.details || log.action}</div>
+                                  <div className="text-[10px] text-white/50 mt-0.5">User: {log.userName} ({log.userEmail})</div>
+                                </div>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <div className="text-xs font-mono font-bold text-cyan-300">{formattedDate} ({formattedDay})</div>
+                                <div className="text-[10px] text-white/60 font-mono mt-0.5">{formattedTime}</div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="p-8 text-center glass-panel rounded-2xl text-white/50 text-xs">
+                          No recent login/logout timeline logs recorded for this user.
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
 

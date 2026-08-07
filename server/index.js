@@ -3,7 +3,32 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
-const { User, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat } = require('./models');
+const { User, UserActivityLog, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat } = require('./models');
+
+const userActivityLogs = []; // in-memory fallback list
+
+const logUserActivity = async (userEmail, userName, action, details = '', metadata = {}) => {
+  if (!userEmail) return;
+  const logItem = {
+    id: `act_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    userEmail,
+    userName: userName || userEmail.split('@')[0],
+    action,
+    details,
+    metadata,
+    timestamp: new Date()
+  };
+  userActivityLogs.unshift(logItem);
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const doc = new UserActivityLog(logItem);
+      await doc.save();
+    } catch (err) {
+      console.warn('UserActivityLog save error:', err.message);
+    }
+  }
+};
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -136,6 +161,8 @@ app.post(['/api/auth/login', '/auth/login'], (req, res) => {
     try {
       let existingUser = await User.findOne({ $or: [{ email: userEmail }, { phone: userIdentifier }] });
       if (existingUser) {
+        existingUser.isOnline = true;
+        existingUser.lastLoginTime = new Date();
         existingUser.lastActive = new Date();
         await existingUser.save();
         customerUser = existingUser.toObject();
@@ -148,6 +175,8 @@ app.post(['/api/auth/login', '/auth/login'], (req, res) => {
       console.warn('MongoDB User Login Sync Warning:', dbErr.message);
     }
   }
+
+  await logUserActivity(customerUser.email, customerUser.name, 'LOGGED_IN', 'Logged in via Password / OTP');
 
   const token = jwt.sign(customerUser, JWT_SECRET, { expiresIn: '7d' });
   return res.json({ token, user: customerUser });
@@ -177,6 +206,8 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
     provider: 'LOCAL',
     avatar: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a',
     profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a',
+    isOnline: true,
+    lastLoginTime: new Date(),
     lastActive: new Date()
   };
 
@@ -187,6 +218,8 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
         existingUser.name = name;
         existingUser.password = password;
         if (phone) existingUser.phone = phone;
+        existingUser.isOnline = true;
+        existingUser.lastLoginTime = new Date();
         existingUser.lastActive = new Date();
         await existingUser.save();
         newUser = existingUser.toObject();
@@ -200,19 +233,22 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
     }
   }
 
+  await logUserActivity(newUser.email, newUser.name, 'REGISTERED', 'Created new account');
+  await logUserActivity(newUser.email, newUser.name, 'LOGGED_IN', 'Logged in on registration');
+
   const token = jwt.sign(newUser, JWT_SECRET, { expiresIn: '7d' });
   return res.json({ token, user: newUser });
 });
 
 // Production-Ready Google OAuth 2.0 Backend Synchronization Endpoint
-app.post(['/api/auth/google', '/auth/google'], async (req, res) => {
-  const { token: idToken, credential, profile } = req.body;
+app.post(['/api/auth/google', '/auth/google', '/api/auth/google-sync', '/auth/google-sync'], async (req, res) => {
+  const { token: idToken, credential, profile, user: clientUser } = req.body;
 
   try {
-    let name = profile?.name;
-    let email = profile?.email;
-    let avatar = profile?.picture || profile?.avatar;
-    let googleId = profile?.sub || profile?.googleId || `g_${Date.now()}`;
+    let name = profile?.name || clientUser?.name;
+    let email = profile?.email || clientUser?.email;
+    let avatar = profile?.picture || profile?.avatar || clientUser?.profilePicture || clientUser?.avatar;
+    let googleId = profile?.sub || profile?.googleId || clientUser?.googleId || `g_${Date.now()}`;
 
     // Decode JWT credential if present
     if (!email && credential) {
@@ -240,33 +276,41 @@ app.post(['/api/auth/google', '/auth/google'], async (req, res) => {
     // Database Persistence & Account Sync
     let dbUser = null;
     try {
-      dbUser = await User.findOne({ email: email });
-      if (!dbUser && googleId) {
-        dbUser = await User.findOne({ googleId: googleId });
-      }
-
-      if (dbUser) {
-        dbUser.name = dbUser.name || name;
-        if (avatar && (!dbUser.avatar || dbUser.avatar.includes('unsplash'))) {
-          dbUser.avatar = avatar;
+      if (mongoose.connection.readyState === 1) {
+        dbUser = await User.findOne({ email: email });
+        if (!dbUser && googleId) {
+          dbUser = await User.findOne({ googleId: googleId });
         }
-        dbUser.provider = 'GOOGLE';
-        dbUser.googleId = googleId;
-        await dbUser.save();
-      } else {
-        dbUser = new User({
-          id: `usr_g_${googleId.slice(-6)}`,
-          name: name,
-          username: email.split('@')[0].toLowerCase(),
-          email: email,
-          phone: profile?.phone || '+91 9876543210',
-          role: 'CUSTOMER',
-          rewardsPoints: 750,
-          avatar: avatar,
-          provider: 'GOOGLE',
-          googleId: googleId
-        });
-        await dbUser.save();
+
+        if (dbUser) {
+          dbUser.name = name || dbUser.name;
+          dbUser.avatar = avatar;
+          dbUser.profilePicture = avatar;
+          dbUser.provider = 'GOOGLE';
+          dbUser.googleId = googleId;
+          dbUser.isOnline = true;
+          dbUser.lastLoginTime = new Date();
+          dbUser.lastActive = new Date();
+          await dbUser.save();
+        } else {
+          dbUser = new User({
+            id: `usr_g_${googleId.slice(-6)}`,
+            name: name,
+            username: email.split('@')[0].toLowerCase(),
+            email: email,
+            phone: profile?.phone || clientUser?.phone || '+91 9876543210',
+            role: 'CUSTOMER',
+            rewardsPoints: 750,
+            avatar: avatar,
+            profilePicture: avatar,
+            provider: 'GOOGLE',
+            googleId: googleId,
+            isOnline: true,
+            lastLoginTime: new Date(),
+            lastActive: new Date()
+          });
+          await dbUser.save();
+        }
       }
     } catch (dbErr) {
       console.warn('MongoDB User Sync Warning (using memory record):', dbErr.message);
@@ -277,13 +321,19 @@ app.post(['/api/auth/google', '/auth/google'], async (req, res) => {
       name: name,
       username: email.split('@')[0].toLowerCase(),
       email: email,
-      phone: profile?.phone || '+91 9876543210',
+      phone: profile?.phone || clientUser?.phone || '+91 9876543210',
       role: 'CUSTOMER',
       rewardsPoints: 750,
       avatar: avatar,
+      profilePicture: avatar,
       provider: 'GOOGLE',
-      googleId: googleId
+      googleId: googleId,
+      isOnline: true,
+      lastLoginTime: new Date(),
+      lastActive: new Date()
     };
+
+    await logUserActivity(finalUserData.email, finalUserData.name, 'LOGGED_IN', 'Logged in via Google OAuth');
 
     const sessionToken = jwt.sign(finalUserData, JWT_SECRET, { expiresIn: '7d' });
     return res.json({ token: sessionToken, user: finalUserData });
@@ -291,6 +341,30 @@ app.post(['/api/auth/google', '/auth/google'], async (req, res) => {
     console.error('Google OAuth Server Error:', err);
     return res.status(500).json({ error: 'Google OAuth Verification Failed' });
   }
+});
+
+// Logout Session Endpoint
+app.post(['/api/auth/logout', '/auth/logout'], async (req, res) => {
+  const { email, userId } = req.body;
+  const userIdentifier = email || userId;
+
+  if (userIdentifier && mongoose.connection.readyState === 1) {
+    try {
+      const dbUser = await User.findOne({
+        $or: [{ email: userIdentifier }, { id: userIdentifier }]
+      });
+      if (dbUser) {
+        dbUser.isOnline = false;
+        dbUser.lastLogoutTime = new Date();
+        await dbUser.save();
+        await logUserActivity(dbUser.email, dbUser.name, 'LOGGED_OUT', 'Logged out of session');
+      }
+    } catch (err) {
+      console.warn('Logout status update warning:', err.message);
+    }
+  }
+
+  return res.json({ success: true, message: 'User session logged out successfully' });
 });
 
 // -------------------------------------------------------------
@@ -1466,8 +1540,13 @@ app.get(['/api/admin/users', '/admin/users'], async (req, res) => {
   }
 });
 
-// Detailed User Activity History (Bookings, Offers, Wishlist, Notifications)
-app.get(['/api/admin/users/:userId/activity', '/admin/users/:userId/activity'], async (req, res) => {
+// Detailed User Activity History (Bookings, Offers, Wishlist, Notifications, Activity Timeline Logs)
+app.get([
+  '/api/admin/users/:userId/activity', 
+  '/admin/users/:userId/activity',
+  '/api/admin/users/:userId/history',
+  '/admin/users/:userId/history'
+], async (req, res) => {
   try {
     const { userId } = req.params;
     let targetUser = null;
@@ -1489,6 +1568,8 @@ app.get(['/api/admin/users/:userId/activity', '/admin/users/:userId/activity'], 
         city: 'Surat',
         rewardsPoints: 1250,
         profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=PrimeUser&backgroundColor=0f172a',
+        isOnline: true,
+        lastLoginTime: new Date().toISOString(),
         createdAt: new Date('2026-01-01').toISOString(),
         lastActive: new Date().toISOString()
       };
@@ -1551,6 +1632,26 @@ app.get(['/api/admin/users/:userId/activity', '/admin/users/:userId/activity'], 
       rating: m.rating || '9.2'
     }));
 
+    // 5. Activity Timeline Logs (Login/Logout events)
+    let logs = userActivityLogs.filter(l => l.userEmail === email);
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbLogs = await UserActivityLog.find({ userEmail: email }).sort({ timestamp: -1 }).lean();
+        if (dbLogs.length > 0) logs = dbLogs;
+      } catch (e) {}
+    }
+
+    if (logs.length === 0) {
+      logs = [
+        {
+          id: 'log_1',
+          action: 'LOGGED_IN',
+          details: 'Logged in via ' + (targetUser.provider || 'Google OAuth'),
+          timestamp: targetUser.lastLoginTime || targetUser.updatedAt || new Date().toISOString()
+        }
+      ];
+    }
+
     res.json({
       user: targetUser,
       bookings: userBookings,
@@ -1565,6 +1666,7 @@ app.get(['/api/admin/users/:userId/activity', '/admin/users/:userId/activity'], 
         poster: m.poster,
         rating: m.rating || '9.0'
       })),
+      logs,
       notificationEngagement: {
         totalReceived: (userBookings.length + userPrivateBookings.length) * 3 + 2,
         readCount: (userBookings.length + userPrivateBookings.length) * 3 + 1,

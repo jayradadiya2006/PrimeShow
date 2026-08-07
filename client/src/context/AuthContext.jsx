@@ -330,16 +330,24 @@ export const AuthProvider = ({ children }) => {
 
   const googleAuth = async (oauthPayload) => {
     try {
-      const res = await apiClient.post('/auth/google', oauthPayload);
+      const res = await apiClient.post('/auth/google-sync', oauthPayload);
       const { token: userToken, user: userData } = res.data;
 
+      const avatarUrl = userData.profilePicture || userData.avatar;
+      const finalUserObj = {
+        ...userData,
+        avatar: avatarUrl,
+        profilePicture: avatarUrl,
+        isOnline: true
+      };
+
       setToken(userToken);
-      setUser(userData);
+      setUser(finalUserObj);
 
       localStorage.setItem('primeshow_token', userToken);
-      localStorage.setItem('primeshow_user', JSON.stringify(userData));
+      localStorage.setItem('primeshow_user', JSON.stringify(finalUserObj));
 
-      return { success: true, user: userData };
+      return { success: true, user: finalUserObj };
     } catch (err) {
       // Local Fault-Tolerant Fallback for Google OAuth
       const profile = oauthPayload?.profile || {};
@@ -520,6 +528,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    try {
+      if (user?.email || user?.id) {
+        await apiClient.post('/auth/logout', {
+          email: user.email,
+          userId: user.id
+        });
+      }
+    } catch (err) {
+      console.warn('Logout API sync note:', err.message);
+    }
+
     try {
       if (auth) {
         await firebaseSignOut(auth);
