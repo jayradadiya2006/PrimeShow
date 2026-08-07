@@ -615,7 +615,7 @@ app.get('/api/theatres/:id', (req, res) => {
 
 // Admin Add Theatre
 app.post('/api/theatres', (req, res) => {
-  const { name, city, state, address, logo, image, facilities, screensCount, totalSeats } = req.body;
+  const { name, city, state, address, logo, image, mapLocationUrl, facilities, screensCount, totalSeats } = req.body;
   if (!name || !city || !address) {
     return res.status(400).json({ error: 'Name, city, and address are required' });
   }
@@ -632,6 +632,7 @@ app.post('/api/theatres', (req, res) => {
     address,
     logo: logo || 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=150&q=80',
     image: image || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
+    mapLocationUrl: mapLocationUrl || '',
     facilities: facilitiesArray,
     screensCount: Number(screensCount || 6),
     totalSeats: Number(totalSeats || 200),

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Clock, Calendar, Film, Play, Sparkles, MapPin, ChevronRight, CheckCircle2, Send, MessageSquare, User, Video, Shield, Award, AlertCircle, ArrowLeft, ChevronDown, ChevronUp, Ticket } from 'lucide-react';
 import { CastCarousel } from '../components/CastCarousel';
+import { TheatreMapModal } from '../components/TheatreMapModal';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 
@@ -11,6 +12,8 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedCityFilter, setSelectedCityFilter] = useState('All');
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const [selectedTheatreForMap, setSelectedTheatreForMap] = useState(null);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   
   // Read More / Read Less States
   const [isAboutReadMore, setIsAboutReadMore] = useState(false);
@@ -349,10 +352,23 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
                 <div key={theatre.id} className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 space-y-4 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <div>
-                      <h4 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>{theatre.name}</span>
-                      </h4>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span>{theatre.name}</span>
+                        </h4>
+                        <button
+                          onClick={() => {
+                            setSelectedTheatreForMap(theatre);
+                            setIsMapModalOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                          title="View Interactive Google Map Location"
+                        >
+                          <MapPin className="w-3.5 h-3.5 text-amber-400 group-hover:text-black" />
+                          <span>📍 Location / Map</span>
+                        </button>
+                      </div>
                       <p className="text-xs text-white/50">{theatre.address}</p>
                     </div>
 
@@ -524,6 +540,15 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
             )}
           </div>
         </div>
+      )}
+
+      {/* Google Map In-App Modal */}
+      {isMapModalOpen && selectedTheatreForMap && (
+        <TheatreMapModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          theatre={selectedTheatreForMap}
+        />
       )}
 
     </div>

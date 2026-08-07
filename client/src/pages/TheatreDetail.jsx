@@ -6,6 +6,7 @@ import {
 import axios from 'axios';
 import { useBooking } from '../context/BookingContext';
 import { PrivateTheatreModal } from '../components/PrivateTheatreModal';
+import { TheatreMapModal } from '../components/TheatreMapModal';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
@@ -19,6 +20,7 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
   const [privateBookingsList, setPrivateBookingsList] = useState([]);
   const [isPrivateModalOpen, setIsPrivateModalOpen] = useState(false);
   const [selectedShowForPrivate, setSelectedShowForPrivate] = useState(null);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const dates = [
     { label: 'Today', date: '28 Jul', day: 'Tue' },
@@ -169,7 +171,17 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
                   <span className="text-white/80">{theatre.screensCount || 6} Screens ({theatre.totalSeats || 200} Seats)</span>
                 </div>
                 <h1 className="text-2xl sm:text-4xl font-bold font-serif text-white mb-2">{theatre.name}</h1>
-                <p className="text-xs text-white/70 max-w-2xl">{theatre.address}</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <p className="text-xs text-white/70 max-w-2xl">{theatre.address}</p>
+                  <button
+                    onClick={() => setIsMapModalOpen(true)}
+                    className="px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-md"
+                    title="View Interactive Google Map Location"
+                  >
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>📍 View Location / Map</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -323,6 +335,14 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
           show={selectedShowForPrivate}
           selectedDate={selectedDateStr}
           onBookingSuccess={handlePrivateBookingSuccess}
+        />
+      )}
+      {/* Google Map In-App Modal */}
+      {isMapModalOpen && theatre && (
+        <TheatreMapModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          theatre={theatre}
         />
       )}
     </div>

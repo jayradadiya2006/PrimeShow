@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Film, Shield, Star, PlaySquare, Search, Filter, ArrowRight, X, MoreVertical, SlidersHorizontal, Check } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { TheatreMapModal } from '../components/TheatreMapModal';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
@@ -13,6 +14,8 @@ export const Theatres = ({ onSelectTheatre }) => {
   const [activeCityFilter, setActiveCityFilter] = useState('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [selectedTheatreForMap, setSelectedTheatreForMap] = useState(null);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const searchContainerRef = useRef(null);
 
   useEffect(() => {
@@ -329,9 +332,23 @@ export const Theatres = ({ onSelectTheatre }) => {
                 </div>
 
                 <div className="p-5 space-y-3">
-                  <div className="flex items-start gap-2 text-xs text-slate-600 dark:text-white/60">
-                    <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    <span className="line-clamp-2">{theatre.address}</span>
+                  <div className="flex items-start justify-between gap-2 text-xs text-slate-600 dark:text-white/60">
+                    <div className="flex items-start gap-2">
+                      <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <span className="line-clamp-2">{theatre.address}</span>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTheatreForMap(theatre);
+                        setIsMapModalOpen(true);
+                      }}
+                      className="px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-400 text-[10px] font-bold transition-all shrink-0 flex items-center gap-1 cursor-pointer"
+                      title="View Interactive Google Map Location"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      <span>📍 Map</span>
+                    </button>
                   </div>
 
                   {/* Facilities Badges */}
@@ -369,6 +386,15 @@ export const Theatres = ({ onSelectTheatre }) => {
           </div>
         )}
       </div>
+
+      {/* Google Map In-App Modal */}
+      {isMapModalOpen && selectedTheatreForMap && (
+        <TheatreMapModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          theatre={selectedTheatreForMap}
+        />
+      )}
     </div>
   );
 };

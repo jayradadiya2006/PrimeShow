@@ -56,6 +56,7 @@ const TheatreSchema = new mongoose.Schema({
   address: { type: String, required: true },
   logo: { type: String },
   image: { type: String },
+  mapLocationUrl: { type: String, default: '' },
   facilities: [{ type: String }],
   screensCount: { type: Number, default: 6 },
   totalSeats: { type: Number, default: 200 },

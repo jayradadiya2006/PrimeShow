@@ -474,6 +474,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     address: '',
     logo: '',
     image: '',
+    mapLocationUrl: '',
     facilities: 'VIP Recliners, IMAX 3D, Dolby Atmos',
     screensCount: 6,
     totalSeats: 200
@@ -2785,6 +2786,19 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     className="w-full p-3 rounded-xl glass-input text-xs text-white"
                   />
                 </div>
+
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-bold text-amber-300 mb-1 flex items-center gap-1">
+                    <span>📍 Google Maps Embed URL / Location Link</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Paste Google Maps embed iframe URL or share link (e.g. https://maps.app.goo.gl/...)"
+                    value={theatreForm.mapLocationUrl || ''}
+                    onChange={(e) => setTheatreForm({ ...theatreForm, mapLocationUrl: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-2 justify-end pt-2">
@@ -2924,6 +2938,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             address: t.address,
                             logo: t.logo || '',
                             image: t.image || '',
+                            mapLocationUrl: t.mapLocationUrl || '',
                             facilities: Array.isArray(t.facilities) ? t.facilities.join(', ') : (t.facilities || ''),
                             screensCount: t.screensCount || 6,
                             totalSeats: t.totalSeats || 200
