@@ -70,6 +70,34 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('primeshow_token') || null;
   });
 
+  // Synchronize User Record & Status to Backend Database
+  const syncUserToBackend = async (userData) => {
+    if (!userData || !userData.email) return;
+    try {
+      await apiClient.post('/auth/user-sync', {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone || '+91 9876543210',
+        profilePicture: userData.profilePicture || userData.avatar,
+        avatar: userData.avatar || userData.profilePicture,
+        provider: userData.provider || 'LOCAL',
+        role: userData.role || 'CUSTOMER',
+        city: userData.city || 'Surat',
+        isOnline: true
+      });
+    } catch (e) {
+      console.warn('⚡ [Backend User Sync Note]:', e.message);
+    }
+  };
+
+  // Sync user state on mount if saved user exists
+  useEffect(() => {
+    if (user && user.email) {
+      syncUserToBackend(user);
+    }
+  }, []);
+
   // Global Firebase Auth State Change Listener (Preserves stored avatar and profilePicture)
   useEffect(() => {
     if (!auth) return;
@@ -99,6 +127,8 @@ export const AuthProvider = ({ children }) => {
         setToken(firebaseUser.accessToken || `firebase_token_${firebaseUser.uid}`);
         localStorage.setItem('primeshow_user', JSON.stringify(userObj));
         localStorage.setItem('primeshow_token', firebaseUser.accessToken || `firebase_token_${firebaseUser.uid}`);
+
+        syncUserToBackend(userObj);
       }
     });
 
@@ -323,6 +353,8 @@ export const AuthProvider = ({ children }) => {
 
       localStorage.setItem('primeshow_token', fallbackToken);
       localStorage.setItem('primeshow_user', JSON.stringify(fallbackUser));
+
+      syncUserToBackend(fallbackUser);
 
       return { success: true, user: fallbackUser };
     }

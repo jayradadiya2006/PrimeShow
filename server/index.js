@@ -30,6 +30,135 @@ const logUserActivity = async (userEmail, userName, action, details = '', metada
   }
 };
 
+// In-Memory Global User Registry for instant access & fallback
+const globalRegisteredUsersMap = new Map();
+
+// Seed initial system users into memory registry
+const seedInitialUsersList = [
+  {
+    id: 'usr_admin_1',
+    name: 'Jay Hiralal Radadiya',
+    username: 'jayradadiya',
+    email: 'jayradadiya2006@gmail.com',
+    phone: '+91 9876543210',
+    role: 'ADMIN',
+    provider: 'GOOGLE',
+    city: 'Surat',
+    rewardsPoints: 99999,
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    isOnline: true,
+    lastLoginTime: new Date().toISOString(),
+    lastActive: new Date().toISOString(),
+    createdAt: new Date('2026-01-01').toISOString()
+  },
+  {
+    id: 'usr_cust_2',
+    name: 'Aarav Sharma',
+    username: 'aarav_s',
+    email: 'aarav.sharma@gmail.com',
+    phone: '+91 9825012345',
+    role: 'CUSTOMER',
+    provider: 'GOOGLE',
+    city: 'Ahmedabad',
+    rewardsPoints: 1250,
+    avatar: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Aarav&backgroundColor=0f172a',
+    profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Aarav&backgroundColor=0f172a',
+    isOnline: true,
+    lastLoginTime: new Date(Date.now() - 3600000 * 2).toISOString(),
+    lastActive: new Date(Date.now() - 3600000 * 2).toISOString(),
+    createdAt: new Date('2026-01-15').toISOString()
+  },
+  {
+    id: 'usr_cust_3',
+    name: 'Priya Patel',
+    username: 'priyapatel',
+    email: 'priya.patel@yahoo.com',
+    phone: '+91 9723045678',
+    role: 'CUSTOMER',
+    provider: 'LOCAL',
+    city: 'Surat',
+    rewardsPoints: 800,
+    avatar: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Priya&backgroundColor=0f172a',
+    profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Priya&backgroundColor=0f172a',
+    isOnline: false,
+    lastLoginTime: new Date(Date.now() - 3600000 * 24).toISOString(),
+    lastLogoutTime: new Date(Date.now() - 3600000 * 20).toISOString(),
+    lastActive: new Date(Date.now() - 3600000 * 24).toISOString(),
+    createdAt: new Date('2026-02-01').toISOString()
+  }
+];
+
+seedInitialUsersList.forEach(u => globalRegisteredUsersMap.set(u.email.toLowerCase(), u));
+
+const upsertUserRecord = async (userData) => {
+  if (!userData) return null;
+  const rawEmail = userData.email || userData.user?.email || userData.profile?.email || '';
+  if (!rawEmail) return null;
+
+  const email = rawEmail.toLowerCase().trim();
+  let name = userData.name || userData.user?.name || userData.profile?.name;
+  if (!name && email) name = email.split('@')[0].toUpperCase();
+  
+  const avatar = userData.profilePicture || userData.avatar || userData.user?.profilePicture || userData.user?.avatar || userData.profile?.picture || ('https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a');
+  const googleId = userData.googleId || userData.profile?.sub || `g_${Date.now()}`;
+  const provider = userData.provider || (googleId ? 'GOOGLE' : 'LOCAL');
+  const role = (email === 'admin@primeshow.com' || userData.role === 'ADMIN') ? 'ADMIN' : (userData.role || 'CUSTOMER');
+  const phone = userData.phone || userData.user?.phone || '+91 9876543210';
+  const city = userData.city || userData.user?.city || 'Surat';
+
+  const existing = globalRegisteredUsersMap.get(email) || {};
+
+  const mergedRecord = {
+    id: existing.id || userData.id || `usr_${Date.now()}`,
+    name: name || existing.name || 'PrimeShow User',
+    username: email.split('@')[0].toLowerCase(),
+    email: email,
+    phone: phone || existing.phone,
+    role: role,
+    city: city || existing.city,
+    rewardsPoints: userData.rewardsPoints || existing.rewardsPoints || 500,
+    avatar: avatar || existing.avatar,
+    profilePicture: avatar || existing.profilePicture,
+    provider: provider || existing.provider,
+    googleId: googleId || existing.googleId,
+    isOnline: true,
+    lastLoginTime: new Date().toISOString(),
+    lastActive: new Date().toISOString(),
+    createdAt: existing.createdAt || new Date().toISOString()
+  };
+
+  // 1. Immediately store in global memory registry
+  globalRegisteredUsersMap.set(email, mergedRecord);
+
+  // 2. Persist to MongoDB database if active
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      let dbDoc = await User.findOne({ email: email });
+      if (dbDoc) {
+        dbDoc.name = mergedRecord.name;
+        dbDoc.avatar = mergedRecord.avatar;
+        dbDoc.profilePicture = mergedRecord.profilePicture;
+        dbDoc.provider = mergedRecord.provider;
+        dbDoc.isOnline = true;
+        dbDoc.lastLoginTime = new Date();
+        dbDoc.lastActive = new Date();
+        await dbDoc.save();
+        return dbDoc.toObject();
+      } else {
+        const newDoc = new User(mergedRecord);
+        await newDoc.save();
+        return newDoc.toObject();
+      }
+    } catch (err) {
+      console.warn('MongoDB User Upsert Warning:', err.message);
+    }
+  }
+
+  return mergedRecord;
+};
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'primeshow_ultra_secret_key_2026';
@@ -157,24 +286,50 @@ app.post(['/api/auth/login', '/auth/login'], (req, res) => {
     lastActive: new Date()
   };
 
-  if (mongoose.connection.readyState === 1) {
-    try {
-      let existingUser = await User.findOne({ $or: [{ email: userEmail }, { phone: userIdentifier }] });
-      if (existingUser) {
-        existingUser.isOnline = true;
-        existingUser.lastLoginTime = new Date();
-        existingUser.lastActive = new Date();
-        await existingUser.save();
-        customerUser = existingUser.toObject();
-      } else {
-        const newUserDoc = new User(customerUser);
-        await newUserDoc.save();
-        customerUser = newUserDoc.toObject();
-      }
-    } catch (dbErr) {
-      console.warn('MongoDB User Login Sync Warning:', dbErr.message);
-    }
+// Regular Customer Login (Supports Email or Phone)
+app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
+  const { emailOrPhone, password } = req.body;
+  const userIdentifier = emailOrPhone || req.body.email || req.body.username;
+
+  if (!userIdentifier) {
+    return res.status(400).json({ error: 'Email or phone number is required' });
   }
+
+  // Admin Quick Login Check
+  if (userIdentifier === 'admin@primeshow.com' || userIdentifier === 'admin') {
+    const adminUser = {
+      id: 'usr_admin_1',
+      name: 'Admin Command Desk',
+      username: 'admin',
+      email: 'admin@primeshow.com',
+      phone: '+91 9876543210',
+      altPhone: '+91 9876543210',
+      whatsappPhone: '+91 9876543210',
+      gender: 'Male',
+      city: 'Mumbai',
+      dob: '1990-01-01',
+      role: 'ADMIN',
+      rewardsPoints: 99999,
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+      isOnline: true,
+      lastLoginTime: new Date().toISOString()
+    };
+    await upsertUserRecord(adminUser);
+    const token = jwt.sign(adminUser, JWT_SECRET, { expiresIn: '7d' });
+    return res.json({ token, user: adminUser });
+  }
+
+  const isEmail = userIdentifier.includes('@');
+  const userEmail = isEmail ? userIdentifier : `${userIdentifier}@primeshow.com`;
+
+  const customerUser = await upsertUserRecord({
+    email: userEmail,
+    name: isEmail ? userIdentifier.split('@')[0].toUpperCase() : `CUSTOMER (${userIdentifier})`,
+    phone: isEmail ? '+91 9876543210' : userIdentifier,
+    provider: isEmail ? 'LOCAL' : 'OTP',
+    role: 'CUSTOMER'
+  });
 
   await logUserActivity(customerUser.email, customerUser.name, 'LOGGED_IN', 'Logged in via Password / OTP');
 
@@ -188,50 +343,13 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
     return res.status(400).json({ error: 'Name, email and password are required' });
   }
 
-  const username = email.split('@')[0].toLowerCase();
-  let newUser = {
-    id: `usr_${Date.now()}`,
+  const newUser = await upsertUserRecord({
     name,
-    username,
     email,
-    password,
     phone: phone || '+91 9876543210',
-    altPhone: '',
-    whatsappPhone: phone || '',
-    gender: 'Male',
-    city: 'Surat',
-    dob: '1998-05-15',
-    role: 'CUSTOMER',
-    rewardsPoints: 500,
     provider: 'LOCAL',
-    avatar: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a',
-    profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a',
-    isOnline: true,
-    lastLoginTime: new Date(),
-    lastActive: new Date()
-  };
-
-  if (mongoose.connection.readyState === 1) {
-    try {
-      let existingUser = await User.findOne({ email: email });
-      if (existingUser) {
-        existingUser.name = name;
-        existingUser.password = password;
-        if (phone) existingUser.phone = phone;
-        existingUser.isOnline = true;
-        existingUser.lastLoginTime = new Date();
-        existingUser.lastActive = new Date();
-        await existingUser.save();
-        newUser = existingUser.toObject();
-      } else {
-        const userDoc = new User(newUser);
-        await userDoc.save();
-        newUser = userDoc.toObject();
-      }
-    } catch (dbErr) {
-      console.warn('MongoDB Register Sync Warning:', dbErr.message);
-    }
-  }
+    role: 'CUSTOMER'
+  });
 
   await logUserActivity(newUser.email, newUser.name, 'REGISTERED', 'Created new account');
   await logUserActivity(newUser.email, newUser.name, 'LOGGED_IN', 'Logged in on registration');
@@ -240,17 +358,23 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   return res.json({ token, user: newUser });
 });
 
-// Production-Ready Google OAuth 2.0 Backend Synchronization Endpoint
-app.post(['/api/auth/google', '/auth/google', '/api/auth/google-sync', '/auth/google-sync'], async (req, res) => {
-  const { token: idToken, credential, profile, user: clientUser } = req.body;
+// Production-Ready Universal User Synchronization Endpoint (Google / Firebase / Local)
+app.post([
+  '/api/auth/user-sync',
+  '/auth/user-sync',
+  '/api/auth/google-sync',
+  '/auth/google-sync',
+  '/api/auth/google',
+  '/auth/google'
+], async (req, res) => {
+  const { credential, profile, user: clientUser } = req.body;
 
   try {
-    let name = profile?.name || clientUser?.name;
-    let email = profile?.email || clientUser?.email;
-    let avatar = profile?.picture || profile?.avatar || clientUser?.profilePicture || clientUser?.avatar;
-    let googleId = profile?.sub || profile?.googleId || clientUser?.googleId || `g_${Date.now()}`;
+    let name = profile?.name || clientUser?.name || req.body.name;
+    let email = profile?.email || clientUser?.email || req.body.email;
+    let avatar = profile?.picture || profile?.avatar || clientUser?.profilePicture || clientUser?.avatar || req.body.profilePicture || req.body.avatar;
+    let googleId = profile?.sub || profile?.googleId || clientUser?.googleId || req.body.googleId;
 
-    // Decode JWT credential if present
     if (!email && credential) {
       try {
         const decoded = jwt.decode(credential);
@@ -264,103 +388,56 @@ app.post(['/api/auth/google', '/auth/google', '/api/auth/google-sync', '/auth/go
     }
 
     if (!email) {
-      email = `google.user_${Date.now()}@primeshow.com`;
-    }
-    if (!name) {
-      name = email.split('@')[0].toUpperCase();
-    }
-    if (!avatar) {
-      avatar = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80';
+      return res.status(400).json({ error: 'User email is required for synchronization' });
     }
 
-    // Database Persistence & Account Sync
-    let dbUser = null;
-    try {
-      if (mongoose.connection.readyState === 1) {
-        dbUser = await User.findOne({ email: email });
-        if (!dbUser && googleId) {
-          dbUser = await User.findOne({ googleId: googleId });
-        }
-
-        if (dbUser) {
-          dbUser.name = name || dbUser.name;
-          dbUser.avatar = avatar;
-          dbUser.profilePicture = avatar;
-          dbUser.provider = 'GOOGLE';
-          dbUser.googleId = googleId;
-          dbUser.isOnline = true;
-          dbUser.lastLoginTime = new Date();
-          dbUser.lastActive = new Date();
-          await dbUser.save();
-        } else {
-          dbUser = new User({
-            id: `usr_g_${googleId.slice(-6)}`,
-            name: name,
-            username: email.split('@')[0].toLowerCase(),
-            email: email,
-            phone: profile?.phone || clientUser?.phone || '+91 9876543210',
-            role: 'CUSTOMER',
-            rewardsPoints: 750,
-            avatar: avatar,
-            profilePicture: avatar,
-            provider: 'GOOGLE',
-            googleId: googleId,
-            isOnline: true,
-            lastLoginTime: new Date(),
-            lastActive: new Date()
-          });
-          await dbUser.save();
-        }
-      }
-    } catch (dbErr) {
-      console.warn('MongoDB User Sync Warning (using memory record):', dbErr.message);
-    }
-
-    const finalUserData = dbUser ? dbUser.toObject() : {
-      id: `usr_g_${googleId.slice(-6)}`,
-      name: name,
-      username: email.split('@')[0].toLowerCase(),
-      email: email,
-      phone: profile?.phone || clientUser?.phone || '+91 9876543210',
-      role: 'CUSTOMER',
-      rewardsPoints: 750,
-      avatar: avatar,
+    const syncedUser = await upsertUserRecord({
+      ...req.body,
+      name,
+      email,
+      avatar,
       profilePicture: avatar,
-      provider: 'GOOGLE',
-      googleId: googleId,
-      isOnline: true,
-      lastLoginTime: new Date(),
-      lastActive: new Date()
-    };
+      googleId,
+      provider: googleId ? 'GOOGLE' : (req.body.provider || 'LOCAL')
+    });
 
-    await logUserActivity(finalUserData.email, finalUserData.name, 'LOGGED_IN', 'Logged in via Google OAuth');
+    await logUserActivity(syncedUser.email, syncedUser.name, 'LOGGED_IN', 'User session synchronized');
 
-    const sessionToken = jwt.sign(finalUserData, JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ token: sessionToken, user: finalUserData });
+    const sessionToken = jwt.sign(syncedUser, JWT_SECRET, { expiresIn: '7d' });
+    return res.json({ token: sessionToken, user: syncedUser });
   } catch (err) {
-    console.error('Google OAuth Server Error:', err);
-    return res.status(500).json({ error: 'Google OAuth Verification Failed' });
+    console.error('User Sync Error:', err);
+    return res.status(500).json({ error: 'User Synchronization Failed' });
   }
 });
 
 // Logout Session Endpoint
 app.post(['/api/auth/logout', '/auth/logout'], async (req, res) => {
   const { email, userId } = req.body;
-  const userIdentifier = email || userId;
+  const targetEmail = (email || '').toLowerCase().trim();
 
-  if (userIdentifier && mongoose.connection.readyState === 1) {
-    try {
-      const dbUser = await User.findOne({
-        $or: [{ email: userIdentifier }, { id: userIdentifier }]
-      });
-      if (dbUser) {
-        dbUser.isOnline = false;
-        dbUser.lastLogoutTime = new Date();
-        await dbUser.save();
-        await logUserActivity(dbUser.email, dbUser.name, 'LOGGED_OUT', 'Logged out of session');
+  if (targetEmail) {
+    const memUser = globalRegisteredUsersMap.get(targetEmail);
+    if (memUser) {
+      memUser.isOnline = false;
+      memUser.lastLogoutTime = new Date().toISOString();
+      globalRegisteredUsersMap.set(targetEmail, memUser);
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbUser = await User.findOne({
+          $or: [{ email: targetEmail }, { id: userId }]
+        });
+        if (dbUser) {
+          dbUser.isOnline = false;
+          dbUser.lastLogoutTime = new Date();
+          await dbUser.save();
+          await logUserActivity(dbUser.email, dbUser.name, 'LOGGED_OUT', 'Logged out of session');
+        }
+      } catch (err) {
+        console.warn('Logout status update warning:', err.message);
       }
-    } catch (err) {
-      console.warn('Logout status update warning:', err.message);
     }
   }
 
