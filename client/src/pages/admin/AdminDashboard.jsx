@@ -4,12 +4,11 @@ import {
   XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X, Zap, Award
 } from 'lucide-react';
 import axios from 'axios';
+import API, { API_BASE } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useBooking } from '../../context/BookingContext';
 import { AdminTabErrorBoundary } from '../../components/AdminErrorBoundary';
 import { GUJARAT_CITIES } from '../../constants/cities';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const AdminDashboard = ({ onReturnHome }) => {
   const { 

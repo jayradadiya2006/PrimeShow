@@ -9,45 +9,9 @@ import {
   updateProfile
 } from '../firebase/config';
 
+import API, { apiClient, API_BASE } from '../services/api';
+
 const AuthContext = createContext();
-const rawApiBase = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
-const cleanBase = rawApiBase.replace(/\/+$/, '');
-const API_BASE = cleanBase.endsWith('/api') ? cleanBase : `${cleanBase}/api`;
-
-// Axios Instance configured for Render cold-starts (60s timeout + automatic retry)
-const apiClient = axios.create({
-  baseURL: API_BASE,
-  timeout: 60000, // 60 seconds timeout to handle Render free-tier cold starts
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Automatic retry interceptor for Network Errors and Timeouts (up to 2 retries)
-apiClient.interceptors.response.use(null, async (error) => {
-  const config = error.config;
-  if (!config) return Promise.reject(error);
-  
-  if (config._retryCount === undefined) {
-    config._retryCount = 0;
-  }
-
-  const isNetworkOrTimeout = 
-    !error.response || 
-    error.code === 'ECONNABORTED' || 
-    error.code === 'ERR_NETWORK' || 
-    [502, 503, 504].includes(error.response?.status);
-
-  if (isNetworkOrTimeout && config._retryCount < 2) {
-    config._retryCount += 1;
-    console.warn(`⏳ [Render Server Cold-Start] Network timeout/error detected. Retrying request (${config._retryCount}/2) in 2 seconds...`);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    return apiClient(config);
-  }
-
-  return Promise.reject(error);
-});
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
