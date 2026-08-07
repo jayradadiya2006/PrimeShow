@@ -1414,7 +1414,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                           <td className="p-4">
                             <div className="font-mono text-cyan-300">{u.email}</div>
-                            <div className="text-[10px] text-white/50">{u.phone || 'N/A'}</div>
+                            <div className="text-[10px] text-white/50">{u.phoneNumber || u.phone || 'N/A'}</div>
                           </td>
 
                           <td className="p-4">
@@ -1430,13 +1430,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                           <td className="p-4">
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase ${
-                              u.provider === 'GOOGLE' 
+                              (u.authProvider === 'google' || u.provider === 'GOOGLE') 
                                 ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' 
-                                : u.provider === 'OTP' 
+                                : (u.authProvider === 'mobile' || u.provider === 'OTP') 
                                   ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
                                   : 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40'
                             }`}>
-                              {u.provider || 'LOCAL'}
+                              {(u.authProvider || u.provider || 'email').toUpperCase()}
                             </span>
                           </td>
 

@@ -1474,140 +1474,93 @@ app.post('/api/activities/book', (req, res) => {
 // ADMIN USER MANAGEMENT & ACTIVITY TRACKING ENDPOINTS
 // -------------------------------------------------------------
 
-// Search & Paginated Users List
+// Search & Paginated Users List from Database & Memory Cache
 app.get(['/api/admin/users', '/admin/users'], async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.max(1, parseInt(req.query.limit) || 10);
-    const search = (req.query.search || req.query.query || '').trim();
+    const search = (req.query.search || req.query.query || '').trim().toLowerCase();
 
-    let query = {};
-    if (search) {
-      const searchRegex = new RegExp(search, 'i');
-      query = {
-        $or: [
-          { name: searchRegex },
-          { email: searchRegex },
-          { phone: searchRegex },
-          { city: searchRegex }
-        ]
-      };
-    }
-
-    let dbUsers = [];
-    let totalUsers = 0;
+    const combinedUsersMap = new Map(globalRegisteredUsersMap);
 
     if (mongoose.connection.readyState === 1) {
-      totalUsers = await User.countDocuments(query);
-      dbUsers = await User.find(query)
-        .sort({ updatedAt: -1, createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
+      try {
+        const dbUsers = await User.find({}).sort({ updatedAt: -1, createdAt: -1 }).lean();
+        dbUsers.forEach(u => {
+          if (u.email) {
+            const emailKey = u.email.toLowerCase();
+            const existing = combinedUsersMap.get(emailKey) || {};
+            combinedUsersMap.set(emailKey, { ...existing, ...u });
+          }
+        });
+      } catch (err) {
+        console.warn('DB User Fetch Warning in Admin API:', err.message);
+      }
     }
 
-    // Fallback seed memory users if DB is empty or connecting
-    if (dbUsers.length === 0 && page === 1 && !search) {
-      dbUsers = [
-        {
-          id: 'usr_admin_1',
-          name: 'Jay Hiralal Radadiya',
-          username: 'jayradadiya',
-          email: 'jayradadiya2006@gmail.com',
-          phone: '+91 9876543210',
-          role: 'ADMIN',
-          provider: 'GOOGLE',
-          city: 'Surat',
-          rewardsPoints: 99999,
-          profilePicture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-          lastActive: new Date().toISOString(),
-          createdAt: new Date('2026-01-01').toISOString()
-        },
-        {
-          id: 'usr_cust_2',
-          name: 'Aarav Sharma',
-          username: 'aarav_s',
-          email: 'aarav.sharma@gmail.com',
-          phone: '+91 9825012345',
-          role: 'CUSTOMER',
-          provider: 'GOOGLE',
-          city: 'Ahmedabad',
-          rewardsPoints: 1250,
-          profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Aarav&backgroundColor=0f172a',
-          lastActive: new Date(Date.now() - 3600000 * 2).toISOString(),
-          createdAt: new Date('2026-01-15').toISOString()
-        },
-        {
-          id: 'usr_cust_3',
-          name: 'Priya Patel',
-          username: 'priyapatel',
-          email: 'priya.patel@yahoo.com',
-          phone: '+91 9723045678',
-          role: 'CUSTOMER',
-          provider: 'LOCAL',
-          city: 'Surat',
-          rewardsPoints: 800,
-          profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Priya&backgroundColor=0f172a',
-          lastActive: new Date(Date.now() - 3600000 * 24).toISOString(),
-          createdAt: new Date('2026-02-01').toISOString()
-        },
-        {
-          id: 'usr_cust_4',
-          name: 'Rohan Mehta',
-          username: 'rohanm',
-          email: 'rohan.mehta@outlook.com',
-          phone: '+91 9904098765',
-          role: 'CUSTOMER',
-          provider: 'OTP',
-          city: 'Vadodara',
-          rewardsPoints: 450,
-          profilePicture: 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Rohan&backgroundColor=0f172a',
-          lastActive: new Date(Date.now() - 3600000 * 48).toISOString(),
-          createdAt: new Date('2026-02-10').toISOString()
-        }
-      ];
-      totalUsers = dbUsers.length;
+    let allUsersList = Array.from(combinedUsersMap.values());
+
+    if (search) {
+      allUsersList = allUsersList.filter(u =>
+        (u.name && u.name.toLowerCase().includes(search)) ||
+        (u.email && u.email.toLowerCase().includes(search)) ||
+        (u.phone && u.phone.toLowerCase().includes(search)) ||
+        (u.phoneNumber && u.phoneNumber.toLowerCase().includes(search)) ||
+        (u.city && u.city.toLowerCase().includes(search))
+      );
     }
 
-    // Enrich users with total bookings count in real-time
+    allUsersList.sort((a, b) => new Date(b.lastLoginTime || b.lastActive || b.createdAt) - new Date(a.lastLoginTime || a.lastActive || a.createdAt));
+
+    const totalUsers = allUsersList.length;
+    const paginatedUsers = allUsersList.slice((page - 1) * limit, page * limit);
+
     const enrichedUsers = await Promise.all(
-      dbUsers.map(async (u) => {
+      paginatedUsers.map(async (u) => {
         let userBookingsCount = 0;
         
-        // Count in memory array
         const memBookings = bookings.filter(
-          b => b.userEmail === u.email || b.userId === u.id || b.userName === u.name
+          b => (b.userEmail && b.userEmail.toLowerCase() === u.email.toLowerCase()) || b.userId === u.id
         ).length;
         const memPrivBookings = privateBookings.filter(
-          pb => pb.userEmail === u.email || pb.userId === u.id || pb.userName === u.name
+          pb => (pb.userEmail && pb.userEmail.toLowerCase() === u.email.toLowerCase()) || pb.userId === u.id
         ).length;
         userBookingsCount = memBookings + memPrivBookings;
 
-        // Count in MongoDB if available
         if (mongoose.connection.readyState === 1) {
           try {
             const dbBCount = await Booking.countDocuments({
-              $or: [{ userEmail: u.email }, { userId: u.id }, { userName: u.name }]
+              $or: [{ userEmail: u.email }, { userId: u.id }]
             });
             const dbPBCount = await PrivateTheatreBooking.countDocuments({
-              $or: [{ userEmail: u.email }, { userId: u.id }, { userName: u.name }]
+              $or: [{ userEmail: u.email }, { userId: u.id }]
             });
             userBookingsCount = Math.max(userBookingsCount, dbBCount + dbPBCount);
           } catch (err) {}
         }
 
+        const formattedPhoneNumber = u.phoneNumber || u.phone || '+91 9876543210';
+        const formattedAuthProvider = u.authProvider || (u.provider === 'GOOGLE' ? 'google' : (u.provider === 'OTP' ? 'mobile' : 'email'));
+
         return {
           ...u,
+          phone: formattedPhoneNumber,
+          phoneNumber: formattedPhoneNumber,
+          authProvider: formattedAuthProvider,
+          provider: u.provider || (formattedAuthProvider === 'google' ? 'GOOGLE' : 'LOCAL'),
           totalBookings: userBookingsCount,
-          lastActive: u.lastActive || u.updatedAt || u.createdAt
+          isOnline: u.isOnline !== undefined ? u.isOnline : true,
+          activityLogs: Array.isArray(u.activityLogs) && u.activityLogs.length > 0 
+            ? u.activityLogs 
+            : [{ action: 'LOGGED_IN', details: `Logged in via ${formattedAuthProvider}`, timestamp: u.lastLoginTime || new Date() }]
         };
       })
     );
 
     res.json({
       users: enrichedUsers,
-      totalUsers: totalUsers || enrichedUsers.length,
-      totalPages: Math.ceil((totalUsers || enrichedUsers.length) / limit),
+      totalUsers: totalUsers,
+      totalPages: Math.ceil(totalUsers / limit) || 1,
       currentPage: page,
       limit
     });

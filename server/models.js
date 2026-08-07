@@ -1,6 +1,12 @@
 // PrimeShow Mongoose Schemas for MongoDB Atlas
 const mongoose = require('mongoose');
 
+const UserActivitySubSchema = new mongoose.Schema({
+  action: { type: String, required: true },
+  details: { type: String, default: '' },
+  timestamp: { type: Date, default: Date.now }
+}, { _id: false });
+
 const UserSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -8,23 +14,26 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String },
   phone: { type: String },
+  phoneNumber: { type: String },
   altPhone: { type: String, default: '' },
   whatsappPhone: { type: String, default: '' },
   gender: { type: String, default: 'Male' },
-  city: { type: String, default: 'Mumbai' },
+  city: { type: String, default: 'Surat' },
   dob: { type: String, default: '1998-05-15' },
   role: { type: String, enum: ['ADMIN', 'CUSTOMER'], default: 'CUSTOMER' },
   rewardsPoints: { type: Number, default: 500 },
   avatar: { type: String, default: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a' },
   profilePicture: { type: String, default: 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a' },
   provider: { type: String, default: 'LOCAL' },
+  authProvider: { type: String, default: 'email' },
   googleId: { type: String, default: '' },
-  isOnline: { type: Boolean, default: true },
+  isOnline: { type: Boolean, default: false },
   lastLoginTime: { type: Date, default: Date.now },
   lastLogoutTime: { type: Date },
   lastActive: { type: Date, default: Date.now },
   wishlist: [{ type: String }],
-  claimedOffers: [{ type: String }]
+  claimedOffers: [{ type: String }],
+  activityLogs: [UserActivitySubSchema]
 }, { timestamps: true });
 
 const UserActivityLogSchema = new mongoose.Schema({
