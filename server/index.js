@@ -1,15 +1,45 @@
 require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const jwt = require('jsonwebtoken');
+const http = require('http');
+const { Server } = require('socket.io');
 const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
 const { User, UserActivityLog, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout } = require('./models');
 
-// Real-Time Multi-Client SSE Subscriber Set (1-Admin to N-Users Broadcast Pipeline)
+const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true
+  }
+});
+
+// Real-Time Multi-Client SSE & Socket.io Broadcast Pipeline (1-Admin to N-Users)
 const sseClients = new Set();
+
+io.on('connection', (socket) => {
+  console.log(`⚡ [Socket.io]: Client connected (ID: ${socket.id})`);
+  
+  socket.on('disconnect', () => {
+    console.log(`⚡ [Socket.io]: Client disconnected (ID: ${socket.id})`);
+  });
+
+  socket.on('USER_BOOKING_EVENT', (data) => {
+    io.emit('NEW_USER_BOOKING', data);
+    io.emit('ADMIN_ALERT', { type: 'NEW_BOOKING', data });
+  });
+
+  socket.on('USER_REGISTERED_EVENT', (data) => {
+    io.emit('NEW_USER_REGISTERED', data);
+    io.emit('ADMIN_ALERT', { type: 'NEW_USER', data });
+  });
+});
 
 const broadcastToAllClients = (eventType, payload) => {
   const dataString = JSON.stringify({ type: eventType, data: payload, timestamp: new Date().toISOString() });
+  
+  // 1. Write to SSE Stream Clients
   sseClients.forEach(res => {
     try {
       res.write(`event: ${eventType}\ndata: ${dataString}\n\n`);
@@ -17,6 +47,13 @@ const broadcastToAllClients = (eventType, payload) => {
       sseClients.delete(res);
     }
   });
+
+  // 2. Broadcast to Socket.io Connected Clients
+  if (io) {
+    io.emit(eventType, payload);
+    io.emit('GLOBAL_STATE_UPDATED', { type: eventType, data: payload, timestamp: new Date().toISOString() });
+    io.emit('client_content_sync', payload);
+  }
 };
 
 const userActivityLogs = []; // in-memory fallback list
@@ -2073,7 +2110,7 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, async () => {
-  console.log(`🚀 PrimeShow REST API Backend running on http://localhost:${PORT}`);
+server.listen(PORT, async () => {
+  console.log(`🚀 PrimeShow REST API & Socket.io Backend running on http://localhost:${PORT}`);
   await connectDB();
 });

@@ -10,6 +10,13 @@ import {
 } from '../firebase/config';
 
 import API, { apiClient, API_BASE } from '../services/api';
+import { io } from 'socket.io-client';
+
+const socketBase = API_BASE.replace(/\/api\/?$/, '');
+export const socket = io(socketBase, {
+  autoConnect: true,
+  transports: ['websocket', 'polling']
+});
 
 const AuthContext = createContext();
 
@@ -221,8 +228,45 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user?.email]);
 
-  // STEP 3: Real-Time 1-Admin to N-Users Broadcast EventSource Listener
+  // STEP 3: Real-Time Socket.io & SSE Dual Broadcast Listener (1-Admin ↔ N-Users)
+  const [globalConfig, setGlobalConfig] = useState(null);
+
   useEffect(() => {
+    // 1. Initial Central Config Fetch on App Boot
+    API.get('/admin/global-config')
+      .then(res => {
+        if (res.data && res.data.config) {
+          setGlobalConfig(res.data.config);
+        }
+      })
+      .catch(err => console.warn('Initial global config fetch note:', err.message));
+
+    // 2. Socket.io Event Listeners
+    socket.on('connect', () => {
+      console.log('⚡ [Socket.io Client]: Connected to central broadcast server');
+    });
+
+    socket.on('GLOBAL_STATE_UPDATED', (payload) => {
+      console.log('⚡ [Real-Time Admin Sync]: GLOBAL_STATE_UPDATED', payload);
+      if (payload && payload.data) {
+        setGlobalConfig(payload.data);
+      }
+    });
+
+    socket.on('client_content_sync', (payload) => {
+      console.log('⚡ [Real-Time Admin Sync]: client_content_sync', payload);
+      if (payload) {
+        setGlobalConfig(prev => ({ ...prev, ...payload }));
+      }
+    });
+
+    socket.on('NOTIFICATION_BROADCAST', (notif) => {
+      if (notif) {
+        setNotifications(prev => [notif, ...prev]);
+      }
+    });
+
+    // 3. SSE Fallback Stream Listener
     let eventSource = null;
     try {
       const streamUrl = `${API_BASE}/events/stream`;
@@ -241,24 +285,19 @@ export const AuthProvider = ({ children }) => {
         try {
           const parsed = JSON.parse(e.data);
           if (parsed && parsed.data) {
-            console.log('⚡ [Real-Time Admin Sync]: Global config updated', parsed.data);
+            setGlobalConfig(parsed.data);
           }
         } catch (err) {}
       });
-
-      eventSource.onmessage = (e) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          if (parsed.type === 'NOTIFICATION_BROADCAST' && parsed.data) {
-            setNotifications(prev => [parsed.data, ...prev]);
-          }
-        } catch (err) {}
-      };
     } catch (err) {
       console.warn('Real-Time SSE Sync Note:', err.message);
     }
 
     return () => {
+      socket.off('connect');
+      socket.off('GLOBAL_STATE_UPDATED');
+      socket.off('client_content_sync');
+      socket.off('NOTIFICATION_BROADCAST');
       if (eventSource) eventSource.close();
     };
   }, []);
@@ -776,6 +815,8 @@ export const AuthProvider = ({ children }) => {
       deleteNotification,
       markNotificationRead,
       markAllNotificationsRead,
+      globalConfig,
+      socket,
       isAdmin: user?.role === 'ADMIN'
     }}>
       {children}
