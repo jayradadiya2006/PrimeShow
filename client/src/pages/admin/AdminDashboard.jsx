@@ -16,33 +16,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
     broadcastNotification, updateNotification, deleteNotification, notifications, socket 
   } = useAuth();
 
-  // STEP 3: Real-Time Admin Socket Alerts (New User Bookings & Registrations)
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.on('NEW_USER_BOOKING', (data) => {
-      console.log('⚡ [Admin Socket Alert]: New booking received', data);
-      setActionSuccess(`⚡ New Live Booking! ${data.userName || 'Customer'} booked ${data.title || 'tickets'} for ₹${data.totalAmount || 480}`);
-      if (activeTab === 'bookings') {
-        fetchCategorizedBookings(bookingCurrentPage, bookingCategoryTab, bookingSearchQuery);
-      }
-      setTimeout(() => setActionSuccess(''), 5000);
-    });
-
-    socket.on('NEW_USER_REGISTERED', (data) => {
-      console.log('⚡ [Admin Socket Alert]: New user registered', data);
-      setActionSuccess(`⚡ New User Registered! ${data.name || data.email}`);
-      if (activeTab === 'users') {
-        fetchAdminUsers(userCurrentPage, userSearchQuery);
-      }
-      setTimeout(() => setActionSuccess(''), 5000);
-    });
-
-    return () => {
-      socket.off('NEW_USER_BOOKING');
-      socket.off('NEW_USER_REGISTERED');
-    };
-  }, [socket, activeTab]);
   const { 
     moviesList, addMovieToGlobalStore, updateMovieInGlobalStore, deleteMovieFromGlobalStore,
     addShowDateToMovie, deleteShowDateFromMovie, addShowSlotToMovieTheatre, deleteShowSlotFromMovieTheatre, deleteTheatreFromMovieDate,
@@ -782,6 +755,34 @@ export const AdminDashboard = ({ onReturnHome }) => {
   useEffect(() => {
     fetchScopedSeats();
   }, [selectedTheatreId, selectedScreenId]);
+
+  // Real-Time Admin Socket Alerts (New User Bookings & Registrations)
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('NEW_USER_BOOKING', (data) => {
+      console.log('⚡ [Admin Socket Alert]: New booking received', data);
+      setActionSuccess(`⚡ New Live Booking! ${data.userName || 'Customer'} booked ${data.title || 'tickets'} for ₹${data.totalAmount || 480}`);
+      if (activeTab === 'bookings') {
+        fetchCategorizedBookings(bookingCurrentPage, bookingCategoryTab, bookingSearchQuery);
+      }
+      setTimeout(() => setActionSuccess(''), 5000);
+    });
+
+    socket.on('NEW_USER_REGISTERED', (data) => {
+      console.log('⚡ [Admin Socket Alert]: New user registered', data);
+      setActionSuccess(`⚡ New User Registered! ${data.name || data.email}`);
+      if (activeTab === 'users') {
+        fetchAdminUsers(userCurrentPage, userSearchQuery);
+      }
+      setTimeout(() => setActionSuccess(''), 5000);
+    });
+
+    return () => {
+      socket.off('NEW_USER_BOOKING');
+      socket.off('NEW_USER_REGISTERED');
+    };
+  }, [socket, activeTab]);
 
   // Handle Full Movie Save (Create / Edit)
   const handleSaveMovie = async (e) => {
