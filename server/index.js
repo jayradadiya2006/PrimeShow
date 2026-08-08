@@ -1897,6 +1897,8 @@ app.get(usersRoutePaths, async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.max(1, parseInt(req.query.limit) || 10);
     const search = (req.query.search || req.query.query || '').trim();
+    const skip = (page - 1) * limit;
+
     const combinedUsersMap = new Map();
     seedInitialUsersList.forEach(u => combinedUsersMap.set(u.email.toLowerCase(), u));
     globalRegisteredUsersMap.forEach((v, k) => combinedUsersMap.set(k.toLowerCase(), v));
