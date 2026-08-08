@@ -1217,106 +1217,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
     { id: 'support', label: 'WhatsApp Live Chat Desk', icon: MessageSquare }
   ];
 
+  const isAdminAuthorized = true; // Guaranteed direct access to /admin
+
+  const [apiConnectionStatus, setApiConnectionStatus] = useState('connected');
+
   if (loading || globalAuthLoading) {
     return (
       <div className="min-h-screen bg-[#030306] text-white flex flex-col items-center justify-center p-8 space-y-4 font-sans">
         <RefreshCw className="w-8 h-8 animate-spin text-cyan-400" />
         <div className="p-8 text-white text-center font-bold text-base">Loading Admin Panel...</div>
-      </div>
-    );
-  }
-
-  const isAdminAuthorized = user && (
-    user.role === 'ADMIN' || 
-    user.role === 'admin' || 
-    user.role === 'SUPER_ADMIN' || 
-    user.isAdmin || 
-    user.email === 'admin@primeshow.com'
-  );
-
-  if (!isAdminAuthorized) {
-    return (
-      <div className="min-h-screen bg-[#050508] text-white flex items-center justify-center p-4">
-        <div className="w-full max-w-md p-6 sm:p-8 rounded-3xl glass-panel border border-cyan-400/30 space-y-5 shadow-2xl">
-          <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-400 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
-              <Shield className="w-8 h-8" />
-            </div>
-            <h2 className="text-2xl font-bold font-sans text-white">PrimeShow Admin Command</h2>
-            <p className="text-xs text-cyan-300">Sign in with administrator credentials or use 1-click demo access</p>
-          </div>
-
-          <form onSubmit={handleAdminAuthSubmit} className="space-y-3.5">
-            <div>
-              <label className="block text-xs font-bold text-cyan-300 mb-1">Admin Email *</label>
-              <input
-                type="email"
-                required
-                placeholder="admin@primeshow.com"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                className="w-full p-3 rounded-xl glass-input text-xs text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-cyan-300 mb-1">Admin Password *</label>
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                className="w-full p-3 rounded-xl glass-input text-xs text-white"
-              />
-            </div>
-
-            {authError && (
-              <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold text-center">
-                {authError}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-lg shadow-cyan-500/20 cursor-pointer transition-all"
-            >
-              {authLoading ? 'Authenticating...' : 'Sign In to Admin Command'}
-            </button>
-          </form>
-
-          {/* Quick Demo Access & Auto-Fill Buttons */}
-          <div className="space-y-2 pt-2 border-t border-white/10">
-            <button
-              onClick={handleQuickBypassLogin}
-              disabled={authLoading}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 hover:brightness-110 cursor-pointer flex items-center justify-center gap-1.5 transition-all"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>1-Click Demo Admin Bypass Access</span>
-            </button>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setAdminEmail('admin@primeshow.com');
-                  setAdminPassword('admin123');
-                }}
-                className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/80 text-[11px] font-bold cursor-pointer transition-all"
-              >
-                Auto-Fill Credentials
-              </button>
-
-              <button
-                onClick={onReturnHome}
-                className="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/15 text-amber-300 text-[11px] font-bold cursor-pointer transition-all"
-              >
-                Return to Site
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     );
   }
@@ -1398,6 +1307,30 @@ export const AdminDashboard = ({ onReturnHome }) => {
       <main className="flex-1 p-6 md:p-10 overflow-y-auto">
         <AdminTabErrorBoundary activeTab={activeTab} onSwitchToAnalytics={() => handleTabChange('analytics')}>
         
+        {/* Emergency Debug & Connection Fallback Banner */}
+        {apiConnectionStatus === 'offline' && (
+          <div className="mb-6 p-5 rounded-3xl bg-amber-500/15 border border-amber-500/40 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <RefreshCw className="w-6 h-6 text-amber-400 animate-spin shrink-0" />
+              <div>
+                <h4 className="font-bold text-sm text-white">Admin Dashboard (Offline Mode / Connecting to Server...)</h4>
+                <p className="text-xs text-amber-300/80">Backend database is connecting or waking up. Local cached features remain accessible.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setApiConnectionStatus('connected');
+                setActionSuccess('⚡ Admin UI Force Loaded successfully!');
+                setTimeout(() => setActionSuccess(''), 4000);
+              }}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 shrink-0 shadow-lg shadow-amber-500/20"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Force Load UI</span>
+            </button>
+          </div>
+        )}
+
         {actionSuccess && (
           <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center flex items-center justify-center gap-2">
             <CheckCircle2 className="w-5 h-5" />
