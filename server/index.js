@@ -53,6 +53,7 @@ const broadcastToAllClients = (eventType, payload) => {
   // 2. Broadcast to Socket.io Connected Clients
   if (io) {
     io.emit(eventType, payload);
+    io.emit('GLOBAL_ADMIN_UPDATE', payload);
     io.emit('ADMIN_STATE_CHANGED', payload);
     io.emit('GLOBAL_STATE_UPDATED', { type: eventType, data: payload, timestamp: new Date().toISOString() });
     io.emit('client_content_sync', payload);

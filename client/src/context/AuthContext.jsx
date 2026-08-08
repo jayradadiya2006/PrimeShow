@@ -246,6 +246,13 @@ export const AuthProvider = ({ children }) => {
       console.log('⚡ [Socket.io Client]: Connected to central broadcast server');
     });
 
+    socket.on('GLOBAL_ADMIN_UPDATE', (newUpdatedData) => {
+      console.log("⚡ Live update received from Admin Panel:", newUpdatedData);
+      if (newUpdatedData) {
+        setGlobalConfig(prev => ({ ...prev, ...(newUpdatedData.data || newUpdatedData) }));
+      }
+    });
+
     socket.on('ADMIN_STATE_CHANGED', (newUpdatedData) => {
       console.log("⚡ Live update received from Main Admin:", newUpdatedData);
       if (newUpdatedData) {
