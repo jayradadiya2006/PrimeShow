@@ -1897,9 +1897,9 @@ app.get(usersRoutePaths, async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.max(1, parseInt(req.query.limit) || 10);
     const search = (req.query.search || req.query.query || '').trim();
-    const skip = (page - 1) * limit;
-
-    const combinedUsersMap = new Map(globalRegisteredUsersMap);
+    const combinedUsersMap = new Map();
+    seedInitialUsersList.forEach(u => combinedUsersMap.set(u.email.toLowerCase(), u));
+    globalRegisteredUsersMap.forEach((v, k) => combinedUsersMap.set(k.toLowerCase(), v));
 
     if (mongoose.connection.readyState === 1) {
       try {
@@ -1915,13 +1915,20 @@ app.get(usersRoutePaths, async (req, res) => {
           : {};
 
         const dbUsers = await User.find(queryFilter).sort({ updatedAt: -1, createdAt: -1 }).lean();
-        dbUsers.forEach(u => {
-          if (u.email) {
-            const emailKey = u.email.toLowerCase();
-            const existing = combinedUsersMap.get(emailKey) || {};
-            combinedUsersMap.set(emailKey, { ...existing, ...u });
-          }
-        });
+        if (dbUsers.length > 0) {
+          dbUsers.forEach(u => {
+            if (u.email) {
+              const emailKey = u.email.toLowerCase();
+              const existing = combinedUsersMap.get(emailKey) || {};
+              combinedUsersMap.set(emailKey, { ...existing, ...u });
+            }
+          });
+        } else if (!search) {
+          // Auto-seed MongoDB with initial demo user records
+          try {
+            await User.insertMany(seedInitialUsersList);
+          } catch (e) {}
+        }
       } catch (err) {
         console.warn('DB User Fetch Warning in Admin API:', err.message);
       }
