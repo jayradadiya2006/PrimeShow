@@ -246,6 +246,13 @@ export const AuthProvider = ({ children }) => {
       console.log('⚡ [Socket.io Client]: Connected to central broadcast server');
     });
 
+    socket.on('ADMIN_STATE_CHANGED', (newUpdatedData) => {
+      console.log("⚡ Live update received from Main Admin:", newUpdatedData);
+      if (newUpdatedData) {
+        setGlobalConfig(prev => ({ ...prev, ...newUpdatedData }));
+      }
+    });
+
     socket.on('GLOBAL_STATE_UPDATED', (payload) => {
       console.log('⚡ [Real-Time Admin Sync]: GLOBAL_STATE_UPDATED', payload);
       if (payload && payload.data) {
@@ -295,6 +302,7 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       socket.off('connect');
+      socket.off('ADMIN_STATE_CHANGED');
       socket.off('GLOBAL_STATE_UPDATED');
       socket.off('client_content_sync');
       socket.off('NOTIFICATION_BROADCAST');

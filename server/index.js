@@ -15,6 +15,8 @@ const io = new Server(server, {
   }
 });
 
+app.set('socketio', io);
+
 // Real-Time Multi-Client SSE & Socket.io Broadcast Pipeline (1-Admin to N-Users)
 const sseClients = new Set();
 
@@ -51,6 +53,7 @@ const broadcastToAllClients = (eventType, payload) => {
   // 2. Broadcast to Socket.io Connected Clients
   if (io) {
     io.emit(eventType, payload);
+    io.emit('ADMIN_STATE_CHANGED', payload);
     io.emit('GLOBAL_STATE_UPDATED', { type: eventType, data: payload, timestamp: new Date().toISOString() });
     io.emit('client_content_sync', payload);
   }
@@ -310,12 +313,53 @@ app.post(['/api/admin/global-update', '/admin/global-update'], async (req, res) 
 
     const payload = configDoc ? configDoc.toObject() : req.body;
 
-    // Broadcast change immediately to all active user panels!
+    // Emit ADMIN_STATE_CHANGED to all active sessions via socketio
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('ADMIN_STATE_CHANGED', payload);
+    }
+    broadcastToAllClients('ADMIN_STATE_CHANGED', payload);
     broadcastToAllClients('GLOBAL_CONFIG_UPDATED', payload);
 
     return res.status(200).json({ success: true, message: 'Global config updated and broadcasted to all user panels', data: payload });
   } catch (err) {
     console.error('Global Update Error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Action Endpoint 2: Edit Content Alias (POST/PUT /api/admin/edit-content)
+app.all(['/api/admin/edit-content', '/admin/edit-content'], async (req, res) => {
+  try {
+    const { key, platformName, activeCity, maintenanceMode, bannerAnnouncement, visualEditorLayout, customThemeTokens, broadcastAlert } = req.body;
+    
+    let configDoc = null;
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      configDoc = await GlobalConfig.findOneAndUpdate(
+        { key: key || 'primary_config' },
+        {
+          platformName,
+          activeCity,
+          maintenanceMode,
+          bannerAnnouncement,
+          visualEditorLayout,
+          customThemeTokens,
+          broadcastAlert,
+          updatedBy: 'Main Admin Desk'
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    const payload = configDoc ? configDoc.toObject() : req.body;
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('ADMIN_STATE_CHANGED', payload);
+    }
+    broadcastToAllClients('ADMIN_STATE_CHANGED', payload);
+
+    return res.status(200).json({ success: true, message: 'Content updated & broadcasted via ADMIN_STATE_CHANGED', data: payload });
+  } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
