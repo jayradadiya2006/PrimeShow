@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 
 const BookingContext = createContext();
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
+const SOCKET_BASE = API_BASE.replace('/api', '');
 
 const DEFAULT_HERO_SLIDES = [
   {
@@ -773,24 +775,30 @@ export const BookingProvider = ({ children }) => {
     localStorage.setItem('primeshow_hero_slides_v1', JSON.stringify(heroSlidesList));
   }, [heroSlidesList]);
 
-  const addHeroSlide = (slideObj) => {
+  const addHeroSlide = async (slideObj) => {
     const newSlide = {
       id: `hero_${Date.now()}`,
       ...slideObj
     };
     setHeroSlidesList(prev => [newSlide, ...prev]);
+    try {
+      const res = await axios.post(`${API_BASE}/hero-slides`, newSlide);
+      if (res.data && Array.isArray(res.data)) {
+        setHeroSlidesList(res.data);
+      }
+    } catch (err) {}
     return newSlide;
   };
 
-  const updateHeroSlide = (slideId, updatedFields) => {
+  const updateHeroSlide = async (slideId, updatedFields) => {
     setHeroSlidesList(prev => prev.map(s => s.id === slideId ? { ...s, ...updatedFields } : s));
   };
 
-  const deleteHeroSlide = (slideId) => {
+  const deleteHeroSlide = async (slideId) => {
     setHeroSlidesList(prev => prev.filter(s => s.id !== slideId));
   };
 
-  // Feature Strips Dynamic Store & Persistent LocalStorage
+  // Feature Strips Dynamic Store & Central API Synchronization
   const [featureStripsList, setFeatureStripsList] = useState(() => {
     const saved = localStorage.getItem('primeshow_feature_strips_v1');
     if (saved) {
@@ -799,22 +807,119 @@ export const BookingProvider = ({ children }) => {
     return DEFAULT_FEATURE_STRIPS;
   });
 
+  const fetchFeatureStrips = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/feature-chips`);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setFeatureStripsList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  const fetchHeroSlides = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/hero-slides`);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setHeroSlidesList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  const fetchUpcomingMovies = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/upcoming-movies`);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setUpcomingMoviesList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    fetchFeatureStrips();
+    fetchHeroSlides();
+    fetchUpcomingMovies();
+  }, []);
+
+  // Real-Time Socket.io Synchronization across ALL active User Panels
+  useEffect(() => {
+    let cmsSocket = null;
+    try {
+      cmsSocket = io(SOCKET_BASE, { transports: ['websocket', 'polling'] });
+
+      cmsSocket.on('FEATURE_CHIPS_UPDATED', (chips) => {
+        console.log('⚡ [BookingContext] Real-time FEATURE_CHIPS_UPDATED received:', chips);
+        if (Array.isArray(chips)) {
+          setFeatureStripsList(chips);
+        }
+      });
+
+      cmsSocket.on('HERO_SLIDES_UPDATED', (slides) => {
+        if (Array.isArray(slides)) {
+          setHeroSlidesList(slides);
+        }
+      });
+
+      cmsSocket.on('UPCOMING_MOVIES_UPDATED', (movies) => {
+        if (Array.isArray(movies)) {
+          setUpcomingMoviesList(movies);
+        }
+      });
+
+      cmsSocket.on('GLOBAL_ADMIN_UPDATE', (payload) => {
+        console.log('⚡ [BookingContext] Real-time GLOBAL_ADMIN_UPDATE received:', payload);
+        if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
+          setFeatureStripsList(payload.featureStripsList);
+        }
+        if (payload && payload.heroSlidesList && Array.isArray(payload.heroSlidesList)) {
+          setHeroSlidesList(payload.heroSlidesList);
+        }
+        if (payload && payload.upcomingMoviesList && Array.isArray(payload.upcomingMoviesList)) {
+          setUpcomingMoviesList(payload.upcomingMoviesList);
+        }
+      });
+    } catch (e) {
+      console.warn('Socket connection note in BookingContext:', e.message);
+    }
+
+    return () => {
+      if (cmsSocket) cmsSocket.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('primeshow_feature_strips_v1', JSON.stringify(featureStripsList));
   }, [featureStripsList]);
 
-  const addFeatureStrip = (stripObj) => {
+  const addFeatureStrip = async (stripObj) => {
     const newStrip = { id: `feat_${Date.now()}`, ...stripObj };
     setFeatureStripsList(prev => [newStrip, ...prev]);
+    try {
+      const res = await axios.post(`${API_BASE}/feature-chips`, newStrip);
+      if (res.data && Array.isArray(res.data)) {
+        setFeatureStripsList(res.data);
+      }
+    } catch (err) {}
     return newStrip;
   };
 
-  const updateFeatureStrip = (stripId, updatedFields) => {
+  const updateFeatureStrip = async (stripId, updatedFields) => {
     setFeatureStripsList(prev => prev.map(s => s.id === stripId ? { ...s, ...updatedFields } : s));
+    try {
+      const res = await axios.put(`${API_BASE}/feature-chips/${stripId}`, updatedFields);
+      if (res.data && Array.isArray(res.data)) {
+        setFeatureStripsList(res.data);
+      }
+    } catch (err) {}
   };
 
-  const deleteFeatureStrip = (stripId) => {
+  const deleteFeatureStrip = async (stripId) => {
     setFeatureStripsList(prev => prev.filter(s => s.id !== stripId));
+    try {
+      const res = await axios.delete(`${API_BASE}/feature-chips/${stripId}`);
+      if (res.data && Array.isArray(res.data)) {
+        setFeatureStripsList(res.data);
+      }
+    } catch (err) {}
   };
 
   // Upcoming Movies Dynamic Store & Persistent LocalStorage
@@ -830,17 +935,23 @@ export const BookingProvider = ({ children }) => {
     localStorage.setItem('primeshow_upcoming_movies_v1', JSON.stringify(upcomingMoviesList));
   }, [upcomingMoviesList]);
 
-  const addUpcomingMovie = (movieObj) => {
+  const addUpcomingMovie = async (movieObj) => {
     const newMovie = { id: `up_${Date.now()}`, ...movieObj };
     setUpcomingMoviesList(prev => [newMovie, ...prev]);
+    try {
+      const res = await axios.post(`${API_BASE}/upcoming-movies`, newMovie);
+      if (res.data && Array.isArray(res.data)) {
+        setUpcomingMoviesList(res.data);
+      }
+    } catch (err) {}
     return newMovie;
   };
 
-  const updateUpcomingMovie = (movieId, updatedFields) => {
+  const updateUpcomingMovie = async (movieId, updatedFields) => {
     setUpcomingMoviesList(prev => prev.map(m => m.id === movieId ? { ...m, ...updatedFields } : m));
   };
 
-  const deleteUpcomingMovie = (movieId) => {
+  const deleteUpcomingMovie = async (movieId) => {
     setUpcomingMoviesList(prev => prev.filter(m => m.id !== movieId));
   };
 

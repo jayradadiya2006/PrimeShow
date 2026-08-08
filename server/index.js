@@ -445,6 +445,143 @@ app.get(['/api/admin/global-config', '/admin/global-config'], async (req, res) =
 });
 
 // -------------------------------------------------------------
+// CENTRAL CMS FEATURE CHIPS, HERO SLIDES & UPCOMING RELEASES API
+// -------------------------------------------------------------
+
+let cmsFeatureStrips = [
+  { id: 'feat_1', title: 'Instant UPI Ticket Pass', subtitle: 'Scan Jay Hiralal Radadiya QR for instant pass generation', icon: 'Zap', color: 'amber', badge: 'INSTANT' },
+  { id: 'feat_2', title: 'Private Cinema Screen', subtitle: 'Book full theatre lounge for private birthday parties', icon: 'Film', color: 'purple', badge: 'LUXURY' },
+  { id: 'feat_3', title: 'Exclusive Promo Vouchers', subtitle: 'Flat 50% discount on IMAX 3D recliners using PRIMESHOW50', icon: 'Gift', color: 'emerald', badge: 'OFFER' },
+  { id: 'feat_4', title: 'Expert VIP Concierge', subtitle: 'Dedicated lounge assistance & gourmet dining booking', icon: 'Sparkles', color: 'cyan', badge: 'VIP' }
+];
+
+let cmsHeroSlides = [
+  { id: 'hero_1', movieId: 'mov_1', title: 'Avatar: Fire and Ash', tagline: 'Enter the Uncharted Regions of Pandora in Native IMAX 3D', badge: 'BLOCKBUSTER', rating: 9.4, votesCount: 42800, duration: '3h 12m', languages: ['English', 'Hindi', 'Tamil', 'Telugu'], price: 480, banner: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80' },
+  { id: 'hero_2', movieId: 'mov_3', title: 'Kalki 2898 AD: Chapter II', tagline: 'The Epic Battle of the Millennia Unleashed', badge: 'TRENDING', rating: 9.1, votesCount: 65200, duration: '3h 05m', languages: ['Hindi', 'Telugu', 'Tamil'], price: 420, banner: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=1920&q=80' },
+  { id: 'hero_3', movieId: 'mov_2', title: 'Dune: Part Two', tagline: 'Long Live The Fighters of Arrakis', badge: 'CRITICS CHOICE', rating: 9.3, votesCount: 89400, duration: '2h 46m', languages: ['English', 'Hindi'], price: 380, banner: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80' }
+];
+
+let cmsUpcomingMovies = [
+  { id: 'up_1', title: 'Avengers: Secret Wars', release: 'Dec 2026', poster: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80', genres: ['Action', 'Superhero'] },
+  { id: 'up_2', title: 'The Dark Knight: Legacy', release: 'Nov 2026', poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80', genres: ['Action', 'Crime'] },
+  { id: 'up_3', title: 'Interstellar II: Beyond Horizon', release: 'Jan 2027', poster: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80', genres: ['Sci-Fi', 'Adventure'] },
+  { id: 'up_4', title: 'Gladiator: Rise of Empires', release: 'Oct 2026', poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80', genres: ['Action', 'Drama'] }
+];
+
+const featureChipRoutePaths = ['/api/feature-chips', '/api/cms/feature-chips', '/feature-chips', '/cms/feature-chips'];
+app.options(featureChipRoutePaths, cors());
+
+app.get(featureChipRoutePaths, (req, res) => {
+  return res.status(200).json(cmsFeatureStrips);
+});
+
+app.post(featureChipRoutePaths, async (req, res) => {
+  try {
+    const newChip = {
+      id: req.body.id || `feat_${Date.now()}`,
+      title: req.body.title || 'New Feature Chip',
+      subtitle: req.body.subtitle || '',
+      badge: req.body.badge || 'INSTANT',
+      icon: req.body.icon || 'Zap',
+      color: req.body.color || 'amber'
+    };
+
+    const existingIdx = cmsFeatureStrips.findIndex(c => c.id === newChip.id);
+    if (existingIdx > -1) {
+      cmsFeatureStrips[existingIdx] = { ...cmsFeatureStrips[existingIdx], ...newChip };
+    } else {
+      cmsFeatureStrips.unshift(newChip);
+    }
+
+    // Persist to MongoDB
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await GlobalConfig.findOneAndUpdate(
+          { key: 'primary_config' },
+          { featureStripsList: cmsFeatureStrips },
+          { upsert: true }
+        );
+      } catch (e) {}
+    }
+
+    // Emit Real-Time Socket Broadcast to ALL Connected User Panels
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+      req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { featureStripsList: cmsFeatureStrips });
+    }
+    broadcastToAllClients('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+    broadcastToAllClients('GLOBAL_ADMIN_UPDATE', { featureStripsList: cmsFeatureStrips });
+
+    return res.status(200).json(cmsFeatureStrips);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.put([...featureChipRoutePaths.map(p => `${p}/:id`)], async (req, res) => {
+  try {
+    const { id } = req.params;
+    const index = cmsFeatureStrips.findIndex(c => c.id === id);
+    if (index > -1) {
+      cmsFeatureStrips[index] = { ...cmsFeatureStrips[index], ...req.body };
+    }
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+      req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { featureStripsList: cmsFeatureStrips });
+    }
+    broadcastToAllClients('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+
+    return res.status(200).json(cmsFeatureStrips);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete([...featureChipRoutePaths.map(p => `${p}/:id`)], async (req, res) => {
+  try {
+    const { id } = req.params;
+    cmsFeatureStrips = cmsFeatureStrips.filter(c => c.id !== id);
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+      req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { featureStripsList: cmsFeatureStrips });
+    }
+    broadcastToAllClients('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+
+    return res.status(200).json(cmsFeatureStrips);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Hero Slides & Upcoming Movies Endpoints
+app.get(['/api/hero-slides', '/api/cms/hero-slides'], (req, res) => res.json(cmsHeroSlides));
+app.post(['/api/hero-slides', '/api/cms/hero-slides'], (req, res) => {
+  const slide = { id: req.body.id || `hero_${Date.now()}`, ...req.body };
+  cmsHeroSlides.unshift(slide);
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('HERO_SLIDES_UPDATED', cmsHeroSlides);
+    req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { heroSlidesList: cmsHeroSlides });
+  }
+  broadcastToAllClients('HERO_SLIDES_UPDATED', cmsHeroSlides);
+  return res.json(cmsHeroSlides);
+});
+
+app.get(['/api/upcoming-movies', '/api/cms/upcoming-movies'], (req, res) => res.json(cmsUpcomingMovies));
+app.post(['/api/upcoming-movies', '/api/cms/upcoming-movies'], (req, res) => {
+  const movie = { id: req.body.id || `up_${Date.now()}`, ...req.body };
+  cmsUpcomingMovies.unshift(movie);
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('UPCOMING_MOVIES_UPDATED', cmsUpcomingMovies);
+    req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { upcomingMoviesList: cmsUpcomingMovies });
+  }
+  broadcastToAllClients('UPCOMING_MOVIES_UPDATED', cmsUpcomingMovies);
+  return res.json(cmsUpcomingMovies);
+});
+
+// -------------------------------------------------------------
 // AUTHENTICATION ENDPOINTS (Supports both /api/auth and /auth)
 // -------------------------------------------------------------
 
