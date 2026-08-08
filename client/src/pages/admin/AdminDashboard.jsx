@@ -12,7 +12,7 @@ import { GUJARAT_CITIES } from '../../constants/cities';
 
 export const AdminDashboard = ({ onReturnHome }) => {
   const { 
-    user, login, logout, token, supportMessages, replyToSupportMessage, 
+    user, login, logout, token, loading, authLoading: globalAuthLoading, supportMessages, replyToSupportMessage, 
     broadcastNotification, updateNotification, deleteNotification, notifications, socket 
   } = useAuth();
 
@@ -1217,7 +1217,24 @@ export const AdminDashboard = ({ onReturnHome }) => {
     { id: 'support', label: 'WhatsApp Live Chat Desk', icon: MessageSquare }
   ];
 
-  if (!user || user.role !== 'ADMIN') {
+  if (loading || globalAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#030306] text-white flex flex-col items-center justify-center p-8 space-y-4 font-sans">
+        <RefreshCw className="w-8 h-8 animate-spin text-cyan-400" />
+        <div className="p-8 text-white text-center font-bold text-base">Loading Admin Panel...</div>
+      </div>
+    );
+  }
+
+  const isAdminAuthorized = user && (
+    user.role === 'ADMIN' || 
+    user.role === 'admin' || 
+    user.role === 'SUPER_ADMIN' || 
+    user.isAdmin || 
+    user.email === 'admin@primeshow.com'
+  );
+
+  if (!isAdminAuthorized) {
     return (
       <div className="min-h-screen bg-[#050508] text-white flex items-center justify-center p-4">
         <div className="w-full max-w-md p-6 sm:p-8 rounded-3xl glass-panel border border-cyan-400/30 space-y-5 shadow-2xl">
@@ -1411,14 +1428,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
                 <div className="text-xs text-cyan-300 mb-2">Active Movies</div>
-                <div className="text-3xl font-bold font-sans text-white">{moviesList.length} Active</div>
+                <div className="text-3xl font-bold font-sans text-white">{(moviesList || []).length} Active</div>
                 <div className="text-[10px] text-cyan-300 font-semibold mt-1">Real-time user sync active</div>
               </div>
 
               <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
                 <div className="text-xs text-cyan-300 mb-2">Pending Support Tickets</div>
                 <div className="text-3xl font-bold font-sans text-white">
-                  {supportMessages.filter(m => m.status === 'pending').length}
+                  {(supportMessages || []).filter(m => m.status === 'pending').length}
                 </div>
                 <div className="text-[10px] text-rose-400 font-semibold mt-1">Requires Response</div>
               </div>

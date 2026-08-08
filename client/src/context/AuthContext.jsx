@@ -825,7 +825,9 @@ export const AuthProvider = ({ children }) => {
       markAllNotificationsRead,
       globalConfig,
       socket,
-      isAdmin: user?.role === 'ADMIN'
+      loading: false,
+      authLoading: false,
+      isAdmin: user?.role === 'ADMIN' || user?.role === 'admin' || user?.isAdmin
     }}>
       {children}
     </AuthContext.Provider>
