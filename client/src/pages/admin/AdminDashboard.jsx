@@ -1298,7 +1298,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
     { id: 'support', label: 'WhatsApp Live Chat Desk', icon: MessageSquare }
   ];
 
-  const isAdminAuthorized = true; // Guaranteed direct access to /admin
+  const isUserAdmin = Boolean(
+    user && (
+      user.role === 'ADMIN' ||
+      (user.email && (
+        user.email.toLowerCase() === 'admin@primeshow.com' ||
+        user.email.toLowerCase() === 'jayradadiya2006@gmail.com'
+      ))
+    )
+  );
 
   const [apiConnectionStatus, setApiConnectionStatus] = useState('connected');
 
@@ -1306,7 +1314,95 @@ export const AdminDashboard = ({ onReturnHome }) => {
     return (
       <div className="min-h-screen bg-[#030306] text-white flex flex-col items-center justify-center p-8 space-y-4 font-sans">
         <RefreshCw className="w-8 h-8 animate-spin text-cyan-400" />
-        <div className="p-8 text-white text-center font-bold text-base">Loading Admin Panel...</div>
+        <div className="p-8 text-white text-center font-bold text-base">Loading Admin Security Clearance...</div>
+      </div>
+    );
+  }
+
+  if (!isUserAdmin) {
+    return (
+      <div className="min-h-screen bg-[#030306] text-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
+        {/* Ambient background glows */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 w-full max-w-md bg-slate-900/90 border border-cyan-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+          {/* Header */}
+          <div className="text-center space-y-3 mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-xl shadow-cyan-500/20 mb-2">
+              <Shield className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">PrimeShow Admin Portal</h1>
+            <p className="text-xs text-slate-400 font-medium">Restricted Access • Administrator Authentication Required</p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleAdminAuthSubmit} className="space-y-4">
+            {authError && (
+              <div className="p-3.5 rounded-xl bg-red-500/15 border border-red-500/40 text-red-300 text-xs font-bold flex items-center gap-2">
+                <Lock className="w-4 h-4 shrink-0 text-red-400" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Admin Email</label>
+              <input
+                type="email"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                placeholder="admin@primeshow.com"
+                required
+                className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Admin Security Password</label>
+              <input
+                type="password"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400 transition"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
+            >
+              {authLoading ? (
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
+              ) : (
+                <Shield className="w-4 h-4" />
+              )}
+              <span>{authLoading ? 'Verifying Admin Token...' : 'Authenticate & Unlock Panel'}</span>
+            </button>
+          </form>
+
+          {/* Quick Admin Auth Button */}
+          <div className="mt-6 pt-6 border-t border-slate-800 space-y-3">
+            <button
+              onClick={handleQuickBypassLogin}
+              disabled={authLoading}
+              className="w-full py-2.5 px-4 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <Zap className="w-3.5 h-3.5 text-cyan-400" />
+              <span>One-Click Master Admin Login (admin@primeshow.com)</span>
+            </button>
+
+            <button
+              onClick={onReturnHome}
+              className="w-full py-2 px-4 text-slate-400 hover:text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Exit to Main Customer Portal</span>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
