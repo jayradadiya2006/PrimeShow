@@ -799,17 +799,13 @@ export const BookingProvider = ({ children }) => {
   };
 
   // Feature Strips Dynamic Store & Central API Synchronization
-  const [featureStripsList, setFeatureStripsList] = useState(() => {
-    const saved = localStorage.getItem('primeshow_feature_strips_v1');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return DEFAULT_FEATURE_STRIPS;
-  });
+  const [featureStripsList, setFeatureStripsList] = useState(DEFAULT_FEATURE_STRIPS);
 
   const fetchFeatureStrips = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/feature-chips`);
+      const res = await axios.get(`${API_BASE}/feature-chips?t=${Date.now()}`, {
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setFeatureStripsList(res.data);
       }
@@ -818,7 +814,9 @@ export const BookingProvider = ({ children }) => {
 
   const fetchHeroSlides = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/hero-slides`);
+      const res = await axios.get(`${API_BASE}/hero-slides?t=${Date.now()}`, {
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setHeroSlidesList(res.data);
       }
@@ -827,7 +825,9 @@ export const BookingProvider = ({ children }) => {
 
   const fetchUpcomingMovies = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/upcoming-movies`);
+      const res = await axios.get(`${API_BASE}/upcoming-movies?t=${Date.now()}`, {
+        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+      });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setUpcomingMoviesList(res.data);
       }
@@ -840,7 +840,7 @@ export const BookingProvider = ({ children }) => {
     fetchUpcomingMovies();
   }, []);
 
-  // Real-Time Socket.io Synchronization across ALL active User Panels
+  // Real-Time Socket.io Synchronization across ALL active User Panels & Sessions
   useEffect(() => {
     let cmsSocket = null;
     try {
@@ -865,6 +865,19 @@ export const BookingProvider = ({ children }) => {
         }
       });
 
+      cmsSocket.on('LAYOUT_DATA_UPDATED', (payload) => {
+        console.log('⚡ [BookingContext] Real-time LAYOUT_DATA_UPDATED received:', payload);
+        if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
+          setFeatureStripsList(payload.featureStripsList);
+        }
+        if (payload && payload.heroSlidesList && Array.isArray(payload.heroSlidesList)) {
+          setHeroSlidesList(payload.heroSlidesList);
+        }
+        if (payload && payload.upcomingMoviesList && Array.isArray(payload.upcomingMoviesList)) {
+          setUpcomingMoviesList(payload.upcomingMoviesList);
+        }
+      });
+
       cmsSocket.on('GLOBAL_ADMIN_UPDATE', (payload) => {
         console.log('⚡ [BookingContext] Real-time GLOBAL_ADMIN_UPDATE received:', payload);
         if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
@@ -885,10 +898,6 @@ export const BookingProvider = ({ children }) => {
       if (cmsSocket) cmsSocket.disconnect();
     };
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('primeshow_feature_strips_v1', JSON.stringify(featureStripsList));
-  }, [featureStripsList]);
 
   const addFeatureStrip = async (stripObj) => {
     const newStrip = { id: `feat_${Date.now()}`, ...stripObj };

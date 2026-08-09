@@ -471,7 +471,20 @@ let cmsUpcomingMovies = [
 const featureChipRoutePaths = ['/api/feature-chips', '/api/cms/feature-chips', '/feature-chips', '/cms/feature-chips'];
 app.options(featureChipRoutePaths, cors());
 
-app.get(featureChipRoutePaths, (req, res) => {
+app.get(featureChipRoutePaths, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const config = await GlobalConfig.findOne({ key: 'primary_config' }).lean();
+      if (config && Array.isArray(config.featureStripsList) && config.featureStripsList.length > 0) {
+        cmsFeatureStrips = config.featureStripsList;
+      }
+    } catch (e) {}
+  }
   return res.status(200).json(cmsFeatureStrips);
 });
 
@@ -493,14 +506,14 @@ app.post(featureChipRoutePaths, async (req, res) => {
       cmsFeatureStrips.unshift(newChip);
     }
 
-    // Persist to MongoDB
+    // Persist directly to MongoDB GlobalConfig
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
       try {
         await GlobalConfig.findOneAndUpdate(
           { key: 'primary_config' },
           { featureStripsList: cmsFeatureStrips },
-          { upsert: true }
+          { upsert: true, new: true }
         );
       } catch (e) {}
     }
@@ -508,9 +521,11 @@ app.post(featureChipRoutePaths, async (req, res) => {
     // Emit Real-Time Socket Broadcast to ALL Connected User Panels
     if (req.app.get('socketio')) {
       req.app.get('socketio').emit('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { featureStripsList: cmsFeatureStrips });
       req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { featureStripsList: cmsFeatureStrips });
     }
     broadcastToAllClients('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+    broadcastToAllClients('LAYOUT_DATA_UPDATED', { featureStripsList: cmsFeatureStrips });
     broadcastToAllClients('GLOBAL_ADMIN_UPDATE', { featureStripsList: cmsFeatureStrips });
 
     return res.status(200).json(cmsFeatureStrips);
@@ -527,11 +542,24 @@ app.put([...featureChipRoutePaths.map(p => `${p}/:id`)], async (req, res) => {
       cmsFeatureStrips[index] = { ...cmsFeatureStrips[index], ...req.body };
     }
 
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await GlobalConfig.findOneAndUpdate(
+          { key: 'primary_config' },
+          { featureStripsList: cmsFeatureStrips },
+          { upsert: true, new: true }
+        );
+      } catch (e) {}
+    }
+
     if (req.app.get('socketio')) {
       req.app.get('socketio').emit('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { featureStripsList: cmsFeatureStrips });
       req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { featureStripsList: cmsFeatureStrips });
     }
     broadcastToAllClients('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+    broadcastToAllClients('LAYOUT_DATA_UPDATED', { featureStripsList: cmsFeatureStrips });
 
     return res.status(200).json(cmsFeatureStrips);
   } catch (err) {
@@ -544,11 +572,24 @@ app.delete([...featureChipRoutePaths.map(p => `${p}/:id`)], async (req, res) => 
     const { id } = req.params;
     cmsFeatureStrips = cmsFeatureStrips.filter(c => c.id !== id);
 
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await GlobalConfig.findOneAndUpdate(
+          { key: 'primary_config' },
+          { featureStripsList: cmsFeatureStrips },
+          { upsert: true, new: true }
+        );
+      } catch (e) {}
+    }
+
     if (req.app.get('socketio')) {
       req.app.get('socketio').emit('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { featureStripsList: cmsFeatureStrips });
       req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { featureStripsList: cmsFeatureStrips });
     }
     broadcastToAllClients('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
+    broadcastToAllClients('LAYOUT_DATA_UPDATED', { featureStripsList: cmsFeatureStrips });
 
     return res.status(200).json(cmsFeatureStrips);
   } catch (err) {
@@ -557,24 +598,64 @@ app.delete([...featureChipRoutePaths.map(p => `${p}/:id`)], async (req, res) => 
 });
 
 // Hero Slides & Upcoming Movies Endpoints
-app.get(['/api/hero-slides', '/api/cms/hero-slides'], (req, res) => res.json(cmsHeroSlides));
-app.post(['/api/hero-slides', '/api/cms/hero-slides'], (req, res) => {
+app.get(['/api/hero-slides', '/api/cms/hero-slides'], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const config = await GlobalConfig.findOne({ key: 'primary_config' }).lean();
+      if (config && Array.isArray(config.heroSlidesList) && config.heroSlidesList.length > 0) {
+        cmsHeroSlides = config.heroSlidesList;
+      }
+    } catch (e) {}
+  }
+  return res.json(cmsHeroSlides);
+});
+
+app.post(['/api/hero-slides', '/api/cms/hero-slides'], async (req, res) => {
   const slide = { id: req.body.id || `hero_${Date.now()}`, ...req.body };
   cmsHeroSlides.unshift(slide);
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      await GlobalConfig.findOneAndUpdate({ key: 'primary_config' }, { heroSlidesList: cmsHeroSlides }, { upsert: true });
+    } catch (e) {}
+  }
   if (req.app.get('socketio')) {
     req.app.get('socketio').emit('HERO_SLIDES_UPDATED', cmsHeroSlides);
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { heroSlidesList: cmsHeroSlides });
     req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { heroSlidesList: cmsHeroSlides });
   }
   broadcastToAllClients('HERO_SLIDES_UPDATED', cmsHeroSlides);
   return res.json(cmsHeroSlides);
 });
 
-app.get(['/api/upcoming-movies', '/api/cms/upcoming-movies'], (req, res) => res.json(cmsUpcomingMovies));
-app.post(['/api/upcoming-movies', '/api/cms/upcoming-movies'], (req, res) => {
+app.get(['/api/upcoming-movies', '/api/cms/upcoming-movies'], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const config = await GlobalConfig.findOne({ key: 'primary_config' }).lean();
+      if (config && Array.isArray(config.upcomingMoviesList) && config.upcomingMoviesList.length > 0) {
+        cmsUpcomingMovies = config.upcomingMoviesList;
+      }
+    } catch (e) {}
+  }
+  return res.json(cmsUpcomingMovies);
+});
+
+app.post(['/api/upcoming-movies', '/api/cms/upcoming-movies'], async (req, res) => {
   const movie = { id: req.body.id || `up_${Date.now()}`, ...req.body };
   cmsUpcomingMovies.unshift(movie);
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      await GlobalConfig.findOneAndUpdate({ key: 'primary_config' }, { upcomingMoviesList: cmsUpcomingMovies }, { upsert: true });
+    } catch (e) {}
+  }
   if (req.app.get('socketio')) {
     req.app.get('socketio').emit('UPCOMING_MOVIES_UPDATED', cmsUpcomingMovies);
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { upcomingMoviesList: cmsUpcomingMovies });
     req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { upcomingMoviesList: cmsUpcomingMovies });
   }
   broadcastToAllClients('UPCOMING_MOVIES_UPDATED', cmsUpcomingMovies);

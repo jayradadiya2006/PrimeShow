@@ -18,6 +18,13 @@ export const GlobalStateProvider = ({ children }) => {
     const activeSocket = authSocket || socket;
     if (!activeSocket) return;
 
+    activeSocket.on('LAYOUT_DATA_UPDATED', (payload) => {
+      console.log("⚡ LAYOUT_DATA_UPDATED received from Admin Panel:", payload);
+      if (payload) {
+        setGlobalState(prev => ({ ...prev, ...(payload.data || payload) }));
+      }
+    });
+
     activeSocket.on('GLOBAL_ADMIN_UPDATE', (newUpdatedData) => {
       console.log("⚡ Live update received from Admin Panel:", newUpdatedData);
       if (newUpdatedData) {
@@ -40,6 +47,7 @@ export const GlobalStateProvider = ({ children }) => {
     });
 
     return () => {
+      activeSocket.off('LAYOUT_DATA_UPDATED');
       activeSocket.off('GLOBAL_ADMIN_UPDATE');
       activeSocket.off('ADMIN_STATE_CHANGED');
       activeSocket.off('GLOBAL_STATE_UPDATED');

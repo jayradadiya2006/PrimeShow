@@ -277,9 +277,9 @@ const GlobalConfigSchema = new mongoose.Schema({
   homeBanners: [{ type: Object }],
   visualEditorLayout: { type: Object, default: {} },
   notifications: [{ type: Object }],
-  activeOffers: [{ type: Object }],
-  customThemeTokens: { type: Object, default: {} },
-  broadcastAlert: { type: Object, default: null },
+  featureStripsList: [{ type: Object }],
+  heroSlidesList: [{ type: Object }],
+  upcomingMoviesList: [{ type: Object }],
   updatedBy: { type: String, default: 'Admin Desk' }
 }, { timestamps: true });
 
