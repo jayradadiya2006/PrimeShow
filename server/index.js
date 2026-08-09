@@ -1245,62 +1245,154 @@ app.delete('/api/notifications/:id', async (req, res) => {
 // MOVIE & CAST CRUD ENDPOINTS
 // -------------------------------------------------------------
 
-app.get('/api/movies', (req, res) => {
+app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      const dbMovies = await Movie.find().sort({ createdAt: -1 }).lean();
+      if (dbMovies && dbMovies.length > 0) {
+        const dbIds = new Set(dbMovies.map(m => m.id));
+        const combined = [...dbMovies];
+        movies.forEach(m => {
+          if (!dbIds.has(m.id)) combined.push(m);
+        });
+        return res.json(combined);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Error fetching movies from MongoDB Atlas:', err.message);
+  }
   res.json(movies);
 });
 
-app.get('/api/movies/:id', (req, res) => {
-  const movie = movies.find(m => m.id === req.params.id);
+app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
+  const { id } = req.params;
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      const dbMovie = await Movie.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      if (dbMovie) return res.json(dbMovie);
+    }
+  } catch (err) {}
+  const movie = movies.find(m => m.id === id);
   if (!movie) return res.status(404).json({ error: 'Movie not found' });
   res.json(movie);
 });
 
-app.post('/api/movies', (req, res) => {
+app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
   const newMovie = {
-    id: `mov_${Date.now()}`,
+    id: req.body.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     title: req.body.title || 'Untitled Movie',
     tagline: req.body.tagline || 'Experience Cinema',
     synopsis: req.body.synopsis || 'Comprehensive movie description.',
     duration: req.body.duration || '2h 30m',
-    rating: req.body.rating || 9.0,
-    votesCount: req.body.votesCount || 100,
+    rating: req.body.rating ? Number(req.body.rating) : 9.0,
+    votesCount: req.body.votesCount ? Number(req.body.votesCount) : 100,
     parentalRating: req.body.parentalRating || 'UA',
-    releaseDate: req.body.releaseDate || '2026-08-01',
-    genres: req.body.genres || ['Action', 'Thriller'],
-    languages: req.body.languages || ['English', 'Hindi'],
-    formats: req.body.formats || ['IMAX 3D', 'Dolby Atmos'],
+    releaseDate: req.body.releaseDate || new Date().toISOString().split('T')[0],
+    genres: Array.isArray(req.body.genres) ? req.body.genres : (req.body.genres ? String(req.body.genres).split(',').map(s => s.trim()) : ['Action']),
+    languages: Array.isArray(req.body.languages) ? req.body.languages : (req.body.languages ? String(req.body.languages).split(',').map(s => s.trim()) : ['English', 'Hindi']),
+    formats: Array.isArray(req.body.formats) ? req.body.formats : (req.body.formats ? String(req.body.formats).split(',').map(s => s.trim()) : ['IMAX 3D', 'Dolby Atmos']),
     poster: req.body.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-    banner: req.body.banner || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+    banner: req.body.banner || req.body.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
     trailerUrl: req.body.trailerUrl || 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_081127_0992a171-d3c6-4978-8213-0ec5df8b6d63.mp4',
     director: req.body.director || 'Famous Director',
     cast: req.body.cast || [
       { id: 'c_default', name: 'Lead Actor', role: 'Hero', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' }
     ],
     status: req.body.status || 'Now Showing',
-    featured: req.body.featured !== undefined ? req.body.featured : true
+    featured: req.body.featured !== undefined ? req.body.featured : true,
+    city: req.body.city || 'All',
+    cities: req.body.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
   };
 
-  movies.unshift(newMovie);
+  // 1. Write to MongoDB Atlas
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      await Movie.findOneAndUpdate({ id: newMovie.id }, newMovie, { upsert: true, new: true, setDefaultsOnInsert: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error saving movie to MongoDB Atlas:', err.message);
+  }
+
+  // 2. Update in-memory fallback list
+  const existingIdx = movies.findIndex(m => m.id === newMovie.id);
+  if (existingIdx !== -1) {
+    movies[existingIdx] = newMovie;
+  } else {
+    movies.unshift(newMovie);
+  }
+
+  // 3. Emit real-time broadcasts
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('MOVIE_UPDATED', newMovie);
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: newMovie });
+  }
+  broadcastToAllClients('MOVIE_UPDATED', newMovie);
+  broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: newMovie });
+
   res.status(201).json(newMovie);
 });
 
-app.put('/api/movies/:id', (req, res) => {
-  const index = movies.findIndex(m => m.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Movie not found' });
+app.put(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
+  const { id } = req.params;
+  const updateData = { ...req.body };
 
-  movies[index] = {
-    ...movies[index],
-    ...req.body
-  };
+  // 1. Write to MongoDB Atlas
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      await Movie.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error updating movie in MongoDB Atlas:', err.message);
+  }
 
-  res.json(movies[index]);
+  // 2. Update in-memory fallback list
+  const index = movies.findIndex(m => m.id === id);
+  if (index !== -1) {
+    movies[index] = { ...movies[index], ...updateData };
+  }
+
+  const updatedMovie = index !== -1 ? movies[index] : { id, ...updateData };
+
+  // 3. Emit real-time broadcasts
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('MOVIE_UPDATED', updatedMovie);
+  }
+  broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
+
+  res.json(updatedMovie);
 });
 
-app.delete('/api/movies/:id', (req, res) => {
-  const index = movies.findIndex(m => m.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Movie not found' });
-  const deleted = movies.splice(index, 1);
-  res.json({ message: 'Movie deleted', movie: deleted[0] });
+app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
+  const { id } = req.params;
+
+  // 1. Delete from MongoDB Atlas
+  try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      await Movie.deleteOne({ id });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error deleting movie from MongoDB Atlas:', err.message);
+  }
+
+  // 2. Remove from in-memory fallback list
+  const index = movies.findIndex(m => m.id === id);
+  let deletedItem = null;
+  if (index !== -1) {
+    deletedItem = movies.splice(index, 1)[0];
+  }
+
+  // 3. Emit real-time deletion event
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('MOVIE_DELETED', { id });
+  }
+  broadcastToAllClients('MOVIE_DELETED', { id });
+
+  res.json({ message: 'Movie deleted', id, movie: deletedItem });
 });
 
 // -------------------------------------------------------------

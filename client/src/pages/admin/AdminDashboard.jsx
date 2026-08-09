@@ -882,11 +882,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
     const payload = {
       ...movieForm,
-      genres: movieForm.genres.split(',').map(s => s.trim()),
-      languages: movieForm.languages.split(',').map(s => s.trim()),
-      formats: movieForm.formats.split(',').map(s => s.trim()),
+      genres: typeof movieForm.genres === 'string' ? movieForm.genres.split(',').map(s => s.trim()) : (movieForm.genres || ['Action']),
+      languages: typeof movieForm.languages === 'string' ? movieForm.languages.split(',').map(s => s.trim()) : (movieForm.languages || ['English', 'Hindi']),
+      formats: typeof movieForm.formats === 'string' ? movieForm.formats.split(',').map(s => s.trim()) : (movieForm.formats || ['IMAX 3D', 'Dolby Atmos']),
       poster: movieForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-      banner: movieForm.banner || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80'
+      banner: movieForm.banner || movieForm.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      status: movieForm.status || 'Now Showing',
+      city: movieForm.city || 'All',
+      cities: movieForm.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
     };
 
     if (editingMovieId) {

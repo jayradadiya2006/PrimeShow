@@ -613,36 +613,47 @@ export const BookingProvider = ({ children }) => {
   };
 
   const addMovieToGlobalStore = async (newMovieData) => {
+    const moviePayload = {
+      id: newMovieData.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      ...newMovieData,
+      duration: newMovieData.duration || '2h 30m',
+      rating: newMovieData.rating || 9.0,
+      votesCount: newMovieData.votesCount || 100,
+      parentalRating: newMovieData.parentalRating || 'UA',
+      releaseDate: newMovieData.releaseDate || new Date().toISOString().split('T')[0],
+      showDates: newMovieData.showDates || ['2026-07-31', '2026-08-01'],
+      genres: Array.isArray(newMovieData.genres) ? newMovieData.genres : (newMovieData.genres ? String(newMovieData.genres).split(',').map(s=>s.trim()) : ['Action']),
+      languages: Array.isArray(newMovieData.languages) ? newMovieData.languages : (newMovieData.languages ? String(newMovieData.languages).split(',').map(s=>s.trim()) : ['English', 'Hindi']),
+      formats: Array.isArray(newMovieData.formats) ? newMovieData.formats : (newMovieData.formats ? String(newMovieData.formats).split(',').map(s=>s.trim()) : ['IMAX 3D', 'Dolby Atmos']),
+      poster: newMovieData.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      banner: newMovieData.banner || newMovieData.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      trailerUrl: newMovieData.trailerUrl || 'https://www.youtube.com/watch?v=d9MyW72ELq0',
+      director: newMovieData.director || 'Famous Director',
+      producer: newMovieData.producer || 'PrimeShow Studios',
+      cast: newMovieData.cast || [],
+      theatres: newMovieData.theatres || [],
+      status: newMovieData.status || 'Now Showing',
+      featured: newMovieData.featured !== undefined ? newMovieData.featured : true,
+      city: newMovieData.city || 'All',
+      cities: newMovieData.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
+    };
+
     try {
       const token = localStorage.getItem('primeshow_token');
-      const res = await axios.post(`${API_BASE}/movies`, newMovieData, {
+      const res = await axios.post(`${API_BASE}/movies`, moviePayload, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMoviesList(prev => [res.data, ...prev]);
+      const returnedMovie = res.data || moviePayload;
+      setMoviesList(prev => {
+        const filtered = prev.filter(m => m.id !== returnedMovie.id);
+        return [returnedMovie, ...filtered];
+      });
     } catch (err) {
-      const fallbackMovie = {
-        id: `mov_${Date.now()}`,
-        ...newMovieData,
-        duration: newMovieData.duration || '2h 30m',
-        rating: newMovieData.rating || 9.0,
-        votesCount: 100,
-        parentalRating: newMovieData.parentalRating || 'UA',
-        releaseDate: newMovieData.releaseDate || '2026-12-18',
-        showDates: newMovieData.showDates || ['2026-07-31', '2026-08-01'],
-        genres: Array.isArray(newMovieData.genres) ? newMovieData.genres : (newMovieData.genres ? newMovieData.genres.split(',').map(s=>s.trim()) : ['Action']),
-        languages: Array.isArray(newMovieData.languages) ? newMovieData.languages : (newMovieData.languages ? newMovieData.languages.split(',').map(s=>s.trim()) : ['English', 'Hindi']),
-        formats: Array.isArray(newMovieData.formats) ? newMovieData.formats : (newMovieData.formats ? newMovieData.formats.split(',').map(s=>s.trim()) : ['IMAX 3D', 'Dolby Atmos']),
-        poster: newMovieData.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-        banner: newMovieData.banner || newMovieData.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
-        trailerUrl: newMovieData.trailerUrl || 'https://www.youtube.com/watch?v=d9MyW72ELq0',
-        director: newMovieData.director || 'Famous Director',
-        producer: newMovieData.producer || 'PrimeShow Studios',
-        cast: newMovieData.cast || [],
-        theatres: newMovieData.theatres || [],
-        status: 'Now Showing',
-        featured: true
-      };
-      setMoviesList(prev => [fallbackMovie, ...prev]);
+      console.warn('⚠️ API movie create error, applying local fallback:', err.message);
+      setMoviesList(prev => {
+        const filtered = prev.filter(m => m.id !== moviePayload.id);
+        return [moviePayload, ...filtered];
+      });
     }
   };
 
@@ -841,9 +852,16 @@ export const BookingProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    fetchMovies();
     fetchFeatureStrips();
     fetchHeroSlides();
     fetchUpcomingMovies();
+
+    const interval = setInterval(() => {
+      fetchMovies();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Real-Time Socket.io Synchronization across ALL active User Panels & Sessions
@@ -851,6 +869,31 @@ export const BookingProvider = ({ children }) => {
     let cmsSocket = null;
     try {
       cmsSocket = io(SOCKET_BASE, { transports: ['websocket', 'polling'] });
+
+      cmsSocket.on('MOVIE_UPDATED', (movie) => {
+        console.log('⚡ [BookingContext] Real-time MOVIE_UPDATED received:', movie);
+        if (movie && movie.id) {
+          setMoviesList(prev => {
+            const exists = prev.some(m => m.id === movie.id);
+            if (exists) {
+              return prev.map(m => m.id === movie.id ? { ...m, ...movie } : m);
+            } else {
+              return [movie, ...prev];
+            }
+          });
+        } else {
+          fetchMovies();
+        }
+      });
+
+      cmsSocket.on('MOVIE_DELETED', (data) => {
+        console.log('⚡ [BookingContext] Real-time MOVIE_DELETED received:', data);
+        if (data && data.id) {
+          setMoviesList(prev => prev.filter(m => m.id !== data.id));
+        } else {
+          fetchMovies();
+        }
+      });
 
       cmsSocket.on('FEATURE_CHIPS_UPDATED', (chips) => {
         console.log('⚡ [BookingContext] Real-time FEATURE_CHIPS_UPDATED received:', chips);
@@ -873,6 +916,7 @@ export const BookingProvider = ({ children }) => {
 
       cmsSocket.on('LAYOUT_DATA_UPDATED', (payload) => {
         console.log('⚡ [BookingContext] Real-time LAYOUT_DATA_UPDATED received:', payload);
+        fetchMovies();
         if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
           setFeatureStripsList(payload.featureStripsList);
         }
@@ -886,6 +930,7 @@ export const BookingProvider = ({ children }) => {
 
       cmsSocket.on('GLOBAL_ADMIN_UPDATE', (payload) => {
         console.log('⚡ [BookingContext] Real-time GLOBAL_ADMIN_UPDATE received:', payload);
+        fetchMovies();
         if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
           setFeatureStripsList(payload.featureStripsList);
         }

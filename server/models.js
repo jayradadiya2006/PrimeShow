@@ -71,7 +71,9 @@ const MovieSchema = new mongoose.Schema({
     photo: String
   }],
   status: { type: String, default: 'Now Showing' },
-  featured: { type: Boolean, default: true }
+  featured: { type: Boolean, default: true },
+  city: { type: String, default: 'All' },
+  cities: [{ type: String }]
 }, { timestamps: true });
 
 const TheatreSchema = new mongoose.Schema({
