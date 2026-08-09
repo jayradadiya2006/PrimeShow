@@ -2,7 +2,7 @@ require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
 const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
-const { User, UserActivityLog, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
+const { User, UserActivityLog, Movie, Theatre, Show, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
 
 const app = express();
 const server = http.createServer(app);
@@ -1399,18 +1399,44 @@ app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
 // THEATRE & SHOWTIMES MANAGEMENT CRUD ENDPOINTS
 // -------------------------------------------------------------
 
-app.get('/api/theatres', (req, res) => {
+// -------------------------------------------------------------
+// THEATRE & SHOWTIMES MANAGEMENT CRUD ENDPOINTS (MongoDB Atlas)
+// -------------------------------------------------------------
+
+app.get(['/api/theatres', '/api/admin/theatres'], async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbTheatres = await Theatre.find().sort({ createdAt: -1 }).lean();
+      if (dbTheatres && dbTheatres.length > 0) {
+        const dbIds = new Set(dbTheatres.map(t => t.id));
+        const combined = [...dbTheatres];
+        theatres.forEach(t => {
+          if (!dbIds.has(t.id)) combined.push(t);
+        });
+        return res.json(combined);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Error fetching theatres from MongoDB Atlas:', err.message);
+  }
   res.json(theatres);
 });
 
-app.get('/api/theatres/:id', (req, res) => {
-  const theatre = theatres.find(t => t.id === req.params.id);
+app.get(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbTheatre = await Theatre.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      if (dbTheatre) return res.json(dbTheatre);
+    }
+  } catch (err) {}
+  const theatre = theatres.find(t => t.id === id);
   if (!theatre) return res.status(404).json({ error: 'Theatre not found' });
   res.json(theatre);
 });
 
 // Admin Add Theatre
-app.post('/api/theatres', (req, res) => {
+app.post(['/api/theatres', '/api/admin/theatres'], async (req, res) => {
   const { name, city, state, address, logo, image, mapLocationUrl, facilities, screensCount, totalSeats } = req.body;
   if (!name || !city || !address) {
     return res.status(400).json({ error: 'Name, city, and address are required' });
@@ -1421,7 +1447,7 @@ app.post('/api/theatres', (req, res) => {
     : (facilities || ['IMAX 3D', 'VIP Recliners']);
 
   const newTheatre = {
-    id: `th_${Date.now()}`,
+    id: req.body.id || `th_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     name,
     city,
     state: state || 'Maharashtra',
@@ -1432,108 +1458,210 @@ app.post('/api/theatres', (req, res) => {
     facilities: facilitiesArray,
     screensCount: Number(screensCount || 6),
     totalSeats: Number(totalSeats || 200),
-    screens: [
+    screens: req.body.screens || [
       { id: `sc_${Date.now()}_1`, name: 'Screen 1 - Director\'s Cut IMAX', formats: ['IMAX 3D', 'Dolby Atmos'], totalSeats: 120 },
       { id: `sc_${Date.now()}_2`, name: 'Screen 2 - Luxe Lounge', formats: ['Dolby Atmos', '2D'], totalSeats: 80 }
     ],
-    shows: [
+    shows: req.body.shows || [
       { id: `sh_${Date.now()}_1`, movieId: 'mov_1', movieTitle: 'Avatar: Fire and Ash', screenId: `sc_${Date.now()}_1`, screenName: 'Screen 1 - IMAX 3D', format: 'IMAX 3D', time: '10:30 AM', price: 450 },
       { id: `sh_${Date.now()}_2`, movieId: 'mov_2', movieTitle: 'Dune: Part Two', screenId: `sc_${Date.now()}_2`, screenName: 'Screen 2 - Luxe Lounge', format: 'Dolby Atmos', time: '04:15 PM', price: 380 }
     ]
   };
 
-  theatres.unshift(newTheatre);
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Theatre.findOneAndUpdate({ id: newTheatre.id }, newTheatre, { upsert: true, new: true, setDefaultsOnInsert: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error saving theatre to MongoDB Atlas:', err.message);
+  }
+
+  const existingIdx = theatres.findIndex(t => t.id === newTheatre.id);
+  if (existingIdx !== -1) theatres[existingIdx] = newTheatre;
+  else theatres.unshift(newTheatre);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('THEATRE_UPDATED', newTheatre);
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'THEATRE', theatre: newTheatre });
+  }
+  broadcastToAllClients('THEATRE_UPDATED', newTheatre);
+  broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'THEATRE', theatre: newTheatre });
+
   res.status(201).json(newTheatre);
 });
 
 // Admin Update Theatre
-app.put('/api/theatres/:id', (req, res) => {
-  const index = theatres.findIndex(t => t.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Theatre not found' });
+app.put(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) => {
+  const { id } = req.params;
+  const updateData = { ...req.body };
 
-  if (typeof req.body.facilities === 'string') {
-    req.body.facilities = req.body.facilities.split(',').map(f => f.trim()).filter(Boolean);
+  if (typeof updateData.facilities === 'string') {
+    updateData.facilities = updateData.facilities.split(',').map(f => f.trim()).filter(Boolean);
   }
 
-  theatres[index] = {
-    ...theatres[index],
-    ...req.body
-  };
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Theatre.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error updating theatre in MongoDB Atlas:', err.message);
+  }
 
-  res.json(theatres[index]);
+  const index = theatres.findIndex(t => t.id === id);
+  if (index !== -1) {
+    theatres[index] = { ...theatres[index], ...updateData };
+  }
+  const updated = index !== -1 ? theatres[index] : { id, ...updateData };
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('THEATRE_UPDATED', updated);
+  }
+  broadcastToAllClients('THEATRE_UPDATED', updated);
+
+  res.json(updated);
 });
 
 // Admin Delete Theatre
-app.delete('/api/theatres/:id', (req, res) => {
-  const index = theatres.findIndex(t => t.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Theatre not found' });
-  const deleted = theatres.splice(index, 1);
-  res.json({ message: 'Theatre deleted', theatre: deleted[0] });
+app.delete(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Theatre.deleteOne({ id });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error deleting theatre from MongoDB Atlas:', err.message);
+  }
+
+  const index = theatres.findIndex(t => t.id === id);
+  let deleted = null;
+  if (index !== -1) {
+    deleted = theatres.splice(index, 1)[0];
+  }
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('THEATRE_DELETED', { id });
+  }
+  broadcastToAllClients('THEATRE_DELETED', { id });
+
+  res.json({ message: 'Theatre deleted', id, theatre: deleted });
 });
 
 // Admin Add Show Slot to a Theatre
-app.post('/api/theatres/:id/shows', (req, res) => {
-  const theatre = theatres.find(t => t.id === req.params.id);
-  if (!theatre) return res.status(404).json({ error: 'Theatre not found' });
+app.post(['/api/theatres/:id/shows', '/api/admin/theatres/:id/shows'], async (req, res) => {
+  const { id } = req.params;
+  const { movieId, movieTitle, screenId, screenName, format, time, price, date } = req.body;
 
-  const { movieId, movieTitle, screenId, screenName, format, time, price } = req.body;
   const newShow = {
-    id: `sh_${Date.now()}`,
+    id: req.body.showId || `sh_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     movieId: movieId || 'mov_1',
     movieTitle: movieTitle || 'Avatar: Fire and Ash',
     screenId: screenId || 'sc_1',
     screenName: screenName || 'Screen 1',
     format: format || 'IMAX 3D',
     time: time || '07:30 PM',
+    date: date || new Date().toISOString().slice(0, 10),
     price: Number(price || 400)
   };
 
-  if (!theatre.shows) theatre.shows = [];
-  theatre.shows.unshift(newShow);
-  res.status(201).json(theatre);
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Theatre.findOneAndUpdate({ id }, { $push: { shows: newShow } }, { new: true });
+      await Show.findOneAndUpdate({ id: newShow.id }, { ...newShow, theatreId: id }, { upsert: true, new: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error adding show slot in MongoDB Atlas:', err.message);
+  }
+
+  const theatre = theatres.find(t => t.id === id);
+  if (theatre) {
+    if (!theatre.shows) theatre.shows = [];
+    theatre.shows.unshift(newShow);
+  }
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('SHOW_UPDATED', { theatreId: id, show: newShow });
+  }
+  broadcastToAllClients('SHOW_UPDATED', { theatreId: id, show: newShow });
+
+  res.status(201).json(theatre || { id, shows: [newShow] });
 });
 
 // Admin Delete Show Slot from a Theatre
-app.delete('/api/theatres/:id/shows/:showId', (req, res) => {
-  const theatre = theatres.find(t => t.id === req.params.id);
-  if (!theatre) return res.status(404).json({ error: 'Theatre not found' });
+app.delete(['/api/theatres/:id/shows/:showId', '/api/admin/theatres/:id/shows/:showId'], async (req, res) => {
+  const { id, showId } = req.params;
 
-  if (theatre.shows) {
-    theatre.shows = theatre.shows.filter(s => s.id !== req.params.showId);
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Theatre.findOneAndUpdate({ id }, { $pull: { shows: { id: showId } } }, { new: true });
+      await Show.deleteOne({ id: showId });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error deleting show slot in MongoDB Atlas:', err.message);
   }
-  res.json(theatre);
+
+  const theatre = theatres.find(t => t.id === id);
+  if (theatre && theatre.shows) {
+    theatre.shows = theatre.shows.filter(s => s.id !== showId);
+  }
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('SHOW_DELETED', { theatreId: id, showId });
+  }
+  broadcastToAllClients('SHOW_DELETED', { theatreId: id, showId });
+
+  res.json(theatre || { id, showId });
 });
 
-// Scoped Seat Block/Unblock
-app.get('/api/theatres/:theatreId/screens/:screenId/blocked-seats', (req, res) => {
-  const key = `${req.params.theatreId}_${req.params.screenId}`;
+// Scoped Seat Block/Unblock (MongoDB BlockedSeat Model)
+app.get('/api/theatres/:theatreId/screens/:screenId/blocked-seats', async (req, res) => {
+  const { theatreId, screenId } = req.params;
+  const key = `${theatreId}_${screenId}`;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const doc = await BlockedSeat.findOne({ key }).lean();
+      if (doc) {
+        return res.json({ theatreId, screenId, blockedSeats: doc.blockedSeats || [] });
+      }
+    }
+  } catch (err) {}
+
   const blockedSeats = cinemaScreenBlockedSeatsMap[key] || [];
-  res.json({ theatreId: req.params.theatreId, screenId: req.params.screenId, blockedSeats });
+  res.json({ theatreId, screenId, blockedSeats });
 });
 
-app.post('/api/theatres/:theatreId/screens/:screenId/toggle-seat-block', (req, res) => {
+app.post('/api/theatres/:theatreId/screens/:screenId/toggle-seat-block', async (req, res) => {
+  const { theatreId, screenId } = req.params;
   const { seatId } = req.body;
   if (!seatId) return res.status(400).json({ error: 'Seat ID required' });
 
-  const key = `${req.params.theatreId}_${req.params.screenId}`;
-  if (!cinemaScreenBlockedSeatsMap[key]) {
-    cinemaScreenBlockedSeatsMap[key] = [];
-  }
+  const key = `${theatreId}_${screenId}`;
+  if (!cinemaScreenBlockedSeatsMap[key]) cinemaScreenBlockedSeatsMap[key] = [];
 
   const list = cinemaScreenBlockedSeatsMap[key];
   const exists = list.includes(seatId);
-  if (exists) {
-    cinemaScreenBlockedSeatsMap[key] = list.filter(s => s !== seatId);
-  } else {
-    cinemaScreenBlockedSeatsMap[key].push(seatId);
+  const updatedList = exists ? list.filter(s => s !== seatId) : [...list, seatId];
+  cinemaScreenBlockedSeatsMap[key] = updatedList;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await BlockedSeat.findOneAndUpdate(
+        { key },
+        { key, theatreId, screenId, blockedSeats: updatedList },
+        { upsert: true, new: true }
+      );
+    }
+  } catch (err) {
+    console.warn('⚠️ Error updating blocked seats in MongoDB Atlas:', err.message);
   }
 
-  res.json({
-    key,
-    theatreId: req.params.theatreId,
-    screenId: req.params.screenId,
-    blockedSeats: cinemaScreenBlockedSeatsMap[key]
-  });
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('SEATS_BLOCKED_UPDATED', { key, theatreId, screenId, blockedSeats: updatedList });
+  }
+  broadcastToAllClients('SEATS_BLOCKED_UPDATED', { key, theatreId, screenId, blockedSeats: updatedList });
+
+  res.json({ key, theatreId, screenId, blockedSeats: updatedList });
 });
 
 // -------------------------------------------------------------
@@ -1620,27 +1748,49 @@ app.post('/api/private-theatre/book', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// EVENTS & FESTIVALS CRUD ENDPOINTS
+// EVENTS & FESTIVALS CRUD ENDPOINTS (MongoDB Atlas)
 // -------------------------------------------------------------
 
-app.get('/api/events', (req, res) => {
+app.get(['/api/events', '/api/admin/events'], async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbEvents = await Event.find().sort({ createdAt: -1 }).lean();
+      if (dbEvents && dbEvents.length > 0) {
+        const dbIds = new Set(dbEvents.map(e => e.id));
+        const combined = [...dbEvents];
+        events.forEach(e => {
+          if (!dbIds.has(e.id)) combined.push(e);
+        });
+        return res.json(combined);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Error fetching events from MongoDB Atlas:', err.message);
+  }
   res.json(events);
 });
 
-app.get('/api/events/:id', (req, res) => {
-  const event = events.find(e => e.id === req.params.id);
+app.get(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbEvent = await Event.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      if (dbEvent) return res.json(dbEvent);
+    }
+  } catch (err) {}
+  const event = events.find(e => e.id === id);
   if (!event) return res.status(404).json({ error: 'Event not found' });
   res.json(event);
 });
 
-app.post('/api/events', (req, res) => {
+app.post(['/api/events', '/api/admin/events'], async (req, res) => {
   const { title, category, badge, venue, city, date, time, price, totalCapacity, availableSeats, image, description } = req.body;
-  if (!title || !venue || !price) {
+  if (!title || !venue || price === undefined) {
     return res.status(400).json({ error: 'Title, venue and ticket price are required' });
   }
 
   const newEvent = {
-    id: `ev_${Date.now()}`,
+    id: req.body.id || `ev_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     title,
     category: category || 'Live Concert',
     badge: badge || 'SELLING FAST',
@@ -1650,37 +1800,92 @@ app.post('/api/events', (req, res) => {
     time: time || '07:00 PM',
     price: Number(price || 1500),
     totalCapacity: Number(totalCapacity || 5000),
-    availableSeats: Number(availableSeats || totalCapacity || 5000),
+    availableSeats: Number(availableSeats !== undefined ? availableSeats : (totalCapacity || 5000)),
     image: image || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
     description: description || 'Exclusive live event experience hosted on PrimeShow.'
   };
 
-  events.unshift(newEvent);
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Event.findOneAndUpdate({ id: newEvent.id }, newEvent, { upsert: true, new: true, setDefaultsOnInsert: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error saving event to MongoDB Atlas:', err.message);
+  }
+
+  const existingIdx = events.findIndex(e => e.id === newEvent.id);
+  if (existingIdx !== -1) events[existingIdx] = newEvent;
+  else events.unshift(newEvent);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('EVENT_UPDATED', newEvent);
+  }
+  broadcastToAllClients('EVENT_UPDATED', newEvent);
+
   res.status(201).json(newEvent);
 });
 
-app.put('/api/events/:id', (req, res) => {
-  const index = events.findIndex(e => e.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Event not found' });
+app.put(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
+  const { id } = req.params;
+  const updateData = { ...req.body };
 
-  events[index] = {
-    ...events[index],
-    ...req.body
-  };
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Event.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error updating event in MongoDB Atlas:', err.message);
+  }
 
-  res.json(events[index]);
+  const index = events.findIndex(e => e.id === id);
+  if (index !== -1) {
+    events[index] = { ...events[index], ...updateData };
+  }
+  const updated = index !== -1 ? events[index] : { id, ...updateData };
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('EVENT_UPDATED', updated);
+  }
+  broadcastToAllClients('EVENT_UPDATED', updated);
+
+  res.json(updated);
 });
 
-app.delete('/api/events/:id', (req, res) => {
-  const index = events.findIndex(e => e.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Event not found' });
-  const deleted = events.splice(index, 1);
-  res.json({ message: 'Event deleted', event: deleted[0] });
+app.delete(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Event.deleteOne({ id });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error deleting event from MongoDB Atlas:', err.message);
+  }
+
+  const index = events.findIndex(e => e.id === id);
+  let deleted = null;
+  if (index !== -1) {
+    deleted = events.splice(index, 1)[0];
+  }
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('EVENT_DELETED', { id });
+  }
+  broadcastToAllClients('EVENT_DELETED', { id });
+
+  res.json({ message: 'Event deleted', id, event: deleted });
 });
 
-app.post('/api/events/book', (req, res) => {
+app.post('/api/events/book', async (req, res) => {
   const { eventId, ticketCount, paymentMethod, userEmail, userName } = req.body;
-  const event = events.find(e => e.id === eventId);
+  
+  let event = null;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      event = await Event.findOne({ id: eventId });
+    }
+  } catch (err) {}
+  if (!event) event = events.find(e => e.id === eventId);
   if (!event) return res.status(404).json({ error: 'Event not found' });
 
   const count = Number(ticketCount || 1);
@@ -1688,8 +1893,13 @@ app.post('/api/events/book', (req, res) => {
     return res.status(400).json({ error: 'Insufficient seats available for this event' });
   }
 
-  // Deduct available seats
   event.availableSeats -= count;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Event.findOneAndUpdate({ id: event.id }, { availableSeats: event.availableSeats });
+    }
+  } catch (err) {}
 
   const bookingId = `EV-PASS-${Math.floor(100000 + Math.random() * 900000)}`;
   const transactionId = `TXN-PAY-${Math.floor(1000000 + Math.random() * 9000000)}`;
@@ -1700,7 +1910,7 @@ app.post('/api/events/book', (req, res) => {
     transactionId,
     eventId: event.id,
     eventTitle: event.title,
-    category: event.category,
+    category: event.category || 'Event',
     venue: event.venue,
     city: event.city,
     date: event.date,
@@ -1708,41 +1918,76 @@ app.post('/api/events/book', (req, res) => {
     ticketCount: count,
     pricePerTicket: event.price,
     totalAmount: totalPrice,
-    paymentMethod: paymentMethod || 'UPI (Jay Hiralal Radadiya)',
+    paymentMethod: paymentMethod || 'UPI (Instant)',
     userEmail: userEmail || 'guest@primeshow.com',
     userName: userName || 'VIP Guest',
     status: 'CONFIRMED',
     createdAt: new Date().toISOString()
   };
 
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Booking.create({ ...newBooking, category: 'Event', title: event.title });
+    }
+  } catch (err) {}
+
   eventBookings.unshift(newBooking);
   bookings.unshift(newBooking);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('EVENT_UPDATED', event);
+    req.app.get('socketio').emit('BOOKING_CREATED', newBooking);
+  }
+  broadcastToAllClients('EVENT_UPDATED', event);
+  broadcastToAllClients('BOOKING_CREATED', newBooking);
 
   res.status(201).json(newBooking);
 });
 
 // -------------------------------------------------------------
-// PLAYS & THEATER SHOWS CRUD ENDPOINTS
+// PLAYS & THEATER SHOWS CRUD ENDPOINTS (MongoDB Atlas)
 // -------------------------------------------------------------
 
-app.get('/api/plays', (req, res) => {
+app.get(['/api/plays', '/api/admin/plays'], async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbPlays = await Play.find().sort({ createdAt: -1 }).lean();
+      if (dbPlays && dbPlays.length > 0) {
+        const dbIds = new Set(dbPlays.map(p => p.id));
+        const combined = [...dbPlays];
+        plays.forEach(p => {
+          if (!dbIds.has(p.id)) combined.push(p);
+        });
+        return res.json(combined);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Error fetching plays from MongoDB Atlas:', err.message);
+  }
   res.json(plays);
 });
 
-app.get('/api/plays/:id', (req, res) => {
-  const play = plays.find(p => p.id === req.params.id);
+app.get(['/api/plays/:id', '/api/admin/plays/:id'], async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbPlay = await Play.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      if (dbPlay) return res.json(dbPlay);
+    }
+  } catch (err) {}
+  const play = plays.find(p => p.id === id);
   if (!play) return res.status(404).json({ error: 'Play not found' });
   res.json(play);
 });
 
-app.post('/api/plays', (req, res) => {
+app.post(['/api/plays', '/api/admin/plays'], async (req, res) => {
   const { title, language, category, badge, venue, city, date, time, price, totalCapacity, availableSeats, image, description } = req.body;
-  if (!title || !venue || !price) {
+  if (!title || !venue || price === undefined) {
     return res.status(400).json({ error: 'Title, venue and ticket price are required' });
   }
 
   const newPlay = {
-    id: `pl_${Date.now()}`,
+    id: req.body.id || `pl_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     title,
     language: language || 'Hindi',
     category: category || 'Drama',
@@ -1753,37 +1998,92 @@ app.post('/api/plays', (req, res) => {
     time: time || '08:00 PM',
     price: Number(price || 500),
     totalCapacity: Number(totalCapacity || 1000),
-    availableSeats: Number(availableSeats || totalCapacity || 1000),
+    availableSeats: Number(availableSeats !== undefined ? availableSeats : (totalCapacity || 1000)),
     image: image || 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80',
     description: description || 'Exclusive theatrical play performance on PrimeShow.'
   };
 
-  plays.unshift(newPlay);
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Play.findOneAndUpdate({ id: newPlay.id }, newPlay, { upsert: true, new: true, setDefaultsOnInsert: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error saving play to MongoDB Atlas:', err.message);
+  }
+
+  const existingIdx = plays.findIndex(p => p.id === newPlay.id);
+  if (existingIdx !== -1) plays[existingIdx] = newPlay;
+  else plays.unshift(newPlay);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('PLAY_UPDATED', newPlay);
+  }
+  broadcastToAllClients('PLAY_UPDATED', newPlay);
+
   res.status(201).json(newPlay);
 });
 
-app.put('/api/plays/:id', (req, res) => {
-  const index = plays.findIndex(p => p.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Play not found' });
+app.put(['/api/plays/:id', '/api/admin/plays/:id'], async (req, res) => {
+  const { id } = req.params;
+  const updateData = { ...req.body };
 
-  plays[index] = {
-    ...plays[index],
-    ...req.body
-  };
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Play.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error updating play in MongoDB Atlas:', err.message);
+  }
 
-  res.json(plays[index]);
+  const index = plays.findIndex(p => p.id === id);
+  if (index !== -1) {
+    plays[index] = { ...plays[index], ...updateData };
+  }
+  const updated = index !== -1 ? plays[index] : { id, ...updateData };
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('PLAY_UPDATED', updated);
+  }
+  broadcastToAllClients('PLAY_UPDATED', updated);
+
+  res.json(updated);
 });
 
-app.delete('/api/plays/:id', (req, res) => {
-  const index = plays.findIndex(p => p.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Play not found' });
-  const deleted = plays.splice(index, 1);
-  res.json({ message: 'Play deleted', play: deleted[0] });
+app.delete(['/api/plays/:id', '/api/admin/plays/:id'], async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Play.deleteOne({ id });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error deleting play from MongoDB Atlas:', err.message);
+  }
+
+  const index = plays.findIndex(p => p.id === id);
+  let deleted = null;
+  if (index !== -1) {
+    deleted = plays.splice(index, 1)[0];
+  }
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('PLAY_DELETED', { id });
+  }
+  broadcastToAllClients('PLAY_DELETED', { id });
+
+  res.json({ message: 'Play deleted', id, play: deleted });
 });
 
-app.post('/api/plays/book', (req, res) => {
+app.post('/api/plays/book', async (req, res) => {
   const { playId, ticketCount, paymentMethod, userEmail, userName } = req.body;
-  const play = plays.find(p => p.id === playId);
+  
+  let play = null;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      play = await Play.findOne({ id: playId });
+    }
+  } catch (err) {}
+  if (!play) play = plays.find(p => p.id === playId);
   if (!play) return res.status(404).json({ error: 'Play not found' });
 
   const count = Number(ticketCount || 1);
@@ -1791,8 +2091,13 @@ app.post('/api/plays/book', (req, res) => {
     return res.status(400).json({ error: 'Insufficient seats available for this play' });
   }
 
-  // Deduct available seats in real-time
   play.availableSeats -= count;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Play.findOneAndUpdate({ id: play.id }, { availableSeats: play.availableSeats });
+    }
+  } catch (err) {}
 
   const bookingId = `PLAY-PASS-${Math.floor(100000 + Math.random() * 900000)}`;
   const transactionId = `TXN-PAY-${Math.floor(1000000 + Math.random() * 9000000)}`;
@@ -1803,8 +2108,7 @@ app.post('/api/plays/book', (req, res) => {
     transactionId,
     playId: play.id,
     playTitle: play.title,
-    language: play.language,
-    category: play.category,
+    category: play.category || 'Play',
     venue: play.venue,
     city: play.city,
     date: play.date,
@@ -1812,30 +2116,56 @@ app.post('/api/plays/book', (req, res) => {
     ticketCount: count,
     pricePerTicket: play.price,
     totalAmount: totalPrice,
-    paymentMethod: paymentMethod || 'UPI (Jay Hiralal Radadiya)',
+    paymentMethod: paymentMethod || 'UPI (Instant)',
     userEmail: userEmail || 'guest@primeshow.com',
     userName: userName || 'VIP Guest',
     status: 'CONFIRMED',
     createdAt: new Date().toISOString()
   };
 
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Booking.create({ ...newBooking, category: 'Play', title: play.title });
+    }
+  } catch (err) {}
+
   playBookings.unshift(newBooking);
   bookings.unshift(newBooking);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('PLAY_UPDATED', play);
+    req.app.get('socketio').emit('BOOKING_CREATED', newBooking);
+  }
+  broadcastToAllClients('PLAY_UPDATED', play);
+  broadcastToAllClients('BOOKING_CREATED', newBooking);
 
   res.status(201).json(newBooking);
 });
 
 // -------------------------------------------------------------
-// OFFERS ENDPOINTS
+// OFFERS & BANNERS CRUD ENDPOINTS (MongoDB Atlas)
 // -------------------------------------------------------------
 
-app.get('/api/offers', (req, res) => {
+app.get(['/api/offers', '/api/admin/offers'], async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbOffers = await Offer.find().sort({ createdAt: -1 }).lean();
+      if (dbOffers && dbOffers.length > 0) {
+        const dbIds = new Set(dbOffers.map(o => o.id));
+        const combined = [...dbOffers];
+        offers.forEach(o => {
+          if (!dbIds.has(o.id)) combined.push(o);
+        });
+        return res.json(combined);
+      }
+    }
+  } catch (err) {}
   res.json(offers);
 });
 
-app.post('/api/offers', (req, res) => {
+app.post(['/api/offers', '/api/admin/offers'], async (req, res) => {
   const newOffer = {
-    id: `off_${Date.now()}`,
+    id: req.body.id || `off_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     code: (req.body.code || 'OFFER50').toUpperCase(),
     title: req.body.title || 'Special Discount',
     description: req.body.description || 'Special promo voucher.',
@@ -1843,40 +2173,93 @@ app.post('/api/offers', (req, res) => {
     discountValue: Number(req.body.discountValue || 150),
     expiryDate: req.body.expiryDate || '2026-12-31'
   };
-  offers.unshift(newOffer);
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Offer.findOneAndUpdate({ id: newOffer.id }, newOffer, { upsert: true, new: true });
+    }
+  } catch (err) {}
+
+  const existingIdx = offers.findIndex(o => o.id === newOffer.id);
+  if (existingIdx !== -1) offers[existingIdx] = newOffer;
+  else offers.unshift(newOffer);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('OFFER_UPDATED', newOffer);
+  }
+  broadcastToAllClients('OFFER_UPDATED', newOffer);
+
   res.status(201).json(newOffer);
 });
 
-app.put('/api/offers/:id', (req, res) => {
-  const index = offers.findIndex(o => o.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Offer not found' });
-  offers[index] = { ...offers[index], ...req.body };
-  res.json(offers[index]);
+app.put(['/api/offers/:id', '/api/admin/offers/:id'], async (req, res) => {
+  const { id } = req.params;
+  const updateData = { ...req.body };
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Offer.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+    }
+  } catch (err) {}
+
+  const index = offers.findIndex(o => o.id === id);
+  if (index !== -1) offers[index] = { ...offers[index], ...updateData };
+  const updated = index !== -1 ? offers[index] : { id, ...updateData };
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('OFFER_UPDATED', updated);
+  }
+  broadcastToAllClients('OFFER_UPDATED', updated);
+
+  res.json(updated);
 });
 
-app.delete('/api/offers/:id', (req, res) => {
-  const index = offers.findIndex(o => o.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Offer not found' });
-  offers.splice(index, 1);
-  res.json({ message: 'Offer deleted' });
+app.delete(['/api/offers/:id', '/api/admin/offers/:id'], async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Offer.deleteOne({ id });
+    }
+  } catch (err) {}
+
+  const index = offers.findIndex(o => o.id === id);
+  if (index !== -1) offers.splice(index, 1);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('OFFER_DELETED', { id });
+  }
+  broadcastToAllClients('OFFER_DELETED', { id });
+
+  res.json({ message: 'Offer deleted', id });
 });
 
-// -------------------------------------------------------------
-// OFFER SLIDE SHOW BANNERS CRUD ENDPOINTS
-// -------------------------------------------------------------
-
-app.get('/api/offers/banners', (req, res) => {
+// Offer Banner Slides
+app.get(['/api/offers/banners', '/api/admin/offers/banners'], async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbBanners = await OfferBanner.find().sort({ createdAt: -1 }).lean();
+      if (dbBanners && dbBanners.length > 0) {
+        const dbIds = new Set(dbBanners.map(b => b.id));
+        const combined = [...dbBanners];
+        offerBanners.forEach(b => {
+          if (!dbIds.has(b.id)) combined.push(b);
+        });
+        return res.json(combined);
+      }
+    }
+  } catch (err) {}
   res.json(offerBanners);
 });
 
-app.post('/api/offers/banners', (req, res) => {
+app.post(['/api/offers/banners', '/api/admin/offers/banners'], async (req, res) => {
   const { title, tagline, code, category, categoryBadge, image, expiryDate, ctaText, ctaLink } = req.body;
   if (!title || !code) {
     return res.status(400).json({ error: 'Title and promo code are required' });
   }
 
   const newBanner = {
-    id: `ban_${Date.now()}`,
+    id: req.body.id || `ban_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     title,
     tagline: tagline || 'Exclusive promotional discount on PrimeShow.',
     code: code.toUpperCase(),
@@ -1888,22 +2271,198 @@ app.post('/api/offers/banners', (req, res) => {
     ctaLink: ctaLink || 'movies'
   };
 
-  offerBanners.unshift(newBanner);
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await OfferBanner.findOneAndUpdate({ id: newBanner.id }, newBanner, { upsert: true, new: true });
+    }
+  } catch (err) {}
+
+  const existingIdx = offerBanners.findIndex(b => b.id === newBanner.id);
+  if (existingIdx !== -1) offerBanners[existingIdx] = newBanner;
+  else offerBanners.unshift(newBanner);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('OFFER_BANNERS_UPDATED', newBanner);
+  }
+  broadcastToAllClients('OFFER_BANNERS_UPDATED', newBanner);
+
   res.status(201).json(newBanner);
 });
 
-app.put('/api/offers/banners/:id', (req, res) => {
-  const index = offerBanners.findIndex(b => b.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Offer banner slide not found' });
-  offerBanners[index] = { ...offerBanners[index], ...req.body };
-  res.json(offerBanners[index]);
+app.put(['/api/offers/banners/:id', '/api/admin/offers/banners/:id'], async (req, res) => {
+  const { id } = req.params;
+  const updateData = { ...req.body };
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await OfferBanner.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+    }
+  } catch (err) {}
+
+  const index = offerBanners.findIndex(b => b.id === id);
+  if (index !== -1) offerBanners[index] = { ...offerBanners[index], ...updateData };
+  const updated = index !== -1 ? offerBanners[index] : { id, ...updateData };
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('OFFER_BANNERS_UPDATED', updated);
+  }
+  broadcastToAllClients('OFFER_BANNERS_UPDATED', updated);
+
+  res.json(updated);
 });
 
-app.delete('/api/offers/banners/:id', (req, res) => {
-  const index = offerBanners.findIndex(b => b.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Offer banner slide not found' });
-  const deleted = offerBanners.splice(index, 1);
-  res.json({ message: 'Banner slide deleted', banner: deleted[0] });
+app.delete(['/api/offers/banners/:id', '/api/admin/offers/banners/:id'], async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await OfferBanner.deleteOne({ id });
+    }
+  } catch (err) {}
+
+  const index = offerBanners.findIndex(b => b.id === id);
+  let deleted = null;
+  if (index !== -1) deleted = offerBanners.splice(index, 1)[0];
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('OFFER_BANNERS_UPDATED', { deletedId: id });
+  }
+  broadcastToAllClients('OFFER_BANNERS_UPDATED', { deletedId: id });
+
+  res.json({ message: 'Banner slide deleted', id, banner: deleted });
+});
+
+// -------------------------------------------------------------
+// ACTIVITIES & THEME PARKS CRUD ENDPOINTS (MongoDB Atlas)
+// -------------------------------------------------------------
+
+app.get(['/api/activities', '/api/admin/activities'], async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbActivities = await Activity.find().sort({ createdAt: -1 }).lean();
+      if (dbActivities && dbActivities.length > 0) {
+        const dbIds = new Set(dbActivities.map(a => a.id));
+        const combined = [...dbActivities];
+        activities.forEach(a => {
+          if (!dbIds.has(a.id)) combined.push(a);
+        });
+        return res.json(combined);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Error fetching activities from MongoDB Atlas:', err.message);
+  }
+  res.json(activities);
+});
+
+app.get(['/api/activities/:id', '/api/admin/activities/:id'], async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbActivity = await Activity.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      if (dbActivity) return res.json(dbActivity);
+    }
+  } catch (err) {}
+  const activity = activities.find(a => a.id === id);
+  if (!activity) return res.status(404).json({ error: 'Activity pass not found' });
+  res.json(activity);
+});
+
+app.post(['/api/activities', '/api/admin/activities'], async (req, res) => {
+  const { title, category, badge, location, city, validity, price, totalCapacity, availableSeats, benefits, image, description } = req.body;
+  if (!title || !location || price === undefined) {
+    return res.status(400).json({ error: 'Title, location and pass price are required' });
+  }
+
+  const newActivity = {
+    id: req.body.id || `act_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    title,
+    category: category || 'Water Park',
+    badge: badge || 'UNLIMITED ACCESS',
+    location,
+    city: city || 'Mumbai',
+    validity: validity || 'Full Day Pass (10:00 AM - 07:00 PM)',
+    price: Number(price || 999),
+    totalCapacity: Number(totalCapacity || 1000),
+    availableSeats: Number(availableSeats !== undefined ? availableSeats : (totalCapacity || 1000)),
+    benefits: Array.isArray(benefits) ? benefits : (benefits ? String(benefits).split(',').map(b => b.trim()) : ['Unlimited Rides', 'Free Entry']),
+    image: image || 'https://images.unsplash.com/photo-1582650625119-3a31f8fa2699?auto=format&fit=crop&w=800&q=80',
+    description: description || 'Exclusive activity adventure pass on PrimeShow.'
+  };
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Activity.findOneAndUpdate({ id: newActivity.id }, newActivity, { upsert: true, new: true, setDefaultsOnInsert: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error saving activity to MongoDB Atlas:', err.message);
+  }
+
+  const existingIdx = activities.findIndex(a => a.id === newActivity.id);
+  if (existingIdx !== -1) activities[existingIdx] = newActivity;
+  else activities.unshift(newActivity);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('ACTIVITY_UPDATED', newActivity);
+  }
+  broadcastToAllClients('ACTIVITY_UPDATED', newActivity);
+
+  res.status(201).json(newActivity);
+});
+
+app.put(['/api/activities/:id', '/api/admin/activities/:id'], async (req, res) => {
+  const { id } = req.params;
+  const updateData = { ...req.body };
+
+  if (typeof updateData.benefits === 'string') {
+    updateData.benefits = updateData.benefits.split(',').map(b => b.trim());
+  }
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Activity.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error updating activity in MongoDB Atlas:', err.message);
+  }
+
+  const index = activities.findIndex(a => a.id === id);
+  if (index !== -1) {
+    activities[index] = { ...activities[index], ...updateData };
+  }
+  const updated = index !== -1 ? activities[index] : { id, ...updateData };
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('ACTIVITY_UPDATED', updated);
+  }
+  broadcastToAllClients('ACTIVITY_UPDATED', updated);
+
+  res.json(updated);
+});
+
+app.delete(['/api/activities/:id', '/api/admin/activities/:id'], async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await Activity.deleteOne({ id });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error deleting activity from MongoDB Atlas:', err.message);
+  }
+
+  const index = activities.findIndex(a => a.id === id);
+  let deleted = null;
+  if (index !== -1) {
+    deleted = activities.splice(index, 1)[0];
+  }
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('ACTIVITY_DELETED', { id });
+  }
+  broadcastToAllClients('ACTIVITY_DELETED', { id });
+
+  res.json({ message: 'Activity pass deleted', id, activity: deleted });
 });
 
 // -------------------------------------------------------------
@@ -2145,399 +2704,64 @@ app.get(['/api/admin/overview', '/admin/overview'], async (req, res) => {
   }
 });
 
-// -------------------------------------------------------------
-// ACTIVITIES & THEME PARKS CRUD ENDPOINTS
-// -------------------------------------------------------------
-
-app.get('/api/activities', (req, res) => {
-  res.json(activities);
-});
-
-app.get('/api/activities/:id', (req, res) => {
-  const activity = activities.find(a => a.id === req.params.id);
-  if (!activity) return res.status(404).json({ error: 'Activity pass not found' });
-  res.json(activity);
-});
-
-app.post('/api/activities', (req, res) => {
-  const { title, category, badge, location, city, validity, price, totalCapacity, availableSeats, benefits, image, description } = req.body;
-  if (!title || !location || !price) {
-    return res.status(400).json({ error: 'Title, location and pass price are required' });
-  }
-
-  const newActivity = {
-    id: `act_${Date.now()}`,
-    title,
-    category: category || 'Water Park',
-    badge: badge || 'UNLIMITED ACCESS',
-    location,
-    city: city || 'Mumbai',
-    validity: validity || 'Full Day Pass (10:00 AM - 07:00 PM)',
-    price: Number(price || 999),
-    totalCapacity: Number(totalCapacity || 1000),
-    availableSeats: Number(availableSeats || totalCapacity || 1000),
-    benefits: Array.isArray(benefits) ? benefits : (benefits ? benefits.split(',').map(b => b.trim()) : ['Unlimited Rides', 'Free Entry']),
-    image: image || 'https://images.unsplash.com/photo-1582650625119-3a31f8fa2699?auto=format&fit=crop&w=800&q=80',
-    description: description || 'Exclusive activity adventure pass on PrimeShow.'
-  };
-
-  activities.unshift(newActivity);
-  res.status(201).json(newActivity);
-});
-
-app.put('/api/activities/:id', (req, res) => {
-  const index = activities.findIndex(a => a.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Activity pass not found' });
-
-  const updated = {
-    ...activities[index],
-    ...req.body
-  };
-
-  if (typeof req.body.benefits === 'string') {
-    updated.benefits = req.body.benefits.split(',').map(b => b.trim());
-  }
-
-  activities[index] = updated;
-  res.json(activities[index]);
-});
-
-app.delete('/api/activities/:id', (req, res) => {
-  const index = activities.findIndex(a => a.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'Activity pass not found' });
-  const deleted = activities.splice(index, 1);
-  res.json({ message: 'Activity pass deleted', activity: deleted[0] });
-});
-
-app.post('/api/activities/book', (req, res) => {
-  const { activityId, ticketCount, paymentMethod, userEmail, userName } = req.body;
-  const activity = activities.find(a => a.id === activityId);
-  if (!activity) return res.status(404).json({ error: 'Activity pass not found' });
-
-  const count = Number(ticketCount || 1);
-  if (activity.availableSeats < count) {
-    return res.status(400).json({ error: 'Insufficient passes available for this activity' });
-  }
-
-  // Deduct available seats in real-time
-  activity.availableSeats -= count;
-
-  const bookingId = `ACT-PASS-${Math.floor(100000 + Math.random() * 900000)}`;
-  const transactionId = `TXN-PAY-${Math.floor(1000000 + Math.random() * 9000000)}`;
-  const totalPrice = activity.price * count;
-
-  const newBooking = {
-    id: bookingId,
-    transactionId,
-    activityId: activity.id,
-    activityTitle: activity.title,
-    category: activity.category,
-    location: activity.location,
-    city: activity.city,
-    validity: activity.validity,
-    benefits: activity.benefits || [],
-    ticketCount: count,
-    pricePerTicket: activity.price,
-    totalAmount: totalPrice,
-    paymentMethod: paymentMethod || 'UPI (Jay Hiralal Radadiya)',
-    userEmail: userEmail || 'guest@primeshow.com',
-    userName: userName || 'VIP Guest',
-    status: 'CONFIRMED',
-    createdAt: new Date().toISOString()
-  };
-
-  activityBookings.unshift(newBooking);
-  bookings.unshift(newBooking);
-
-  res.status(201).json(newBooking);
-});
-
-// -------------------------------------------------------------
-// ADMIN USER MANAGEMENT & ACTIVITY TRACKING ENDPOINTS
-// -------------------------------------------------------------
-
-// Search & Paginated Users List from Database & Memory Cache (Supports multiple route aliases)
-const usersRoutePaths = [
-  '/api/admin/users', 
-  '/admin/users',
-  '/api/users',
-  '/users'
-];
-
-app.options(usersRoutePaths, cors());
-
-app.get(usersRoutePaths, async (req, res) => {
+const seedDatabaseIfEmpty = async () => {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.max(1, parseInt(req.query.limit) || 10);
-    const search = (req.query.search || req.query.query || '').trim();
-    const skip = (page - 1) * limit;
+    if (mongoose.connection.readyState !== 1) return;
 
-    const combinedUsersMap = new Map();
-    seedInitialUsersList.forEach(u => combinedUsersMap.set(u.email.toLowerCase(), u));
-    globalRegisteredUsersMap.forEach((v, k) => combinedUsersMap.set(k.toLowerCase(), v));
-
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const queryFilter = search
-          ? {
-              $or: [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
-                { phoneNumber: { $regex: search, $options: 'i' } },
-                { phone: { $regex: search, $options: 'i' } }
-              ]
-            }
-          : {};
-
-        const dbUsers = await User.find(queryFilter).sort({ updatedAt: -1, createdAt: -1 }).lean();
-        if (dbUsers.length > 0) {
-          dbUsers.forEach(u => {
-            if (u.email) {
-              const emailKey = u.email.toLowerCase();
-              const existing = combinedUsersMap.get(emailKey) || {};
-              combinedUsersMap.set(emailKey, { ...existing, ...u });
-            }
-          });
-        } else if (!search) {
-          // Auto-seed MongoDB with initial demo user records
-          try {
-            await User.insertMany(seedInitialUsersList);
-          } catch (e) {}
-        }
-      } catch (err) {
-        console.warn('DB User Fetch Warning in Admin API:', err.message);
-      }
+    const movieCount = await Movie.countDocuments({});
+    if (movieCount === 0 && movies.length > 0) {
+      await Movie.insertMany(movies);
+      console.log('🌱 Seeded MongoDB Atlas with initial Movie records');
     }
 
-    let allUsersList = Array.from(combinedUsersMap.values());
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      allUsersList = allUsersList.filter(u =>
-        (u.name && u.name.toLowerCase().includes(searchLower)) ||
-        (u.email && u.email.toLowerCase().includes(searchLower)) ||
-        (u.phone && u.phone.toLowerCase().includes(searchLower)) ||
-        (u.phoneNumber && u.phoneNumber.toLowerCase().includes(searchLower)) ||
-        (u.city && u.city.toLowerCase().includes(searchLower))
-      );
+    const theatreCount = await Theatre.countDocuments({});
+    if (theatreCount === 0 && theatres.length > 0) {
+      await Theatre.insertMany(theatres);
+      console.log('🌱 Seeded MongoDB Atlas with initial Theatre records');
     }
 
-    allUsersList.sort((a, b) => new Date(b.lastLoginTime || b.lastActive || b.createdAt) - new Date(a.lastLoginTime || a.lastActive || a.createdAt));
+    const eventCount = await Event.countDocuments({});
+    if (eventCount === 0 && events.length > 0) {
+      await Event.insertMany(events);
+      console.log('🌱 Seeded MongoDB Atlas with initial Event records');
+    }
 
-    const totalUsers = allUsersList.length;
-    const paginatedUsers = allUsersList.slice(skip, skip + limit);
+    const playCount = await Play.countDocuments({});
+    if (playCount === 0 && plays.length > 0) {
+      await Play.insertMany(plays);
+      console.log('🌱 Seeded MongoDB Atlas with initial Play records');
+    }
 
-    const enrichedUsers = await Promise.all(
-      paginatedUsers.map(async (u) => {
-        let userBookingsCount = 0;
-        
-        const memBookings = bookings.filter(
-          b => (b.userEmail && b.userEmail.toLowerCase() === u.email.toLowerCase()) || b.userId === u.id
-        ).length;
-        const memPrivBookings = privateBookings.filter(
-          pb => (pb.userEmail && pb.userEmail.toLowerCase() === u.email.toLowerCase()) || pb.userId === u.id
-        ).length;
-        userBookingsCount = memBookings + memPrivBookings;
+    const actCount = await Activity.countDocuments({});
+    if (actCount === 0 && activities.length > 0) {
+      await Activity.insertMany(activities);
+      console.log('🌱 Seeded MongoDB Atlas with initial Activity records');
+    }
 
-        if (mongoose.connection.readyState === 1) {
-          try {
-            const dbBCount = await Booking.countDocuments({
-              $or: [{ userEmail: u.email }, { userId: u.id }]
-            });
-            const dbPBCount = await PrivateTheatreBooking.countDocuments({
-              $or: [{ userEmail: u.email }, { userId: u.id }]
-            });
-            userBookingsCount = Math.max(userBookingsCount, dbBCount + dbPBCount);
-          } catch (err) {}
-        }
+    const offerCount = await Offer.countDocuments({});
+    if (offerCount === 0 && offers.length > 0) {
+      await Offer.insertMany(offers);
+      console.log('🌱 Seeded MongoDB Atlas with initial Offer records');
+    }
 
-        const formattedPhoneNumber = u.phoneNumber || u.phone || '+91 9876543210';
-        const formattedAuthProvider = u.authProvider || (u.provider === 'GOOGLE' ? 'google' : (u.provider === 'OTP' ? 'mobile' : 'email'));
+    const offerBanCount = await OfferBanner.countDocuments({});
+    if (offerBanCount === 0 && offerBanners.length > 0) {
+      await OfferBanner.insertMany(offerBanners);
+      console.log('🌱 Seeded MongoDB Atlas with initial Offer Banner records');
+    }
 
-        return {
-          ...u,
-          phone: formattedPhoneNumber,
-          phoneNumber: formattedPhoneNumber,
-          authProvider: formattedAuthProvider,
-          provider: u.provider || (formattedAuthProvider === 'google' ? 'GOOGLE' : 'LOCAL'),
-          totalBookings: userBookingsCount,
-          isOnline: u.isOnline !== undefined ? u.isOnline : true,
-          activityLogs: Array.isArray(u.activityLogs) && u.activityLogs.length > 0 
-            ? u.activityLogs 
-            : [{ action: 'LOGGED_IN', details: `Logged in via ${formattedAuthProvider}`, timestamp: u.lastLoginTime || new Date() }]
-        };
-      })
-    );
-
-    res.status(200).json({
-      success: true,
-      users: enrichedUsers,
-      totalUsers: totalUsers,
-      totalPages: Math.ceil(totalUsers / limit) || 1,
-      currentPage: page,
-      limit
-    });
+    const notifCount = await Notification.countDocuments({});
+    if (notifCount === 0 && notifications.length > 0) {
+      await Notification.insertMany(notifications);
+      console.log('🌱 Seeded MongoDB Atlas with initial Notification records');
+    }
   } catch (err) {
-    console.error('Error fetching admin users:', err);
-    res.status(500).json({ success: false, message: err.message || 'Failed to retrieve registered users' });
+    console.warn('⚠️ Auto-seeding MongoDB Atlas note:', err.message);
   }
-});
-
-// Detailed User Activity History (Bookings, Offers, Wishlist, Notifications, Activity Timeline Logs)
-app.get([
-  '/api/admin/users/:userId/activity', 
-  '/admin/users/:userId/activity',
-  '/api/admin/users/:userId/history',
-  '/admin/users/:userId/history'
-], async (req, res) => {
-  try {
-    const { userId } = req.params;
-    let targetUser = null;
-
-    if (mongoose.connection.readyState === 1) {
-      targetUser = await User.findOne({
-        $or: [{ id: userId }, { _id: mongoose.Types.ObjectId.isValid(userId) ? userId : null }, { email: userId }]
-      }).lean();
-    }
-
-    if (!targetUser) {
-      targetUser = {
-        id: userId,
-        name: 'PrimeShow User',
-        email: userId.includes('@') ? userId : 'user@primeshow.com',
-        phone: '+91 9876543210',
-        role: 'CUSTOMER',
-        provider: 'GOOGLE',
-        city: 'Surat',
-        rewardsPoints: 1250,
-        profilePicture: 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=PrimeUser&backgroundColor=0f172a',
-        isOnline: true,
-        lastLoginTime: new Date().toISOString(),
-        createdAt: new Date('2026-01-01').toISOString(),
-        lastActive: new Date().toISOString()
-      };
-    }
-
-    const email = targetUser.email || '';
-    const name = targetUser.name || '';
-
-    // 1. Fetch User Booking History (Movie Tickets, Events, Plays, Activities)
-    let userBookings = bookings.filter(
-      b => b.userEmail === email || b.userId === userId || b.userName === name
-    );
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const dbB = await Booking.find({
-          $or: [{ userEmail: email }, { userId: userId }, { userName: name }]
-        }).sort({ createdAt: -1 }).lean();
-        if (dbB.length > 0) userBookings = dbB;
-      } catch (e) {}
-    }
-
-    // 2. Fetch Private Theatre Bookings
-    let userPrivateBookings = privateBookings.filter(
-      pb => pb.userEmail === email || pb.userId === userId || pb.userName === name
-    );
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const dbPB = await PrivateTheatreBooking.find({
-          $or: [{ userEmail: email }, { userId: userId }, { userName: name }]
-        }).sort({ createdAt: -1 }).lean();
-        if (dbPB.length > 0) userPrivateBookings = dbPB;
-      } catch (e) {}
-    }
-
-    // 3. Offers & Discounts Claimed
-    const claimedOffers = (targetUser.claimedOffers || []).map(code => ({
-      code,
-      title: `${code} Coupon Applied`,
-      discount: '15% OFF',
-      claimedAt: targetUser.updatedAt || new Date().toISOString()
-    }));
-
-    userBookings.forEach(b => {
-      if (b.appliedCoupon || b.promoCode) {
-        claimedOffers.push({
-          code: b.appliedCoupon || b.promoCode,
-          title: `Booking Discount (${b.appliedCoupon || b.promoCode})`,
-          discount: b.discountAmount ? `₹${b.discountAmount} OFF` : 'Instant Offer',
-          claimedAt: b.createdAt
-        });
-      }
-    });
-
-    // 4. Wishlist Items
-    const wishlistMovies = movies.filter(m => (targetUser.wishlist || []).includes(m.id)).map(m => ({
-      id: m.id,
-      title: m.title,
-      genre: Array.isArray(m.genres) ? m.genres.join(', ') : m.genre,
-      poster: m.poster,
-      rating: m.rating || '9.2'
-    }));
-
-    // 5. Activity Timeline Logs (Login/Logout events)
-    let logs = userActivityLogs.filter(l => l.userEmail === email);
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const dbLogs = await UserActivityLog.find({ userEmail: email }).sort({ timestamp: -1 }).lean();
-        if (dbLogs.length > 0) logs = dbLogs;
-      } catch (e) {}
-    }
-
-    if (logs.length === 0) {
-      logs = [
-        {
-          id: 'log_1',
-          action: 'LOGGED_IN',
-          details: 'Logged in via ' + (targetUser.provider || 'Google OAuth'),
-          timestamp: targetUser.lastLoginTime || targetUser.updatedAt || new Date().toISOString()
-        }
-      ];
-    }
-
-    res.json({
-      user: targetUser,
-      bookings: userBookings,
-      privateBookings: userPrivateBookings,
-      claimedOffers: claimedOffers.length > 0 ? claimedOffers : [
-        { code: 'WELCOME50', title: 'Welcome New User Special', discount: '₹50 OFF', claimedAt: targetUser.createdAt }
-      ],
-      wishlist: wishlistMovies.length > 0 ? wishlistMovies : movies.slice(0, 2).map(m => ({
-        id: m.id,
-        title: m.title,
-        genre: Array.isArray(m.genres) ? m.genres.join(', ') : m.genre,
-        poster: m.poster,
-        rating: m.rating || '9.0'
-      })),
-      logs,
-      notificationEngagement: {
-        totalReceived: (userBookings.length + userPrivateBookings.length) * 3 + 2,
-        readCount: (userBookings.length + userPrivateBookings.length) * 3 + 1,
-        unreadCount: 1,
-        lastNotification: new Date().toISOString()
-      }
-    });
-  } catch (err) {
-    console.error('Error fetching user activity:', err);
-    res.status(500).json({ error: 'Failed to retrieve user activity history' });
-  }
-});
-
-// Global 404 Fallback for unmapped API routes (returns JSON with CORS headers instead of HTML 404)
-app.use((req, res) => {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.status(404).json({
-    error: 'API Endpoint Not Found',
-    path: req.originalUrl,
-    method: req.method,
-    timestamp: new Date().toISOString()
-  });
-});
+};
 
 server.listen(PORT, async () => {
   console.log(`🚀 PrimeShow REST API & Socket.io Backend running on http://localhost:${PORT}`);
   await connectDB();
+  await seedDatabaseIfEmpty();
 });

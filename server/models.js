@@ -324,9 +324,29 @@ const UpcomingMovieSchema = new mongoose.Schema({
   genres: [{ type: String }]
 }, { timestamps: true });
 
+const ShowSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  movieId: { type: String, required: true },
+  movieTitle: { type: String },
+  theatreId: { type: String, required: true },
+  theatreName: { type: String },
+  screenId: { type: String, default: 'sc_1' },
+  screenName: { type: String, default: 'Screen 1' },
+  format: { type: String, default: 'IMAX 3D' },
+  time: { type: String, required: true },
+  date: { type: String, required: true },
+  price: { type: Number, default: 450 },
+  tier: { type: String, default: 'Recliner' },
+  availableSeats: { type: Number, default: 120 },
+  bookedSeats: [{ type: String }],
+  heldSeats: [{ type: String }],
+  blockedSeats: [{ type: String }]
+}, { timestamps: true });
+
 const User = mongoose.model('User', UserSchema);
 const Movie = mongoose.model('Movie', MovieSchema);
 const Theatre = mongoose.model('Theatre', TheatreSchema);
+const Show = mongoose.model('Show', ShowSchema);
 const Booking = mongoose.model('Booking', BookingSchema);
 const PrivateTheatreBooking = mongoose.model('PrivateTheatreBooking', PrivateTheatreBookingSchema);
 const Event = mongoose.model('Event', EventSchema);
@@ -349,6 +369,7 @@ module.exports = {
   UserActivityLog,
   Movie,
   Theatre,
+  Show,
   Booking,
   PrivateTheatreBooking,
   Event,

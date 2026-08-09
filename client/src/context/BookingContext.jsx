@@ -851,14 +851,18 @@ export const BookingProvider = ({ children }) => {
     } catch (err) {}
   };
 
-  useEffect(() => {
+  const fetchAllGlobalData = () => {
     fetchMovies();
     fetchFeatureStrips();
     fetchHeroSlides();
     fetchUpcomingMovies();
+  };
+
+  useEffect(() => {
+    fetchAllGlobalData();
 
     const interval = setInterval(() => {
-      fetchMovies();
+      fetchAllGlobalData();
     }, 10000);
 
     return () => clearInterval(interval);
@@ -895,6 +899,20 @@ export const BookingProvider = ({ children }) => {
         }
       });
 
+      cmsSocket.on('THEATRE_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('THEATRE_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('SHOW_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('SHOW_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('EVENT_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('EVENT_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('PLAY_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('PLAY_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('ACTIVITY_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('ACTIVITY_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('OFFER_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('OFFER_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('OFFER_BANNERS_UPDATED', () => fetchAllGlobalData());
+
       cmsSocket.on('FEATURE_CHIPS_UPDATED', (chips) => {
         console.log('⚡ [BookingContext] Real-time FEATURE_CHIPS_UPDATED received:', chips);
         if (Array.isArray(chips)) {
@@ -916,7 +934,7 @@ export const BookingProvider = ({ children }) => {
 
       cmsSocket.on('LAYOUT_DATA_UPDATED', (payload) => {
         console.log('⚡ [BookingContext] Real-time LAYOUT_DATA_UPDATED received:', payload);
-        fetchMovies();
+        fetchAllGlobalData();
         if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
           setFeatureStripsList(payload.featureStripsList);
         }
@@ -930,7 +948,7 @@ export const BookingProvider = ({ children }) => {
 
       cmsSocket.on('GLOBAL_ADMIN_UPDATE', (payload) => {
         console.log('⚡ [BookingContext] Real-time GLOBAL_ADMIN_UPDATE received:', payload);
-        fetchMovies();
+        fetchAllGlobalData();
         if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
           setFeatureStripsList(payload.featureStripsList);
         }
