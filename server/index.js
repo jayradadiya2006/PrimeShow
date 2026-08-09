@@ -214,7 +214,6 @@ const upsertUserRecord = async (userData) => {
   return mergedRecord;
 };
 
-const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'primeshow_ultra_secret_key_2026';
 
@@ -782,59 +781,6 @@ app.post(['/api/auth/admin-login', '/api/admin/login', '/auth/admin-login', '/ad
     return res.status(500).json({ success: false, error: err.message });
   }
 });
-
-app.post(['/api/auth/login', '/auth/login'], (req, res) => {
-  const { email, phone, identifier, password } = req.body;
-  const userIdentifier = email || phone || identifier;
-
-  if (!userIdentifier || !password) {
-    return res.status(400).json({ error: 'Email or phone number and password required' });
-  }
-
-  // Demo Admin Login
-  if ((userIdentifier === 'admin@primeshow.com' || userIdentifier === 'admin') && password === 'admin123') {
-    const adminUser = {
-      id: 'admin_1',
-      name: 'Admin Command Desk',
-      username: 'admin',
-      email: 'admin@primeshow.com',
-      phone: '+91 9999999999',
-      altPhone: '+91 8888888888',
-      whatsappPhone: '+91 9999999999',
-      gender: 'Male',
-      city: 'Mumbai',
-      dob: '1990-01-01',
-      role: 'ADMIN',
-      rewardsPoints: 99999,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
-    };
-    const token = jwt.sign(adminUser, JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ token, user: adminUser });
-  }
-
-  // Regular Customer Login (Supports Email or Phone)
-  const isEmail = userIdentifier.includes('@');
-  const userEmail = isEmail ? userIdentifier : `${userIdentifier}@primeshow.com`;
-  const customerName = isEmail ? userIdentifier.split('@')[0].toUpperCase() : `CUSTOMER (${userIdentifier})`;
-  
-  let customerUser = {
-    id: `usr_${Math.floor(1000 + Math.random() * 9000)}`,
-    name: customerName,
-    username: isEmail ? userIdentifier.split('@')[0].toLowerCase() : `usr_${userIdentifier}`,
-    email: userEmail,
-    phone: isEmail ? '+91 9876543210' : userIdentifier,
-    altPhone: '+91 9123456789',
-    whatsappPhone: isEmail ? '+91 9876543210' : userIdentifier,
-    gender: 'Male',
-    city: 'Surat',
-    dob: '1998-05-15',
-    role: 'CUSTOMER',
-    rewardsPoints: 1250,
-    provider: isEmail ? 'LOCAL' : 'OTP',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
-    profilePicture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
-    lastActive: new Date()
-  };
 
 // Regular Customer Login (Supports Email or Phone)
 app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
