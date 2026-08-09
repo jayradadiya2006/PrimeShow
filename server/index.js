@@ -2,7 +2,7 @@ require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
 const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
-const { User, UserActivityLog, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout } = require('./models');
+const { User, UserActivityLog, Movie, Theatre, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
 
 const app = express();
 const server = http.createServer(app);
@@ -468,7 +468,10 @@ let cmsUpcomingMovies = [
   { id: 'up_4', title: 'Gladiator: Rise of Empires', release: 'Oct 2026', poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80', genres: ['Action', 'Drama'] }
 ];
 
-const featureChipRoutePaths = ['/api/feature-chips', '/api/cms/feature-chips', '/feature-chips', '/cms/feature-chips'];
+const featureChipRoutePaths = [
+  '/api/feature-chips', '/api/cms/feature-chips', '/api/admin/feature-chips',
+  '/feature-chips', '/cms/feature-chips', '/admin/feature-chips'
+];
 app.options(featureChipRoutePaths, cors());
 
 app.get(featureChipRoutePaths, async (req, res) => {
@@ -476,12 +479,17 @@ app.get(featureChipRoutePaths, async (req, res) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
-  const mongoose = require('mongoose');
   if (mongoose.connection.readyState === 1) {
     try {
+      const dbChips = await FeatureChip.find().sort({ createdAt: -1 }).lean();
+      if (dbChips && dbChips.length > 0) {
+        cmsFeatureStrips = dbChips;
+        return res.status(200).json(cmsFeatureStrips);
+      }
       const config = await GlobalConfig.findOne({ key: 'primary_config' }).lean();
       if (config && Array.isArray(config.featureStripsList) && config.featureStripsList.length > 0) {
         cmsFeatureStrips = config.featureStripsList;
+        return res.status(200).json(cmsFeatureStrips);
       }
     } catch (e) {}
   }
@@ -506,10 +514,13 @@ app.post(featureChipRoutePaths, async (req, res) => {
       cmsFeatureStrips.unshift(newChip);
     }
 
-    // Persist directly to MongoDB GlobalConfig
-    const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
       try {
+        await FeatureChip.findOneAndUpdate(
+          { id: newChip.id },
+          newChip,
+          { upsert: true, new: true }
+        );
         await GlobalConfig.findOneAndUpdate(
           { key: 'primary_config' },
           { featureStripsList: cmsFeatureStrips },
@@ -518,7 +529,6 @@ app.post(featureChipRoutePaths, async (req, res) => {
       } catch (e) {}
     }
 
-    // Emit Real-Time Socket Broadcast to ALL Connected User Panels
     if (req.app.get('socketio')) {
       req.app.get('socketio').emit('FEATURE_CHIPS_UPDATED', cmsFeatureStrips);
       req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { featureStripsList: cmsFeatureStrips });
@@ -542,9 +552,13 @@ app.put([...featureChipRoutePaths.map(p => `${p}/:id`)], async (req, res) => {
       cmsFeatureStrips[index] = { ...cmsFeatureStrips[index], ...req.body };
     }
 
-    const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
       try {
+        await FeatureChip.findOneAndUpdate(
+          { id },
+          req.body,
+          { upsert: true, new: true }
+        );
         await GlobalConfig.findOneAndUpdate(
           { key: 'primary_config' },
           { featureStripsList: cmsFeatureStrips },
@@ -572,9 +586,9 @@ app.delete([...featureChipRoutePaths.map(p => `${p}/:id`)], async (req, res) => 
     const { id } = req.params;
     cmsFeatureStrips = cmsFeatureStrips.filter(c => c.id !== id);
 
-    const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
       try {
+        await FeatureChip.deleteOne({ id });
         await GlobalConfig.findOneAndUpdate(
           { key: 'primary_config' },
           { featureStripsList: cmsFeatureStrips },
@@ -598,26 +612,34 @@ app.delete([...featureChipRoutePaths.map(p => `${p}/:id`)], async (req, res) => 
 });
 
 // Hero Slides & Upcoming Movies Endpoints
-app.get(['/api/hero-slides', '/api/cms/hero-slides'], async (req, res) => {
+const heroSlideRoutePaths = ['/api/hero-slides', '/api/cms/hero-slides', '/api/admin/hero-slides', '/hero-slides', '/cms/hero-slides', '/admin/hero-slides'];
+app.options(heroSlideRoutePaths, cors());
+
+app.get(heroSlideRoutePaths, async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  const mongoose = require('mongoose');
   if (mongoose.connection.readyState === 1) {
     try {
+      const dbSlides = await HeroSlide.find().sort({ createdAt: -1 }).lean();
+      if (dbSlides && dbSlides.length > 0) {
+        cmsHeroSlides = dbSlides;
+        return res.json(cmsHeroSlides);
+      }
       const config = await GlobalConfig.findOne({ key: 'primary_config' }).lean();
       if (config && Array.isArray(config.heroSlidesList) && config.heroSlidesList.length > 0) {
         cmsHeroSlides = config.heroSlidesList;
+        return res.json(cmsHeroSlides);
       }
     } catch (e) {}
   }
   return res.json(cmsHeroSlides);
 });
 
-app.post(['/api/hero-slides', '/api/cms/hero-slides'], async (req, res) => {
+app.post(heroSlideRoutePaths, async (req, res) => {
   const slide = { id: req.body.id || `hero_${Date.now()}`, ...req.body };
   cmsHeroSlides.unshift(slide);
-  const mongoose = require('mongoose');
   if (mongoose.connection.readyState === 1) {
     try {
+      await HeroSlide.findOneAndUpdate({ id: slide.id }, slide, { upsert: true, new: true });
       await GlobalConfig.findOneAndUpdate({ key: 'primary_config' }, { heroSlidesList: cmsHeroSlides }, { upsert: true });
     } catch (e) {}
   }
@@ -630,26 +652,51 @@ app.post(['/api/hero-slides', '/api/cms/hero-slides'], async (req, res) => {
   return res.json(cmsHeroSlides);
 });
 
-app.get(['/api/upcoming-movies', '/api/cms/upcoming-movies'], async (req, res) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  const mongoose = require('mongoose');
+app.delete([...heroSlideRoutePaths.map(p => `${p}/:id`)], async (req, res) => {
+  const { id } = req.params;
+  cmsHeroSlides = cmsHeroSlides.filter(s => s.id !== id);
   if (mongoose.connection.readyState === 1) {
     try {
+      await HeroSlide.deleteOne({ id });
+      await GlobalConfig.findOneAndUpdate({ key: 'primary_config' }, { heroSlidesList: cmsHeroSlides }, { upsert: true });
+    } catch (e) {}
+  }
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('HERO_SLIDES_UPDATED', cmsHeroSlides);
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { heroSlidesList: cmsHeroSlides });
+  }
+  broadcastToAllClients('HERO_SLIDES_UPDATED', cmsHeroSlides);
+  return res.json(cmsHeroSlides);
+});
+
+const upcomingMovieRoutePaths = ['/api/upcoming-movies', '/api/cms/upcoming-movies', '/api/admin/upcoming-movies', '/upcoming-movies', '/cms/upcoming-movies', '/admin/upcoming-movies'];
+app.options(upcomingMovieRoutePaths, cors());
+
+app.get(upcomingMovieRoutePaths, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const dbMovies = await UpcomingMovie.find().sort({ createdAt: -1 }).lean();
+      if (dbMovies && dbMovies.length > 0) {
+        cmsUpcomingMovies = dbMovies;
+        return res.json(cmsUpcomingMovies);
+      }
       const config = await GlobalConfig.findOne({ key: 'primary_config' }).lean();
       if (config && Array.isArray(config.upcomingMoviesList) && config.upcomingMoviesList.length > 0) {
         cmsUpcomingMovies = config.upcomingMoviesList;
+        return res.json(cmsUpcomingMovies);
       }
     } catch (e) {}
   }
   return res.json(cmsUpcomingMovies);
 });
 
-app.post(['/api/upcoming-movies', '/api/cms/upcoming-movies'], async (req, res) => {
+app.post(upcomingMovieRoutePaths, async (req, res) => {
   const movie = { id: req.body.id || `up_${Date.now()}`, ...req.body };
   cmsUpcomingMovies.unshift(movie);
-  const mongoose = require('mongoose');
   if (mongoose.connection.readyState === 1) {
     try {
+      await UpcomingMovie.findOneAndUpdate({ id: movie.id }, movie, { upsert: true, new: true });
       await GlobalConfig.findOneAndUpdate({ key: 'primary_config' }, { upcomingMoviesList: cmsUpcomingMovies }, { upsert: true });
     } catch (e) {}
   }
@@ -657,6 +704,23 @@ app.post(['/api/upcoming-movies', '/api/cms/upcoming-movies'], async (req, res) 
     req.app.get('socketio').emit('UPCOMING_MOVIES_UPDATED', cmsUpcomingMovies);
     req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { upcomingMoviesList: cmsUpcomingMovies });
     req.app.get('socketio').emit('GLOBAL_ADMIN_UPDATE', { upcomingMoviesList: cmsUpcomingMovies });
+  }
+  broadcastToAllClients('UPCOMING_MOVIES_UPDATED', cmsUpcomingMovies);
+  return res.json(cmsUpcomingMovies);
+});
+
+app.delete([...upcomingMovieRoutePaths.map(p => `${p}/:id`)], async (req, res) => {
+  const { id } = req.params;
+  cmsUpcomingMovies = cmsUpcomingMovies.filter(m => m.id !== id);
+  if (mongoose.connection.readyState === 1) {
+    try {
+      await UpcomingMovie.deleteOne({ id });
+      await GlobalConfig.findOneAndUpdate({ key: 'primary_config' }, { upcomingMoviesList: cmsUpcomingMovies }, { upsert: true });
+    } catch (e) {}
+  }
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('UPCOMING_MOVIES_UPDATED', cmsUpcomingMovies);
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { upcomingMoviesList: cmsUpcomingMovies });
   }
   broadcastToAllClients('UPCOMING_MOVIES_UPDATED', cmsUpcomingMovies);
   return res.json(cmsUpcomingMovies);

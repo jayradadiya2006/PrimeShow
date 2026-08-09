@@ -291,6 +291,37 @@ const EditorLayoutSchema = new mongoose.Schema({
   updatedBy: { type: String, default: 'Admin Desk' }
 }, { timestamps: true });
 
+const FeatureChipSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  subtitle: { type: String, default: '' },
+  badge: { type: String, default: 'INSTANT' },
+  icon: { type: String, default: 'Zap' },
+  color: { type: String, default: 'amber' }
+}, { timestamps: true });
+
+const HeroSlideSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  movieId: { type: String },
+  title: { type: String, required: true },
+  tagline: { type: String, default: '' },
+  badge: { type: String, default: 'BLOCKBUSTER' },
+  rating: { type: Number, default: 9.0 },
+  votesCount: { type: Number, default: 1000 },
+  duration: { type: String, default: '2h 30m' },
+  languages: [{ type: String }],
+  price: { type: Number, default: 400 },
+  banner: { type: String, default: '' }
+}, { timestamps: true });
+
+const UpcomingMovieSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  release: { type: String, default: '' },
+  poster: { type: String, default: '' },
+  genres: [{ type: String }]
+}, { timestamps: true });
+
 const User = mongoose.model('User', UserSchema);
 const Movie = mongoose.model('Movie', MovieSchema);
 const Theatre = mongoose.model('Theatre', TheatreSchema);
@@ -307,6 +338,9 @@ const UserActivityLog = mongoose.model('UserActivityLog', UserActivityLogSchema)
 const BlockedSeat = mongoose.model('BlockedSeat', BlockedSeatSchema);
 const GlobalConfig = mongoose.model('GlobalConfig', GlobalConfigSchema);
 const EditorLayout = mongoose.model('EditorLayout', EditorLayoutSchema);
+const FeatureChip = mongoose.model('FeatureChip', FeatureChipSchema);
+const HeroSlide = mongoose.model('HeroSlide', HeroSlideSchema);
+const UpcomingMovie = mongoose.model('UpcomingMovie', UpcomingMovieSchema);
 
 module.exports = {
   User,
@@ -324,5 +358,8 @@ module.exports = {
   Notification,
   BlockedSeat,
   GlobalConfig,
-  EditorLayout
+  EditorLayout,
+  FeatureChip,
+  HeroSlide,
+  UpcomingMovie
 };

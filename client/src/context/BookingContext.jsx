@@ -796,6 +796,12 @@ export const BookingProvider = ({ children }) => {
 
   const deleteHeroSlide = async (slideId) => {
     setHeroSlidesList(prev => prev.filter(s => s.id !== slideId));
+    try {
+      const res = await axios.delete(`${API_BASE}/hero-slides/${slideId}`);
+      if (res.data && Array.isArray(res.data)) {
+        setHeroSlidesList(res.data);
+      }
+    } catch (err) {}
   };
 
   // Feature Strips Dynamic Store & Central API Synchronization
@@ -962,6 +968,12 @@ export const BookingProvider = ({ children }) => {
 
   const deleteUpcomingMovie = async (movieId) => {
     setUpcomingMoviesList(prev => prev.filter(m => m.id !== movieId));
+    try {
+      const res = await axios.delete(`${API_BASE}/upcoming-movies/${movieId}`);
+      if (res.data && Array.isArray(res.data)) {
+        setUpcomingMoviesList(res.data);
+      }
+    } catch (err) {}
   };
 
   return (
