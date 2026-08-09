@@ -12,7 +12,7 @@ import { GUJARAT_CITIES } from '../../constants/cities';
 
 export const AdminDashboard = ({ onReturnHome }) => {
   const { 
-    user, login, logout, token, loading, authLoading: globalAuthLoading, supportMessages, replyToSupportMessage, 
+    user, login, adminLogin, logout, token, loading, authLoading: globalAuthLoading, supportMessages, replyToSupportMessage, 
     broadcastNotification, updateNotification, deleteNotification, notifications, socket 
   } = useAuth();
 
@@ -39,24 +39,26 @@ export const AdminDashboard = ({ onReturnHome }) => {
         targetTab = 'hero';
       } else if (allParts.some(p => p.includes('strip') || p.includes('feature'))) {
         targetTab = 'strips';
-      } else if (allParts.some(p => p.includes('upcoming'))) {
+      } else if (allParts.some(p => p.includes('upcoming') || p.includes('release'))) {
         targetTab = 'upcoming';
-      } else if (allParts.some(p => p.includes('movie'))) {
+      } else if (allParts.some(p => p.includes('movie') || p.includes('film'))) {
         targetTab = 'movies';
-      } else if (allParts.some(p => p.includes('theatre'))) {
+      } else if (allParts.some(p => p.includes('theatre') || p.includes('cinema') || p.includes('show'))) {
         targetTab = 'theatres';
-      } else if (allParts.some(p => p.includes('event'))) {
+      } else if (allParts.some(p => p.includes('event') || p.includes('fest'))) {
         targetTab = 'events';
-      } else if (allParts.some(p => p.includes('play'))) {
+      } else if (allParts.some(p => p.includes('play') || p.includes('theater'))) {
         targetTab = 'plays';
-      } else if (allParts.some(p => p.includes('activit'))) {
+      } else if (allParts.some(p => p.includes('activity') || p.includes('park'))) {
         targetTab = 'activities';
-      } else if (allParts.some(p => p.includes('seat'))) {
+      } else if (allParts.some(p => p.includes('seat') || p.includes('grid'))) {
         targetTab = 'seats';
-      } else if (allParts.some(p => p.includes('offer'))) {
+      } else if (allParts.some(p => p.includes('offer') || p.includes('promo'))) {
         targetTab = 'offers';
-      } else if (allParts.some(p => p.includes('notif'))) {
+      } else if (allParts.some(p => p.includes('notif') || p.includes('alert'))) {
         targetTab = 'notifications';
+      } else if (allParts.some(p => p.includes('booking') || p.includes('ticket'))) {
+        targetTab = 'bookings';
       } else if (allParts.some(p => p.includes('user') || p.includes('cust'))) {
         targetTab = 'users';
       } else if (allParts.some(p => p.includes('support') || p.includes('chat'))) {
@@ -90,18 +92,23 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setAuthLoading(true);
     const emailToUse = adminEmail || 'admin@primeshow.com';
     const passToUse = adminPassword || 'admin123';
-    const res = await login(emailToUse, passToUse);
+    const res = await (adminLogin ? adminLogin(emailToUse, passToUse) : login(emailToUse, passToUse));
     setAuthLoading(false);
     if (!res.success) {
-      setAuthError(res.error || 'Invalid Admin Credentials');
+      setAuthError(res.error || 'Invalid Admin Email or Password');
     } else if (res.user?.role !== 'ADMIN') {
       setAuthError('Access Denied: Administrator account required.');
+    } else {
+      try {
+        window.history.pushState(null, '', '/admin');
+      } catch (e) {}
     }
   };
 
   const handleQuickBypassLogin = async () => {
     setAuthLoading(true);
-    const res = await login('admin@primeshow.com', 'admin123');
+    setAuthError('');
+    const res = await (adminLogin ? adminLogin('admin@primeshow.com', 'admin123') : login('admin@primeshow.com', 'admin123'));
     setAuthLoading(false);
     if (!res.success) {
       const mockAdmin = {
@@ -114,6 +121,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
       localStorage.setItem('primeshow_user', JSON.stringify(mockAdmin));
       localStorage.setItem('primeshow_token', 'primeshow_admin_token_bypass');
       window.location.reload();
+    } else {
+      try {
+        window.history.pushState(null, '', '/admin');
+      } catch (e) {}
     }
   };
 

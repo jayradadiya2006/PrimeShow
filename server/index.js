@@ -730,6 +730,59 @@ app.delete([...upcomingMovieRoutePaths.map(p => `${p}/:id`)], async (req, res) =
 // AUTHENTICATION ENDPOINTS (Supports both /api/auth and /auth)
 // -------------------------------------------------------------
 
+app.post(['/api/auth/admin-login', '/api/admin/login', '/auth/admin-login', '/admin/login'], async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email and password required' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Primary Admin Master Credentials Check
+    if ((cleanEmail === 'admin@primeshow.com' || cleanEmail === 'admin') && password === 'admin123') {
+      const adminUser = {
+        id: 'admin_1',
+        name: 'Admin Command Desk',
+        username: 'admin',
+        email: 'admin@primeshow.com',
+        phone: '+91 9999999999',
+        role: 'ADMIN',
+        rewardsPoints: 99999,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
+      };
+      const token = jwt.sign(adminUser, JWT_SECRET, { expiresIn: '7d' });
+      return res.status(200).json({ success: true, token, user: adminUser });
+    }
+
+    // 2. Query MongoDB Atlas User Collection
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbUser = await User.findOne({ email: cleanEmail }).lean();
+        if (dbUser) {
+          if (dbUser.role !== 'ADMIN' && cleanEmail !== 'jayradadiya2006@gmail.com') {
+            return res.status(403).json({ success: false, error: 'Access Denied: Administrator account required.' });
+          }
+          const adminUser = {
+            id: dbUser.id || dbUser._id,
+            name: dbUser.name || 'Master Admin',
+            email: dbUser.email,
+            role: 'ADMIN',
+            avatar: dbUser.profilePicture || dbUser.avatar
+          };
+          const token = jwt.sign(adminUser, JWT_SECRET, { expiresIn: '7d' });
+          return res.status(200).json({ success: true, token, user: adminUser });
+        }
+      } catch (e) {}
+    }
+
+    return res.status(401).json({ success: false, error: 'Invalid Email or Password' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post(['/api/auth/login', '/auth/login'], (req, res) => {
   const { email, phone, identifier, password } = req.body;
   const userIdentifier = email || phone || identifier;

@@ -443,6 +443,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const adminLogin = async (email, password) => {
+    try {
+      const res = await apiClient.post('/auth/admin-login', { email, password });
+      const { token: userToken, user: userData } = res.data;
+
+      setToken(userToken);
+      setUser(userData);
+
+      localStorage.setItem('primeshow_token', userToken);
+      localStorage.setItem('primeshow_user', JSON.stringify(userData));
+
+      return { success: true, user: userData };
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Invalid Email or Password';
+      return { success: false, error: errorMsg };
+    }
+  };
+
   const googleAuth = async (oauthPayload) => {
     try {
       const res = await apiClient.post('/auth/google-sync', oauthPayload);
@@ -813,6 +831,7 @@ export const AuthProvider = ({ children }) => {
       user: user ? { ...user, wishlist } : null,
       token,
       login,
+      adminLogin,
       register,
       socialAuth,
       googleAuth,
