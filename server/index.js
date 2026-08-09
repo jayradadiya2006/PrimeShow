@@ -2,7 +2,7 @@ require('dotenv').config();
 const http = require('http');
 const { Server } = require('socket.io');
 const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
-const { User, UserActivityLog, Movie, Theatre, Show, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
+const { User, UserNotification, UserActivityLog, Movie, Theatre, Show, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,6 +22,19 @@ const sseClients = new Set();
 
 io.on('connection', (socket) => {
   console.log(`⚡ [Socket.io]: Client connected (ID: ${socket.id})`);
+
+  socket.on('JOIN_USER_ROOM', (userId) => {
+    if (userId) {
+      const room = `user:${userId}`;
+      socket.join(room);
+      console.log(`⚡ [Socket.io]: Socket ${socket.id} joined user room ${room}`);
+    }
+  });
+
+  socket.on('JOIN_ADMIN_ROOM', () => {
+    socket.join('admin');
+    console.log(`⚡ [Socket.io]: Socket ${socket.id} joined admin room`);
+  });
   
   socket.on('disconnect', () => {
     console.log(`⚡ [Socket.io]: Client disconnected (ID: ${socket.id})`);
@@ -148,26 +161,97 @@ seedInitialUsersList.forEach(u => globalRegisteredUsersMap.set(u.email.toLowerCa
 
 const upsertUserRecord = async (userData) => {
   if (!userData) return null;
+  
+  const firebaseUid = userData.firebaseUid || userData.uid || userData.authProviderId || userData.googleId || null;
   const rawEmail = userData.email || userData.user?.email || userData.profile?.email || '';
-  if (!rawEmail) return null;
+  if (!rawEmail && !firebaseUid) return null;
 
-  const email = rawEmail.toLowerCase().trim();
+  const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
   let name = userData.name || userData.user?.name || userData.profile?.name;
   if (!name && email) name = email.split('@')[0].toUpperCase();
-  
+
   const avatar = userData.profilePicture || userData.avatar || userData.user?.profilePicture || userData.user?.avatar || userData.profile?.picture || ('https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a');
-  const googleId = userData.googleId || userData.profile?.sub || `g_${Date.now()}`;
-  const provider = userData.provider || (googleId ? 'GOOGLE' : 'LOCAL');
+  const provider = userData.provider || userData.authProvider || (firebaseUid ? 'FIREBASE' : 'LOCAL');
   const role = (email === 'admin@primeshow.com' || userData.role === 'ADMIN') ? 'ADMIN' : (userData.role || 'CUSTOMER');
-  const phone = userData.phone || userData.user?.phone || '+91 9876543210';
+  const phone = userData.phone || userData.phoneNumber || userData.user?.phone || '+91 9876543210';
   const city = userData.city || userData.user?.city || 'Surat';
 
-  const existing = globalRegisteredUsersMap.get(email) || {};
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState === 1) {
+    try {
+      let dbDoc = null;
+      
+      // Preferred Lookup Order:
+      // 1. Search by Firebase UID
+      if (firebaseUid) {
+        dbDoc = await User.findOne({ firebaseUid });
+      }
+      
+      // 2. Fallback search by normalized email
+      if (!dbDoc && email) {
+        dbDoc = await User.findOne({ email });
+      }
 
+      if (dbDoc) {
+        // Attach firebaseUid if missing
+        if (firebaseUid && !dbDoc.firebaseUid) {
+          dbDoc.firebaseUid = firebaseUid;
+        }
+        if (name) dbDoc.name = name;
+        if (avatar) {
+          dbDoc.avatar = avatar;
+          dbDoc.profilePicture = avatar;
+        }
+        if (phone && phone !== '+91 9876543210') {
+          dbDoc.phone = phone;
+          dbDoc.phoneNumber = phone;
+        }
+        dbDoc.isOnline = true;
+        dbDoc.lastLoginTime = new Date();
+        dbDoc.lastActive = new Date();
+        await dbDoc.save();
+
+        const userObj = dbDoc.toObject();
+        if (email) globalRegisteredUsersMap.set(email, userObj);
+        return userObj;
+      } else {
+        const stableId = firebaseUid ? `usr_${firebaseUid}` : `usr_${Date.now()}`;
+        const newRecord = {
+          id: stableId,
+          firebaseUid: firebaseUid || undefined,
+          name: name || 'PrimeShow User',
+          username: email ? email.split('@')[0].toLowerCase() : `user_${Date.now()}`,
+          email: email,
+          phone: phone,
+          phoneNumber: phone,
+          role: role,
+          city: city,
+          rewardsPoints: userData.rewardsPoints || 500,
+          avatar: avatar,
+          profilePicture: avatar,
+          provider: provider,
+          isOnline: true,
+          lastLoginTime: new Date(),
+          lastActive: new Date()
+        };
+        const newDoc = new User(newRecord);
+        await newDoc.save();
+
+        const userObj = newDoc.toObject();
+        if (email) globalRegisteredUsersMap.set(email, userObj);
+        return userObj;
+      }
+    } catch (err) {
+      console.warn('MongoDB User Upsert Warning:', err.message);
+    }
+  }
+
+  const existing = email ? (globalRegisteredUsersMap.get(email) || {}) : {};
   const mergedRecord = {
-    id: existing.id || userData.id || `usr_${Date.now()}`,
+    id: existing.id || (firebaseUid ? `usr_${firebaseUid}` : `usr_${Date.now()}`),
+    firebaseUid: firebaseUid || existing.firebaseUid,
     name: name || existing.name || 'PrimeShow User',
-    username: email.split('@')[0].toLowerCase(),
+    username: email ? email.split('@')[0].toLowerCase() : `user_${Date.now()}`,
     email: email,
     phone: phone || existing.phone,
     role: role,
@@ -176,41 +260,11 @@ const upsertUserRecord = async (userData) => {
     avatar: avatar || existing.avatar,
     profilePicture: avatar || existing.profilePicture,
     provider: provider || existing.provider,
-    googleId: googleId || existing.googleId,
     isOnline: true,
     lastLoginTime: new Date().toISOString(),
-    lastActive: new Date().toISOString(),
-    createdAt: existing.createdAt || new Date().toISOString()
+    lastActive: new Date().toISOString()
   };
-
-  // 1. Immediately store in global memory registry
-  globalRegisteredUsersMap.set(email, mergedRecord);
-
-  // 2. Persist to MongoDB database if active
-  const mongoose = require('mongoose');
-  if (mongoose.connection.readyState === 1) {
-    try {
-      let dbDoc = await User.findOne({ email: email });
-      if (dbDoc) {
-        dbDoc.name = mergedRecord.name;
-        dbDoc.avatar = mergedRecord.avatar;
-        dbDoc.profilePicture = mergedRecord.profilePicture;
-        dbDoc.provider = mergedRecord.provider;
-        dbDoc.isOnline = true;
-        dbDoc.lastLoginTime = new Date();
-        dbDoc.lastActive = new Date();
-        await dbDoc.save();
-        return dbDoc.toObject();
-      } else {
-        const newDoc = new User(mergedRecord);
-        await newDoc.save();
-        return newDoc.toObject();
-      }
-    } catch (err) {
-      console.warn('MongoDB User Upsert Warning:', err.message);
-    }
-  }
-
+  if (email) globalRegisteredUsersMap.set(email, mergedRecord);
   return mergedRecord;
 };
 
@@ -1144,19 +1198,38 @@ app.put(['/api/users/profile', '/users/profile'], async (req, res) => {
 // NOTIFICATION SYSTEM CRUD ENDPOINTS
 // -------------------------------------------------------------
 
-app.get('/api/notifications', async (req, res) => {
+// -------------------------------------------------------------
+// NOTIFICATION SYSTEM CRUD ENDPOINTS (Per-User Account Read State Sync)
+// -------------------------------------------------------------
+
+app.get(['/api/notifications', '/api/user/notifications'], async (req, res) => {
+  const userId = req.query.userId || req.headers['x-user-id'] || null;
   try {
-    const dbNotifs = await Notification.find().sort({ createdAt: -1 });
-    if (dbNotifs && dbNotifs.length > 0) {
-      return res.json(dbNotifs);
+    if (mongoose.connection.readyState === 1) {
+      const dbNotifs = await Notification.find().sort({ createdAt: -1 }).lean();
+      
+      let userReadMap = {};
+      if (userId) {
+        const readDocs = await UserNotification.find({ userId, read: true }).lean();
+        readDocs.forEach(rd => {
+          userReadMap[rd.notificationId] = true;
+        });
+      }
+
+      const merged = dbNotifs.map(n => ({
+        ...n,
+        read: userId ? Boolean(userReadMap[n.id]) : Boolean(n.read)
+      }));
+
+      return res.json(merged);
     }
   } catch (err) {
-    console.warn('⚠️ Error fetching notifications from MongoDB:', err.message);
+    console.warn('⚠️ Error fetching notifications from MongoDB Atlas:', err.message);
   }
   res.json(notifications);
 });
 
-app.post('/api/notifications', async (req, res) => {
+app.post(['/api/notifications', '/api/admin/notifications'], async (req, res) => {
   const { title, message, type, priority, date } = req.body;
   if (!title || !message) {
     return res.status(400).json({ error: 'Title and message required' });
@@ -1164,7 +1237,7 @@ app.post('/api/notifications', async (req, res) => {
 
   const notifType = priority || type || 'SYSTEM';
   const newNotif = {
-    id: `notif_${Date.now()}`,
+    id: req.body.id || `notif_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     title: title.trim(),
     message: message.trim(),
     type: notifType,
@@ -1173,20 +1246,61 @@ app.post('/api/notifications', async (req, res) => {
   };
 
   try {
-    await Notification.create(newNotif);
+    if (mongoose.connection.readyState === 1) {
+      await Notification.findOneAndUpdate({ id: newNotif.id }, newNotif, { upsert: true, new: true });
+    }
   } catch (err) {
-    console.warn('⚠️ Notification DB create warning:', err.message);
+    console.warn('⚠️ Notification DB create error:', err.message);
   }
 
-  notifications.unshift(newNotif);
+  const existingIdx = notifications.findIndex(n => n.id === newNotif.id);
+  if (existingIdx !== -1) notifications[existingIdx] = newNotif;
+  else notifications.unshift(newNotif);
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('NOTIFICATION_UPDATED', newNotif);
+    req.app.get('socketio').emit('NOTIFICATION_BROADCAST', newNotif);
+  }
+  broadcastToAllClients('NOTIFICATION_UPDATED', newNotif);
+  broadcastToAllClients('NOTIFICATION_BROADCAST', newNotif);
+
   res.status(201).json(newNotif);
 });
 
-app.put('/api/notifications/:id', async (req, res) => {
+app.put(['/api/notifications/:id/read', '/api/user/notifications/:id/read'], async (req, res) => {
+  const notifId = req.params.id;
+  const { userId } = req.body;
+  const targetUserId = userId || req.headers['x-user-id'] || 'guest_user';
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await UserNotification.findOneAndUpdate(
+        { userId: targetUserId, notificationId: notifId },
+        { userId: targetUserId, notificationId: notifId, read: true, readAt: new Date() },
+        { upsert: true, new: true }
+      );
+    }
+  } catch (err) {
+    console.warn('⚠️ UserNotification DB update error:', err.message);
+  }
+
+  const notif = notifications.find(n => n.id === notifId);
+  if (notif) notif.read = true;
+
+  if (targetUserId && req.app.get('socketio')) {
+    req.app.get('socketio').to(`user:${targetUserId}`).emit('USER_NOTIFICATION_UPDATED', {
+      userId: targetUserId,
+      notificationId: notifId,
+      read: true
+    });
+  }
+
+  res.json(notif || { id: notifId, userId: targetUserId, read: true });
+});
+
+app.put(['/api/notifications/:id', '/api/admin/notifications/:id'], async (req, res) => {
   const { title, message, type, priority, date, read } = req.body;
   const notifId = req.params.id;
-
-  const notifIndex = notifications.findIndex(n => n.id === notifId);
   const updateData = {};
   if (title !== undefined) updateData.title = title.trim();
   if (message !== undefined) updateData.message = message.trim();
@@ -1194,51 +1308,104 @@ app.put('/api/notifications/:id', async (req, res) => {
   if (date !== undefined) updateData.createdAt = new Date(date);
   if (read !== undefined) updateData.read = Boolean(read);
 
-  if (notifIndex !== -1) {
-    notifications[notifIndex] = {
-      ...notifications[notifIndex],
-      ...updateData
-    };
-  }
-
   try {
-    await Notification.findOneAndUpdate({ id: notifId }, { $set: updateData }, { new: true });
+    if (mongoose.connection.readyState === 1) {
+      await Notification.findOneAndUpdate({ id: notifId }, { $set: updateData }, { new: true });
+    }
   } catch (err) {
-    console.warn('⚠️ Notification DB update warning:', err.message);
+    console.warn('⚠️ Notification DB update error:', err.message);
   }
 
+  const notifIndex = notifications.findIndex(n => n.id === notifId);
+  if (notifIndex !== -1) notifications[notifIndex] = { ...notifications[notifIndex], ...updateData };
   const updated = notifIndex !== -1 ? notifications[notifIndex] : { id: notifId, ...updateData };
+
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('NOTIFICATION_UPDATED', updated);
+  }
+  broadcastToAllClients('NOTIFICATION_UPDATED', updated);
+
   res.json(updated);
 });
 
-app.put('/api/notifications/:id/read', async (req, res) => {
+app.delete(['/api/notifications/:id', '/api/admin/notifications/:id'], async (req, res) => {
   const notifId = req.params.id;
-  const notif = notifications.find(n => n.id === notifId);
-  if (notif) notif.read = true;
 
   try {
-    await Notification.findOneAndUpdate({ id: notifId }, { $set: { read: true } });
-  } catch (err) {}
+    if (mongoose.connection.readyState === 1) {
+      await Notification.deleteOne({ id: notifId });
+      await UserNotification.deleteMany({ notificationId: notifId });
+    }
+  } catch (err) {
+    console.warn('⚠️ Notification DB delete error:', err.message);
+  }
 
-  res.json(notif || { id: notifId, read: true });
-});
-
-app.delete('/api/notifications/:id', async (req, res) => {
-  const notifId = req.params.id;
   const notifIndex = notifications.findIndex(n => n.id === notifId);
   let deletedItem = null;
+  if (notifIndex !== -1) deletedItem = notifications.splice(notifIndex, 1)[0];
 
-  if (notifIndex !== -1) {
-    deletedItem = notifications.splice(notifIndex, 1)[0];
+  if (req.app.get('socketio')) {
+    req.app.get('socketio').emit('NOTIFICATION_DELETED', { id: notifId });
   }
-
-  try {
-    await Notification.deleteOne({ id: notifId });
-  } catch (err) {
-    console.warn('⚠️ Notification DB delete warning:', err.message);
-  }
+  broadcastToAllClients('NOTIFICATION_DELETED', { id: notifId });
 
   res.json({ message: 'Notification deleted successfully', id: notifId, notification: deletedItem });
+});
+
+// User Account-Level Wishlist Endpoints (MongoDB Atlas Persistent)
+app.get(['/api/user/wishlist', '/user/wishlist'], async (req, res) => {
+  const { userId, email } = req.query;
+  const targetEmail = (email || '').toLowerCase().trim();
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbUser = await User.findOne({
+        $or: [{ id: userId }, { firebaseUid: userId }, { email: targetEmail }]
+      }).lean();
+      if (dbUser) {
+        return res.json({ success: true, wishlist: dbUser.wishlist || [] });
+      }
+    }
+  } catch (err) {}
+  res.json({ success: true, wishlist: ['mov_1'] });
+});
+
+app.post(['/api/user/wishlist/toggle', '/user/wishlist/toggle'], async (req, res) => {
+  const { userId, email, movieId } = req.body;
+  if (!movieId) return res.status(400).json({ error: 'Movie ID required' });
+  const targetEmail = (email || '').toLowerCase().trim();
+
+  let updatedWishlist = [];
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbUser = await User.findOne({
+        $or: [{ id: userId }, { firebaseUid: userId }, { email: targetEmail }]
+      });
+
+      if (dbUser) {
+        const wishlist = dbUser.wishlist || [];
+        if (wishlist.includes(movieId)) {
+          dbUser.wishlist = wishlist.filter(id => id !== movieId);
+        } else {
+          dbUser.wishlist.push(movieId);
+        }
+        await dbUser.save();
+        updatedWishlist = dbUser.wishlist;
+
+        if (req.app.get('socketio')) {
+          const roomUser = dbUser.id || userId;
+          req.app.get('socketio').to(`user:${roomUser}`).emit('USER_WISHLIST_UPDATED', {
+            userId: roomUser,
+            wishlist: updatedWishlist
+          });
+        }
+        return res.json({ success: true, wishlist: updatedWishlist });
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Wishlist update error:', err.message);
+  }
+
+  res.json({ success: true, wishlist: [movieId] });
 });
 
 // -------------------------------------------------------------

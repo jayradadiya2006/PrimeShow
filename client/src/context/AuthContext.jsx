@@ -43,13 +43,14 @@ export const AuthProvider = ({ children }) => {
 
   // Synchronize User Record & Status to Backend Database
   const syncUserToBackend = async (userData) => {
-    if (!userData || !userData.email) return;
+    if (!userData || (!userData.email && !userData.id)) return;
     try {
-      await apiClient.post('/user-sync', {
+      const res = await apiClient.post('/user-sync', {
         id: userData.id,
+        firebaseUid: userData.firebaseUid || userData.id,
         name: userData.name,
         email: userData.email,
-        phone: userData.phone || '+91 9876543210',
+        phone: userData.phone || userData.phoneNumber || '+91 9876543210',
         phoneNumber: userData.phoneNumber || userData.phone || '+91 9876543210',
         profilePicture: userData.profilePicture || userData.avatar,
         avatar: userData.avatar || userData.profilePicture,
@@ -59,6 +60,10 @@ export const AuthProvider = ({ children }) => {
         city: userData.city || 'Surat',
         isOnline: true
       });
+      if (res.data && res.data.user) {
+        setUser(prev => ({ ...prev, ...res.data.user }));
+        socket.emit('JOIN_USER_ROOM', res.data.user.id || res.data.user.firebaseUid);
+      }
     } catch (e) {
       console.warn('⚡ [Backend User Sync Note]:', e.message);
     }
@@ -66,7 +71,7 @@ export const AuthProvider = ({ children }) => {
 
   // Sync user state on mount if saved user exists
   useEffect(() => {
-    if (user && user.email) {
+    if (user && (user.email || user.id)) {
       syncUserToBackend(user);
     }
   }, []);
@@ -87,6 +92,7 @@ export const AuthProvider = ({ children }) => {
         const userObj = {
           ...existingUser,
           id: firebaseUser.uid,
+          firebaseUid: firebaseUser.uid,
           name: existingUser.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'PrimeShow Member',
           email: firebaseUser.email || existingUser.email || '',
           phone: firebaseUser.phoneNumber || existingUser.phone || '',
@@ -333,14 +339,23 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('primeshow_selected_city', selectedCity);
   }, [selectedCity]);
 
-  const toggleWishlist = (movieId) => {
+  const toggleWishlist = async (movieId) => {
     setWishlist(prev => {
-      if (prev.includes(movieId)) {
-        return prev.filter(id => id !== movieId);
-      } else {
-        return [...prev, movieId];
-      }
+      const exists = prev.includes(movieId);
+      return exists ? prev.filter(id => id !== movieId) : [...prev, movieId];
     });
+    try {
+      if (user) {
+        const res = await apiClient.post('/user/wishlist/toggle', {
+          userId: user.id || user.firebaseUid,
+          email: user.email,
+          movieId
+        });
+        if (res.data && Array.isArray(res.data.wishlist)) {
+          setWishlist(res.data.wishlist);
+        }
+      }
+    } catch (e) {}
   };
 
   // Theme Sync & System Listener Effect
@@ -747,23 +762,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Admin Create / Broadcast Notification
+  // Admin Create / Broadcast Notification (Strict MongoDB Persistence, NO Fake Success)
   const broadcastNotification = async (title, message, priority = 'Info', date = null) => {
     try {
       const res = await apiClient.post('/notifications', { title, message, priority, date });
-      setNotifications(prev => [res.data, ...prev.filter(n => n.id !== res.data.id)]);
-      return { success: true, data: res.data };
+      if (res.data && res.data.id) {
+        setNotifications(prev => [res.data, ...prev.filter(n => n.id !== res.data.id)]);
+        return { success: true, data: res.data };
+      }
+      return { success: false, error: 'Failed to create notification on server' };
     } catch (err) {
-      const fallbackNotif = {
-        id: `notif_${Date.now()}`,
-        title,
-        message,
-        type: priority || 'Info',
-        read: false,
-        createdAt: date ? new Date(date).toISOString() : new Date().toISOString()
-      };
-      setNotifications(prev => [fallbackNotif, ...prev]);
-      return { success: true, data: fallbackNotif };
+      return { success: false, error: err.response?.data?.error || err.message || 'Notification creation failed' };
     }
   };
 
@@ -771,11 +780,13 @@ export const AuthProvider = ({ children }) => {
   const updateNotification = async (notifId, payload) => {
     try {
       const res = await apiClient.put(`/notifications/${notifId}`, payload);
-      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, ...res.data } : n));
-      return { success: true, data: res.data };
+      if (res.data) {
+        setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, ...res.data } : n));
+        return { success: true, data: res.data };
+      }
+      return { success: false, error: 'Failed to update notification' };
     } catch (err) {
-      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, ...payload } : n));
-      return { success: true };
+      return { success: false, error: err.response?.data?.error || err.message };
     }
   };
 
@@ -786,19 +797,18 @@ export const AuthProvider = ({ children }) => {
       setNotifications(prev => prev.filter(n => n.id !== notifId));
       return { success: true };
     } catch (err) {
-      setNotifications(prev => prev.filter(n => n.id !== notifId));
-      return { success: true };
+      return { success: false, error: err.response?.data?.error || err.message };
     }
   };
 
-  // Mark Notification as Read
+  // Mark Notification as Read (Per-User Account Sync across Devices)
   const markNotificationRead = async (notifId) => {
+    setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
     try {
-      await apiClient.put(`/notifications/${notifId}/read`);
-      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
-    } catch (err) {
-      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
-    }
+      await apiClient.put(`/notifications/${notifId}/read`, {
+        userId: user?.id || user?.firebaseUid || 'guest_user'
+      });
+    } catch (err) {}
   };
 
   // Mark All Notifications as Read
@@ -806,7 +816,9 @@ export const AuthProvider = ({ children }) => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     notifications.forEach(n => {
       if (!n.read) {
-        apiClient.put(`/notifications/${n.id}/read`).catch(() => {});
+        apiClient.put(`/notifications/${n.id}/read`, {
+          userId: user?.id || user?.firebaseUid || 'guest_user'
+        }).catch(() => {});
       }
     });
   };

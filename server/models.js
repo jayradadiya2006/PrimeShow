@@ -9,6 +9,7 @@ const UserActivitySubSchema = new mongoose.Schema({
 
 const UserSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
+  firebaseUid: { type: String, index: true, sparse: true },
   name: { type: String, required: true },
   username: { type: String },
   email: { type: String, required: true, unique: true },
@@ -35,6 +36,17 @@ const UserSchema = new mongoose.Schema({
   claimedOffers: [{ type: String }],
   activityLogs: [UserActivitySubSchema]
 }, { timestamps: true });
+
+UserSchema.index({ firebaseUid: 1 }, { sparse: true });
+
+const UserNotificationSchema = new mongoose.Schema({
+  userId: { type: String, required: true, index: true },
+  notificationId: { type: String, required: true, index: true },
+  read: { type: Boolean, default: false },
+  readAt: { type: Date }
+}, { timestamps: true });
+
+UserNotificationSchema.index({ userId: 1, notificationId: 1 }, { unique: true });
 
 const UserActivityLogSchema = new mongoose.Schema({
   id: { type: String, required: true },
@@ -356,6 +368,7 @@ const Offer = mongoose.model('Offer', OfferSchema);
 const OfferBanner = mongoose.model('OfferBanner', OfferBannerSchema);
 const SupportMessage = mongoose.model('SupportMessage', SupportMessageSchema);
 const Notification = mongoose.model('Notification', NotificationSchema);
+const UserNotification = mongoose.model('UserNotification', UserNotificationSchema);
 const UserActivityLog = mongoose.model('UserActivityLog', UserActivityLogSchema);
 const BlockedSeat = mongoose.model('BlockedSeat', BlockedSeatSchema);
 const GlobalConfig = mongoose.model('GlobalConfig', GlobalConfigSchema);
@@ -366,6 +379,7 @@ const UpcomingMovie = mongoose.model('UpcomingMovie', UpcomingMovieSchema);
 
 module.exports = {
   User,
+  UserNotification,
   UserActivityLog,
   Movie,
   Theatre,
