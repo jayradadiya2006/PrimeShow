@@ -185,17 +185,23 @@ PrivateTheatreBookingSchema.index({ createdAt: -1 });
 const EventSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   title: { type: String, required: true },
-  category: { type: String },
-  badge: { type: String },
-  venue: { type: String },
-  city: { type: String },
-  date: { type: String },
-  time: { type: String },
-  price: { type: Number },
-  totalCapacity: { type: Number },
-  availableSeats: { type: Number },
-  image: { type: String },
-  description: { type: String }
+  category: { type: String, default: 'Live Concert' },
+  badge: { type: String, default: 'LIVE' },
+  venue: { type: String, required: true },
+  venueLocation: { type: String },
+  city: { type: String, required: true, default: 'Surat' },
+  date: { type: String, required: true },
+  eventDate: { type: String },
+  time: { type: String, required: true },
+  eventTime: { type: String },
+  price: { type: Number, required: true, default: 0 },
+  ticketPrice: { type: Number, default: 0 },
+  totalCapacity: { type: Number, default: 1000 },
+  availableSeats: { type: Number, default: 1000 },
+  image: { type: String, default: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80' },
+  bannerUrl: { type: String },
+  description: { type: String, default: '' },
+  bookingStatus: { type: Boolean, default: true }
 }, { timestamps: true });
 
 const PlaySchema = new mongoose.Schema({

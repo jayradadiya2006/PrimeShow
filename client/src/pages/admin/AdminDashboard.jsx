@@ -509,6 +509,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [eventForm, setEventForm] = useState({
     title: '',
     category: 'Live Concert',
+    badge: 'SELLING FAST',
     venue: '',
     city: 'Surat',
     date: '18 FEB 2027',
@@ -517,7 +518,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
     totalCapacity: 5000,
     availableSeats: 5000,
     image: '',
-    description: ''
+    description: '',
+    bookingStatus: true
   });
   const [editingEventId, setEditingEventId] = useState(null);
 
@@ -1160,30 +1162,49 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingEventId) {
-        const res = await axios.put(`${API_BASE}/events/${editingEventId}`, eventForm);
+        const res = await API.put(`/events/${editingEventId}`, eventForm);
         setEventsList(eventsList.map(ev => ev.id === editingEventId ? res.data : ev));
-        setActionSuccess('Event details updated successfully!');
+        setActionSuccess('Event details updated and persisted to DB successfully!');
       } else {
-        const res = await axios.post(`${API_BASE}/events`, eventForm);
+        const res = await API.post('/events', eventForm);
         setEventsList([res.data, ...eventsList]);
-        setActionSuccess('New Live Event created successfully!');
+        setActionSuccess('New Live Event created & persisted to DB successfully!');
       }
-      setEventForm({ title: '', category: 'Live Concert', venue: '', city: 'Mumbai', date: '18 JAN 2027', time: '07:00 PM', price: 1500, totalCapacity: 5000, availableSeats: 5000, image: '', description: '' });
+      setEventForm({ title: '', category: 'Live Concert', badge: 'SELLING FAST', venue: '', city: 'Surat', date: '18 FEB 2027', time: '07:00 PM', price: 1500, totalCapacity: 5000, availableSeats: 5000, image: '', description: '', bookingStatus: true });
       setEditingEventId(null);
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {
-      setActionSuccess('Error saving event');
-      setTimeout(() => setActionSuccess(''), 3000);
+      const msg = err.response?.data?.error || err.message || 'Error saving event';
+      setActionSuccess(`Failed: ${msg}`);
+      setTimeout(() => setActionSuccess(''), 4000);
     }
   };
 
   const handleDeleteEvent = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/events/${id}`);
+      await API.delete(`/events/${id}`);
       setEventsList(eventsList.filter(ev => ev.id !== id));
-      setActionSuccess('Event deleted!');
+      setActionSuccess('Event permanently deleted from DB!');
       setTimeout(() => setActionSuccess(''), 3000);
-    } catch (err) {}
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message || 'Error deleting event';
+      setActionSuccess(`Failed: ${msg}`);
+      setTimeout(() => setActionSuccess(''), 4000);
+    }
+  };
+
+  const handleToggleEventBookingStatus = async (eventItem) => {
+    try {
+      const updatedStatus = eventItem.bookingStatus === false ? true : false;
+      const res = await API.put(`/events/${eventItem.id}`, { bookingStatus: updatedStatus });
+      setEventsList(eventsList.map(ev => ev.id === eventItem.id ? res.data : ev));
+      setActionSuccess(`Booking Status for "${eventItem.title}" updated to ${updatedStatus ? 'ACTIVE' : 'DISABLED'}`);
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message || 'Error updating booking status';
+      setActionSuccess(`Failed: ${msg}`);
+      setTimeout(() => setActionSuccess(''), 4000);
+    }
   };
 
   const handleSavePlay = async (e) => {
@@ -3794,7 +3815,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               ))}
             </div>
-
           </div>
         )}
 
@@ -3834,6 +3854,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <option value="Festival">Festival</option>
                     <option value="Singing">Singing</option>
                     <option value="DJ Night">DJ Night</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="Exhibition">Exhibition</option>
                   </select>
                 </div>
 
@@ -3921,6 +3943,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-white mb-1">User Booking Status</label>
+                  <button
+                    type="button"
+                    onClick={() => setEventForm({ ...eventForm, bookingStatus: !eventForm.bookingStatus })}
+                    className={`w-full p-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                      eventForm.bookingStatus !== false
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                    }`}
+                  >
+                    {eventForm.bookingStatus !== false ? '🟢 ENABLED (Accepting Passes)' : '🔴 DISABLED (Booking Closed)'}
+                  </button>
+                </div>
+
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-white mb-1">Event Banner Image URL</label>
                   <input
@@ -3950,7 +3987,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     type="button"
                     onClick={() => {
                       setEditingEventId(null);
-                      setEventForm({ title: '', category: 'Live Concert', venue: '', city: 'Mumbai', date: '18 JAN 2027', time: '07:00 PM', price: 1500, totalCapacity: 5000, availableSeats: 5000, image: '', description: '' });
+                      setEventForm({ title: '', category: 'Live Concert', badge: 'SELLING FAST', venue: '', city: 'Surat', date: '18 FEB 2027', time: '07:00 PM', price: 1500, totalCapacity: 5000, availableSeats: 5000, image: '', description: '', bookingStatus: true });
                     }}
                     className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold cursor-pointer"
                   >
@@ -3976,16 +4013,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <div className="flex items-start gap-4">
                       <img src={ev.image} alt={ev.title} className="w-20 h-20 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
                       <div className="space-y-1">
-                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
-                          {ev.category}
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                            {ev.category}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded font-bold text-[10px] uppercase ${
+                            ev.bookingStatus !== false
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          }`}>
+                            {ev.bookingStatus !== false ? '🟢 Booking Active' : '🔴 Booking Closed'}
+                          </span>
+                        </div>
                         <h4 className="text-base font-bold text-white leading-tight">{ev.title}</h4>
-                        <p className="text-xs text-white/60">{ev.venue} • <strong className="text-amber-300">₹{ev.price}/person</strong></p>
+                        <p className="text-xs text-white/60">{ev.venue} ({ev.city}) • <strong className="text-amber-300">₹{ev.price}/person</strong></p>
                         <p className="text-[11px] text-white/40">{ev.date} @ {ev.time} • Seats: {ev.availableSeats} / {ev.totalCapacity}</p>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
+                    <div className="flex gap-2 justify-end pt-2 border-t border-white/10 flex-wrap">
+                      <button
+                        onClick={() => handleToggleEventBookingStatus(ev)}
+                        className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                          ev.bookingStatus !== false
+                            ? 'bg-rose-500/20 hover:bg-rose-500 hover:text-white border-rose-500/40 text-rose-300'
+                            : 'bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border-emerald-500/40 text-emerald-300'
+                        }`}
+                      >
+                        {ev.bookingStatus !== false ? 'Disable Booking' : 'Enable Booking'}
+                      </button>
+
                       <button
                         onClick={() => {
                           setEditingEventId(ev.id);
@@ -3994,14 +4051,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             category: ev.category || 'Live Concert',
                             badge: ev.badge || 'SELLING FAST',
                             venue: ev.venue,
-                            city: ev.city || 'Mumbai',
+                            city: ev.city || 'Surat',
                             date: ev.date,
                             time: ev.time,
                             price: ev.price,
                             totalCapacity: ev.totalCapacity || 5000,
                             availableSeats: ev.availableSeats || 5000,
                             image: ev.image || '',
-                            description: ev.description || ''
+                            description: ev.description || '',
+                            bookingStatus: ev.bookingStatus !== false
                           });
                         }}
                         className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
@@ -4020,7 +4078,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 ))}
               </div>
             </div>
-
           </div>
         )}
 

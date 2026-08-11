@@ -1951,54 +1951,108 @@ app.get(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
 });
 
 app.post(['/api/events', '/api/admin/events'], async (req, res) => {
-  const { title, category, badge, venue, city, date, time, price, totalCapacity, availableSeats, image, description } = req.body;
-  if (!title || !venue || price === undefined) {
-    return res.status(400).json({ error: 'Title, venue and ticket price are required' });
-  }
-
-  const newEvent = {
-    id: req.body.id || `ev_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-    title,
-    category: category || 'Live Concert',
-    badge: badge || 'SELLING FAST',
-    venue,
-    city: city || 'Mumbai',
-    date: date || '18 JAN 2027',
-    time: time || '07:00 PM',
-    price: Number(price || 1500),
-    totalCapacity: Number(totalCapacity || 5000),
-    availableSeats: Number(availableSeats !== undefined ? availableSeats : (totalCapacity || 5000)),
-    image: image || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
-    description: description || 'Exclusive live event experience hosted on PrimeShow.'
-  };
-
   try {
-    if (mongoose.connection.readyState === 1) {
-      await Event.findOneAndUpdate({ id: newEvent.id }, newEvent, { upsert: true, new: true, setDefaultsOnInsert: true });
+    const title = req.body.title || req.body.eventName;
+    const venue = req.body.venue || req.body.venueLocation;
+    const city = req.body.city || 'Surat';
+    const date = req.body.date || req.body.eventDate || '18 JAN 2027';
+    const time = req.body.time || req.body.eventTime || '07:00 PM';
+    const priceVal = req.body.price !== undefined ? req.body.price : req.body.ticketPrice;
+    
+    if (!title || !venue || priceVal === undefined) {
+      return res.status(400).json({ error: 'Title, venue location and ticket price are required' });
     }
+
+    const price = Number(priceVal || 0);
+    const totalCap = Number(req.body.totalCapacity || 1000);
+    const avail = Number(req.body.availableSeats !== undefined ? req.body.availableSeats : totalCap);
+    const imgUrl = convertGoogleDriveUrl(req.body.image || req.body.bannerUrl || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80');
+
+    const newEvent = {
+      id: req.body.id || `ev_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      title: title.trim(),
+      category: req.body.category || 'Live Concert',
+      badge: req.body.badge || 'LIVE',
+      venue: venue.trim(),
+      venueLocation: venue.trim(),
+      city: city.trim(),
+      date: date.trim(),
+      eventDate: date.trim(),
+      time: time.trim(),
+      eventTime: time.trim(),
+      price,
+      ticketPrice: price,
+      totalCapacity: totalCap,
+      availableSeats: avail,
+      image: imgUrl,
+      bannerUrl: imgUrl,
+      description: req.body.description || 'Exclusive live event experience on PrimeShow.',
+      bookingStatus: req.body.bookingStatus !== undefined ? Boolean(req.body.bookingStatus) : true
+    };
+
+    delete newEvent._id;
+    delete newEvent.__v;
+
+    let dbSaved = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        dbSaved = await Event.findOneAndUpdate({ id: newEvent.id }, newEvent, { upsert: true, new: true, setDefaultsOnInsert: true }).lean();
+      } catch (dbErr) {
+        console.warn('⚠️ Error saving event to MongoDB Atlas:', dbErr.message);
+      }
+    }
+
+    const finalEvent = dbSaved || newEvent;
+
+    const existingIdx = events.findIndex(e => e.id === finalEvent.id);
+    if (existingIdx !== -1) events[existingIdx] = finalEvent;
+    else events.unshift(finalEvent);
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('EVENT_UPDATED', finalEvent);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: finalEvent });
+    }
+    broadcastToAllClients('EVENT_UPDATED', finalEvent);
+    broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: finalEvent });
+
+    res.status(201).json(finalEvent);
   } catch (err) {
-    console.warn('⚠️ Error saving event to MongoDB Atlas:', err.message);
+    console.error('❌ POST /api/events error:', err);
+    res.status(500).json({ error: err.message });
   }
-
-  const existingIdx = events.findIndex(e => e.id === newEvent.id);
-  if (existingIdx !== -1) events[existingIdx] = newEvent;
-  else events.unshift(newEvent);
-
-  if (req.app.get('socketio')) {
-    req.app.get('socketio').emit('EVENT_UPDATED', newEvent);
-  }
-  broadcastToAllClients('EVENT_UPDATED', newEvent);
-
-  res.status(201).json(newEvent);
 });
 
 app.put(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
   const { id } = req.params;
   const updateData = { ...req.body };
 
+  delete updateData._id;
+  delete updateData.__v;
+
+  if (updateData.price !== undefined || updateData.ticketPrice !== undefined) {
+    const p = Number(updateData.price !== undefined ? updateData.price : updateData.ticketPrice);
+    updateData.price = p;
+    updateData.ticketPrice = p;
+  }
+  if (updateData.totalCapacity !== undefined) updateData.totalCapacity = Number(updateData.totalCapacity);
+  if (updateData.availableSeats !== undefined) updateData.availableSeats = Number(updateData.availableSeats);
+  if (updateData.image || updateData.bannerUrl) {
+    const img = convertGoogleDriveUrl(updateData.image || updateData.bannerUrl);
+    updateData.image = img;
+    updateData.bannerUrl = img;
+  }
+  if (updateData.bookingStatus !== undefined) {
+    updateData.bookingStatus = Boolean(updateData.bookingStatus);
+  }
+
+  let dbUpdated = null;
   try {
     if (mongoose.connection.readyState === 1) {
-      await Event.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+      dbUpdated = await Event.findOneAndUpdate(
+        { $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] },
+        { $set: updateData },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+      ).lean();
     }
   } catch (err) {
     console.warn('⚠️ Error updating event in MongoDB Atlas:', err.message);
@@ -2007,13 +2061,17 @@ app.put(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
   const index = events.findIndex(e => e.id === id);
   if (index !== -1) {
     events[index] = { ...events[index], ...updateData };
+  } else if (dbUpdated) {
+    events.unshift(dbUpdated);
   }
-  const updated = index !== -1 ? events[index] : { id, ...updateData };
+  const updated = dbUpdated || (index !== -1 ? events[index] : { id, ...updateData });
 
   if (req.app.get('socketio')) {
     req.app.get('socketio').emit('EVENT_UPDATED', updated);
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: updated });
   }
   broadcastToAllClients('EVENT_UPDATED', updated);
+  broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: updated });
 
   res.json(updated);
 });
@@ -2023,7 +2081,7 @@ app.delete(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
 
   try {
     if (mongoose.connection.readyState === 1) {
-      await Event.deleteOne({ id });
+      await Event.deleteOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] });
     }
   } catch (err) {
     console.warn('⚠️ Error deleting event from MongoDB Atlas:', err.message);
@@ -2037,10 +2095,12 @@ app.delete(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
 
   if (req.app.get('socketio')) {
     req.app.get('socketio').emit('EVENT_DELETED', { id });
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'EVENT_DELETED', id });
   }
   broadcastToAllClients('EVENT_DELETED', { id });
+  broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'EVENT_DELETED', id });
 
-  res.json({ message: 'Event deleted', id, event: deleted });
+  res.json({ message: 'Event deleted successfully', id, event: deleted });
 });
 
 app.post('/api/events/book', async (req, res) => {

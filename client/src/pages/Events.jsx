@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Calendar, MapPin, Ticket, Search, Filter, Clock, ArrowRight, X, MoreVertical, SlidersHorizontal, Check } from 'lucide-react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import { EventBookingModal } from '../components/EventBookingModal';
 import { useAuth } from '../context/AuthContext';
+import { API } from '../services/api';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
@@ -23,8 +25,10 @@ export const Events = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/events`);
-      setEventsList(res.data);
+      const res = await API.get('/events');
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setEventsList(res.data);
+      }
     } catch (err) {
       setEventsList([
         {
@@ -39,7 +43,8 @@ export const Events = () => {
           totalCapacity: 15000,
           availableSeats: 3200,
           image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
-          description: 'Experience Surat\'s biggest live music night featuring top Bollywood singers and acoustic band performances.'
+          description: 'Experience Surat\'s biggest live music night featuring top Bollywood singers and acoustic band performances.',
+          bookingStatus: true
         },
         {
           id: 'ev_ahmedabad_1',
@@ -53,49 +58,8 @@ export const Events = () => {
           totalCapacity: 2000,
           availableSeats: 450,
           image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
-          description: 'Live standup comedy special packed with hilarious Gujarati and Hindi observational humor.'
-        },
-        {
-          id: 'ev_rajkot_1',
-          title: 'Rajkot Royal Cultural Evening',
-          category: 'Festival',
-          venue: 'Race Course Ground, Rajkot',
-          city: 'Rajkot',
-          date: '04 MAR 2027',
-          time: '06:30 PM',
-          price: 599,
-          totalCapacity: 5000,
-          availableSeats: 1200,
-          image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
-          description: 'A grand celebration of Kathiyawadi folk art, royal music, and traditional dance performances.'
-        },
-        {
-          id: 'ev_vadodara_1',
-          title: 'Vadodara EDM Music Fest 2027',
-          category: 'Festival',
-          venue: 'Navlakhi Ground, Vadodara',
-          city: 'Vadodara',
-          date: '12 MAR 2027',
-          time: '05:00 PM',
-          price: 1199,
-          totalCapacity: 8000,
-          availableSeats: 2100,
-          image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80',
-          description: 'Electronic dance music celebration with laser lights, pyrotechnics, and top DJs.'
-        },
-        {
-          id: 'ev_bhavnagar_1',
-          title: 'Bhavnagar Heritage Musical Night',
-          category: 'Singing',
-          venue: 'Yashwantrai Parmar Auditorium, Bhavnagar',
-          city: 'Bhavnagar',
-          date: '20 MAR 2027',
-          time: '07:30 PM',
-          price: 499,
-          totalCapacity: 1500,
-          availableSeats: 380,
-          image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
-          description: 'Classical & Sufi vocal evening celebrating Gujarat\'s rich musical heritage.'
+          description: 'Live standup comedy special packed with hilarious Gujarati and Hindi observational humor.',
+          bookingStatus: true
         }
       ]);
     } finally {
@@ -105,20 +69,37 @@ export const Events = () => {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
 
-  // Handle clicking outside of search dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
-        setIsSearchFocused(false);
-      }
+    let socket = null;
+    try {
+      const SOCKET_BASE = API_BASE.replace('/api', '');
+      socket = io(SOCKET_BASE, { transports: ['websocket', 'polling'] });
+      socket.on('EVENT_UPDATED', (updatedEvent) => {
+        if (updatedEvent && updatedEvent.id) {
+          setEventsList(prev => {
+            const exists = prev.some(e => e.id === updatedEvent.id);
+            if (exists) return prev.map(e => e.id === updatedEvent.id ? { ...e, ...updatedEvent } : e);
+            return [updatedEvent, ...prev];
+          });
+        } else {
+          fetchEvents();
+        }
+      });
+      socket.on('EVENT_DELETED', (data) => {
+        if (data && data.id) {
+          setEventsList(prev => prev.filter(e => e.id !== data.id));
+        } else {
+          fetchEvents();
+        }
+      });
+    } catch (e) {}
+
+    return () => {
+      if (socket) socket.disconnect();
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const categories = ['All', 'Live Concert', 'Stand-up Comedy', 'Festival', 'Singing'];
+  const categories = ['All', 'Live Concert', 'Stand-up Comedy', 'Festival', 'Singing', 'DJ Night', 'Workshop', 'Exhibition'];
 
   const filteredEvents = eventsList.filter(ev => {
     const matchesCity = !selectedCity || selectedCity === 'All' || ev.city === selectedCity || ev.city === 'All' || (Array.isArray(ev.cities) && ev.cities.includes(selectedCity));
@@ -359,13 +340,22 @@ export const Events = () => {
                     <span className="text-base font-black text-amber-600 dark:text-amber-400">₹{evt.price}</span>
                   </div>
 
-                  <button
-                    onClick={() => handleOpenBooking(evt)}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Ticket className="w-3.5 h-3.5" />
-                    <span>Book Passes</span>
-                  </button>
+                  {evt.bookingStatus !== false ? (
+                    <button
+                      onClick={() => handleOpenBooking(evt)}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 hover:brightness-110 transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Ticket className="w-3.5 h-3.5" />
+                      <span>Book Passes</span>
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="px-4 py-2 rounded-xl bg-slate-700/50 text-slate-400 font-extrabold text-xs cursor-not-allowed flex items-center gap-1.5 border border-slate-600/30"
+                    >
+                      <span>🔴 Booking Closed</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -62,4 +62,4 @@ API.interceptors.response.use(
 );
 
 export default API;
-export { API as apiClient, API_BASE };
+export { API, API as apiClient, API_BASE };
