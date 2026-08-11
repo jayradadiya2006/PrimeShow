@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
 import { io } from 'socket.io-client';
+import API, { API_BASE } from '../services/api';
 
 const BookingContext = createContext();
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 const SOCKET_BASE = API_BASE.replace('/api', '');
 
 const DEFAULT_HERO_SLIDES = [
@@ -301,7 +300,7 @@ export const BookingProvider = ({ children }) => {
   
   const fetchMovies = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/movies`);
+      const res = await API.get('/movies');
       if (res.data && res.data.length > 0) {
         setMoviesList(res.data);
       }
@@ -505,10 +504,8 @@ export const BookingProvider = ({ children }) => {
 
   const applyCoupon = async (code, totalAmount) => {
     try {
-      const token = localStorage.getItem('primeshow_token');
-      const res = await axios.post(`${API_BASE}/coupons/verify`, 
-        { code, amount: totalAmount },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await API.post('/coupons/verify', 
+        { code, amount: totalAmount }
       );
       
       setActiveBooking(prev => ({
@@ -572,8 +569,7 @@ export const BookingProvider = ({ children }) => {
     }
 
     try {
-      const token = localStorage.getItem('primeshow_token');
-      await axios.post(`${API_BASE}/bookings/create`, {
+      await API.post('/bookings/create', {
         showId: activeBooking.show?.id || 'sh_101',
         seats: bookingDetails.seats,
         tier: bookingDetails.tier,
@@ -584,8 +580,6 @@ export const BookingProvider = ({ children }) => {
         convenienceFee: bookingDetails.convenienceFee,
         tax: bookingDetails.tax,
         discount: bookingDetails.discount
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
     } catch (err) {}
 
@@ -602,12 +596,9 @@ export const BookingProvider = ({ children }) => {
     }));
 
     try {
-      const token = localStorage.getItem('primeshow_token');
-      await axios.post(`${API_BASE}/bookings/hold-seats`, {
+      await API.post('/bookings/hold-seats', {
         showId,
         seats
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
     } catch (err) {}
   };
@@ -639,10 +630,7 @@ export const BookingProvider = ({ children }) => {
     };
 
     try {
-      const token = localStorage.getItem('primeshow_token');
-      const res = await axios.post(`${API_BASE}/movies`, moviePayload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await API.post('/movies', moviePayload);
       const returnedMovie = res.data || moviePayload;
       setMoviesList(prev => {
         const filtered = prev.filter(m => m.id !== returnedMovie.id);
@@ -660,19 +648,13 @@ export const BookingProvider = ({ children }) => {
   const updateMovieInGlobalStore = async (movieId, updatedFields) => {
     setMoviesList(prev => prev.map(m => m.id === movieId ? { ...m, ...updatedFields } : m));
     try {
-      const token = localStorage.getItem('primeshow_token');
-      await axios.put(`${API_BASE}/movies/${movieId}`, updatedFields, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.put(`/movies/${movieId}`, updatedFields);
     } catch (err) {}
   };
 
   const deleteMovieFromGlobalStore = async (movieId) => {
     try {
-      const token = localStorage.getItem('primeshow_token');
-      await axios.delete(`${API_BASE}/movies/${movieId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await API.delete(`/movies/${movieId}`);
     } catch (err) {}
     setMoviesList(prev => prev.filter(m => m.id !== movieId));
   };
@@ -793,7 +775,7 @@ export const BookingProvider = ({ children }) => {
     };
     setHeroSlidesList(prev => [newSlide, ...prev]);
     try {
-      const res = await axios.post(`${API_BASE}/hero-slides`, newSlide);
+      const res = await API.post('/hero-slides', newSlide);
       if (res.data && Array.isArray(res.data)) {
         setHeroSlidesList(res.data);
       }
@@ -808,7 +790,7 @@ export const BookingProvider = ({ children }) => {
   const deleteHeroSlide = async (slideId) => {
     setHeroSlidesList(prev => prev.filter(s => s.id !== slideId));
     try {
-      const res = await axios.delete(`${API_BASE}/hero-slides/${slideId}`);
+      const res = await API.delete(`/hero-slides/${slideId}`);
       if (res.data && Array.isArray(res.data)) {
         setHeroSlidesList(res.data);
       }
@@ -820,9 +802,7 @@ export const BookingProvider = ({ children }) => {
 
   const fetchFeatureStrips = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/feature-chips?t=${Date.now()}`, {
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-      });
+      const res = await API.get(`/feature-chips?t=${Date.now()}`);
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setFeatureStripsList(res.data);
       }
@@ -831,9 +811,7 @@ export const BookingProvider = ({ children }) => {
 
   const fetchHeroSlides = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/hero-slides?t=${Date.now()}`, {
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-      });
+      const res = await API.get(`/hero-slides?t=${Date.now()}`);
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setHeroSlidesList(res.data);
       }
@@ -842,9 +820,7 @@ export const BookingProvider = ({ children }) => {
 
   const fetchUpcomingMovies = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/upcoming-movies?t=${Date.now()}`, {
-        headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
-      });
+      const res = await API.get(`/upcoming-movies?t=${Date.now()}`);
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setUpcomingMoviesList(res.data);
       }
@@ -972,7 +948,7 @@ export const BookingProvider = ({ children }) => {
     const newStrip = { id: `feat_${Date.now()}`, ...stripObj };
     setFeatureStripsList(prev => [newStrip, ...prev]);
     try {
-      const res = await axios.post(`${API_BASE}/feature-chips`, newStrip);
+      const res = await API.post('/feature-chips', newStrip);
       if (res.data && Array.isArray(res.data)) {
         setFeatureStripsList(res.data);
       }
@@ -983,7 +959,7 @@ export const BookingProvider = ({ children }) => {
   const updateFeatureStrip = async (stripId, updatedFields) => {
     setFeatureStripsList(prev => prev.map(s => s.id === stripId ? { ...s, ...updatedFields } : s));
     try {
-      const res = await axios.put(`${API_BASE}/feature-chips/${stripId}`, updatedFields);
+      const res = await API.put(`/feature-chips/${stripId}`, updatedFields);
       if (res.data && Array.isArray(res.data)) {
         setFeatureStripsList(res.data);
       }
@@ -993,7 +969,7 @@ export const BookingProvider = ({ children }) => {
   const deleteFeatureStrip = async (stripId) => {
     setFeatureStripsList(prev => prev.filter(s => s.id !== stripId));
     try {
-      const res = await axios.delete(`${API_BASE}/feature-chips/${stripId}`);
+      const res = await API.delete(`/feature-chips/${stripId}`);
       if (res.data && Array.isArray(res.data)) {
         setFeatureStripsList(res.data);
       }
@@ -1017,7 +993,7 @@ export const BookingProvider = ({ children }) => {
     const newMovie = { id: `up_${Date.now()}`, ...movieObj };
     setUpcomingMoviesList(prev => [newMovie, ...prev]);
     try {
-      const res = await axios.post(`${API_BASE}/upcoming-movies`, newMovie);
+      const res = await API.post('/upcoming-movies', newMovie);
       if (res.data && Array.isArray(res.data)) {
         setUpcomingMoviesList(res.data);
       }
@@ -1032,7 +1008,7 @@ export const BookingProvider = ({ children }) => {
   const deleteUpcomingMovie = async (movieId) => {
     setUpcomingMoviesList(prev => prev.filter(m => m.id !== movieId));
     try {
-      const res = await axios.delete(`${API_BASE}/upcoming-movies/${movieId}`);
+      const res = await API.delete(`/upcoming-movies/${movieId}`);
       if (res.data && Array.isArray(res.data)) {
         setUpcomingMoviesList(res.data);
       }

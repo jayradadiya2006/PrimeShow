@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Copy, Check, Tag, Sparkles, ArrowRight, Pause, Play } from 'lucide-react';
-import axios from 'axios';
-
-const API_BASE = 'http://localhost:5000/api';
+import API, { API_BASE } from '../services/api';
 
 export const OfferCarousel = ({ onSelectCategory }) => {
   const [banners, setBanners] = useState([]);
@@ -78,7 +76,7 @@ export const OfferCarousel = ({ onSelectCategory }) => {
 
   const fetchBanners = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/offers/banners`);
+      const res = await API.get('/offers/banners');
       if (res.data && res.data.length > 0) {
         setBanners(res.data);
       } else {

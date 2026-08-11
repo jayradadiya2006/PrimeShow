@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Search, Filter, MapPin, Clock, Check, Ticket, Sparkles, X, RefreshCw, MoreVertical, SlidersHorizontal, ArrowRight } from 'lucide-react';
-import axios from 'axios';
+import API, { API_BASE } from '../services/api';
 import { ActivityBookingModal } from '../components/ActivityBookingModal';
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const Activities = () => {
   const { selectedCity } = useAuth();
@@ -23,7 +21,7 @@ export const Activities = () => {
   const fetchActivities = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/activities`);
+      const res = await API.get('/activities');
       setActivitiesList(res.data);
     } catch (err) {
       setActivitiesList([

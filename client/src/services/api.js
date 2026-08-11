@@ -12,10 +12,10 @@ const cleanBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '');
 // Standardized single /api base
 const API_BASE = `${cleanBase}/api`;
 
-// 2. Create Axios Instance
+// 2. Create Axios Instance with extended 60s timeout for Render free tier cold-starts
 const API = axios.create({
   baseURL: API_BASE,
-  timeout: 45000, // 45 seconds to handle Render Cold Start
+  timeout: 60000, // 60 seconds to wait for Render free tier spin-up
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -30,30 +30,36 @@ API.interceptors.request.use((config) => {
   return config;
 }, (error) => Promise.reject(error));
 
-// 3. Automatic Retry Middleware on Network Error / Timeout
+// 3. Multi-Attempt Retry Middleware on Network Error / Timeout (Render Cold Start)
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
     const config = error.config;
     
-    // Stop if config is missing or already retried
-    if (!config || config.__isRetry) {
+    // If config is missing, return rejection
+    if (!config) {
       return Promise.reject(error);
     }
+
+    config._retryCount = config._retryCount || 0;
+    const maxRetries = 3;
     
-    // Retry once if Network Error / Timeout occurs (Render Cold Start)
-    if (
+    // Check if error is Network Error / Timeout / Cold-Start
+    const isColdStartError = 
       !error.response || 
       error.code === 'ECONNABORTED' || 
       error.code === 'ERR_NETWORK' ||
-      (error.message && error.message.includes('Network Error'))
-    ) {
-      config.__isRetry = true;
-      console.warn("⚡ [Render Cold-Start] Network timeout/error detected. Retrying request in 3s...");
+      [502, 503, 504].includes(error.response?.status) ||
+      (error.message && error.message.includes('Network Error'));
+
+    if (isColdStartError && config._retryCount < maxRetries) {
+      config._retryCount += 1;
+      const delayMs = config._retryCount * 2500; // 2.5s, 5s, 7.5s backoff
+      console.warn(`⚡ [Render Cold-Start] Network error detected. Attempt ${config._retryCount}/${maxRetries}. Retrying in ${delayMs/1000}s...`);
       
-      await new Promise(resolve => setTimeout(resolve, 3000)); // wait 3 seconds
+      await new Promise(resolve => setTimeout(resolve, delayMs));
       
-      // Execute retry cleanly using API.request(config)
+      // Execute retry using API.request(config)
       return API.request(config);
     }
     

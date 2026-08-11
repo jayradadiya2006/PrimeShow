@@ -5,10 +5,8 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import jsPDF from 'jspdf';
-import axios from 'axios';
+import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE = 'http://localhost:5000/api';
 
 export const ActivityBookingModal = ({ isOpen, onClose, activity, onBookingSuccess }) => {
   const { user } = useAuth();
@@ -51,7 +49,7 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, onBookingSucce
       // Simulate real-time banking verification network delay
       await new Promise(r => setTimeout(r, 2200));
 
-      const response = await axios.post(`${API_BASE}/activities/book`, {
+      const response = await API.post('/activities/book', {
         activityId: activity.id,
         ticketCount: passCount,
         paymentMethod: activePaymentTab === 'upi' ? 'UPI (Jay Hiralal Radadiya)' :

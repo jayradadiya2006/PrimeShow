@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Tag, Copy, Check, ShieldCheck, Sparkles, RefreshCw, Search, X, MoreVertical, SlidersHorizontal, ArrowRight } from 'lucide-react';
-import axios from 'axios';
+import API, { API_BASE } from '../services/api';
 import { OfferCarousel } from '../components/OfferCarousel';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const Offers = ({ onSelectCategory }) => {
   const [offersList, setOffersList] = useState([]);
@@ -18,7 +16,7 @@ export const Offers = ({ onSelectCategory }) => {
   const fetchOffers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/offers`);
+      const res = await API.get('/offers');
       setOffersList(res.data);
     } catch (err) {
       setOffersList([

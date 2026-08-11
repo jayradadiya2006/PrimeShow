@@ -4,10 +4,8 @@ import {
   Smartphone, Lock, Printer, Share2, Sparkles, Film, Clock, MapPin, Ticket, AlertCircle, AlertTriangle, Wallet, Copy, Check
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import axios from 'axios';
+import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE = 'http://localhost:5000/api';
 
 export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDate, onBookingSuccess }) => {
   const { user } = useAuth();
@@ -72,7 +70,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
         userName: user?.name || 'VIP Guest'
       };
 
-      const res = await axios.post(`${API_BASE}/private-theatre/book`, payload);
+      const res = await API.post('/private-theatre/book', payload);
       setConfirmedBooking(res.data);
       setStep('confirmation');
       if (onBookingSuccess) onBookingSuccess(res.data);

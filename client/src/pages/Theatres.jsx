@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Film, Shield, Star, PlaySquare, Search, Filter, ArrowRight, X, MoreVertical, SlidersHorizontal, Check } from 'lucide-react';
-import axios from 'axios';
+import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { TheatreMapModal } from '../components/TheatreMapModal';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const Theatres = ({ onSelectTheatre }) => {
   const { selectedCity } = useAuth();
@@ -22,7 +20,7 @@ export const Theatres = ({ onSelectTheatre }) => {
     const fetchTheatres = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_BASE}/theatres`);
+        const res = await API.get('/theatres');
         setTheatresList(res.data);
       } catch (err) {
         setTheatresList([

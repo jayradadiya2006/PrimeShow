@@ -3,12 +3,10 @@ import {
   MapPin, Film, Shield, Star, PlaySquare, ArrowLeft, Calendar, 
   Clock, Ticket, CheckCircle2, ChevronRight, Award, Sparkles, Building, Lock
 } from 'lucide-react';
-import axios from 'axios';
+import API, { API_BASE } from '../services/api';
 import { useBooking } from '../context/BookingContext';
 import { PrivateTheatreModal } from '../components/PrivateTheatreModal';
 import { TheatreMapModal } from '../components/TheatreMapModal';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
 
 export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) => {
   const { moviesList } = useBooking();
@@ -32,12 +30,12 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
   const fetchTheatreDetails = async () => {
     setLoading(true);
     try {
-      const [thRes, privRes] = await Promise.all([
-        axios.get(`${API_BASE}/theatres/${theatreId || 'th_1'}`),
-        axios.get(`${API_BASE}/private-theatre/bookings`)
+      const [thRes, privRes] = await Promise.allSettled([
+        API.get(`/theatres/${theatreId || 'th_1'}`),
+        API.get('/private-theatre/bookings')
       ]);
-      setTheatre(thRes.data);
-      setPrivateBookingsList(privRes.data);
+      if (thRes.status === 'fulfilled' && thRes.value.data) setTheatre(thRes.value.data);
+      if (privRes.status === 'fulfilled' && privRes.value.data) setPrivateBookingsList(privRes.value.data);
     } catch (err) {
       // Fallback seed data if offline
       setTheatre({
@@ -82,7 +80,7 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
 
   const handlePrivateBookingSuccess = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/private-theatre/bookings`);
+      const res = await API.get('/private-theatre/bookings');
       setPrivateBookingsList(res.data);
     } catch (err) {}
   };

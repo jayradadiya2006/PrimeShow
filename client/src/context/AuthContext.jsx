@@ -664,7 +664,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, phone, password) => {
     try {
-      const res = await axios.post(`${API_BASE}/auth/register`, { name, email, phone, password });
+      const res = await apiClient.post('/auth/register', { name, email, phone, password });
       const { token: userToken, user: userData } = res.data;
 
       setToken(userToken);
@@ -825,7 +825,7 @@ export const AuthProvider = ({ children }) => {
 
   const sendMessageToSupport = async (subject, message) => {
     try {
-      const res = await axios.post(`${API_BASE}/support/messages`, {
+      const res = await apiClient.post('/support/messages', {
         userId: user?.id || 'usr_1',
         userName: user?.name || 'Guest User',
         userEmail: user?.email || 'guest@primeshow.com',
@@ -853,7 +853,7 @@ export const AuthProvider = ({ children }) => {
 
   const replyToSupportMessage = async (msgId, replyText) => {
     try {
-      const res = await axios.post(`${API_BASE}/support/messages/${msgId}/reply`, { replyText });
+      const res = await apiClient.post(`/support/messages/${msgId}/reply`, { replyText });
       setSupportMessages(prev => prev.map(m => m.id === msgId ? res.data : m));
       return { success: true };
     } catch (err) {

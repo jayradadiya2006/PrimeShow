@@ -6,10 +6,8 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
 import { jsPDF } from 'jspdf';
-import axios from 'axios';
+import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE = 'http://localhost:5000/api';
 
 export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) => {
   const { user } = useAuth();
@@ -73,7 +71,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) =>
           userName: user?.name || 'VIP Guest'
         };
 
-        const res = await axios.post(`${API_BASE}/plays/book`, payload);
+        const res = await API.post('/plays/book', payload);
         setConfirmedBooking(res.data);
         setIsProcessing(false);
         setVerificationStep('');
