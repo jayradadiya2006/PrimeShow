@@ -653,20 +653,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
   // Fetch Theatres, Offers, Banners, Events, Plays & Activities
   const fetchAdminData = async () => {
     try {
-      const [offRes, banRes, thRes, evRes, plRes, actRes] = await Promise.all([
-        axios.get(`${API_BASE}/offers`),
-        axios.get(`${API_BASE}/offers/banners`),
-        axios.get(`${API_BASE}/theatres`),
-        axios.get(`${API_BASE}/events`),
-        axios.get(`${API_BASE}/plays`),
-        axios.get(`${API_BASE}/activities`)
+      const [offRes, banRes, thRes, evRes, plRes, actRes] = await Promise.allSettled([
+        API.get('/offers'),
+        API.get('/offers/banners'),
+        API.get('/theatres'),
+        API.get('/events'),
+        API.get('/plays'),
+        API.get('/activities')
       ]);
-      setOffersList(offRes.data);
-      setOfferBannersList(banRes.data);
-      setTheatresList(thRes.data);
-      setEventsList(evRes.data);
-      setPlaysList(plRes.data);
-      setActivitiesList(actRes.data);
+      if (offRes.status === 'fulfilled' && offRes.value.data) setOffersList(offRes.value.data);
+      if (banRes.status === 'fulfilled' && banRes.value.data) setOfferBannersList(banRes.value.data);
+      if (thRes.status === 'fulfilled' && thRes.value.data) setTheatresList(thRes.value.data);
+      if (evRes.status === 'fulfilled' && evRes.value.data) setEventsList(evRes.value.data);
+      if (plRes.status === 'fulfilled' && plRes.value.data) setPlaysList(plRes.value.data);
+      if (actRes.status === 'fulfilled' && actRes.value.data) setActivitiesList(actRes.value.data);
     } catch (err) {
       setOffersList([
         { id: 'off_1', code: 'PRIMESHOW50', title: '50% Flat Discount on IMAX & VIP Bookings', bank: 'All Cards & UPI' },
@@ -697,7 +697,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   // Fetch Scoped Blocked Seats when Cinema or Screen changes
   const fetchScopedSeats = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/theatres/${selectedTheatreId}/screens/${selectedScreenId}/blocked-seats`);
+      const res = await API.get(`/theatres/${selectedTheatreId}/screens/${selectedScreenId}/blocked-seats`);
       setScreenBlockedSeats(res.data.blockedSeats || []);
     } catch (err) {
       setScreenBlockedSeats(['V1', 'V2']);
@@ -785,11 +785,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
     try {
       let res;
       try {
-        res = await axios.get(`${API_BASE}/admin/users`, {
+        res = await API.get('/admin/users', {
           params: { page, limit: 10, search }
         });
       } catch (e1) {
-        res = await axios.get(`${API_BASE}/users`, {
+        res = await API.get('/users', {
           params: { page, limit: 10, search }
         });
       }
@@ -822,9 +822,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
     try {
       let res;
       try {
-        res = await axios.get(`${API_BASE}/admin/users/${u.id || u.email}/activity`);
+        res = await API.get(`/admin/users/${u.id || u.email}/activity`);
       } catch (e1) {
-        res = await axios.get(`${API_BASE}/admin/users/${u.id || u.email}/history`);
+        res = await API.get(`/admin/users/${u.id || u.email}/history`);
       }
       setUserActivityData(res.data);
     } catch (err) {
@@ -943,7 +943,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     if (!castName || !castMovieId) return;
 
     try {
-      await axios.post(`${API_BASE}/movies/${castMovieId}/cast`, {
+      await API.post(`/movies/${castMovieId}/cast`, {
         name: castName,
         role: castRole || 'Lead Role',
         photo: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'
@@ -970,7 +970,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleDeleteCastMember = async (movieId, castId) => {
     try {
-      await axios.delete(`${API_BASE}/movies/${movieId}/cast/${castId}`);
+      await API.delete(`/movies/${movieId}/cast/${castId}`);
     } catch (err) {}
 
     const targetMovie = moviesList.find(m => m.id === movieId);
@@ -1028,7 +1028,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   // Cinema & Screen Scoped Seat Blocking
   const handleToggleScopedSeatBlock = async (seatId) => {
     try {
-      const res = await axios.post(`${API_BASE}/theatres/${selectedTheatreId}/screens/${selectedScreenId}/toggle-seat-block`, { seatId });
+      const res = await API.post(`/theatres/${selectedTheatreId}/screens/${selectedScreenId}/toggle-seat-block`, { seatId });
       setScreenBlockedSeats(res.data.blockedSeats);
     } catch (err) {
       if (screenBlockedSeats.includes(seatId)) {
@@ -1056,13 +1056,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
     if (editingOfferId) {
       try {
-        await axios.put(`${API_BASE}/offers/${editingOfferId}`, offerPayload, { headers: { Authorization: `Bearer ${token}` } });
+        await API.put(`/offers/${editingOfferId}`, offerPayload);
       } catch (err) {}
       setOffersList(offersList.map(o => o.id === editingOfferId ? { ...o, ...offerPayload } : o));
       setActionSuccess('Offer updated successfully!');
     } else {
       try {
-        const res = await axios.post(`${API_BASE}/offers`, offerPayload, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await API.post('/offers', offerPayload);
         setOffersList([res.data, ...offersList]);
       } catch (err) {
         setOffersList([{ id: `off_${Date.now()}`, ...offerPayload, expiryDate: '2026-12-31' }, ...offersList]);
@@ -1078,7 +1078,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleDeleteOffer = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/offers/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await API.delete(`/offers/${id}`);
     } catch (err) {}
     setOffersList(offersList.filter(o => o.id !== id));
     setActionSuccess('Offer deleted');
@@ -1108,11 +1108,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingTheatreId) {
-        const res = await axios.put(`${API_BASE}/theatres/${editingTheatreId}`, theatreForm);
+        const res = await API.put(`/theatres/${editingTheatreId}`, theatreForm);
         setTheatresList(theatresList.map(t => t.id === editingTheatreId ? res.data : t));
         setActionSuccess('Theatre details updated successfully!');
       } else {
-        const res = await axios.post(`${API_BASE}/theatres`, theatreForm);
+        const res = await API.post('/theatres', theatreForm);
         setTheatresList([res.data, ...theatresList]);
         setActionSuccess('New Theatre added to platform!');
       }
@@ -1127,7 +1127,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleDeleteTheatre = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/theatres/${id}`);
+      await API.delete(`/theatres/${id}`);
       setTheatresList(theatresList.filter(t => t.id !== id));
       setActionSuccess('Theatre deleted!');
       setTimeout(() => setActionSuccess(''), 3000);
@@ -1142,7 +1142,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
         ...showSlotForm,
         movieTitle: selectedMov.title
       };
-      const res = await axios.post(`${API_BASE}/theatres/${showSlotForm.theatreId}/shows`, payload);
+      const res = await API.post(`/theatres/${showSlotForm.theatreId}/shows`, payload);
       setTheatresList(theatresList.map(t => t.id === showSlotForm.theatreId ? res.data : t));
       setActionSuccess('Show Slot added to Theatre!');
       setTimeout(() => setActionSuccess(''), 3000);
@@ -1151,7 +1151,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleDeleteShowSlot = async (theatreId, showId) => {
     try {
-      const res = await axios.delete(`${API_BASE}/theatres/${theatreId}/shows/${showId}`);
+      const res = await API.delete(`/theatres/${theatreId}/shows/${showId}`);
       setTheatresList(theatresList.map(t => t.id === theatreId ? res.data : t));
       setActionSuccess('Show Slot removed');
       setTimeout(() => setActionSuccess(''), 3000);
@@ -1211,11 +1211,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingPlayId) {
-        const res = await axios.put(`${API_BASE}/plays/${editingPlayId}`, playForm);
+        const res = await API.put(`/plays/${editingPlayId}`, playForm);
         setPlaysList(playsList.map(p => p.id === editingPlayId ? res.data : p));
         setActionSuccess('Play details updated successfully!');
       } else {
-        const res = await axios.post(`${API_BASE}/plays`, playForm);
+        const res = await API.post('/plays', playForm);
         setPlaysList([res.data, ...playsList]);
         setActionSuccess('New Theater Play added successfully!');
       }
@@ -1230,7 +1230,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleDeletePlay = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/plays/${id}`);
+      await API.delete(`/plays/${id}`);
       setPlaysList(playsList.filter(p => p.id !== id));
       setActionSuccess('Play deleted!');
       setTimeout(() => setActionSuccess(''), 3000);
@@ -1258,11 +1258,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingActivityId) {
-        const res = await axios.put(`${API_BASE}/activities/${editingActivityId}`, activityForm);
+        const res = await API.put(`/activities/${editingActivityId}`, activityForm);
         setActivitiesList(activitiesList.map(a => a.id === editingActivityId ? res.data : a));
         setActionSuccess('Activity pass details updated successfully!');
       } else {
-        const res = await axios.post(`${API_BASE}/activities`, activityForm);
+        const res = await API.post('/activities', activityForm);
         setActivitiesList([res.data, ...activitiesList]);
         setActionSuccess('New Adventure Activity Pass created successfully!');
       }
@@ -1277,7 +1277,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleDeleteActivity = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/activities/${id}`);
+      await API.delete(`/activities/${id}`);
       setActivitiesList(activitiesList.filter(a => a.id !== id));
       setActionSuccess('Activity pass deleted!');
       setTimeout(() => setActionSuccess(''), 3000);
@@ -1288,11 +1288,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingBannerId) {
-        const res = await axios.put(`${API_BASE}/offers/banners/${editingBannerId}`, bannerForm);
+        const res = await API.put(`/offers/banners/${editingBannerId}`, bannerForm);
         setOfferBannersList(offerBannersList.map(b => b.id === editingBannerId ? res.data : b));
         setActionSuccess('Banner slide updated successfully!');
       } else {
-        const res = await axios.post(`${API_BASE}/offers/banners`, bannerForm);
+        const res = await API.post('/offers/banners', bannerForm);
         setOfferBannersList([res.data, ...offerBannersList]);
         setActionSuccess('New Offer Carousel Banner created successfully!');
       }
@@ -1307,7 +1307,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleDeleteBanner = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/offers/banners/${id}`);
+      await API.delete(`/offers/banners/${id}`);
       setOfferBannersList(offerBannersList.filter(b => b.id !== id));
       setActionSuccess('Banner slide deleted!');
       setTimeout(() => setActionSuccess(''), 3000);
