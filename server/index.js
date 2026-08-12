@@ -7,6 +7,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
 const { User, UserNotification, UserActivityLog, Movie, Theatre, Show, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
+const { generateGeminiSupportReply } = require('./geminiAssistant');
 
 const app = express();
 const server = http.createServer(app);
@@ -126,6 +127,9 @@ io.on('connection', (socket) => {
       io.emit('receive_message', newMsg);
       io.to('admin').emit('NEW_SUPPORT_MESSAGE', newMsg);
       io.to(`user:${newMsg.userId}`).emit('receive_message', newMsg);
+
+      // Trigger Gemini AI Auto-Reply Assistant in Background
+      triggerAiAutoReply(newMsg);
     }
   });
 
@@ -159,6 +163,59 @@ const broadcastToAllClients = (eventType, payload) => {
     io.emit('client_content_sync', payload);
   }
 };
+
+/**
+ * Background Worker: Triggers Google Gemini AI Auto-Reply Assistant for incoming customer queries
+ */
+async function triggerAiAutoReply(msg, req = null) {
+  if (!msg || msg.reply || msg.status === 'replied') return;
+
+  setTimeout(async () => {
+    try {
+      const currentMsg = supportMessages.find(m => m.id === msg.id);
+      if (currentMsg && currentMsg.reply) return; // Admin already replied manually
+
+      console.log(`🤖 [Gemini AI Auto-Reply]: Processing user query "${msg.message}"...`);
+      const aiResponse = await generateGeminiSupportReply(msg.message, { userName: msg.userName });
+      const formattedReply = `🤖 [AI Assistant]: ${aiResponse}`;
+
+      let updatedMsg = null;
+      try {
+        if (mongoose.connection.readyState === 1) {
+          updatedMsg = await SupportMessage.findOneAndUpdate(
+            { id: msg.id },
+            { reply: formattedReply, status: 'replied' },
+            { new: true }
+          ).lean();
+        }
+      } catch (err) {}
+
+      const msgIndex = supportMessages.findIndex(m => m.id === msg.id);
+      if (msgIndex !== -1) {
+        supportMessages[msgIndex].reply = formattedReply;
+        supportMessages[msgIndex].status = 'replied';
+        if (!updatedMsg) updatedMsg = supportMessages[msgIndex];
+      }
+
+      if (!updatedMsg) {
+        updatedMsg = { ...msg, reply: formattedReply, status: 'replied' };
+      }
+
+      const ioInstance = req ? req.app.get('socketio') : io;
+      if (ioInstance) {
+        ioInstance.emit('SUPPORT_MESSAGE_REPLIED', updatedMsg);
+        ioInstance.emit('receive_message', updatedMsg);
+        ioInstance.to('admin').emit('SUPPORT_MESSAGE_REPLIED', updatedMsg);
+        if (updatedMsg.userId) {
+          ioInstance.to(`user:${updatedMsg.userId}`).emit('receive_message', updatedMsg);
+        }
+      }
+      broadcastToAllClients('SUPPORT_MESSAGE_REPLIED', updatedMsg);
+    } catch (err) {
+      console.warn('⚠️ Gemini AI Auto-Reply background worker note:', err.message);
+    }
+  }, 1000);
+}
 
 const userActivityLogs = []; // in-memory fallback list
 
@@ -2837,6 +2894,9 @@ app.post(['/api/support/messages', '/support/messages'], async (req, res) => {
     ioInstance.to(`user:${newMsg.userId}`).emit('receive_message', newMsg);
   }
   broadcastToAllClients('NEW_SUPPORT_MESSAGE', newMsg);
+
+  // Trigger Gemini AI Auto-Reply Assistant in Background
+  triggerAiAutoReply(newMsg, req);
 
   res.status(201).json(newMsg);
 });
