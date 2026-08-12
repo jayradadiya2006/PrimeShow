@@ -293,6 +293,40 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
+    // 2b. Live Support Chat Real-Time Socket Listeners (NEW_SUPPORT_MESSAGE, SUPPORT_MESSAGE_REPLIED, receive_message)
+    const handleNewSupportMessage = (msg) => {
+      console.log('⚡ [Socket.io]: Real-time NEW_SUPPORT_MESSAGE received:', msg);
+      if (msg && msg.id) {
+        setSupportMessages(prev => {
+          const idx = prev.findIndex(m => m.id === msg.id);
+          if (idx !== -1) {
+            const updated = [...prev];
+            updated[idx] = { ...updated[idx], ...msg };
+            return updated;
+          }
+          return [msg, ...prev];
+        });
+      }
+    };
+
+    const handleSupportMessageReplied = (msg) => {
+      console.log('⚡ [Socket.io]: Real-time SUPPORT_MESSAGE_REPLIED received:', msg);
+      if (msg && msg.id) {
+        setSupportMessages(prev => prev.map(m => m.id === msg.id ? { ...m, ...msg } : m));
+      }
+    };
+
+    socket.on('NEW_SUPPORT_MESSAGE', handleNewSupportMessage);
+    socket.on('SUPPORT_MESSAGE_REPLIED', handleSupportMessageReplied);
+    socket.on('receive_message', (msg) => {
+      console.log('⚡ [Socket.io]: Real-time receive_message event:', msg);
+      if (msg && msg.reply) {
+        handleSupportMessageReplied(msg);
+      } else {
+        handleNewSupportMessage(msg);
+      }
+    });
+
     // 3. SSE Fallback Stream Listener
     let eventSource = null;
     try {
@@ -326,6 +360,9 @@ export const AuthProvider = ({ children }) => {
       socket.off('GLOBAL_STATE_UPDATED');
       socket.off('client_content_sync');
       socket.off('NOTIFICATION_BROADCAST');
+      socket.off('NEW_SUPPORT_MESSAGE');
+      socket.off('SUPPORT_MESSAGE_REPLIED');
+      socket.off('receive_message');
       if (eventSource) eventSource.close();
     };
   }, []);
@@ -824,40 +861,65 @@ export const AuthProvider = ({ children }) => {
   };
 
   const sendMessageToSupport = async (subject, message) => {
+    const msgId = `msg_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const payload = {
+      id: msgId,
+      userId: user?.id || 'usr_1',
+      userName: user?.name || 'Guest User',
+      userEmail: user?.email || 'guest@primeshow.com',
+      userPhone: user?.phone || '',
+      subject: subject || 'General Support',
+      message: message || '',
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+
+    // 1. Emit instant WebSocket send_message event
     try {
-      const res = await apiClient.post('/support/messages', {
-        userId: user?.id || 'usr_1',
-        userName: user?.name || 'Guest User',
-        userEmail: user?.email || 'guest@primeshow.com',
-        userPhone: user?.phone || '',
-        subject,
-        message
+      socket.emit('send_message', payload);
+    } catch (e) {
+      console.warn('Socket emit send_message note:', e);
+    }
+
+    // 2. Persist via Backend REST API
+    try {
+      const res = await apiClient.post('/support/messages', payload);
+      setSupportMessages(prev => {
+        const exists = prev.some(m => m.id === res.data.id);
+        return exists ? prev.map(m => m.id === res.data.id ? res.data : m) : [res.data, ...prev];
       });
-      setSupportMessages(prev => [res.data, ...prev]);
       return { success: true, data: res.data };
     } catch (err) {
-      const localMsg = {
-        id: 'msg_' + Date.now(),
-        userId: user?.id || 'usr_1',
-        userName: user?.name || 'Guest User',
-        userEmail: user?.email || 'guest@primeshow.com',
-        subject,
-        message,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      };
-      setSupportMessages(prev => [localMsg, ...prev]);
-      return { success: true, data: localMsg };
+      setSupportMessages(prev => {
+        const exists = prev.some(m => m.id === payload.id);
+        return exists ? prev : [payload, ...prev];
+      });
+      return { success: true, data: payload };
     }
   };
 
   const replyToSupportMessage = async (msgId, replyText) => {
+    const payload = {
+      msgId,
+      reply: replyText,
+      replyText,
+      status: 'replied'
+    };
+
+    // 1. Emit instant WebSocket send_message event
+    try {
+      socket.emit('send_message', payload);
+    } catch (e) {
+      console.warn('Socket emit reply note:', e);
+    }
+
+    // 2. Persist via Backend REST API
     try {
       const res = await apiClient.post(`/support/messages/${msgId}/reply`, { replyText });
       setSupportMessages(prev => prev.map(m => m.id === msgId ? res.data : m));
       return { success: true };
     } catch (err) {
-      setSupportMessages(prev => prev.map(m => m.id === msgId ? { ...m, reply: replyText, status: 'resolved' } : m));
+      setSupportMessages(prev => prev.map(m => m.id === msgId ? { ...m, reply: replyText, status: 'replied' } : m));
       return { success: true };
     }
   };

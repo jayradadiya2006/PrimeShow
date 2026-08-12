@@ -53,6 +53,89 @@ io.on('connection', (socket) => {
     io.emit('NEW_USER_REGISTERED', data);
     io.emit('ADMIN_ALERT', { type: 'NEW_USER', data });
   });
+
+  // Live Chat & Support WebSockets Listeners (connection, send_message, receive_message)
+  socket.on('JOIN_CHAT_ROOM', (chatId) => {
+    if (chatId) {
+      socket.join(`chat:${chatId}`);
+      console.log(`⚡ [Socket.io]: Socket ${socket.id} joined chat room chat:${chatId}`);
+    }
+  });
+
+  socket.on('send_message', async (data) => {
+    console.log(`⚡ [Socket.io Live Chat]: Received send_message event:`, data);
+    if (!data) return;
+
+    if (data.msgId || (data.id && data.reply)) {
+      const msgId = data.msgId || data.id;
+      const replyText = data.reply || data.replyText || data.message || '';
+
+      let updatedMsg = null;
+      try {
+        if (mongoose.connection.readyState === 1) {
+          updatedMsg = await SupportMessage.findOneAndUpdate(
+            { id: msgId },
+            { reply: replyText, status: 'replied' },
+            { new: true }
+          ).lean();
+        }
+      } catch (err) {}
+
+      const msgIndex = supportMessages.findIndex(m => m.id === msgId);
+      if (msgIndex !== -1) {
+        supportMessages[msgIndex].reply = replyText;
+        supportMessages[msgIndex].status = 'replied';
+        if (!updatedMsg) updatedMsg = supportMessages[msgIndex];
+      }
+
+      if (!updatedMsg) {
+        updatedMsg = { id: msgId, reply: replyText, status: 'replied', updatedAt: new Date().toISOString() };
+      }
+
+      io.emit('SUPPORT_MESSAGE_REPLIED', updatedMsg);
+      io.emit('receive_message', updatedMsg);
+      io.to('admin').emit('SUPPORT_MESSAGE_REPLIED', updatedMsg);
+      if (updatedMsg.userId) {
+        io.to(`user:${updatedMsg.userId}`).emit('receive_message', updatedMsg);
+      }
+    } else {
+      const newMsg = {
+        id: data.id || `msg_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        userId: data.userId || 'usr_1',
+        userName: data.userName || 'Customer',
+        userEmail: data.userEmail || 'customer@primeshow.com',
+        userPhone: data.userPhone || '',
+        subject: data.subject || 'General Support',
+        message: data.message || 'Hello Admin Support!',
+        reply: data.reply || null,
+        status: data.status || 'pending',
+        createdAt: data.createdAt || new Date().toISOString()
+      };
+
+      try {
+        if (mongoose.connection.readyState === 1) {
+          await SupportMessage.findOneAndUpdate({ id: newMsg.id }, newMsg, { upsert: true, new: true, setDefaultsOnInsert: true });
+        }
+      } catch (err) {}
+
+      const existingIdx = supportMessages.findIndex(m => m.id === newMsg.id);
+      if (existingIdx !== -1) supportMessages[existingIdx] = newMsg;
+      else supportMessages.unshift(newMsg);
+
+      io.emit('NEW_SUPPORT_MESSAGE', newMsg);
+      io.emit('receive_message', newMsg);
+      io.to('admin').emit('NEW_SUPPORT_MESSAGE', newMsg);
+      io.to(`user:${newMsg.userId}`).emit('receive_message', newMsg);
+    }
+  });
+
+  socket.on('typing_start', (data) => {
+    socket.broadcast.emit('typing_start', data);
+  });
+
+  socket.on('typing_stop', (data) => {
+    socket.broadcast.emit('typing_stop', data);
+  });
 });
 
 const broadcastToAllClients = (eventType, payload) => {
@@ -2700,33 +2783,104 @@ app.delete(['/api/activities/:id', '/api/admin/activities/:id'], async (req, res
 // WHATSAPP SUPPORT & BOOKINGS
 // -------------------------------------------------------------
 
-app.get('/api/support/messages', (req, res) => {
+app.get(['/api/support/messages', '/support/messages'], async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbMessages = await SupportMessage.find().sort({ createdAt: -1 }).lean();
+      if (dbMessages && dbMessages.length > 0) {
+        const dbIds = new Set(dbMessages.map(m => m.id));
+        const combined = [...dbMessages];
+        supportMessages.forEach(m => {
+          if (!dbIds.has(m.id)) combined.push(m);
+        });
+        return res.json(combined);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Error fetching support messages from MongoDB Atlas:', err.message);
+  }
   res.json(supportMessages);
 });
 
-app.post('/api/support/messages', (req, res) => {
-  const { subject, message, userName, userEmail } = req.body;
+app.post(['/api/support/messages', '/support/messages'], async (req, res) => {
+  const { subject, message, userName, userEmail, userPhone, userId } = req.body;
   const newMsg = {
-    id: `msg_${Date.now()}`,
-    userId: req.body.userId || 'usr_1',
+    id: req.body.id || `msg_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    userId: userId || req.body.userId || 'usr_1',
     userName: userName || 'Customer',
     userEmail: userEmail || 'customer@primeshow.com',
-    subject: subject || 'General Query',
+    userPhone: userPhone || '',
+    subject: subject || 'General Support',
     message: message || 'Hello Admin Support!',
     reply: null,
     status: 'pending',
     createdAt: new Date().toISOString()
   };
-  supportMessages.unshift(newMsg);
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      await SupportMessage.findOneAndUpdate({ id: newMsg.id }, newMsg, { upsert: true, new: true, setDefaultsOnInsert: true });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error saving support message to MongoDB Atlas:', err.message);
+  }
+
+  const existingIdx = supportMessages.findIndex(m => m.id === newMsg.id);
+  if (existingIdx !== -1) supportMessages[existingIdx] = newMsg;
+  else supportMessages.unshift(newMsg);
+
+  if (req.app.get('socketio')) {
+    const ioInstance = req.app.get('socketio');
+    ioInstance.emit('NEW_SUPPORT_MESSAGE', newMsg);
+    ioInstance.emit('receive_message', newMsg);
+    ioInstance.to('admin').emit('NEW_SUPPORT_MESSAGE', newMsg);
+    ioInstance.to(`user:${newMsg.userId}`).emit('receive_message', newMsg);
+  }
+  broadcastToAllClients('NEW_SUPPORT_MESSAGE', newMsg);
+
   res.status(201).json(newMsg);
 });
 
-app.put('/api/support/messages/:id/reply', (req, res) => {
-  const msg = supportMessages.find(m => m.id === req.params.id);
-  if (!msg) return res.status(404).json({ error: 'Message not found' });
-  msg.reply = req.body.reply;
-  msg.status = 'replied';
-  res.json(msg);
+app.all(['/api/support/messages/:id/reply', '/support/messages/:id/reply'], async (req, res) => {
+  const { id } = req.params;
+  const replyText = req.body.replyText || req.body.reply || req.body.message || '';
+
+  let updatedMsg = null;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      updatedMsg = await SupportMessage.findOneAndUpdate(
+        { id },
+        { reply: replyText, status: 'replied' },
+        { new: true }
+      ).lean();
+    }
+  } catch (err) {
+    console.warn('⚠️ Error updating support reply in MongoDB Atlas:', err.message);
+  }
+
+  const msgIndex = supportMessages.findIndex(m => m.id === id);
+  if (msgIndex !== -1) {
+    supportMessages[msgIndex].reply = replyText;
+    supportMessages[msgIndex].status = 'replied';
+    if (!updatedMsg) updatedMsg = supportMessages[msgIndex];
+  }
+
+  if (!updatedMsg) {
+    updatedMsg = { id, reply: replyText, status: 'replied', updatedAt: new Date().toISOString() };
+  }
+
+  if (req.app.get('socketio')) {
+    const ioInstance = req.app.get('socketio');
+    ioInstance.emit('SUPPORT_MESSAGE_REPLIED', updatedMsg);
+    ioInstance.emit('receive_message', updatedMsg);
+    ioInstance.to('admin').emit('SUPPORT_MESSAGE_REPLIED', updatedMsg);
+    if (updatedMsg.userId) {
+      ioInstance.to(`user:${updatedMsg.userId}`).emit('receive_message', updatedMsg);
+    }
+  }
+  broadcastToAllClients('SUPPORT_MESSAGE_REPLIED', updatedMsg);
+
+  res.json(updatedMsg);
 });
 
 // Universal Booking Creation Pipeline (Movies, Events, Plays, Activities)

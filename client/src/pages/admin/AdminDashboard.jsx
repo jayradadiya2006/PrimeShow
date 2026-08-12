@@ -849,9 +849,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
     fetchScopedSeats();
   }, [selectedTheatreId, selectedScreenId]);
 
-  // Real-Time Admin Socket Alerts (New User Bookings & Registrations)
+  // Real-Time Admin Socket Alerts (New User Bookings, Registrations & Live Support Messages)
   useEffect(() => {
     if (!socket) return;
+
+    socket.emit('JOIN_ADMIN_ROOM');
 
     socket.on('NEW_USER_BOOKING', (data) => {
       console.log('⚡ [Admin Socket Alert]: New booking received', data);
@@ -871,9 +873,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
       setTimeout(() => setActionSuccess(''), 5000);
     });
 
+    socket.on('NEW_SUPPORT_MESSAGE', (data) => {
+      console.log('⚡ [Admin Socket Alert]: New Live Support Message received', data);
+      setActionSuccess(`💬 New Live Support Query from ${data.userName || data.userEmail || 'Customer'}: "${data.message}"`);
+      setTimeout(() => setActionSuccess(''), 6000);
+    });
+
     return () => {
       socket.off('NEW_USER_BOOKING');
       socket.off('NEW_USER_REGISTERED');
+      socket.off('NEW_SUPPORT_MESSAGE');
     };
   }, [socket, activeTab]);
 

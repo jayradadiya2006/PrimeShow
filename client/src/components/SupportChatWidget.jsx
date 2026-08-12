@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, X, Send, CheckCircle2, Bot, Sparkles, User } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, socket } from '../context/AuthContext';
 
 export const SupportChatWidget = () => {
   const { user, supportMessages, sendMessageToSupport } = useAuth();
@@ -8,8 +8,22 @@ export const SupportChatWidget = () => {
   const [subject, setSubject] = useState('Cinema Booking Assistance');
   const [message, setMessage] = useState('');
   const [sentSuccess, setSentSuccess] = useState(false);
+  const chatEndRef = useRef(null);
 
-  const userMessages = supportMessages.filter(m => m.userId === (user?.id || 'usr_1'));
+  const activeUserId = user?.id || user?.email || 'usr_1';
+  const userMessages = supportMessages.filter(m => m.userId === activeUserId || (user?.email && m.userEmail === user.email));
+
+  useEffect(() => {
+    if (socket) {
+      socket.emit('JOIN_USER_ROOM', activeUserId);
+    }
+  }, [activeUserId]);
+
+  useEffect(() => {
+    if (isOpen && chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [userMessages.length, isOpen]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -106,6 +120,7 @@ export const SupportChatWidget = () => {
                 ✓ Message delivered to Admin!
               </div>
             )}
+            <div ref={chatEndRef} />
           </div>
 
           {/* Chat Input Form */}

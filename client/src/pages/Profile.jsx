@@ -213,7 +213,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
     doc.save(`PrimeShow_Ticket_${b.id}.pdf`);
   };
 
-  const userChatList = supportMessages.filter(m => m.userId === user.id);
+  const userChatList = supportMessages.filter(m => m.userId === user.id || (user.email && m.userEmail === user.email));
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
   return (
