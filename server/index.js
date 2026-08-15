@@ -1380,11 +1380,11 @@ app.get(['/api/notifications', '/api/user/notifications'], async (req, res) => {
 app.post(['/api/notifications', '/api/admin/notifications'], async (req, res) => {
   const { title, message, type, priority, date } = req.body;
   if (!title || !message) {
-    return res.status(400).json({ error: 'Title and message required' });
+    return res.status(400).json({ success: false, error: 'Title and message required' });
   }
 
   const notifType = priority || type || 'SYSTEM';
-  const newNotif = {
+  const notifData = {
     id: req.body.id || `notif_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     title: title.trim(),
     message: message.trim(),
@@ -1394,25 +1394,29 @@ app.post(['/api/notifications', '/api/admin/notifications'], async (req, res) =>
   };
 
   try {
-    if (mongoose.connection.readyState === 1) {
-      await Notification.findOneAndUpdate({ id: newNotif.id }, newNotif, { upsert: true, new: true });
+    const savedDoc = await Notification.findOneAndUpdate(
+      { id: notifData.id },
+      notifData,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    console.log('Saved to DB:', savedDoc);
+
+    const existingIdx = notifications.findIndex(n => n.id === savedDoc.id);
+    if (existingIdx !== -1) notifications[existingIdx] = savedDoc.toObject ? savedDoc.toObject() : savedDoc;
+    else notifications.unshift(savedDoc.toObject ? savedDoc.toObject() : savedDoc);
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('NOTIFICATION_UPDATED', savedDoc);
+      req.app.get('socketio').emit('NOTIFICATION_BROADCAST', savedDoc);
     }
+    broadcastToAllClients('NOTIFICATION_UPDATED', savedDoc);
+    broadcastToAllClients('NOTIFICATION_BROADCAST', savedDoc);
+
+    return res.status(201).json(savedDoc);
   } catch (err) {
-    console.warn('⚠️ Notification DB create error:', err.message);
+    console.error('❌ MongoDB Write Error in POST /api/notifications:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
-
-  const existingIdx = notifications.findIndex(n => n.id === newNotif.id);
-  if (existingIdx !== -1) notifications[existingIdx] = newNotif;
-  else notifications.unshift(newNotif);
-
-  if (req.app.get('socketio')) {
-    req.app.get('socketio').emit('NOTIFICATION_UPDATED', newNotif);
-    req.app.get('socketio').emit('NOTIFICATION_BROADCAST', newNotif);
-  }
-  broadcastToAllClients('NOTIFICATION_UPDATED', newNotif);
-  broadcastToAllClients('NOTIFICATION_BROADCAST', newNotif);
-
-  res.status(201).json(newNotif);
 });
 
 app.put(['/api/notifications/:id/read', '/api/user/notifications/:id/read'], async (req, res) => {
@@ -1621,33 +1625,33 @@ app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
     cities: req.body.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
   };
 
-  // 1. Write to MongoDB Atlas
   try {
-    const mongoose = require('mongoose');
-    if (mongoose.connection.readyState === 1) {
-      await Movie.findOneAndUpdate({ id: newMovie.id }, newMovie, { upsert: true, new: true, setDefaultsOnInsert: true });
+    const savedDoc = await Movie.findOneAndUpdate(
+      { id: newMovie.id },
+      newMovie,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    console.log('Saved to DB:', savedDoc);
+
+    const existingIdx = movies.findIndex(m => m.id === savedDoc.id);
+    if (existingIdx !== -1) {
+      movies[existingIdx] = savedDoc.toObject ? savedDoc.toObject() : savedDoc;
+    } else {
+      movies.unshift(savedDoc.toObject ? savedDoc.toObject() : savedDoc);
     }
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('MOVIE_UPDATED', savedDoc);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: savedDoc });
+    }
+    broadcastToAllClients('MOVIE_UPDATED', savedDoc);
+    broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: savedDoc });
+
+    return res.status(201).json(savedDoc);
   } catch (err) {
-    console.warn('⚠️ Error saving movie to MongoDB Atlas:', err.message);
+    console.error('❌ MongoDB Write Error in POST /api/movies:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
-
-  // 2. Update in-memory fallback list
-  const existingIdx = movies.findIndex(m => m.id === newMovie.id);
-  if (existingIdx !== -1) {
-    movies[existingIdx] = newMovie;
-  } else {
-    movies.unshift(newMovie);
-  }
-
-  // 3. Emit real-time broadcasts
-  if (req.app.get('socketio')) {
-    req.app.get('socketio').emit('MOVIE_UPDATED', newMovie);
-    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: newMovie });
-  }
-  broadcastToAllClients('MOVIE_UPDATED', newMovie);
-  broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: newMovie });
-
-  res.status(201).json(newMovie);
 });
 
 app.put(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
@@ -2879,30 +2883,33 @@ app.post(['/api/support/messages', '/support/messages'], async (req, res) => {
   };
 
   try {
-    if (mongoose.connection.readyState === 1) {
-      await SupportMessage.findOneAndUpdate({ id: newMsg.id }, newMsg, { upsert: true, new: true, setDefaultsOnInsert: true });
+    const savedDoc = await SupportMessage.findOneAndUpdate(
+      { id: newMsg.id },
+      newMsg,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    console.log('Saved to DB:', savedDoc);
+
+    const existingIdx = supportMessages.findIndex(m => m.id === savedDoc.id);
+    if (existingIdx !== -1) supportMessages[existingIdx] = savedDoc.toObject ? savedDoc.toObject() : savedDoc;
+    else supportMessages.unshift(savedDoc.toObject ? savedDoc.toObject() : savedDoc);
+
+    if (req.app.get('socketio')) {
+      const ioInstance = req.app.get('socketio');
+      ioInstance.emit('NEW_SUPPORT_MESSAGE', savedDoc);
+      ioInstance.emit('receive_message', savedDoc);
+      ioInstance.to('admin').emit('NEW_SUPPORT_MESSAGE', savedDoc);
+      ioInstance.to(`user:${savedDoc.userId}`).emit('receive_message', savedDoc);
     }
+    broadcastToAllClients('NEW_SUPPORT_MESSAGE', savedDoc);
+
+    triggerAiAutoReply(savedDoc, req);
+
+    return res.status(201).json(savedDoc);
   } catch (err) {
-    console.warn('⚠️ Error saving support message to MongoDB Atlas:', err.message);
+    console.error('❌ MongoDB Write Error in POST /api/support/messages:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
-
-  const existingIdx = supportMessages.findIndex(m => m.id === newMsg.id);
-  if (existingIdx !== -1) supportMessages[existingIdx] = newMsg;
-  else supportMessages.unshift(newMsg);
-
-  if (req.app.get('socketio')) {
-    const ioInstance = req.app.get('socketio');
-    ioInstance.emit('NEW_SUPPORT_MESSAGE', newMsg);
-    ioInstance.emit('receive_message', newMsg);
-    ioInstance.to('admin').emit('NEW_SUPPORT_MESSAGE', newMsg);
-    ioInstance.to(`user:${newMsg.userId}`).emit('receive_message', newMsg);
-  }
-  broadcastToAllClients('NEW_SUPPORT_MESSAGE', newMsg);
-
-  // Trigger Gemini AI Auto-Reply Assistant in Background
-  triggerAiAutoReply(newMsg, req);
-
-  res.status(201).json(newMsg);
 });
 
 app.all(['/api/support/messages/:id/reply', '/support/messages/:id/reply'], async (req, res) => {
