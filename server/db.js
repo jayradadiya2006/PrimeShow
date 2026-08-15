@@ -6,6 +6,11 @@ try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
 } catch (e) {}
 
+try {
+  mongoose.set('returnDocument', 'after');
+} catch (e) {}
+mongoose.set('bufferCommands', false);
+
 const {
   User,
   Movie,
@@ -241,7 +246,10 @@ async function connectDB() {
     }
 
     console.log(`🔄 Connecting strictly to MongoDB Atlas Cloud Database...`);
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 10000
+    });
 
     isConnected = true;
     console.log(`>>> CONNECTED TO CLOUD DB: ${mongoose.connection.host}`);

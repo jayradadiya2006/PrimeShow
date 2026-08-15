@@ -7,6 +7,10 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+
+try {
+  mongoose.set('returnDocument', 'after');
+} catch (e) {}
 const http = require('http');
 const { Server } = require('socket.io');
 const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
