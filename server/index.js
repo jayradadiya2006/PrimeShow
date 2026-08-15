@@ -3198,7 +3198,52 @@ const seedDatabaseIfEmpty = async () => {
     const notifCount = await Notification.countDocuments({});
     if (notifCount === 0 && notifications.length > 0) {
       await Notification.insertMany(notifications);
-      console.log('🌱 Seeded MongoDB Atlas with initial Notification records');
+      console.log('🌱 Seeded MongoDB with initial Notification records');
+    }
+
+    const userCount = await User.countDocuments({});
+    if (userCount === 0) {
+      await User.insertMany([
+        {
+          id: 'admin_1',
+          name: 'Admin Command Desk',
+          username: 'admin',
+          email: 'admin@primeshow.com',
+          password: 'admin123',
+          phone: '+91 9999999999',
+          role: 'ADMIN',
+          rewardsPoints: 99999
+        },
+        {
+          id: 'usr_1',
+          name: 'Jay Hiralal Radadiya',
+          username: 'jayradadiya',
+          email: 'jayradadiya2006@gmail.com',
+          phone: '+91 9876543210',
+          role: 'CUSTOMER',
+          city: 'Surat',
+          rewardsPoints: 1500
+        }
+      ]);
+      console.log('🌱 Seeded MongoDB with initial User records');
+    }
+
+    const msgCount = await SupportMessage.countDocuments({});
+    if (msgCount === 0) {
+      await SupportMessage.insertMany([
+        {
+          id: 'msg_welcome_1',
+          userId: 'usr_1',
+          userName: 'Jay Hiralal Radadiya',
+          userEmail: 'jayradadiya2006@gmail.com',
+          subject: 'Cinema Ticket & VIP Seating Inquiry',
+          message: 'Hello PrimeShow Support! Can I upgrade my seats to VIP Recliners for Avatar: Fire and Ash?',
+          reply: '🤖 [AI Assistant]: Welcome to PrimeShow VIP Support! Yes, you can upgrade your seats directly from your profile or during checkout.',
+          status: 'replied',
+          createdAt: new Date()
+        }
+      ]);
+      console.log('🌱 Seeded MongoDB with initial Support Messages / Chats records');
     }
   } catch (err) {
     console.warn('⚠️ Auto-seeding MongoDB Atlas note:', err.message);
