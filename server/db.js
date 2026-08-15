@@ -231,26 +231,25 @@ let isConnected = false;
 async function connectDB() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    console.error('❌ MONGODB_URI environment variable is missing! Database connection aborted.');
-    return false;
+    throw new Error('❌ MONGODB_URI environment variable is missing! Missing MongoDB Atlas URI connection string.');
   }
 
   try {
     if (mongoose.connection.readyState === 1) {
-      console.log('Connected to Database Host:', mongoose.connection.host);
+      console.log(`>>> CONNECTED TO CLOUD DB: ${mongoose.connection.host}`);
       return true;
     }
 
-    console.log(`🔄 Connecting strictly to MongoDB Atlas: ${uri.substring(0, 35)}...`);
+    console.log(`🔄 Connecting strictly to MongoDB Atlas Cloud Database...`);
     await mongoose.connect(uri);
 
     isConnected = true;
-    console.log('Connected to Database Host:', mongoose.connection.host);
+    console.log(`>>> CONNECTED TO CLOUD DB: ${mongoose.connection.host}`);
     await seedDatabaseIfEmpty();
     return true;
   } catch (err) {
-    console.error('❌ MongoDB Atlas connection failed:', err.message);
-    return false;
+    console.error(`❌ MongoDB Atlas Connection Error: ${err.message}`);
+    throw err;
   }
 }
 
