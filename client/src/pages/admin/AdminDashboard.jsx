@@ -779,7 +779,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     }
   ];
 
-  // Fetch Admin Registered Users with Search & Pagination (Supports direct DB fetch & fallbacks)
+  // Fetch Admin Registered Users with Search & Pagination directly from MongoDB Atlas
   const fetchAdminUsers = async (page = 1, search = '') => {
     setUsersLoading(true);
     try {
@@ -796,19 +796,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
       if (res && res.data) {
         const fetchedList = Array.isArray(res.data) ? res.data : (res.data.users || []);
-        const finalUsersList = (fetchedList.length > 0 || search) ? fetchedList : fallbackSeedUsers;
-        setUsersList(finalUsersList);
-        setUserTotalCount(res.data.totalUsers !== undefined && res.data.totalUsers > 0 ? res.data.totalUsers : finalUsersList.length);
-        setUserTotalPages(res.data.totalPages || Math.ceil(finalUsersList.length / 10) || 1);
+        setUsersList(fetchedList);
+        setUserTotalCount(res.data.totalUsers !== undefined ? res.data.totalUsers : fetchedList.length);
+        setUserTotalPages(res.data.totalPages || Math.ceil((fetchedList.length || 1) / 10) || 1);
         setUserCurrentPage(res.data.currentPage || page);
       } else {
-        setUsersList(fallbackSeedUsers);
-        setUserTotalCount(fallbackSeedUsers.length);
+        setUsersList([]);
+        setUserTotalCount(0);
       }
     } catch (err) {
       console.warn('Failed to fetch admin users from database:', err);
-      setUsersList(fallbackSeedUsers);
-      setUserTotalCount(fallbackSeedUsers.length);
+      setUsersList([]);
+      setUserTotalCount(0);
     } finally {
       setUsersLoading(false);
     }

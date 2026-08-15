@@ -345,7 +345,6 @@ const upsertUserRecord = async (userData) => {
       }
 
       if (dbDoc) {
-        // Attach firebaseUid if missing
         if (firebaseUid && !dbDoc.firebaseUid) {
           dbDoc.firebaseUid = firebaseUid;
         }
@@ -359,8 +358,10 @@ const upsertUserRecord = async (userData) => {
           dbDoc.phoneNumber = phone;
         }
         dbDoc.isOnline = true;
+        dbDoc.lastLoginAt = new Date();
         dbDoc.lastLoginTime = new Date();
         dbDoc.lastActive = new Date();
+        dbDoc.authProvider = provider.toLowerCase().includes('google') ? 'google' : (provider.toLowerCase().includes('phone') || provider.toLowerCase().includes('otp') ? 'phone' : 'email');
         await dbDoc.save();
 
         const userObj = dbDoc.toObject();
@@ -368,6 +369,7 @@ const upsertUserRecord = async (userData) => {
         return userObj;
       } else {
         const stableId = firebaseUid ? `usr_${firebaseUid}` : `usr_${Date.now()}`;
+        const normalizedAuth = provider.toLowerCase().includes('google') ? 'google' : (provider.toLowerCase().includes('phone') || provider.toLowerCase().includes('otp') ? 'phone' : 'email');
         const newRecord = {
           id: stableId,
           firebaseUid: firebaseUid || undefined,
@@ -379,10 +381,13 @@ const upsertUserRecord = async (userData) => {
           role: role,
           city: city,
           rewardsPoints: userData.rewardsPoints || 500,
+          rewardPoints: userData.rewardsPoints || 500,
           avatar: avatar,
           profilePicture: avatar,
           provider: provider,
+          authProvider: normalizedAuth,
           isOnline: true,
+          lastLoginAt: new Date(),
           lastLoginTime: new Date(),
           lastActive: new Date()
         };
