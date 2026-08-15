@@ -1,9 +1,6 @@
-// PrimeShow Server Database Connection & Seed Sync
+require('dotenv').config();
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 const dns = require('dns');
-
-dotenv.config();
 
 try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
@@ -232,31 +229,29 @@ const initialBanners = [
 let isConnected = false;
 
 async function connectDB() {
-  const urisToTry = [
-    process.env.MONGODB_URI,
-    'mongodb://127.0.0.1:27017/primeshow'
-  ].filter(Boolean);
-
-  for (const uri of urisToTry) {
-    try {
-      if (mongoose.connection.readyState === 1) return true;
-
-      console.log(`🔄 Connecting to MongoDB (${uri.includes('mongodb+srv') ? 'Atlas' : 'Local'})...`);
-      await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 3000
-      });
-
-      isConnected = true;
-      console.log(`✅ Connected successfully to MongoDB (${uri.includes('mongodb+srv') ? 'Atlas Cluster' : 'Local Instance'}): primeshow`);
-      await seedDatabaseIfEmpty();
-      return true;
-    } catch (err) {
-      console.warn(`⚠️ Connection attempt failed for ${uri.substring(0, 30)}...: ${err.message}`);
-    }
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.error('❌ MONGODB_URI environment variable is missing! Database connection aborted.');
+    return false;
   }
 
-  console.log('💡 Running in hybrid mode with local persistent state.');
-  return false;
+  try {
+    if (mongoose.connection.readyState === 1) {
+      console.log('Connected to Database Host:', mongoose.connection.host);
+      return true;
+    }
+
+    console.log(`🔄 Connecting strictly to MongoDB Atlas: ${uri.substring(0, 35)}...`);
+    await mongoose.connect(uri);
+
+    isConnected = true;
+    console.log('Connected to Database Host:', mongoose.connection.host);
+    await seedDatabaseIfEmpty();
+    return true;
+  } catch (err) {
+    console.error('❌ MongoDB Atlas connection failed:', err.message);
+    return false;
+  }
 }
 
 async function seedDatabaseIfEmpty() {
