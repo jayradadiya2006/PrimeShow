@@ -978,6 +978,67 @@ app.post(['/api/auth/admin-login', '/api/admin/login', '/auth/admin-login', '/ad
   }
 });
 
+// -------------------------------------------------------------
+// USER MANAGEMENT ENDPOINTS (Supports GET & POST /api/users)
+// -------------------------------------------------------------
+const userRoutesPaths = ['/api/users', '/users', '/api/admin/users', '/admin/users'];
+app.options(userRoutesPaths, cors());
+
+app.get(userRoutesPaths, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  try {
+    const dbUsers = await User.find().sort({ createdAt: -1 }).lean();
+    if (dbUsers && dbUsers.length > 0) {
+      return res.status(200).json(dbUsers);
+    }
+    const memoryUsers = Array.from(globalRegisteredUsersMap.values());
+    return res.status(200).json(memoryUsers);
+  } catch (err) {
+    const memoryUsers = Array.from(globalRegisteredUsersMap.values());
+    return res.status(200).json(memoryUsers);
+  }
+});
+
+app.post(userRoutesPaths, async (req, res) => {
+  try {
+    const userData = {
+      id: req.body.id || `usr_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      name: req.body.name || 'PrimeShow User',
+      username: req.body.username || (req.body.email ? req.body.email.split('@')[0] : `user_${Date.now()}`),
+      email: req.body.email ? req.body.email.toLowerCase().trim() : `user_${Date.now()}@primeshow.com`,
+      phone: req.body.phone || '+91 9876543210',
+      role: req.body.role || 'CUSTOMER',
+      city: req.body.city || 'Surat',
+      rewardsPoints: req.body.rewardsPoints || 500,
+      avatar: req.body.avatar || req.body.profilePicture || 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Alexander&backgroundColor=0f172a',
+      profilePicture: req.body.profilePicture || req.body.avatar || 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=Alexander&backgroundColor=0f172a',
+      provider: req.body.provider || 'LOCAL',
+      isOnline: true,
+      lastLoginTime: new Date()
+    };
+
+    const savedDoc = await User.findOneAndUpdate(
+      { $or: [{ id: userData.id }, { email: userData.email }] },
+      userData,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    console.log('Saved to DB:', savedDoc);
+
+    const userObj = savedDoc.toObject ? savedDoc.toObject() : savedDoc;
+    globalRegisteredUsersMap.set(userObj.email.toLowerCase(), userObj);
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('USER_UPDATED', userObj);
+    }
+    broadcastToAllClients('USER_UPDATED', userObj);
+
+    return res.status(201).json(userObj);
+  } catch (err) {
+    console.error('❌ MongoDB Write Error in POST /api/users:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Regular Customer Login (Supports Email or Phone)
 app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   const { emailOrPhone, password } = req.body;
