@@ -1433,32 +1433,31 @@ app.get(['/api/notifications', '/api/user/notifications'], async (req, res) => {
 });
 
 app.post(['/api/notifications', '/api/admin/notifications'], async (req, res) => {
-  const { title, message, type, priority, date } = req.body;
-  if (!title || !message) {
-    return res.status(400).json({ success: false, error: 'Title and message required' });
-  }
-
-  const notifType = priority || type || 'SYSTEM';
-  const notifData = {
-    id: req.body.id || `notif_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-    title: title.trim(),
-    message: message.trim(),
-    type: notifType,
-    read: false,
-    createdAt: date ? new Date(date) : new Date()
-  };
-
   try {
-    const savedDoc = await Notification.findOneAndUpdate(
-      { id: notifData.id },
-      notifData,
+    const { title, message, category, priority, type, date } = req.body;
+    const notifId = req.body.id || `notif_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const notifPayload = {
+      id: notifId,
+      title: title ? String(title).trim() : 'System Alert',
+      message: message ? String(message).trim() : '',
+      category: category || priority || type || 'SYSTEM',
+      priority: priority || category || type || 'SYSTEM',
+      type: type || priority || category || 'SYSTEM',
+      read: false,
+      createdAt: date ? new Date(date) : new Date()
+    };
+
+    const notification = await Notification.findOneAndUpdate(
+      { id: notifId },
+      notifPayload,
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
-    console.log('Saved to DB:', savedDoc);
+    console.log('Saved to DB:', notification);
 
+    const savedDoc = notification.toObject ? notification.toObject() : notification;
     const existingIdx = notifications.findIndex(n => n.id === savedDoc.id);
-    if (existingIdx !== -1) notifications[existingIdx] = savedDoc.toObject ? savedDoc.toObject() : savedDoc;
-    else notifications.unshift(savedDoc.toObject ? savedDoc.toObject() : savedDoc);
+    if (existingIdx !== -1) notifications[existingIdx] = savedDoc;
+    else notifications.unshift(savedDoc);
 
     if (req.app.get('socketio')) {
       req.app.get('socketio').emit('NOTIFICATION_UPDATED', savedDoc);
@@ -1467,10 +1466,10 @@ app.post(['/api/notifications', '/api/admin/notifications'], async (req, res) =>
     broadcastToAllClients('NOTIFICATION_UPDATED', savedDoc);
     broadcastToAllClients('NOTIFICATION_BROADCAST', savedDoc);
 
-    return res.status(201).json(savedDoc);
-  } catch (err) {
-    console.error('❌ MongoDB Write Error in POST /api/notifications:', err.message);
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(201).json({ success: true, data: savedDoc, ...savedDoc });
+  } catch (error) {
+    console.error('Notification Save Error:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 });
 

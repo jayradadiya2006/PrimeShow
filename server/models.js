@@ -270,10 +270,12 @@ const SupportMessageSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const NotificationSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true },
-  title: { type: String, required: true },
-  message: { type: String, required: true },
+  id: { type: String, default: () => `notif_${Date.now()}_${Math.floor(Math.random() * 1000)}` },
+  title: { type: String, default: 'Notification' },
+  message: { type: String, default: '' },
   type: { type: String, default: 'SYSTEM' },
+  category: { type: String, default: 'SYSTEM' },
+  priority: { type: String, default: 'SYSTEM' },
   read: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
