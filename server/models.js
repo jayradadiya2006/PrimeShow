@@ -37,8 +37,6 @@ const UserSchema = new mongoose.Schema({
   activityLogs: [UserActivitySubSchema]
 }, { timestamps: true });
 
-UserSchema.index({ firebaseUid: 1 }, { sparse: true });
-
 const UserNotificationSchema = new mongoose.Schema({
   userId: { type: String, required: true, index: true },
   notificationId: { type: String, required: true, index: true },
@@ -147,7 +145,6 @@ const BookingSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Mongoose Indexes for Heavy Load Query Optimization
-UserSchema.index({ email: 1 });
 UserSchema.index({ createdAt: -1 });
 UserSchema.index({ lastLoginTime: -1 });
 
