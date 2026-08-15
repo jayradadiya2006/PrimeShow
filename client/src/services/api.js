@@ -4,7 +4,7 @@ import axios from 'axios';
 const rawApiBase = import.meta.env.VITE_API_BASE_URL || 
   (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
     ? 'http://localhost:5000' 
-    : 'https://primeshow-backend.onrender.com');
+    : 'https://primeshow-api.onrender.com');
 
 // Remove trailing slashes and remove existing /api if present to avoid /api/api duplication
 const cleanBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '');

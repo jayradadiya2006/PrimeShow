@@ -6,7 +6,7 @@ import { EventBookingModal } from '../components/EventBookingModal';
 import { useAuth } from '../context/AuthContext';
 import { API } from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-backend.onrender.com/api');
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-api.onrender.com/api');
 
 export const Events = () => {
   const { selectedCity } = useAuth();
