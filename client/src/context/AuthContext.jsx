@@ -14,6 +14,7 @@ import { io } from 'socket.io-client';
 
 const socketBase = API_BASE.replace(/\/api\/?$/, '');
 export const socket = io(socketBase, {
+  path: '/socket.io',
   autoConnect: true,
   transports: ['websocket', 'polling']
 });
