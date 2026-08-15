@@ -422,26 +422,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'primeshow_ultra_secret_key_2026';
 // STEP 1: Global CORS Middleware (Allows ALL origins including Vercel production & preview builds with credentials)
 app.use(cors({
   origin: function (origin, callback) {
-    // Dynamic origin reflection allows credentials: true without wildcard CORS errors
-    callback(null, true);
+    // Dynamic origin reflection allows credentials: true without wildcard CORS browser rejection
+    callback(null, origin || '*');
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-Id', 'Accept'],
   credentials: true
 }));
 
-// Express explicitly handling OPTIONS preflight requests for all endpoints
 app.options('*', cors());
 
-// Header fallback middleware for any custom requests / proxy passes
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
   res.setHeader('X-Content-Type-Options', 'nosniff');
