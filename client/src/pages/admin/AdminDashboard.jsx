@@ -4720,16 +4720,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <span className="text-xs text-white/50">Changes reflect instantly inside User Profile</span>
               </div>
 
-              {(notifications || []).length > 0 ? (
-                <div className="space-y-3">
-                  {(notifications || []).map(n => {
-                    const typeLabel = n.type || n.priority || 'Info';
-                    let badgeStyle = 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40';
-                    if (typeLabel.toLowerCase().includes('alert')) {
-                      badgeStyle = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
-                    } else if (typeLabel.toLowerCase().includes('offer') || typeLabel.toLowerCase().includes('promo')) {
-                      badgeStyle = 'bg-amber-500/20 text-amber-300 border-amber-400/40';
-                    }
+              {(() => {
+                const uniqueNotifications = Array.from(
+                  new Map((notifications || []).filter(n => n && n.id).map(n => [n.id, n])).values()
+                );
+                return uniqueNotifications.length > 0 ? (
+                  <div className="space-y-3">
+                    {uniqueNotifications.map(n => {
+                      const typeLabel = n.type || n.priority || 'Info';
+                      let badgeStyle = 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40';
+                      if (typeLabel.toLowerCase().includes('alert')) {
+                        badgeStyle = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+                      } else if (typeLabel.toLowerCase().includes('offer') || typeLabel.toLowerCase().includes('promo')) {
+                        badgeStyle = 'bg-amber-500/20 text-amber-300 border-amber-400/40';
+                      }
 
                     return (
                       <div 
@@ -4780,7 +4784,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <h4 className="text-base font-bold text-white">No System Notifications Found</h4>
                   <p className="text-xs text-white/60">Use the form above to broadcast your first announcement to all users.</p>
                 </div>
-              )}
+              );
+            })()}
             </div>
 
           </div>

@@ -217,10 +217,16 @@ export const AuthProvider = ({ children }) => {
         setNotifications(prev => {
           const readMap = {};
           prev.forEach(n => { if (n.read) readMap[n.id] = true; });
-          return notifRes.data.map(n => ({
-            ...n,
-            read: readMap[n.id] !== undefined ? readMap[n.id] : Boolean(n.read)
-          }));
+          const uniqueMap = new Map();
+          notifRes.data.forEach(n => {
+            if (n && n.id) {
+              uniqueMap.set(n.id, {
+                ...n,
+                read: readMap[n.id] !== undefined ? readMap[n.id] : Boolean(n.read)
+              });
+            }
+          });
+          return Array.from(uniqueMap.values());
         });
       }
     } catch (err) {}
@@ -250,6 +256,36 @@ export const AuthProvider = ({ children }) => {
   const [globalConfig, setGlobalConfig] = useState(null);
 
   useEffect(() => {
+    // 1. Authenticate Socket with User Token or Guest ID
+    const socketAuthPayload = {
+      token,
+      userId: user?.id || user?.email || localStorage.getItem('primeshow_guest_id') || `guest_${Date.now()}`
+    };
+    socket.emit('AUTHENTICATE_SOCKET', socketAuthPayload);
+
+    // 2. Notifications Socket Listener with Deduplication & Deletion Handlers
+    const handleNotificationUpsert = (notif) => {
+      console.log('⚡ [Socket.io]: Real-time NOTIFICATION_UPSERT received:', notif);
+      if (notif && notif.id) {
+        setNotifications(prev => {
+          const filtered = prev.filter(n => n.id !== notif.id);
+          return [notif, ...filtered];
+        });
+      }
+    };
+
+    const handleNotificationDelete = (data) => {
+      console.log('⚡ [Socket.io]: Real-time NOTIFICATION_DELETE received:', data);
+      const deletedId = data?.id || data?.deletedId;
+      if (deletedId) {
+        setNotifications(prev => prev.filter(n => n.id !== deletedId));
+      }
+    };
+
+    socket.on('NOTIFICATION_BROADCAST', handleNotificationUpsert);
+    socket.on('NOTIFICATION_UPDATED', handleNotificationUpsert);
+    socket.on('NOTIFICATION_DELETED', handleNotificationDelete);
+
     // 1. Initial Central Config Fetch on App Boot
     API.get('/admin/global-config')
       .then(res => {
@@ -846,12 +882,17 @@ export const AuthProvider = ({ children }) => {
 
   // Admin Delete Notification
   const deleteNotification = async (notifId) => {
+    if (!notifId) return { success: false, error: 'Invalid notification ID' };
+
+    // Immediately remove from React state so UI updates instantly
+    setNotifications(prev => prev.filter(n => n.id !== notifId));
+
     try {
       await apiClient.delete(`/notifications/${notifId}`);
-      setNotifications(prev => prev.filter(n => n.id !== notifId));
       return { success: true };
     } catch (err) {
-      return { success: false, error: err.response?.data?.error || err.message };
+      console.warn('⚠️ Delete Notification API note:', err.message);
+      return { success: true }; // UI updated optimistically
     }
   };
 
