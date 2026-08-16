@@ -1621,10 +1621,8 @@ app.post(['/api/notifications', '/api/admin/notifications'], async (req, res) =>
     else notifications.unshift(savedDoc);
 
     if (req.app.get('socketio')) {
-      req.app.get('socketio').emit('NOTIFICATION_UPDATED', savedDoc);
       req.app.get('socketio').emit('NOTIFICATION_BROADCAST', savedDoc);
     }
-    broadcastToAllClients('NOTIFICATION_UPDATED', savedDoc);
     broadcastToAllClients('NOTIFICATION_BROADCAST', savedDoc);
 
     return res.status(201).json({ success: true, data: savedDoc, ...savedDoc });
@@ -1677,7 +1675,9 @@ app.put(['/api/notifications/:id', '/api/admin/notifications/:id'], async (req, 
 
   try {
     if (mongoose.connection.readyState === 1) {
-      await Notification.findOneAndUpdate({ id: notifId }, { $set: updateData }, { new: true });
+      const query = { $or: [{ id: notifId }] };
+      if (mongoose.Types.ObjectId.isValid(notifId)) query.$or.push({ _id: notifId });
+      await Notification.findOneAndUpdate(query, { $set: updateData }, { new: true });
     }
   } catch (err) {
     console.warn('⚠️ Notification DB update error:', err.message);
@@ -1700,7 +1700,9 @@ app.delete(['/api/notifications/:id', '/api/admin/notifications/:id'], async (re
 
   try {
     if (mongoose.connection.readyState === 1) {
-      await Notification.deleteOne({ id: notifId });
+      const deleteQuery = { $or: [{ id: notifId }] };
+      if (mongoose.Types.ObjectId.isValid(notifId)) deleteQuery.$or.push({ _id: notifId });
+      await Notification.deleteOne(deleteQuery);
       await UserNotification.deleteMany({ notificationId: notifId });
     }
   } catch (err) {
@@ -1716,7 +1718,7 @@ app.delete(['/api/notifications/:id', '/api/admin/notifications/:id'], async (re
   }
   broadcastToAllClients('NOTIFICATION_DELETED', { id: notifId });
 
-  res.json({ message: 'Notification deleted successfully', id: notifId, notification: deletedItem });
+  return res.json({ success: true, message: 'Notification deleted successfully', id: notifId, notification: deletedItem });
 });
 
 // User Account-Level Wishlist Endpoints (MongoDB Atlas Persistent)
