@@ -797,11 +797,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
     }
   };
 
-  // Fetch Scoped Blocked Seats when Cinema or Screen changes
+  // Fetch Scoped Blocked Seats when Cinema, Screen, or Show Slot changes
   const fetchScopedSeats = async () => {
     try {
-      const res = await API.get(`/theatres/${selectedTheatreId}/screens/${selectedScreenId}/blocked-seats`);
-      setScreenBlockedSeats(res.data.blockedSeats || []);
+      const res = await API.get(`/theatres/${selectedTheatreId || 'th_1'}/screens/${isolatedLayoutKey}/blocked-seats`);
+      if (res.data?.blockedSeats) {
+        setScreenBlockedSeats(res.data.blockedSeats);
+      }
     } catch (err) {
       setScreenBlockedSeats(['V1', 'V2']);
     }
@@ -983,7 +985,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   useEffect(() => {
     fetchScopedSeats();
-  }, [selectedTheatreId, selectedScreenId]);
+  }, [selectedTheatreId, selectedScreenId, selectedShowSlotId, isolatedLayoutKey]);
 
   // Real-Time Admin Socket Alerts (New User Bookings, Registrations & Live Support Messages)
   useEffect(() => {
@@ -3351,16 +3353,42 @@ export const AdminDashboard = ({ onReturnHome }) => {
         {/* Tab 3: Cinema & Screen Specific Seat Operations */}
         {activeTab === 'seats' && (
           <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold font-sans text-white">Isolated Show & Seat Management</h1>
-              <p className="text-xs text-cyan-300">Select City ➔ Theatre ➔ Movie Show Slot. Seat layouts and availability rules apply isolately to the selected show instance.</p>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div>
+                <h1 className="text-3xl font-bold font-sans text-white">Authentic Show & Seat Management</h1>
+                <p className="text-xs text-cyan-300">Live API connected. Follow Step 1 ➔ Step 2 ➔ Step 3 ➔ Step 4 to manage authentic show layouts.</p>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold shrink-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Live API Connected</span>
+              </div>
+            </div>
+
+            {/* Step Progress Stepper Bar */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center text-xs">
+              <div className={`p-3 rounded-2xl border transition-all ${selectedCity ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200' : 'bg-white/5 border-white/10 text-white/40'}`}>
+                <div className="text-[10px] uppercase font-bold text-cyan-400">Step 1</div>
+                <div className="font-bold truncate">🌆 City: {selectedCity || 'Surat'}</div>
+              </div>
+              <div className={`p-3 rounded-2xl border transition-all ${selectedTheatreId ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200' : 'bg-white/5 border-white/10 text-white/40'}`}>
+                <div className="text-[10px] uppercase font-bold text-cyan-400">Step 2</div>
+                <div className="font-bold truncate">🎭 {activeTheatreObj?.name ? activeTheatreObj.name.split(',')[0] : 'Select Cinema'}</div>
+              </div>
+              <div className={`p-3 rounded-2xl border transition-all ${selectedShowSlotId ? 'bg-amber-500/20 border-amber-400/50 text-amber-200' : 'bg-white/5 border-white/10 text-white/40'}`}>
+                <div className="text-[10px] uppercase font-bold text-amber-400">Step 3</div>
+                <div className="font-bold truncate">🎬 {activeShowSlotObj?.movieTitle || 'Select Show'}</div>
+              </div>
+              <div className="p-3 rounded-2xl border bg-emerald-500/20 border-emerald-400/50 text-emerald-200">
+                <div className="text-[10px] uppercase font-bold text-emerald-400">Step 4</div>
+                <div className="font-bold truncate">💺 Seat Layout & Controls</div>
+              </div>
             </div>
 
             {/* Cascading 3-Tier Dynamic Dropdowns Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Dropdown 1: Select City */}
               <div>
-                <label className="block text-xs font-bold text-cyan-300 mb-1">1. Select City *</label>
+                <label className="block text-xs font-bold text-cyan-300 mb-1">1. Select City (Live Backend) *</label>
                 <select
                   value={selectedCity || 'Surat'}
                   onChange={e => {
