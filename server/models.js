@@ -51,12 +51,18 @@ const UserNotificationSchema = new mongoose.Schema({
 UserNotificationSchema.index({ userId: 1, notificationId: 1 }, { unique: true });
 
 const UserActivityLogSchema = new mongoose.Schema({
-  id: { type: String, required: true },
+  id: { type: String, default: () => `act_${Date.now()}_${Math.floor(Math.random() * 1000)}` },
   userId: { type: String },
-  userEmail: { type: String, required: true },
+  userEmail: { type: String, default: 'guest@primeshow.com' },
   userName: { type: String, default: 'User' },
-  action: { type: String, required: true },
+  userPhone: { type: String, default: '' },
+  eventType: { type: String, default: 'GENERAL' },
+  action: { type: String, default: 'User Activity' },
   details: { type: String, default: '' },
+  category: { type: String, default: 'System' },
+  amountPaid: { type: Number, default: 0 },
+  totalHistoricalSpend: { type: Number, default: 0 },
+  rewardPointsBalance: { type: Number, default: 500 },
   metadata: { type: Object, default: {} },
   timestamp: { type: Date, default: Date.now }
 }, { timestamps: true });

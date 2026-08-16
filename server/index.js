@@ -227,19 +227,53 @@ async function triggerAiAutoReply(msg, req = null) {
 
 const userActivityLogs = []; // in-memory fallback list
 
-const logUserActivity = async (userEmail, userName, action, details = '', metadata = {}) => {
+const logUserActivity = async (userEmail, userName, action, details = '', metadata = {}, extra = {}) => {
   if (!userEmail) return;
+  
+  const eventType = extra.eventType || metadata.eventType || (action.includes('BOOK') ? 'SHOW_BOOKING' : action.includes('LOG') ? (action.includes('OUT') ? 'USER_LOGOUT' : 'USER_LOGIN') : 'GENERAL');
+  const category = extra.category || metadata.category || (action.includes('BOOK') ? 'Movie' : action.includes('REWARD') ? 'Rewards' : 'System');
+  const amountPaid = Number(extra.amountPaid || metadata.amountPaid || metadata.totalAmount || metadata.price || 0);
+
+  let totalHistoricalSpend = amountPaid;
+  let rewardPointsBalance = 500;
+  let userPhone = extra.userPhone || metadata.userPhone || '';
+  let userId = extra.userId || metadata.userId || '';
+
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const userDoc = await User.findOne({ $or: [{ email: userEmail.toLowerCase() }, { id: userId }] });
+      if (userDoc) {
+        rewardPointsBalance = userDoc.rewardsPoints || userDoc.rewardPoints || 500;
+        if (!userPhone) userPhone = userDoc.phone || userDoc.phoneNumber || '';
+        if (!userId) userId = userDoc.id || '';
+      }
+
+      const previousLogs = await UserActivityLog.find({ userEmail: userEmail.toLowerCase() }).lean();
+      const previousTotal = previousLogs.reduce((sum, l) => sum + (Number(l.amountPaid) || 0), 0);
+      totalHistoricalSpend = previousTotal + amountPaid;
+    }
+  } catch (e) {}
+
   const logItem = {
     id: `act_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-    userEmail,
+    userId,
+    userEmail: userEmail.toLowerCase().trim(),
     userName: userName || userEmail.split('@')[0],
+    userPhone,
+    eventType,
     action,
     details,
+    category,
+    amountPaid,
+    totalHistoricalSpend,
+    rewardPointsBalance,
     metadata,
     timestamp: new Date()
   };
+
   userActivityLogs.unshift(logItem);
-  const mongoose = require('mongoose');
+  if (userActivityLogs.length > 500) userActivityLogs.pop();
+
   if (mongoose.connection.readyState === 1) {
     try {
       const doc = new UserActivityLog(logItem);
@@ -1005,6 +1039,79 @@ app.get(userRoutesPaths, async (req, res) => {
   } catch (err) {
     const memoryUsers = Array.from(globalRegisteredUsersMap.values());
     return res.status(200).json(memoryUsers);
+  }
+});
+
+// Admin Real-Time System Activity Logs & Financial Aggregations Endpoint
+app.get([
+  '/api/admin/user-activities',
+  '/admin/user-activities',
+  '/api/admin/activity-logs',
+  '/admin/activity-logs',
+  '/api/admin/system-activities',
+  '/admin/system-activities'
+], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const search = (req.query.search || '').trim().toLowerCase();
+    const eventType = req.query.eventType || req.query.category || 'ALL';
+
+    if (mongoose.connection.readyState === 1) {
+      let query = {};
+      if (search) {
+        query.$or = [
+          { userName: { $regex: search, $options: 'i' } },
+          { userEmail: { $regex: search, $options: 'i' } },
+          { action: { $regex: search, $options: 'i' } },
+          { details: { $regex: search, $options: 'i' } }
+        ];
+      }
+      if (eventType && eventType !== 'ALL') {
+        query.$or = [
+          { eventType },
+          { category: eventType }
+        ];
+      }
+
+      const totalCount = await UserActivityLog.countDocuments(query);
+      const dbLogs = await UserActivityLog.find(query)
+        .sort({ timestamp: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
+      if (dbLogs && dbLogs.length > 0) {
+        return res.json({
+          success: true,
+          activities: dbLogs,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit) || 1,
+          currentPage: page
+        });
+      }
+    }
+
+    let filtered = userActivityLogs;
+    if (search) {
+      filtered = filtered.filter(l => 
+        (l.userName && l.userName.toLowerCase().includes(search)) ||
+        (l.userEmail && l.userEmail.toLowerCase().includes(search)) ||
+        (l.action && l.action.toLowerCase().includes(search)) ||
+        (l.details && l.details.toLowerCase().includes(search))
+      );
+    }
+    return res.json({
+      success: true,
+      activities: filtered.slice((page - 1) * limit, page * limit),
+      totalCount: filtered.length,
+      totalPages: Math.ceil(filtered.length / limit) || 1,
+      currentPage: page
+    });
+  } catch (err) {
+    console.error('Error fetching admin activity logs:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
