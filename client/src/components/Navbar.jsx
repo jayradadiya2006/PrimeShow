@@ -190,14 +190,6 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                 )}
 
                 <button
-                  onClick={() => { setActiveTab('profile-notifications'); setIsSettingsOpen(false); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2.5 cursor-pointer"
-                >
-                  <Bell className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                  <span>Notifications</span>
-                </button>
-
-                <button
                   onClick={() => { setActiveTab('profile-wishlist'); setIsSettingsOpen(false); }}
                   className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2.5 cursor-pointer"
                 >
