@@ -495,21 +495,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
     'Navsari', 'Mehsana', 'Palanpur', 'Patan', 'Godhra', 'Himmatnagar'
   ];
 
-  // 1. Full Theatres List
+  // 1. Full Theatres List from live backend state
   const currentTheatresList = (theatresList && theatresList.length > 0) ? theatresList : DEFAULT_THEATRES;
 
-  // 2. Available Cities Array
+  // 2. Master Unified City List (Combines backend database cities & regional cities)
   const availableCities = Array.from(new Set([
-    'Surat', 'Ahmedabad', 'Rajkot', 'Vadodara',
+    'Surat', 'Ahmedabad', 'Rajkot', 'Vadodara', 'Mumbai',
     ...(currentTheatresList || []).map(t => t?.city).filter(Boolean)
-  ]));
+  ])).sort();
 
-  // 3. Theatres Filtered by Selected City
+  // 3. Theatres Filtered Dynamically by Selected City
   const theatresInSelectedCity = (currentTheatresList || []).filter(
-    t => t && (!selectedCity || (t.city || '').toLowerCase() === (selectedCity || '').toLowerCase())
+    t => t && (!selectedCity || (t.city || '').trim().toLowerCase() === (selectedCity || '').trim().toLowerCase())
   );
 
-  // 4. Active Theatre Object
+  // 4. Active Theatre Object (Auto-Syncs on Add / Delete)
   const activeTheatreObj = (theatresInSelectedCity || []).find(t => t?.id === selectedTheatreId) 
     || (theatresInSelectedCity || [])[0]
     || (currentTheatresList || []).find(t => t?.id === selectedTheatreId)
@@ -521,7 +521,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     { id: 'sc_2', name: 'Screen 2 - 4DX' }
   ];
 
-  // 6. Active Show Slots for Active Theatre ([Movie Name] - [Show Time])
+  // 6. Layer 3 Active Show Slots ([Movie Name] - [Show Time])
   const activeShowSlots = (activeTheatreObj?.showSlots && activeTheatreObj.showSlots.length > 0)
     ? activeTheatreObj.showSlots
     : (activeScreensList || []).map((sc, idx) => {
