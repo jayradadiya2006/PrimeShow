@@ -213,7 +213,13 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
     doc.save(`PrimeShow_Ticket_${b.id}.pdf`);
   };
 
-  const userChatList = supportMessages.filter(m => m.userId === user.id || (user.email && m.userEmail === user.email));
+  const userChatList = (supportMessages || [])
+    .filter(m => (user && (m.userId === user.id || (user.email && m.userEmail === user.email))))
+    .sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+      const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+      return timeA - timeB;
+    });
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
   return (

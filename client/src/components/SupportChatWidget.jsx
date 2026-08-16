@@ -11,7 +11,15 @@ export const SupportChatWidget = () => {
   const chatEndRef = useRef(null);
 
   const activeUserId = user?.id || user?.email || 'usr_1';
-  const userMessages = supportMessages.filter(m => m.userId === activeUserId || (user?.email && m.userEmail === user.email));
+  
+  // Sort messages in ascending chronological order (oldest to newest)
+  const userMessages = (supportMessages || [])
+    .filter(m => m.userId === activeUserId || (user?.email && m.userEmail === user.email))
+    .sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+      const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+      return timeA - timeB;
+    });
 
   useEffect(() => {
     if (socket) {
@@ -19,9 +27,17 @@ export const SupportChatWidget = () => {
     }
   }, [activeUserId]);
 
-  useEffect(() => {
-    if (isOpen && chatEndRef.current) {
+  const scrollToBottom = () => {
+    if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      scrollToBottom();
+      const timer = setTimeout(scrollToBottom, 100);
+      return () => clearTimeout(timer);
     }
   }, [userMessages.length, isOpen]);
 

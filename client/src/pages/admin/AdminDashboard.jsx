@@ -3705,7 +3705,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
           <div className="space-y-4">
             <h1 className="text-3xl font-bold font-sans text-white">WhatsApp Live Support Desk</h1>
 
-            {supportMessages.map(msg => (
+            {([...(supportMessages || [])].sort((a, b) => new Date(a.createdAt || a.timestamp || 0) - new Date(b.createdAt || b.timestamp || 0))).map(msg => (
               <div key={msg.id} className="glass-panel p-5 rounded-3xl border border-cyan-400/30 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>

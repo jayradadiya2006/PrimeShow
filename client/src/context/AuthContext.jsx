@@ -194,6 +194,15 @@ export const AuthProvider = ({ children }) => {
     wakeUpRenderServer();
   }, []);
 
+  const sortMessagesAscending = (list) => {
+    if (!Array.isArray(list)) return [];
+    return [...list].sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+      const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+      return timeA - timeB;
+    });
+  };
+
   // Fetch support messages & notifications from Backend API (Mount only, no infinite loop)
   const fetchStreamData = async () => {
     try {
@@ -201,7 +210,9 @@ export const AuthProvider = ({ children }) => {
         apiClient.get('/support/messages'),
         apiClient.get('/notifications')
       ]);
-      setSupportMessages(msgRes.data);
+      if (Array.isArray(msgRes.data)) {
+        setSupportMessages(sortMessagesAscending(msgRes.data));
+      }
       if (Array.isArray(notifRes.data) && notifRes.data.length > 0) {
         setNotifications(prev => {
           const readMap = {};
@@ -215,7 +226,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {}
   };
 
-  // STEP 1: Execute fetchStreamData ONLY ONCE on mount (Kill infinite setInterval loop)
+  // STEP 1: Execute fetchStreamData ONLY ONCE on mount
   useEffect(() => {
     fetchStreamData();
   }, []);
@@ -892,13 +903,15 @@ export const AuthProvider = ({ children }) => {
       const res = await apiClient.post('/support/messages', payload);
       setSupportMessages(prev => {
         const exists = prev.some(m => m.id === res.data.id);
-        return exists ? prev.map(m => m.id === res.data.id ? res.data : m) : [res.data, ...prev];
+        const updated = exists ? prev.map(m => m.id === res.data.id ? res.data : m) : [...prev, res.data];
+        return sortMessagesAscending(updated);
       });
       return { success: true, data: res.data };
     } catch (err) {
       setSupportMessages(prev => {
         const exists = prev.some(m => m.id === payload.id);
-        return exists ? prev : [payload, ...prev];
+        const updated = exists ? prev : [...prev, payload];
+        return sortMessagesAscending(updated);
       });
       return { success: true, data: payload };
     }
