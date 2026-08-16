@@ -486,11 +486,59 @@ export const AdminDashboard = ({ onReturnHome }) => {
         { id: 'sc_8', name: 'Screen 1 - IMAX 4K Laser' },
         { id: 'sc_9', name: 'Screen 2 - 4DX Dolby' }
       ]
+    },
+    {
+      id: 'th_5',
+      name: 'Inox Vadodara Central',
+      city: 'Vadodara',
+      screens: [
+        { id: 'sc_10', name: 'Screen 1 - Dolby Atmos 3D' }
+      ]
+    },
+    {
+      id: 'th_6',
+      name: 'PVR Himalaya Mall',
+      city: 'Bhavnagar',
+      screens: [
+        { id: 'sc_11', name: 'Screen 1 - Executive Recliner' }
+      ]
+    },
+    {
+      id: 'th_7',
+      name: 'Cinepolis Crystal Mall',
+      city: 'Jamnagar',
+      screens: [
+        { id: 'sc_12', name: 'Screen 1 - VIP Lounge' }
+      ]
+    },
+    {
+      id: 'th_8',
+      name: 'PVR City Pulse Mall',
+      city: 'Gandhinagar',
+      screens: [
+        { id: 'sc_13', name: 'Screen 1 - IMAX 3D' }
+      ]
+    },
+    {
+      id: 'th_9',
+      name: 'Inox Reliance Mall',
+      city: 'Junagadh',
+      screens: [
+        { id: 'sc_14', name: 'Screen 1 - Dolby Digital 7.1' }
+      ]
+    },
+    {
+      id: 'th_10',
+      name: 'Cinepolis Anand Town Center',
+      city: 'Anand',
+      screens: [
+        { id: 'sc_15', name: 'Screen 1 - Premium Recliner' }
+      ]
     }
   ];
 
-  const GUJARAT_CITIES = [
-    'Surat', 'Ahmedabad', 'Rajkot', 'Vadodara', 'Bhavnagar', 'Jamnagar', 
+  const OFFICIAL_18_CITIES = [
+    'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar', 
     'Junagadh', 'Gandhinagar', 'Anand', 'Nadiad', 'Bharuch', 'Valsad', 
     'Navsari', 'Mehsana', 'Palanpur', 'Patan', 'Godhra', 'Himmatnagar'
   ];
@@ -498,9 +546,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
   // 1. Full Theatres List from live backend state
   const currentTheatresList = (theatresList && theatresList.length > 0) ? theatresList : DEFAULT_THEATRES;
 
-  // 2. Master Unified City List (Combines backend database cities & regional cities)
+  // 2. Master Unified City List (Includes all 18 official User Panel Gujarat cities + any backend DB cities)
   const availableCities = Array.from(new Set([
-    'Surat', 'Ahmedabad', 'Rajkot', 'Vadodara', 'Mumbai',
+    ...OFFICIAL_18_CITIES,
     ...(currentTheatresList || []).map(t => t?.city).filter(Boolean)
   ])).sort();
 
