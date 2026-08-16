@@ -476,13 +476,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
     { id: 'sc_2', name: 'Screen 2 - 4DX' }
   ];
 
-  const currentLayout = getScreenLayout(selectedScreenId);
+  const currentLayout = getScreenLayout(selectedScreenId || 'sc_1');
   const seatRowsList = currentLayout.rows || [];
 
   const handleAddRowForm = (e) => {
     e.preventDefault();
     if (!newRowChar) return;
-    addRowToScreenLayout(selectedScreenId, newRowChar, newRowTier, newRowPrice, newRowSeatsCount);
+    addRowToScreenLayout(selectedScreenId || 'sc_1', newRowChar, newRowTier, newRowPrice, newRowSeatsCount);
     setNewRowChar('');
     setActionSuccess(`Added Row ${newRowChar.toUpperCase()} (${newRowTier}) with ${newRowSeatsCount} seats at ₹${newRowPrice}!`);
     setTimeout(() => setActionSuccess(''), 3000);
