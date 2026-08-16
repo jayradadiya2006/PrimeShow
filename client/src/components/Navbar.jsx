@@ -11,10 +11,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isNotifDrawerOpen, setIsNotifDrawerOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-
-  const unreadNotifCount = (notifications || []).filter(n => !n.read).length;
 
   const navCategories = [
     { id: 'movies', label: 'Movies', icon: Film },
@@ -134,80 +131,6 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Primary Top Notification Bell & Drawer Dropdown */}
-          <div className="relative z-[100]">
-            <button
-              onClick={() => setIsNotifDrawerOpen(!isNotifDrawerOpen)}
-              className="p-2.5 rounded-full bg-slate-200/60 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white/80 transition-all cursor-pointer relative"
-              title="Notification Center"
-            >
-              <Bell className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              {unreadNotifCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center animate-pulse">
-                  {unreadNotifCount}
-                </span>
-              )}
-            </button>
-
-            {isNotifDrawerOpen && (
-              <div 
-                className="absolute right-0 top-12 w-80 sm:w-96 glass-modal rounded-2xl p-4 border border-slate-300 dark:border-white/15 shadow-2xl z-[110] text-xs animate-fade-in text-slate-900 dark:text-white"
-                onMouseLeave={() => setIsNotifDrawerOpen(false)}
-              >
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10 mb-3">
-                  <div className="flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-amber-500" />
-                    <h4 className="font-extrabold text-sm">Notification Center</h4>
-                  </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-400/30">
-                    {notifications?.length || 0} Alerts
-                  </span>
-                </div>
-
-                <div className="max-h-80 overflow-y-auto custom-scrollbar space-y-2 pr-1">
-                  {(notifications && notifications.length > 0) ? (
-                    notifications.map(n => (
-                      <div 
-                        key={n.id} 
-                        className={`p-3 rounded-xl border transition-all ${
-                          n.read 
-                            ? 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/70' 
-                            : 'bg-amber-500/10 border-amber-400/30 text-slate-900 dark:text-white font-semibold'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] uppercase font-bold text-amber-500 tracking-wide">{n.type || n.priority || 'Alert'}</span>
-                          <span className="text-[9px] text-slate-400 dark:text-white/40">
-                            {n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
-                          </span>
-                        </div>
-                        <h5 className="font-bold text-xs mb-1">{n.title}</h5>
-                        <p className="text-[11px] text-slate-600 dark:text-white/60 leading-snug">{n.message}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-6 text-slate-500 dark:text-white/40">
-                      <Bell className="w-8 h-8 mx-auto mb-2 opacity-40 text-amber-400" />
-                      <p className="text-xs">No active notifications</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-2 mt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
-                  <button
-                    onClick={() => {
-                      setActiveTab('profile-notifications');
-                      setIsNotifDrawerOpen(false);
-                    }}
-                    className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline font-bold"
-                  >
-                    View All Notifications in Profile →
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Desktop Settings Dropdown (hidden on mobile, moved into Mobile Drawer) */}
           <div className="relative hidden md:block z-[100]">
             <button
@@ -265,6 +188,14 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                     <span>My Personal Details</span>
                   </button>
                 )}
+
+                <button
+                  onClick={() => { setActiveTab('profile-notifications'); setIsSettingsOpen(false); }}
+                  className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2.5 cursor-pointer"
+                >
+                  <Bell className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                  <span>Notifications</span>
+                </button>
 
                 <button
                   onClick={() => { setActiveTab('profile-wishlist'); setIsSettingsOpen(false); }}
