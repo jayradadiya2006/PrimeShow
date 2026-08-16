@@ -65,14 +65,15 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             </div>
           </button>
 
-          {/* Desktop City Selector Button */}
+          {/* Desktop Location Pin City Selector Button */}
           <button
             onClick={onOpenCityModal}
-            className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 hover:border-amber-500 dark:hover:border-amber-400/50 hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-xs font-medium text-amber-800 dark:text-amber-200 cursor-pointer"
+            className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 hover:border-amber-500 dark:hover:border-amber-400/60 hover:bg-amber-500/10 transition-all text-xs font-bold text-amber-800 dark:text-amber-300 cursor-pointer shadow-sm group"
+            title="Click to switch city"
           >
-            <MapPin className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            <span>{selectedCity}</span>
-            <ChevronDown className="w-3 h-3 text-slate-500 dark:text-white/50" />
+            <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform fill-amber-500/20" />
+            <span>{selectedCity || 'Surat'}</span>
+            <ChevronDown className="w-3 h-3 text-slate-500 dark:text-white/50 group-hover:text-amber-400 transition-colors" />
           </button>
         </div>
 
