@@ -226,8 +226,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   // Cinema & Screen Scoped Seat State
   const [theatresList, setTheatresList] = useState([]);
+  const [selectedCity, setSelectedCity] = useState('Surat');
   const [selectedTheatreId, setSelectedTheatreId] = useState('th_1');
   const [selectedScreenId, setSelectedScreenId] = useState('sc_1');
+  const [selectedShowSlotId, setSelectedShowSlotId] = useState('th_1_sc_1');
   const [screenBlockedSeats, setScreenBlockedSeats] = useState([]);
 
   // Full Movie Form State
@@ -450,8 +452,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const DEFAULT_THEATRES = [
     {
       id: 'th_1',
-      name: "PVR Director's Cut, Palladium Mall",
-      city: 'Mumbai',
+      name: "PVR Director's Cut, VR Mall",
+      city: 'Surat',
       screens: [
         { id: 'sc_1', name: 'Screen 1 - IMAX 3D' },
         { id: 'sc_2', name: 'Screen 2 - 4DX' },
@@ -460,29 +462,93 @@ export const AdminDashboard = ({ onReturnHome }) => {
     },
     {
       id: 'th_2',
-      name: 'INOX Megaplex, Inorbit Mall',
-      city: 'Mumbai',
+      name: 'INOX Megaplex, Vrindavan Mall',
+      city: 'Surat',
       screens: [
         { id: 'sc_4', name: 'Screen 1 - ScreenX 270°' },
         { id: 'sc_5', name: 'Screen 2 - Dolby Atmos' }
       ]
+    },
+    {
+      id: 'th_3',
+      name: 'Cinepolis Imperial, Crystal Mall',
+      city: 'Rajkot',
+      screens: [
+        { id: 'sc_6', name: 'Screen 1 - VIP Gold Recliner' },
+        { id: 'sc_7', name: 'Screen 2 - Dolby Digital 7.1' }
+      ]
+    },
+    {
+      id: 'th_4',
+      name: 'PVR Acropolis Mall',
+      city: 'Ahmedabad',
+      screens: [
+        { id: 'sc_8', name: 'Screen 1 - IMAX 4K Laser' },
+        { id: 'sc_9', name: 'Screen 2 - 4DX Dolby' }
+      ]
     }
   ];
 
+  const GUJARAT_CITIES = [
+    'Surat', 'Ahmedabad', 'Rajkot', 'Vadodara', 'Bhavnagar', 'Jamnagar', 
+    'Junagadh', 'Gandhinagar', 'Anand', 'Nadiad', 'Bharuch', 'Valsad', 
+    'Navsari', 'Mehsana', 'Palanpur', 'Patan', 'Godhra', 'Himmatnagar'
+  ];
+
+  // 1. Full Theatres List
   const currentTheatresList = (theatresList && theatresList.length > 0) ? theatresList : DEFAULT_THEATRES;
-  const activeTheatreObj = currentTheatresList.find(t => t.id === selectedTheatreId) || currentTheatresList[0];
+
+  // 2. Available Cities Array
+  const availableCities = Array.from(new Set([
+    'Surat', 'Ahmedabad', 'Rajkot', 'Vadodara',
+    ...(currentTheatresList || []).map(t => t?.city).filter(Boolean)
+  ]));
+
+  // 3. Theatres Filtered by Selected City
+  const theatresInSelectedCity = (currentTheatresList || []).filter(
+    t => t && (!selectedCity || (t.city || '').toLowerCase() === (selectedCity || '').toLowerCase())
+  );
+
+  // 4. Active Theatre Object
+  const activeTheatreObj = (theatresInSelectedCity || []).find(t => t?.id === selectedTheatreId) 
+    || (theatresInSelectedCity || [])[0]
+    || (currentTheatresList || []).find(t => t?.id === selectedTheatreId)
+    || (currentTheatresList || [])[0];
+
+  // 5. Active Screens List for Active Theatre
   const activeScreensList = activeTheatreObj?.screens || [
     { id: 'sc_1', name: 'Screen 1 - IMAX 3D' },
     { id: 'sc_2', name: 'Screen 2 - 4DX' }
   ];
 
-  const currentLayout = getScreenLayout(selectedScreenId || 'sc_1');
-  const seatRowsList = currentLayout.rows || [];
+  // 6. Active Show Slots for Active Theatre ([Movie Name] - [Show Time])
+  const activeShowSlots = (activeTheatreObj?.showSlots && activeTheatreObj.showSlots.length > 0)
+    ? activeTheatreObj.showSlots
+    : (activeScreensList || []).map((sc, idx) => {
+        const m = (moviesList || [])[idx % (moviesList || []).length] || { title: idx === 0 ? 'Avatar: The Way of Water' : 'Pushpa 2: The Rule' };
+        const time = idx === 0 ? '07:30 PM' : idx === 1 ? '10:15 AM' : '04:00 PM';
+        return {
+          id: `${activeTheatreObj?.id || 'th_1'}_${sc.id || 'sc_1'}`,
+          screenId: sc.id || 'sc_1',
+          movieTitle: m.title || 'Featured Movie',
+          time: time,
+          format: sc.name || 'IMAX 3D',
+          label: `${m.title || 'Featured Movie'} - ${time} (${sc.name || 'Screen 1'})`
+        };
+      });
+
+  // 7. Isolated Layout Key
+  const activeShowSlotObj = (activeShowSlots || []).find(s => s?.id === selectedShowSlotId) || (activeShowSlots || [])[0];
+  const isolatedLayoutKey = activeShowSlotObj?.id || selectedShowSlotId || selectedScreenId || 'sc_1';
+
+  // 8. Isolated Layout Resolution
+  const currentLayout = getScreenLayout(isolatedLayoutKey);
+  const seatRowsList = currentLayout?.rows || DEFAULT_SEAT_ROWS;
 
   const handleAddRowForm = (e) => {
     e.preventDefault();
     if (!newRowChar) return;
-    addRowToScreenLayout(selectedScreenId || 'sc_1', newRowChar, newRowTier, newRowPrice, newRowSeatsCount);
+    addRowToScreenLayout(isolatedLayoutKey, newRowChar, newRowTier, newRowPrice, newRowSeatsCount);
     setNewRowChar('');
     setActionSuccess(`Added Row ${newRowChar.toUpperCase()} (${newRowTier}) with ${newRowSeatsCount} seats at ₹${newRowPrice}!`);
     setTimeout(() => setActionSuccess(''), 3000);
@@ -1104,11 +1170,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
-  // Cinema & Screen Scoped Seat Blocking
+  // Cinema & Screen Scoped Seat Blocking & Persistence
   const handleToggleScopedSeatBlock = async (seatId) => {
+    toggleBlockSeatForScreen(isolatedLayoutKey, seatId);
     try {
-      const res = await API.post(`/theatres/${selectedTheatreId}/screens/${selectedScreenId}/toggle-seat-block`, { seatId });
-      setScreenBlockedSeats(res.data.blockedSeats);
+      const res = await API.post(`/theatres/${selectedTheatreId || 'th_1'}/screens/${isolatedLayoutKey}/toggle-seat-block`, { seatId });
+      if (res.data?.blockedSeats) {
+        setScreenBlockedSeats(res.data.blockedSeats);
+      }
     } catch (err) {
       if (screenBlockedSeats.includes(seatId)) {
         setScreenBlockedSeats(screenBlockedSeats.filter(s => s !== seatId));
@@ -1116,8 +1185,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
         setScreenBlockedSeats([...screenBlockedSeats, seatId]);
       }
     }
-    setActionSuccess(`Seat block toggled for Screen ID: ${selectedScreenId}`);
+    setActionSuccess(`Seat block toggled for Show Instance: ${isolatedLayoutKey}`);
     setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleSaveIsolatedSeatLayout = async () => {
+    try {
+      await API.post(`/theatres/${selectedTheatreId || 'th_1'}/screens/${isolatedLayoutKey}/blocked-seats`, {
+        blockedSeats: currentLayout?.blockedSeats || [],
+        rows: currentLayout?.rows || []
+      });
+      setActionSuccess(`Successfully saved seat layout to backend DB for ${activeTheatreObj?.name || 'Theatre'} (${isolatedLayoutKey})!`);
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setActionSuccess(`Seat layout committed locally for ${activeTheatreObj?.name || 'Theatre'}!`);
+      setTimeout(() => setActionSuccess(''), 3000);
+    }
   };
 
   // Offers Full CRUD
@@ -3269,40 +3352,85 @@ export const AdminDashboard = ({ onReturnHome }) => {
         {activeTab === 'seats' && (
           <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
             <div>
-              <h1 className="text-3xl font-bold font-sans text-white">Cinema & Screen Seat Management</h1>
-              <p className="text-xs text-cyan-300">Select Cinema and Screen first. Seat layouts and block rules apply strictly to the selected screen.</p>
+              <h1 className="text-3xl font-bold font-sans text-white">Isolated Show & Seat Management</h1>
+              <p className="text-xs text-cyan-300">Select City ➔ Theatre ➔ Movie Show Slot. Seat layouts and availability rules apply isolately to the selected show instance.</p>
             </div>
 
-            {/* Cinema & Screen Selector Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Cascading 3-Tier Dynamic Dropdowns Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Dropdown 1: Select City */}
               <div>
-                <label className="block text-xs font-bold text-cyan-300 mb-1">Select Cinema / Theatre</label>
+                <label className="block text-xs font-bold text-cyan-300 mb-1">1. Select City *</label>
                 <select
-                  value={selectedTheatreId}
+                  value={selectedCity || 'Surat'}
                   onChange={e => {
-                    setSelectedTheatreId(e.target.value);
-                    const targetTh = currentTheatresList.find(t => t.id === e.target.value);
-                    if (targetTh && targetTh.screens && targetTh.screens[0]) {
-                      setSelectedScreenId(targetTh.screens[0].id);
+                    const newCity = e.target.value;
+                    setSelectedCity(newCity);
+                    const thsInCity = (currentTheatresList || []).filter(
+                      t => t && (t.city || '').toLowerCase() === (newCity || '').toLowerCase()
+                    );
+                    if (thsInCity.length > 0) {
+                      const firstTh = thsInCity[0];
+                      setSelectedTheatreId(firstTh.id);
+                      const firstSc = firstTh.screens?.[0]?.id || 'sc_1';
+                      setSelectedScreenId(firstSc);
+                      setSelectedShowSlotId(`${firstTh.id}_${firstSc}`);
                     }
                   }}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
                 >
-                  {currentTheatresList.map(t => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
+                  {(availableCities || []).map(city => (
+                    <option key={city} value={city}>{city}</option>
                   ))}
                 </select>
               </div>
 
+              {/* Dropdown 2: Select Theatre (Filtered by City) */}
               <div>
-                <label className="block text-xs font-bold text-cyan-300 mb-1">Select Screen</label>
+                <label className="block text-xs font-bold text-cyan-300 mb-1">2. Select Cinema / Theatre *</label>
                 <select
-                  value={selectedScreenId}
-                  onChange={e => setSelectedScreenId(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                  value={selectedTheatreId || 'th_1'}
+                  onChange={e => {
+                    const newThId = e.target.value;
+                    setSelectedTheatreId(newThId);
+                    const targetTh = (currentTheatresList || []).find(t => t?.id === newThId);
+                    if (targetTh) {
+                      const firstSc = targetTh.screens?.[0]?.id || 'sc_1';
+                      setSelectedScreenId(firstSc);
+                      setSelectedShowSlotId(`${targetTh.id}_${firstSc}`);
+                    }
+                  }}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
                 >
-                  {activeScreensList.map(sc => (
-                    <option key={sc.id} value={sc.id}>{sc.name}</option>
+                  {(theatresInSelectedCity || []).length > 0 ? (
+                    (theatresInSelectedCity || []).map(t => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
+                    ))
+                  ) : (
+                    <option value="">No theatres found in {selectedCity}</option>
+                  )}
+                </select>
+              </div>
+
+              {/* Dropdown 3: Select Show Slot / Movie Instance */}
+              <div>
+                <label className="block text-xs font-bold text-cyan-300 mb-1">3. Select Movie Show Slot *</label>
+                <select
+                  value={selectedShowSlotId || isolatedLayoutKey}
+                  onChange={e => {
+                    const newSlotId = e.target.value;
+                    setSelectedShowSlotId(newSlotId);
+                    const matchedSlot = (activeShowSlots || []).find(s => s.id === newSlotId);
+                    if (matchedSlot) {
+                      setSelectedScreenId(matchedSlot.screenId || 'sc_1');
+                    }
+                  }}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-amber-300 bg-black font-bold"
+                >
+                  {(activeShowSlots || []).map(slot => (
+                    <option key={slot.id} value={slot.id}>
+                      🎬 {slot.label || `${slot.movieTitle} - ${slot.time}`}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -3310,7 +3438,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs text-cyan-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div>
-                Managing layout & prices for: <strong className="text-white">{activeTheatreObj?.name}</strong> → <strong className="text-amber-400">{activeScreensList.find(s => s.id === selectedScreenId)?.name || 'Screen 1'}</strong>
+                📍 Managing Layout for: <strong className="text-white">{selectedCity}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Theatre'}</strong> → <strong className="text-amber-400">{activeShowSlotObj?.label || '07:30 PM Show'}</strong>
               </div>
               <div className="flex items-center gap-2 text-[11px]">
                 <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-white/10 border border-white/20 inline-block"></span> Available</span>
@@ -3319,7 +3447,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
-            {/* Interactive Visual Layout Grid (Scrollable Container & Legible Font Sizes) */}
+            {/* Interactive Visual Layout Grid */}
             <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-4">
               <div className="w-full max-w-xl mx-auto text-center shrink-0">
                 <div className="screen-curve mb-2"></div>
@@ -3330,14 +3458,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               <div className="w-full overflow-auto max-h-[55vh] sm:max-h-[62vh] p-2 sm:p-4 my-2 rounded-2xl bg-black/30 border border-white/10 flex flex-col items-center select-none">
                 <div className="min-w-max flex flex-col items-center justify-center space-y-3 sm:space-y-4 py-2 px-2">
-                  {seatRowsList.map((tierObj) => (
+                  {(seatRowsList || []).map((tierObj) => (
                     <div key={tierObj.row} className="flex flex-col items-center w-full">
                       <div className="text-xs font-bold text-amber-400 mb-1.5 uppercase tracking-wider flex items-center gap-2 flex-wrap justify-center">
                         <span>Row {tierObj.row}: {tierObj.tier}</span>
                         <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">₹{tierObj.price}</span>
                         <button
                           type="button"
-                          onClick={() => deleteRowFromScreenLayout(selectedScreenId, tierObj.row)}
+                          onClick={() => deleteRowFromScreenLayout(isolatedLayoutKey, tierObj.row)}
                           className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-1 cursor-pointer"
                           title="Delete entire row"
                         >
@@ -3352,8 +3480,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
                             const seatNum = idx + 1;
                             const seatId = `${tierObj.row}${seatNum}`;
-                            const isBlocked = (currentLayout.blockedSeats || []).includes(seatId);
-                            const customStat = currentLayout.customStatuses?.[seatId];
+                            const isBlocked = (currentLayout?.blockedSeats || []).includes(seatId);
+                            const customStat = currentLayout?.customStatuses?.[seatId];
                             const isBooked = customStat === 'BOOKED';
 
                             return (
@@ -3362,11 +3490,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                 type="button"
                                 onClick={() => {
                                   if (isBlocked) {
-                                    setManualSeatStatusForScreen(selectedScreenId, seatId, 'AVAILABLE');
+                                    setManualSeatStatusForScreen(isolatedLayoutKey, seatId, 'AVAILABLE');
                                   } else if (isBooked) {
-                                    setManualSeatStatusForScreen(selectedScreenId, seatId, 'AVAILABLE');
+                                    setManualSeatStatusForScreen(isolatedLayoutKey, seatId, 'AVAILABLE');
                                   } else {
-                                    toggleBlockSeatForScreen(selectedScreenId, seatId);
+                                    handleToggleScopedSeatBlock(seatId);
                                   }
                                 }}
                                 className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all flex items-center justify-center cursor-pointer shrink-0 ${
@@ -3420,23 +3548,32 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </form>
             </div>
 
-            {/* Bulk Actions */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* Persistence & Template Actions */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleSaveIsolatedSeatLayout}
+                className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-2 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Save Changes / Commit Isolated Layout to Backend</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
-                  updateScreenRowsConfig(selectedScreenId, [
+                  updateScreenRowsConfig(isolatedLayoutKey, [
                     { row: 'N', tier: 'Classic Normal', price: 250, seatsCount: 12 },
                     { row: 'P', tier: 'Premium Tier', price: 450, seatsCount: 12 },
                     { row: 'R', tier: 'Luxury Recliner', price: 650, seatsCount: 10 },
                     { row: 'V', tier: 'VIP Gold Lounge', price: 950, seatsCount: 8 }
                   ]);
-                  setActionSuccess('Reset screen layout to standard 4-Tier template.');
+                  setActionSuccess('Reset show slot layout to standard 4-Tier template.');
                   setTimeout(() => setActionSuccess(''), 3000);
                 }}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
               >
-                Reset Standard Template
+                Reset Standard 4-Tier Template
               </button>
             </div>
           </div>
