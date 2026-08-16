@@ -801,12 +801,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Admin Create / Broadcast Notification (Strict MongoDB Persistence, NO Fake Success)
-  const broadcastNotification = async (title, message, priority = 'Info', date = null) => {
+  const broadcastNotification = async (title, message, priority = 'Info', extraPayload = {}) => {
     try {
-      const res = await apiClient.post('/notifications', { title, message, priority, date });
-      if (res.data && res.data.id) {
-        setNotifications(prev => [res.data, ...prev.filter(n => n.id !== res.data.id)]);
-        return { success: true, data: res.data };
+      const payload = typeof extraPayload === 'object' && extraPayload !== null 
+        ? { title, message, priority, ...extraPayload } 
+        : { title, message, priority, date: extraPayload };
+
+      const res = await apiClient.post('/notifications', payload);
+      const savedDoc = res.data?.data || res.data;
+      if (savedDoc && savedDoc.id) {
+        setNotifications(prev => [savedDoc, ...prev.filter(n => n.id !== savedDoc.id)]);
+        return { success: true, data: savedDoc };
       }
       return { success: false, error: 'Failed to create notification on server' };
     } catch (err) {

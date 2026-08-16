@@ -251,7 +251,9 @@ const OfferSchema = new mongoose.Schema({
   description: { type: String },
   bank: { type: String },
   discountValue: { type: Number },
-  expiryDate: { type: String }
+  expiryDate: { type: String },
+  targetType: { type: String, enum: ['ALL', 'SPECIFIC'], default: 'ALL' },
+  targetUserIds: [{ type: String }]
 }, { timestamps: true });
 
 const OfferBannerSchema = new mongoose.Schema({
@@ -264,7 +266,9 @@ const OfferBannerSchema = new mongoose.Schema({
   image: { type: String },
   expiryDate: { type: String },
   ctaText: { type: String },
-  ctaLink: { type: String }
+  ctaLink: { type: String },
+  targetType: { type: String, enum: ['ALL', 'SPECIFIC'], default: 'ALL' },
+  targetUserIds: [{ type: String }]
 }, { timestamps: true });
 
 const SupportMessageSchema = new mongoose.Schema({
@@ -286,6 +290,8 @@ const NotificationSchema = new mongoose.Schema({
   type: { type: String, default: 'SYSTEM' },
   category: { type: String, default: 'SYSTEM' },
   priority: { type: String, default: 'SYSTEM' },
+  targetType: { type: String, enum: ['ALL', 'SPECIFIC'], default: 'ALL' },
+  targetUserIds: [{ type: String }],
   read: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });

@@ -597,6 +597,35 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [bookingTotalPages, setBookingTotalPages] = useState(1);
   const [bookingTotalCount, setBookingTotalCount] = useState(0);
 
+  // Target Audience Selection State for Notifications & Offers
+  const [usersDropdownList, setUsersDropdownList] = useState([]);
+  const [notifTargetType, setNotifTargetType] = useState('ALL'); // 'ALL' | 'SPECIFIC'
+  const [selectedNotifTargetUsers, setSelectedNotifTargetUsers] = useState([]);
+  const [offerTargetType, setOfferTargetType] = useState('ALL'); // 'ALL' | 'SPECIFIC'
+  const [selectedOfferTargetUsers, setSelectedOfferTargetUsers] = useState([]);
+
+  const fetchUsersDropdownList = async () => {
+    try {
+      const res = await API.get('/admin/users/list');
+      if (res && res.data && res.data.users) {
+        setUsersDropdownList(res.data.users);
+      } else if (Array.isArray(res.data)) {
+        setUsersDropdownList(res.data);
+      }
+    } catch (e) {
+      try {
+        const fallbackRes = await API.get('/users/list');
+        if (fallbackRes && fallbackRes.data && fallbackRes.data.users) {
+          setUsersDropdownList(fallbackRes.data.users);
+        }
+      } catch (err) {}
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersDropdownList();
+  }, []);
+
   // Global CMS & Visual Editor State (Step 2)
   const [platformTitleInput, setPlatformTitleInput] = useState('PrimeShow Cinema & Events');
   const [activeCityInput, setActiveCityInput] = useState('Surat');
@@ -1093,7 +1122,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
       code: offerCode.toUpperCase(),
       bank: offerBank,
       discountValue: Number(offerDiscount),
-      description: `Special ${offerCode.toUpperCase()} discount voucher valid on all screenings.`
+      description: `Special ${offerCode.toUpperCase()} discount voucher valid on all screenings.`,
+      targetType: offerTargetType,
+      targetUserIds: offerTargetType === 'SPECIFIC' ? selectedOfferTargetUsers : []
     };
 
     if (editingOfferId) {
@@ -1114,6 +1145,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
     setOfferTitle('');
     setOfferCode('');
+    setOfferTargetType('ALL');
+    setSelectedOfferTargetUsers([]);
     setEditingOfferId(null);
     setTimeout(() => setActionSuccess(''), 4000);
   };
@@ -1139,11 +1172,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const handleBroadcastNotificationSubmit = async (e) => {
     e.preventDefault();
     if (!notifTitle.trim() || !notifMessage.trim()) return;
-    await broadcastNotification(notifTitle, notifMessage, notifType);
+
+    const extraPayload = {
+      date: notifDate || new Date().toISOString(),
+      targetType: notifTargetType,
+      targetUserIds: notifTargetType === 'SPECIFIC' ? selectedNotifTargetUsers : []
+    };
+
+    await broadcastNotification(notifTitle.trim(), notifMessage.trim(), notifType, extraPayload);
     setNotifTitle('');
     setNotifMessage('');
-    setActionSuccess('System Notification Broadcasted to all User Profiles!');
-    setTimeout(() => setActionSuccess(''), 3000);
+    setNotifTargetType('ALL');
+    setSelectedNotifTargetUsers([]);
+    setActionSuccess(notifTargetType === 'SPECIFIC' ? 'Notification dispatched to targeted user(s)!' : 'System Notification Broadcasted to all User Profiles!');
+    setTimeout(() => setActionSuccess(''), 4000);
   };
 
   const handleSaveTheatre = async (e) => {
@@ -3706,8 +3748,44 @@ export const AdminDashboard = ({ onReturnHome }) => {
             <p className="text-xs text-white/60">Create and broadcast announcements directly to all customer profile notification drawers in real time.</p>
 
             <form onSubmit={handleBroadcastNotificationSubmit} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Target Audience *</label>
+                  <select
+                    value={notifTargetType}
+                    onChange={(e) => setNotifTargetType(e.target.value)}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="ALL">🌐 All Users (Global Broadcast)</option>
+                    <option value="SPECIFIC">🎯 Specific User(s)</option>
+                  </select>
+                </div>
+
+                {notifTargetType === 'SPECIFIC' && (
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Select Target User(s) *</label>
+                    <select
+                      multiple
+                      value={selectedNotifTargetUsers}
+                      onChange={(e) => {
+                        const selectedOpts = Array.from(e.target.selectedOptions, option => option.value);
+                        setSelectedNotifTargetUsers(selectedOpts);
+                      }}
+                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black h-24 overflow-y-auto"
+                    >
+                      {usersDropdownList.map(u => (
+                        <option key={u.id || u.email} value={u.id || u.email}>
+                          {u.name} ({u.email})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-cyan-300 mt-1">Hold Ctrl/Cmd to select multiple specific users</p>
+                  </div>
+                )}
+              </div>
+
               <div>
-                <label className="block text-xs font-bold text-white mb-1">Notification Title</label>
+                <label className="block text-xs font-bold text-white mb-1">Notification Title *</label>
                 <input
                   type="text"
                   required
@@ -3732,7 +3810,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-white mb-1">Notification Message Content</label>
+                <label className="block text-xs font-bold text-white mb-1">Notification Message Content *</label>
                 <textarea
                   rows={4}
                   required
@@ -3748,7 +3826,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
               >
                 <Bell className="w-4 h-4" />
-                <span>Broadcast Live Notification to All Users</span>
+                <span>{notifTargetType === 'SPECIFIC' ? 'Send Targeted Notification' : 'Broadcast Live Notification to All Users'}</span>
               </button>
             </form>
           </div>

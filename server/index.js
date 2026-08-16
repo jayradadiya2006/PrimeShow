@@ -1027,6 +1027,31 @@ app.post(['/api/auth/admin-login', '/api/admin/login', '/auth/admin-login', '/ad
 const userRoutesPaths = ['/api/users', '/users', '/api/admin/users', '/admin/users'];
 app.options(userRoutesPaths, cors());
 
+// Lightweight Users List Endpoint for Admin Selection Dropdowns
+app.get(['/api/admin/users/list', '/admin/users/list', '/api/users/list', '/users/list'], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbUsers = await User.find({}, 'id name email phone role avatar profilePicture authProvider').sort({ createdAt: -1 }).lean();
+      if (dbUsers && dbUsers.length > 0) {
+        return res.status(200).json({ success: true, users: dbUsers });
+      }
+    }
+    const memoryUsers = Array.from(globalRegisteredUsersMap.values()).map(u => ({
+      id: u.id || u.email,
+      name: u.name || 'User',
+      email: u.email,
+      phone: u.phone || '',
+      role: u.role || 'CUSTOMER',
+      avatar: u.avatar || u.profilePicture || ''
+    }));
+    return res.status(200).json({ success: true, users: memoryUsers });
+  } catch (err) {
+    console.error('Error fetching users list:', err.message);
+    return res.status(500).json({ success: false, error: err.message, users: [] });
+  }
+});
+
 app.get(userRoutesPaths, async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   try {
@@ -1523,6 +1548,7 @@ app.put(['/api/users/profile', '/users/profile'], async (req, res) => {
 
 app.get(['/api/notifications', '/api/user/notifications'], async (req, res) => {
   const userId = req.query.userId || req.headers['x-user-id'] || null;
+  const userEmail = (req.query.userEmail || req.headers['x-user-email'] || '').toLowerCase().trim();
   try {
     if (mongoose.connection.readyState === 1) {
       const dbNotifs = await Notification.find().sort({ createdAt: -1 }).lean();
@@ -1535,7 +1561,16 @@ app.get(['/api/notifications', '/api/user/notifications'], async (req, res) => {
         });
       }
 
-      const merged = dbNotifs.map(n => ({
+      const filtered = dbNotifs.filter(n => {
+        if (!n.targetType || n.targetType === 'ALL' || !n.targetUserIds || n.targetUserIds.length === 0) {
+          return true;
+        }
+        if (userId && n.targetUserIds.includes(userId)) return true;
+        if (userEmail && n.targetUserIds.some(id => id.toLowerCase() === userEmail)) return true;
+        return false;
+      });
+
+      const merged = filtered.map(n => ({
         ...n,
         read: userId ? Boolean(userReadMap[n.id]) : Boolean(n.read)
       }));
@@ -1545,12 +1580,20 @@ app.get(['/api/notifications', '/api/user/notifications'], async (req, res) => {
   } catch (err) {
     console.warn('⚠️ Error fetching notifications from MongoDB Atlas:', err.message);
   }
-  res.json(notifications);
+
+  const filteredMem = notifications.filter(n => {
+    if (!n.targetType || n.targetType === 'ALL' || !n.targetUserIds || n.targetUserIds.length === 0) return true;
+    if (userId && n.targetUserIds.includes(userId)) return true;
+    if (userEmail && n.targetUserIds.some(id => id.toLowerCase() === userEmail)) return true;
+    return false;
+  });
+
+  res.json(filteredMem);
 });
 
 app.post(['/api/notifications', '/api/admin/notifications'], async (req, res) => {
   try {
-    const { title, message, category, priority, type, date } = req.body;
+    const { title, message, category, priority, type, date, targetType, targetUserIds } = req.body;
     const notifId = req.body.id || `notif_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const notifPayload = {
       id: notifId,
@@ -1559,6 +1602,8 @@ app.post(['/api/notifications', '/api/admin/notifications'], async (req, res) =>
       category: category || priority || type || 'SYSTEM',
       priority: priority || category || type || 'SYSTEM',
       type: type || priority || category || 'SYSTEM',
+      targetType: targetType === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
+      targetUserIds: Array.isArray(targetUserIds) ? targetUserIds : (targetUserIds ? [targetUserIds] : []),
       read: false,
       createdAt: date ? new Date(date) : new Date()
     };
@@ -2802,7 +2847,7 @@ app.get(['/api/offers/banners', '/api/admin/offers/banners'], async (req, res) =
 });
 
 app.post(['/api/offers/banners', '/api/admin/offers/banners'], async (req, res) => {
-  const { title, tagline, code, category, categoryBadge, image, expiryDate, ctaText, ctaLink } = req.body;
+  const { title, tagline, code, category, categoryBadge, image, expiryDate, ctaText, ctaLink, targetType, targetUserIds } = req.body;
   if (!title || !code) {
     return res.status(400).json({ error: 'Title and promo code are required' });
   }
@@ -2813,11 +2858,13 @@ app.post(['/api/offers/banners', '/api/admin/offers/banners'], async (req, res) 
     tagline: tagline || 'Exclusive promotional discount on PrimeShow.',
     code: code.toUpperCase(),
     category: category || 'Movies',
-    categoryBadge: categoryBadge || `🎬 ${category || 'MOVIES'} SPECIAL`,
+    categoryBadge: categoryBadge || `⚡ ${category || 'MOVIES'} SPECIAL`,
     image: image || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1600&q=80',
     expiryDate: expiryDate || '2026-12-31',
     ctaText: ctaText || 'Claim Offer',
-    ctaLink: ctaLink || 'movies'
+    ctaLink: ctaLink || 'movies',
+    targetType: targetType === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
+    targetUserIds: Array.isArray(targetUserIds) ? targetUserIds : (targetUserIds ? [targetUserIds] : [])
   };
 
   try {
