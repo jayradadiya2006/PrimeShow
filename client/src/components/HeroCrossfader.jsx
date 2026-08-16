@@ -38,7 +38,7 @@ const VIDEO_SOURCES = [
 ];
 
 export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, setActiveTab }) => {
-  const { moviesList, eventsList, playsList, activitiesList, theatresList } = useBooking();
+  const { moviesList, eventsList, playsList, activitiesList, theatresList, heroSlidesList } = useBooking();
   const [activeVideoIdx, setActiveVideoIdx] = useState(0);
   const [activeCategory, setActiveCategory] = useState('movies');
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,6 +47,19 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
   const searchContainerRef = useRef(null);
+
+  // Dynamic CMS Hero Slides array (binds directly to live heroSlidesList, with VIDEO_SOURCES fallback)
+  const slidesToDisplay = (heroSlidesList && heroSlidesList.length > 0)
+    ? heroSlidesList.map((slide, idx) => ({
+        id: slide.id || idx,
+        label: slide.badge || slide.priority || "Now Showing",
+        url: slide.videoUrl || slide.url || VIDEO_SOURCES[idx % VIDEO_SOURCES.length].url,
+        poster: slide.banner || slide.image || slide.poster || VIDEO_SOURCES[idx % VIDEO_SOURCES.length].poster,
+        title: slide.title || "Featured Movie",
+        sub: slide.tagline || slide.description || slide.sub || "Native IMAX 3D Experience",
+        movieId: slide.movieId || 'mov_1'
+      }))
+    : VIDEO_SOURCES;
 
   // Categories Funnel Menu Items
   const categoryMenu = [
@@ -61,10 +74,10 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
   // Auto-switch video every 8 seconds if user doesn't manually click
   useEffect(() => {
     const timer = setInterval(() => {
-      setActiveVideoIdx(prev => (prev + 1) % VIDEO_SOURCES.length);
+      setActiveVideoIdx(prev => (prev + 1) % slidesToDisplay.length);
     }, 8000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slidesToDisplay.length]);
 
   // Search Debounce Simulation
   useEffect(() => {
@@ -229,7 +242,7 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
     <section className="relative w-full h-screen min-h-[680px] overflow-hidden bg-[#0A0C10] flex items-center justify-center font-sans">
       
       {/* Instant Fallback Backdrop Images for Zero Latency Readability */}
-      {VIDEO_SOURCES.map((video, idx) => (
+      {slidesToDisplay.map((video, idx) => (
         <img
           key={`img_${video.id}`}
           src={video.poster}
@@ -240,8 +253,8 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
         />
       ))}
 
-      {/* 4 Stacked Crossfade Movie & Character Reel Video Elements */}
-      {VIDEO_SOURCES.map((video, idx) => (
+      {/* Stacked Crossfade Movie & Character Reel Video Elements */}
+      {slidesToDisplay.map((video, idx) => (
         <video
           key={video.id}
           autoPlay
@@ -334,8 +347,10 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
               {/* Book Now Action CTA (Electric Crimson Button) */}
               <button
                 onClick={() => {
-                  if (onBookNow) onBookNow('mov_1');
-                  else if (onSelectMovie) onSelectMovie('mov_1');
+                  const currentSlide = slidesToDisplay[activeVideoIdx % slidesToDisplay.length];
+                  const targetId = currentSlide?.movieId || 'mov_1';
+                  if (onBookNow) onBookNow(targetId);
+                  else if (onSelectMovie) onSelectMovie(targetId);
                 }}
                 className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:brightness-110 text-white font-extrabold text-sm shadow-xl shadow-red-600/30 flex items-center justify-center gap-2 transition-all hover:scale-105 cursor-pointer"
               >
@@ -435,8 +450,8 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
       <div className="hidden lg:flex absolute bottom-8 right-8 z-30 glass-panel rounded-2xl p-3 px-4 border border-slate-700 flex items-center gap-3">
         <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></div>
         <div className="text-left">
-          <div className="text-xs font-bold text-slate-100">{VIDEO_SOURCES[activeVideoIdx].title}</div>
-          <div className="text-[10px] text-amber-400">{VIDEO_SOURCES[activeVideoIdx].sub}</div>
+          <div className="text-xs font-bold text-slate-100">{slidesToDisplay[activeVideoIdx % slidesToDisplay.length]?.title}</div>
+          <div className="text-[10px] text-amber-400">{slidesToDisplay[activeVideoIdx % slidesToDisplay.length]?.sub}</div>
         </div>
       </div>
 
