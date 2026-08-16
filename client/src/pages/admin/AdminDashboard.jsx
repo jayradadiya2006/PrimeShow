@@ -159,12 +159,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
     if (e) e.preventDefault();
     if (!notifTitle.trim() || !notifMessage.trim()) return;
 
+    const extraPayload = {
+      date: notifDate || new Date().toISOString(),
+      targetType: notifTargetType,
+      targetUserIds: notifTargetType === 'SPECIFIC' ? selectedNotifTargetUsers : []
+    };
+
     if (editingNotifId) {
       await updateNotification(editingNotifId, {
         title: notifTitle.trim(),
         message: notifMessage.trim(),
         priority: notifType,
-        date: notifDate || null
+        ...extraPayload
       });
       setActionSuccess('Notification updated & synced live with User Profile!');
     } else {
@@ -172,15 +178,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
         notifTitle.trim(),
         notifMessage.trim(),
         notifType,
-        notifDate || null
+        extraPayload
       );
-      setActionSuccess('New Notification created & broadcasted live!');
+      setActionSuccess(notifTargetType === 'SPECIFIC' ? 'Targeted Notification sent live to user profile!' : 'New Notification created & broadcasted live!');
     }
 
     setNotifTitle('');
     setNotifMessage('');
     setNotifType('Info');
     setNotifDate('');
+    setNotifTargetType('ALL');
+    setSelectedNotifTargetUsers([]);
     setEditingNotifId(null);
     setTimeout(() => setActionSuccess(''), 4000);
   };
@@ -3741,97 +3749,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
           </div>
         )}
 
-        {/* Tab 6: Broadcast Notifications */}
-        {activeTab === 'notifications' && (
-          <div className="space-y-6 max-w-2xl">
-            <h2 className="text-2xl font-bold font-sans text-white">Broadcast System Notification</h2>
-            <p className="text-xs text-white/60">Create and broadcast announcements directly to all customer profile notification drawers in real time.</p>
-
-            <form onSubmit={handleBroadcastNotificationSubmit} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Target Audience *</label>
-                  <select
-                    value={notifTargetType}
-                    onChange={(e) => setNotifTargetType(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
-                  >
-                    <option value="ALL">🌐 All Users (Global Broadcast)</option>
-                    <option value="SPECIFIC">🎯 Specific User(s)</option>
-                  </select>
-                </div>
-
-                {notifTargetType === 'SPECIFIC' && (
-                  <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Select Target User(s) *</label>
-                    <select
-                      multiple
-                      value={selectedNotifTargetUsers}
-                      onChange={(e) => {
-                        const selectedOpts = Array.from(e.target.selectedOptions, option => option.value);
-                        setSelectedNotifTargetUsers(selectedOpts);
-                      }}
-                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black h-24 overflow-y-auto"
-                    >
-                      {usersDropdownList.map(u => (
-                        <option key={u.id || u.email} value={u.id || u.email}>
-                          {u.name} ({u.email})
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-[10px] text-cyan-300 mt-1">Hold Ctrl/Cmd to select multiple specific users</p>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-white mb-1">Notification Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. IMAX 3D Weekend Discount 50% Off"
-                  value={notifTitle}
-                  onChange={(e) => setNotifTitle(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-white mb-1">Category / Type</label>
-                <select
-                  value={notifType}
-                  onChange={(e) => setNotifType(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
-                >
-                  <option value="PROMO">PROMO (Promotional Voucher)</option>
-                  <option value="MOVIE">MOVIE (New Release Update)</option>
-                  <option value="SYSTEM">SYSTEM (Maintenance / Notice)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-white mb-1">Notification Message Content *</label>
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="Type the full announcement broadcast message..."
-                  value={notifMessage}
-                  onChange={(e) => setNotifMessage(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
-                ></textarea>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 cursor-pointer"
-              >
-                <Bell className="w-4 h-4" />
-                <span>{notifTargetType === 'SPECIFIC' ? 'Send Targeted Notification' : 'Broadcast Live Notification to All Users'}</span>
-              </button>
-            </form>
-          </div>
-        )}
-
         {/* Tab 7: Theatre & Showtimes Management CRUD */}
         {activeTab === 'theatres' && (
           <div className="space-y-8">
@@ -4675,11 +4592,49 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setNotifMessage('');
                       setNotifType('Info');
                       setNotifDate('');
+                      setNotifTargetType('ALL');
+                      setSelectedNotifTargetUsers([]);
                     }}
                     className="px-3 py-1 rounded-xl bg-white/10 text-white/70 hover:text-white text-xs font-bold"
                   >
                     Cancel Edit
                   </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-cyan-300 mb-1">Target Audience *</label>
+                  <select
+                    value={notifTargetType}
+                    onChange={(e) => setNotifTargetType(e.target.value)}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  >
+                    <option value="ALL">🌐 All Users (Global Broadcast)</option>
+                    <option value="SPECIFIC">🎯 Specific User(s)</option>
+                  </select>
+                </div>
+
+                {notifTargetType === 'SPECIFIC' && (
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">Select Target User(s) *</label>
+                    <select
+                      multiple
+                      value={selectedNotifTargetUsers}
+                      onChange={(e) => {
+                        const selectedOpts = Array.from(e.target.selectedOptions, option => option.value);
+                        setSelectedNotifTargetUsers(selectedOpts);
+                      }}
+                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black h-24 overflow-y-auto"
+                    >
+                      {usersDropdownList.map(u => (
+                        <option key={u.id || u.email} value={u.id || u.email}>
+                          {u.name} ({u.email})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-cyan-300 mt-1">Hold Ctrl/Cmd to select multiple specific users</p>
+                  </div>
                 )}
               </div>
 
