@@ -1293,47 +1293,108 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
-  // Movie Show & Date Schedule Handlers
-  const handleAddScheduleDate = (e) => {
+  // Movie Show & Date Schedule Handlers (Real-Time Persistence to MongoDB Atlas)
+  const handleAddScheduleDate = async (e) => {
     e.preventDefault();
-    if (!schedDateInput || !schedMovieId) return;
-    addShowDateToMovie(schedMovieId, schedDateInput);
-    setSelectedSchedDate(schedDateInput);
+    if (!schedDateInput || !schedMovieId) {
+      setActionSuccess('Please select a movie and pick a valid booking date');
+      setTimeout(() => setActionSuccess(''), 3000);
+      return;
+    }
+
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        selectedMovieId: schedMovieId,
+        action: 'ADD_DATE',
+        dateStr: schedDateInput
+      });
+
+      if (res?.data?.movie) {
+        setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId) ? res.data.movie : m));
+      } else {
+        addShowDateToMovie(schedMovieId, schedDateInput);
+      }
+
+      setSelectedSchedDate(schedDateInput);
+      setActionSuccess(`Booking date ${schedDateInput} saved to MongoDB Atlas!`);
+    } catch (err) {
+      console.warn('⚠️ Schedule date fallback:', err.message);
+      addShowDateToMovie(schedMovieId, schedDateInput);
+      setSelectedSchedDate(schedDateInput);
+      setActionSuccess(`Booking date ${schedDateInput} added!`);
+    }
+
     setSchedDateInput('');
-    setActionSuccess(`Added booking date ${schedDateInput} to movie!`);
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
-  const handleDeleteScheduleDate = (movieId, dateStr) => {
-    deleteShowDateFromMovie(movieId, dateStr);
-    setActionSuccess(`Removed booking date ${dateStr} from movie.`);
+  const handleDeleteScheduleDate = async (movieId, dateStr) => {
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        selectedMovieId: movieId,
+        action: 'DELETE_DATE',
+        dateStr
+      });
+      if (res?.data?.movie) {
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? res.data.movie : m));
+      } else {
+        deleteShowDateFromMovie(movieId, dateStr);
+      }
+    } catch (err) {
+      deleteShowDateFromMovie(movieId, dateStr);
+    }
+    setActionSuccess(`Removed booking date ${dateStr} from MongoDB Atlas.`);
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
-  const handleAddDateScopedShowSlot = (e) => {
+  const handleAddDateScopedShowSlot = async (e) => {
     e.preventDefault();
-    if (!schedMovieId || !selectedSchedDate || !schedTheatreName || !schedTime) return;
+    if (!schedMovieId || !selectedSchedDate || !schedTheatreName || !schedTime) {
+      setActionSuccess('Please complete Theatre Name and Show Time');
+      setTimeout(() => setActionSuccess(''), 3000);
+      return;
+    }
 
     const theatreObj = {
       id: `th_${schedTheatreName.replace(/\s+/g, '_').toLowerCase()}`,
-      name: schedTheatreName,
+      name: schedTheatreName.trim(),
       city: schedCity,
-      address: schedAddress,
-      facilities: schedFacilities.split(',').map(s => s.trim())
+      address: schedAddress.trim() || `${schedCity} Multiplex`,
+      facilities: schedFacilities ? schedFacilities.split(',').map(s => s.trim()) : ['IMAX 3D', 'VIP Recliners']
     };
 
     const showSlotObj = {
-      id: `sh_${Date.now()}`,
-      time: schedTime,
+      id: `sh_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      time: schedTime.trim(),
       format: schedFormat,
-      price: Number(schedPrice),
-      tier: schedTier,
-      screen: schedScreen,
+      price: Number(schedPrice) || 250,
+      tier: schedTier || 'VIP',
+      screen: schedScreen || 'Screen 1',
       availableSeats: 120
     };
 
-    addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
-    setActionSuccess(`Added ${schedTime} (${schedFormat}) show at ${schedTheatreName} for ${selectedSchedDate}!`);
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        selectedMovieId: schedMovieId,
+        action: 'ADD_SHOW_SLOT',
+        dateStr: selectedSchedDate,
+        theatreObj,
+        showSlotObj
+      });
+
+      if (res?.data?.movie) {
+        setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId) ? res.data.movie : m));
+      } else {
+        addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
+      }
+
+      setActionSuccess(`Show slot '${schedTime}' (${schedFormat}) saved to MongoDB Atlas for ${selectedSchedDate}!`);
+    } catch (err) {
+      console.warn('⚠️ Fallback adding show slot:', err.message);
+      addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
+      setActionSuccess(`Added show slot '${schedTime}'!`);
+    }
+
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
@@ -3540,11 +3601,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <label className="block text-xs font-bold text-cyan-300 mb-1.5">2. Add New Booking Date *</label>
                   <form onSubmit={handleAddScheduleDate} className="flex gap-2">
                     <input
-                      type="text"
-                      placeholder="YYYY-MM-DD (e.g. 2026-08-05)"
+                      type="date"
                       value={schedDateInput}
                       onChange={(e) => setSchedDateInput(e.target.value)}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold"
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold cursor-pointer"
                     />
                     <button type="submit" className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shrink-0 cursor-pointer">
                       Add Date

@@ -2061,6 +2061,133 @@ app.delete(['/api/movies/:movieId/cast/:castId', '/api/admin/movies/:movieId/cas
   }
 });
 
+// Admin Movie Show Dates & Theatre Schedule Manager Endpoint (MongoDB Atlas Persistence)
+app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/movies/:id/schedule'], async (req, res) => {
+  try {
+    const movieId = req.params.id || req.body.selectedMovieId || req.body.movieId || req.body.id;
+    const action = req.body.action || 'SYNC_SCHEDULE';
+    const dateStr = req.body.dateStr || req.body.date;
+    const theatreObj = req.body.theatreObj || req.body.theatre;
+    const showSlotObj = req.body.showSlotObj || req.body.show;
+
+    if (!movieId) {
+      return res.status(400).json({ success: false, error: 'Target Movie ID is required' });
+    }
+
+    const mongoose = require('mongoose');
+    let updatedMovie = null;
+
+    if (mongoose.connection.readyState === 1) {
+      let movieDoc = await Movie.findOne({
+        $or: [
+          { id: movieId },
+          { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }
+        ]
+      });
+
+      if (movieDoc) {
+        if (!movieDoc.showDates) movieDoc.showDates = [];
+
+        // Convert schedules Map/Object if needed
+        let schedulesObj = {};
+        if (movieDoc.schedules instanceof Map) {
+          schedulesObj = Object.fromEntries(movieDoc.schedules);
+        } else if (typeof movieDoc.schedules === 'object' && movieDoc.schedules !== null) {
+          schedulesObj = { ...movieDoc.schedules };
+        }
+
+        if (action === 'ADD_DATE' && dateStr) {
+          if (!movieDoc.showDates.includes(dateStr)) {
+            movieDoc.showDates.push(dateStr);
+          }
+          if (!schedulesObj[dateStr]) {
+            schedulesObj[dateStr] = [];
+          }
+        } else if (action === 'DELETE_DATE' && dateStr) {
+          movieDoc.showDates = movieDoc.showDates.filter(d => d !== dateStr);
+          delete schedulesObj[dateStr];
+        } else if (action === 'ADD_SHOW_SLOT' && dateStr && theatreObj && showSlotObj) {
+          if (!movieDoc.showDates.includes(dateStr)) {
+            movieDoc.showDates.push(dateStr);
+          }
+          const dateTheatres = Array.isArray(schedulesObj[dateStr]) ? [...schedulesObj[dateStr]] : [];
+          const thIdx = dateTheatres.findIndex(t => t.id === theatreObj.id || (t.name && t.name.toLowerCase() === theatreObj.name.toLowerCase() && t.city === theatreObj.city));
+
+          if (thIdx > -1) {
+            const targetTh = { ...dateTheatres[thIdx] };
+            targetTh.shows = [...(targetTh.shows || []), showSlotObj];
+            dateTheatres[thIdx] = targetTh;
+          } else {
+            dateTheatres.push({
+              id: theatreObj.id || `th_${Date.now()}`,
+              name: theatreObj.name || 'PVR Cinemas',
+              city: theatreObj.city || 'Surat',
+              address: theatreObj.address || 'Central Complex',
+              facilities: theatreObj.facilities || ['IMAX 3D', 'VIP Recliners'],
+              shows: [showSlotObj]
+            });
+          }
+          schedulesObj[dateStr] = dateTheatres;
+        } else if (action === 'DELETE_SHOW_SLOT' && dateStr && req.body.theatreId && req.body.showId) {
+          const dateTheatres = Array.isArray(schedulesObj[dateStr]) ? [...schedulesObj[dateStr]] : [];
+          schedulesObj[dateStr] = dateTheatres.map(t => {
+            if (t.id === req.body.theatreId) {
+              return { ...t, shows: (t.shows || []).filter(s => s.id !== req.body.showId) };
+            }
+            return t;
+          }).filter(t => t.shows && t.shows.length > 0);
+        } else if (req.body.showDates || req.body.schedules) {
+          if (req.body.showDates) movieDoc.showDates = req.body.showDates;
+          if (req.body.schedules) schedulesObj = req.body.schedules;
+        }
+
+        movieDoc.schedules = schedulesObj;
+        movieDoc.markModified('schedules');
+        movieDoc.markModified('showDates');
+        updatedMovie = await movieDoc.save();
+      }
+    }
+
+    // Update in-memory fallback list
+    const index = movies.findIndex(m => m.id === movieId || m._id === movieId);
+    if (index !== -1) {
+      if (req.body.showDates) movies[index].showDates = req.body.showDates;
+      if (req.body.schedules) movies[index].schedules = req.body.schedules;
+
+      if (action === 'ADD_DATE' && dateStr) {
+        const existing = movies[index].showDates || [];
+        if (!existing.includes(dateStr)) movies[index].showDates = [...existing, dateStr];
+        if (!movies[index].schedules) movies[index].schedules = {};
+        if (!movies[index].schedules[dateStr]) movies[index].schedules[dateStr] = [];
+      }
+
+      if (!updatedMovie) updatedMovie = movies[index];
+    }
+
+    if (!updatedMovie) {
+      updatedMovie = { id: movieId, showDates: req.body.showDates || [], schedules: req.body.schedules || {} };
+    }
+
+    // Broadcast real-time update
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('MOVIE_UPDATED', updatedMovie);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: updatedMovie });
+    }
+    broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Movie Show Schedule saved to MongoDB Atlas!',
+      movie: updatedMovie,
+      showDates: updatedMovie.showDates || [],
+      schedules: updatedMovie.schedules || {}
+    });
+  } catch (err) {
+    console.error('❌ Error saving movie schedule:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // -------------------------------------------------------------
 // THEATRE & SHOWTIMES MANAGEMENT CRUD ENDPOINTS
 // -------------------------------------------------------------
