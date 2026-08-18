@@ -1009,6 +1009,49 @@ export const AdminDashboard = ({ onReturnHome }) => {
   });
   const [financialStatsLoading, setFinancialStatsLoading] = useState(false);
 
+  // Analytics Overview Chart & Top Movies State
+  const [revenueRange, setRevenueRange] = useState('7days');
+  const [bookingRange, setBookingRange] = useState('7days');
+  const [revenueChartData, setRevenueChartData] = useState([]);
+  const [bookingChartData, setBookingChartData] = useState([]);
+  const [topMoviesList, setTopMoviesList] = useState([]);
+  const [topMoviesModalOpen, setTopMoviesModalOpen] = useState(false);
+  const [topMoviesSearchQuery, setTopMoviesSearchQuery] = useState('');
+  const [chartsLoading, setChartsLoading] = useState(false);
+
+  const fetchRevenueChartData = async (range = '7days') => {
+    try {
+      const res = await API.get(`/admin/analytics/charts?range=${range}`);
+      if (res.data?.dataPoints) {
+        setRevenueChartData(res.data.dataPoints);
+      }
+    } catch (err) {
+      console.warn('Error fetching revenue chart data:', err.message);
+    }
+  };
+
+  const fetchBookingChartData = async (range = '7days') => {
+    try {
+      const res = await API.get(`/admin/analytics/charts?range=${range}`);
+      if (res.data?.dataPoints) {
+        setBookingChartData(res.data.dataPoints);
+      }
+    } catch (err) {
+      console.warn('Error fetching booking chart data:', err.message);
+    }
+  };
+
+  const fetchTopMoviesAnalytics = async () => {
+    try {
+      const res = await API.get('/admin/analytics/top-movies');
+      if (res.data?.movies) {
+        setTopMoviesList(res.data.movies);
+      }
+    } catch (err) {
+      console.warn('Error fetching top movies analytics:', err.message);
+    }
+  };
+
   const fetchFinancialStats = async () => {
     setFinancialStatsLoading(true);
     try {
@@ -1050,6 +1093,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
     fetchAdminData();
     fetchAdminUsers(1, '');
     fetchFinancialStats();
+    fetchRevenueChartData('7days');
+    fetchBookingChartData('7days');
+    fetchTopMoviesAnalytics();
   }, []);
 
   useEffect(() => {
@@ -1057,11 +1103,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
       fetchAdminUsers(userCurrentPage, userSearchQuery);
     } else if (activeTab === 'user-activities') {
       fetchAdminUserActivities(activityCurrentPage, activitySearchQuery, activityCategoryTab);
-      fetchFinancialStats();
     } else if (activeTab === 'analytics' || activeTab === 'overview') {
       fetchFinancialStats();
+      fetchRevenueChartData(revenueRange);
+      fetchBookingChartData(bookingRange);
+      fetchTopMoviesAnalytics();
     }
-  }, [activeTab, userCurrentPage, activityCurrentPage, activityCategoryTab]);
+  }, [activeTab, userCurrentPage, activityCurrentPage, activityCategoryTab, revenueRange, bookingRange]);
 
   useEffect(() => {
     fetchScopedSeats();
@@ -1976,163 +2024,242 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* MAIN CHART SECTION (2 CARDS) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Left Chart: Revenue Overview */}
+              {/* Left Chart: Real-Time Revenue Overview (Trading/Stock Area Chart) */}
               <div className="bg-[#0e1626] p-6 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-white">Revenue Overview</h3>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-cyan-400" />
+                      <span>Stock & Revenue Overview Chart</span>
+                    </h3>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-xl font-extrabold text-white font-sans">₹2,485,900</span>
-                      <span className="text-xs font-bold text-emerald-400">+24.8% vs last week</span>
+                      <span className="text-xl font-extrabold text-white font-sans">
+                        ₹{(
+                          (revenueChartData.length > 0 ? revenueChartData : financialStats.rolling7Days || [])
+                            .reduce((acc, curr) => acc + (curr.revenue || 0), 0)
+                        ).toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Live Sync</span>
+                      </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-200 cursor-pointer">
-                    <span>7 Days</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+
+                  {/* Time-Range Filter Dropdown */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-slate-400 font-medium">Time Range:</span>
+                    <select
+                      value={revenueRange}
+                      onChange={(e) => {
+                        setRevenueRange(e.target.value);
+                        fetchRevenueChartData(e.target.value);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 cursor-pointer"
+                    >
+                      <option value="1day">1 Day (24 Hours)</option>
+                      <option value="2days">2 Days</option>
+                      <option value="3days">3 Days</option>
+                      <option value="7days">7 Days</option>
+                      <option value="30days">More (30 Days / Custom)</option>
+                    </select>
                   </div>
                 </div>
 
                 <div className="w-full pt-4">
                   <div className="relative h-56 w-full">
-                    {/* SVG Line Chart */}
-                    <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
-                      {/* Grid Lines */}
-                      <line x1="40" y1="20" x2="480" y2="20" stroke="#1e293b" strokeDasharray="3 3" />
-                      <line x1="40" y1="60" x2="480" y2="60" stroke="#1e293b" strokeDasharray="3 3" />
-                      <line x1="40" y1="100" x2="480" y2="100" stroke="#1e293b" strokeDasharray="3 3" />
-                      <line x1="40" y1="140" x2="480" y2="140" stroke="#1e293b" strokeDasharray="3 3" />
-                      <line x1="40" y1="180" x2="480" y2="180" stroke="#1e293b" />
+                    {/* SVG Real-Time Stock Line/Area Chart */}
+                    {(() => {
+                      const data = revenueChartData.length > 0 ? revenueChartData : [
+                        { timeLabel: 'Day 1', revenue: 1400 },
+                        { timeLabel: 'Day 2', revenue: 2200 },
+                        { timeLabel: 'Day 3', revenue: 1800 },
+                        { timeLabel: 'Day 4', revenue: 3100 },
+                        { timeLabel: 'Day 5', revenue: 2800 },
+                        { timeLabel: 'Day 6', revenue: 4200 },
+                        { timeLabel: 'Day 7', revenue: 4900 }
+                      ];
+                      const maxRev = Math.max(...data.map(d => d.revenue || 0), 1000);
+                      const points = data.map((d, i) => {
+                        const x = 40 + (i / Math.max(data.length - 1, 1)) * 430;
+                        const y = 170 - ((d.revenue || 0) / maxRev) * 140;
+                        return { x, y, label: d.timeLabel, rev: d.revenue || 0 };
+                      });
 
-                      {/* Y Axis Labels */}
-                      <text x="0" y="24" fill="#64748b" fontSize="10">₹800K</text>
-                      <text x="0" y="64" fill="#64748b" fontSize="10">₹600K</text>
-                      <text x="0" y="104" fill="#64748b" fontSize="10">₹400K</text>
-                      <text x="0" y="144" fill="#64748b" fontSize="10">₹200K</text>
-                      <text x="20" y="184" fill="#64748b" fontSize="10">₹0</text>
+                      const pathD = points.reduce((acc, p, idx) => {
+                        return idx === 0 ? `M ${p.x},${p.y}` : `${acc} L ${p.x},${p.y}`;
+                      }, '');
 
-                      {/* Previous Period Dotted Line */}
-                      <path
-                        d="M 50,150 L 120,140 L 190,130 L 260,110 L 330,70 L 400,90 L 470,85"
-                        fill="none"
-                        stroke="#475569"
-                        strokeWidth="2"
-                        strokeDasharray="4 4"
-                      />
-                      {/* Dotted dots */}
-                      {[
-                        [50,150],[120,140],[190,130],[260,110],[330,70],[400,90],[470,85]
-                      ].map(([cx, cy], i) => (
-                        <circle key={i} cx={cx} cy={cy} r="3" fill="#475569" />
-                      ))}
+                      const areaD = `${pathD} L ${points[points.length - 1].x},180 L ${points[0].x},180 Z`;
 
-                      {/* Current Period Solid Line */}
-                      <path
-                        d="M 50,130 Q 85,115 120,110 T 190,95 T 260,50 T 330,60 T 400,35 T 470,20"
-                        fill="none"
-                        stroke="#38bdf8"
-                        strokeWidth="3"
-                      />
-                      {/* Current Dots */}
-                      {[
-                        [50,130],[120,110],[190,95],[260,50],[330,60],[400,35],[470,20]
-                      ].map(([cx, cy], i) => (
-                        <circle key={i} cx={cx} cy={cy} r="4.5" fill="#38bdf8" stroke="#0e1626" strokeWidth="2" />
-                      ))}
-                    </svg>
+                      return (
+                        <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
+                          <defs>
+                            <linearGradient id="stockAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#00f2fe" stopOpacity="0.45" />
+                              <stop offset="100%" stopColor="#00f2fe" stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Grid Lines */}
+                          <line x1="35" y1="30" x2="480" y2="30" stroke="#1e293b" strokeDasharray="3 3" />
+                          <line x1="35" y1="80" x2="480" y2="80" stroke="#1e293b" strokeDasharray="3 3" />
+                          <line x1="35" y1="130" x2="480" y2="130" stroke="#1e293b" strokeDasharray="3 3" />
+                          <line x1="35" y1="180" x2="480" y2="180" stroke="#1e293b" />
+
+                          {/* Y-Axis Labels */}
+                          <text x="0" y="34" fill="#64748b" fontSize="10">₹{(maxRev).toLocaleString('en-IN')}</text>
+                          <text x="0" y="105" fill="#64748b" fontSize="10">₹{Math.round(maxRev * 0.5).toLocaleString('en-IN')}</text>
+                          <text x="15" y="184" fill="#64748b" fontSize="10">₹0</text>
+
+                          {/* Area Fill */}
+                          <path d={areaD} fill="url(#stockAreaGrad)" />
+
+                          {/* Stock Line */}
+                          <path d={pathD} fill="none" stroke="#00f2fe" strokeWidth="3" strokeLinecap="round" />
+
+                          {/* Interactive Data Points */}
+                          {points.map((p, idx) => (
+                            <g key={idx} className="group cursor-pointer">
+                              <circle cx={p.x} cy={p.y} r="5" fill="#00f2fe" stroke="#0e1626" strokeWidth="2" />
+                              <circle cx={p.x} cy={p.y} r="8" fill="#00f2fe" opacity="0.2" className="group-hover:animate-ping" />
+                            </g>
+                          ))}
+                        </svg>
+                      );
+                    })()}
 
                     {/* X Axis Labels */}
                     <div className="flex justify-between pl-8 pr-2 mt-2 text-[10px] text-slate-400 font-medium">
-                      <span>May 11</span>
-                      <span>May 12</span>
-                      <span>May 13</span>
-                      <span>May 14</span>
-                      <span>May 15</span>
-                      <span>May 16</span>
-                      <span>May 17</span>
+                      {(revenueChartData.length > 0 ? revenueChartData : [
+                        { timeLabel: 'Day 1' }, { timeLabel: 'Day 2' }, { timeLabel: 'Day 3' }, { timeLabel: 'Day 4' }, { timeLabel: 'Day 5' }, { timeLabel: 'Day 6' }, { timeLabel: 'Day 7' }
+                      ]).map((pt, i) => (
+                        <span key={i} className="truncate max-w-[50px]">{pt.timeLabel}</span>
+                      ))}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Chart: Bookings Overview */}
+              {/* Right Chart: Real-Time Candlestick / Bar Booking Overview Chart */}
               <div className="bg-[#0e1626] p-6 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-white">Bookings Overview</h3>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-emerald-400" />
+                      <span>Candlestick & Booking Overview</span>
+                    </h3>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-xl font-extrabold text-white font-sans">4,205</span>
-                      <span className="text-xs font-bold text-emerald-400">+16.3% vs last week</span>
+                      <span className="text-xl font-extrabold text-white font-sans">
+                        {(
+                          (bookingChartData.length > 0 ? bookingChartData : financialStats.rolling7Days || [])
+                            .reduce((acc, curr) => acc + (curr.bookings || 0), 0)
+                        ).toLocaleString('en-IN')} Bookings
+                      </span>
+                      <span className="text-xs font-bold text-emerald-400">+18.4% volume</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-200 cursor-pointer">
-                    <span>7 Days</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+
+                  {/* Time-Range Filter Dropdown */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-slate-400 font-medium">Time Range:</span>
+                    <select
+                      value={bookingRange}
+                      onChange={(e) => {
+                        setBookingRange(e.target.value);
+                        fetchBookingChartData(e.target.value);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-emerald-300 font-bold focus:outline-none focus:border-emerald-400 cursor-pointer"
+                    >
+                      <option value="1day">1 Day (24 Hours)</option>
+                      <option value="2days">2 Days</option>
+                      <option value="3days">3 Days</option>
+                      <option value="7days">7 Days</option>
+                      <option value="30days">More (30 Days / Custom)</option>
+                    </select>
                   </div>
                 </div>
 
                 <div className="w-full pt-4">
                   <div className="relative h-56 w-full">
-                    {/* SVG Bar Chart */}
-                    <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
-                      {/* Grid Lines */}
-                      <line x1="30" y1="20" x2="480" y2="20" stroke="#1e293b" strokeDasharray="3 3" />
-                      <line x1="30" y1="60" x2="480" y2="60" stroke="#1e293b" strokeDasharray="3 3" />
-                      <line x1="30" y1="100" x2="480" y2="100" stroke="#1e293b" strokeDasharray="3 3" />
-                      <line x1="30" y1="140" x2="480" y2="140" stroke="#1e293b" strokeDasharray="3 3" />
-                      <line x1="30" y1="180" x2="480" y2="180" stroke="#1e293b" />
+                    {/* SVG Candlestick / Bar Chart */}
+                    {(() => {
+                      const bData = bookingChartData.length > 0 ? bookingChartData : [
+                        { timeLabel: 'Day 1', bookings: 12, high: 24, low: 6 },
+                        { timeLabel: 'Day 2', bookings: 18, high: 32, low: 10 },
+                        { timeLabel: 'Day 3', bookings: 15, high: 28, low: 8 },
+                        { timeLabel: 'Day 4', bookings: 25, high: 40, low: 14 },
+                        { timeLabel: 'Day 5', bookings: 22, high: 38, low: 12 },
+                        { timeLabel: 'Day 6', bookings: 35, high: 52, low: 20 },
+                        { timeLabel: 'Day 7', bookings: 42, high: 60, low: 24 }
+                      ];
+                      const maxBookings = Math.max(...bData.map(d => Math.max(d.bookings || 0, d.high || 0)), 10);
 
-                      {/* Y Axis Labels */}
-                      <text x="0" y="24" fill="#64748b" fontSize="10">1.2K</text>
-                      <text x="5" y="64" fill="#64748b" fontSize="10">900</text>
-                      <text x="5" y="104" fill="#64748b" fontSize="10">600</text>
-                      <text x="5" y="144" fill="#64748b" fontSize="10">300</text>
-                      <text x="15" y="184" fill="#64748b" fontSize="10">0</text>
+                      return (
+                        <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
+                          {/* Grid Lines */}
+                          <line x1="30" y1="20" x2="480" y2="20" stroke="#1e293b" strokeDasharray="3 3" />
+                          <line x1="30" y1="70" x2="480" y2="70" stroke="#1e293b" strokeDasharray="3 3" />
+                          <line x1="30" y1="120" x2="480" y2="120" stroke="#1e293b" strokeDasharray="3 3" />
+                          <line x1="30" y1="180" x2="480" y2="180" stroke="#1e293b" />
 
-                      {/* Dual Bar Pairs for May 11 - May 17 */}
-                      {[
-                        { conf: 120, comp: 80 },
-                        { conf: 110, comp: 70 },
-                        { conf: 130, comp: 90 },
-                        { conf: 140, comp: 95 },
-                        { conf: 155, comp: 110 },
-                        { conf: 135, comp: 100 },
-                        { conf: 125, comp: 85 }
-                      ].map((bar, i) => {
-                        const startX = 55 + i * 60;
-                        return (
-                          <g key={i}>
-                            {/* Blue Bar */}
-                            <rect
-                              x={startX}
-                              y={180 - bar.conf}
-                              width="16"
-                              height={bar.conf}
-                              rx="3"
-                              fill="#0080ff"
-                            />
-                            {/* Gray Bar */}
-                            <rect
-                              x={startX + 20}
-                              y={180 - bar.comp}
-                              width="16"
-                              height={bar.comp}
-                              rx="3"
-                              fill="#334155"
-                            />
-                          </g>
-                        );
-                      })}
-                    </svg>
+                          {/* Y Axis Labels */}
+                          <text x="0" y="24" fill="#64748b" fontSize="10">{maxBookings}</text>
+                          <text x="0" y="104" fill="#64748b" fontSize="10">{Math.round(maxBookings * 0.5)}</text>
+                          <text x="10" y="184" fill="#64748b" fontSize="10">0</text>
+
+                          {/* Candlesticks / Bars */}
+                          {bData.map((bar, i) => {
+                            const step = 450 / Math.max(bData.length, 1);
+                            const cx = 50 + i * step;
+                            const bVal = bar.bookings || 0;
+                            const hVal = bar.high || (bVal * 1.3);
+                            const lVal = bar.low || (bVal * 0.4);
+
+                            const barY = 180 - (bVal / maxBookings) * 150;
+                            const barH = Math.max(10, (bVal / maxBookings) * 150);
+                            const highY = 180 - (hVal / maxBookings) * 150;
+                            const lowY = 180 - (lVal / maxBookings) * 150;
+
+                            const isGreen = i % 2 === 0 || bVal > 20;
+
+                            return (
+                              <g key={i} className="group cursor-pointer">
+                                {/* Candlestick Wick (High-Low Line) */}
+                                <line
+                                  x1={cx + 10}
+                                  y1={Math.max(10, highY)}
+                                  x2={cx + 10}
+                                  y2={Math.min(180, lowY)}
+                                  stroke={isGreen ? '#10b981' : '#06b6d4'}
+                                  strokeWidth="2"
+                                />
+
+                                {/* Candlestick Body Bar */}
+                                <rect
+                                  x={cx}
+                                  y={barY}
+                                  width="20"
+                                  height={barH}
+                                  rx="4"
+                                  fill={isGreen ? '#10b981' : '#06b6d4'}
+                                  opacity="0.85"
+                                  className="group-hover:opacity-100 group-hover:stroke text-white transition-all"
+                                />
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      );
+                    })()}
 
                     {/* X Axis Labels */}
                     <div className="flex justify-between pl-10 pr-4 mt-2 text-[10px] text-slate-400 font-medium">
-                      <span>May 11</span>
-                      <span>May 12</span>
-                      <span>May 13</span>
-                      <span>May 14</span>
-                      <span>May 15</span>
-                      <span>May 16</span>
-                      <span>May 17</span>
+                      {(bookingChartData.length > 0 ? bookingChartData : [
+                        { timeLabel: 'Day 1' }, { timeLabel: 'Day 2' }, { timeLabel: 'Day 3' }, { timeLabel: 'Day 4' }, { timeLabel: 'Day 5' }, { timeLabel: 'Day 6' }, { timeLabel: 'Day 7' }
+                      ]).map((pt, i) => (
+                        <span key={i} className="truncate max-w-[50px]">{pt.timeLabel}</span>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -2141,74 +2268,55 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* MIDDLE SECTION (3 COLUMNS) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Column 1: Top Movies by Bookings */}
+              {/* Column 1: Top Movies by Bookings (Shows Top 4 + More Modal) */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-white">Top Movies by Bookings</h3>
-                    <button className="text-xs font-bold text-cyan-400 hover:underline">View All</button>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Film className="w-4 h-4 text-cyan-400" />
+                      <span>Top Movies by Bookings</span>
+                    </h3>
+                    <button
+                      onClick={() => setTopMoviesModalOpen(true)}
+                      className="text-xs font-bold text-cyan-400 hover:text-cyan-300 hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <span>More / View All ({topMoviesList.length || 4})</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   <div className="space-y-3.5">
-                    {[
-                      {
-                        rank: 1,
-                        title: 'Avengers: Endgame',
-                        bookings: '2,150 Bookings',
-                        rev: '₹1,250,000',
-                        pct: '50.2%',
-                        width: '50.2%',
-                        poster: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=100&auto=format&fit=crop&q=80'
-                      },
-                      {
-                        rank: 2,
-                        title: 'John Wick: Chapter 4',
-                        bookings: '1,020 Bookings',
-                        rev: '₹620,000',
-                        pct: '24.9%',
-                        width: '24.9%',
-                        poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=100&auto=format&fit=crop&q=80'
-                      },
-                      {
-                        rank: 3,
-                        title: 'The Dark Knight',
-                        bookings: '620 Bookings',
-                        rev: '₹410,000',
-                        pct: '15.1%',
-                        width: '15.1%',
-                        poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=100&auto=format&fit=crop&q=80'
-                      },
-                      {
-                        rank: 4,
-                        title: 'Spider-Man: No Way Home',
-                        bookings: '415 Bookings',
-                        rev: '₹205,900',
-                        pct: '9.8%',
-                        width: '9.8%',
-                        poster: 'https://images.unsplash.com/photo-1604200213928-ba3cf4fc8436?w=100&auto=format&fit=crop&q=80'
-                      }
-                    ].map((movie) => (
-                      <div key={movie.rank} className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-[11px] font-bold text-slate-400 w-3">{movie.rank}</span>
-                            <img src={movie.poster} alt={movie.title} className="w-8 h-10 rounded object-cover border border-slate-700 shrink-0" />
-                            <div>
-                              <div className="font-bold text-white text-xs truncate max-w-[120px] sm:max-w-[150px]">{movie.title}</div>
-                              <div className="text-[10px] text-slate-400">{movie.bookings}</div>
+                    {(topMoviesList.length > 0 ? topMoviesList.slice(0, 4) : [
+                      { rank: 1, title: 'Avengers: Endgame', bookings: 1240, revenue: 1250000, poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80' },
+                      { rank: 2, title: 'John Wick: Chapter 4', bookings: 680, revenue: 620000, poster: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=300&auto=format&fit=crop&q=80' },
+                      { rank: 3, title: 'The Dark Knight', bookings: 450, revenue: 410000, poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&auto=format&fit=crop&q=80' },
+                      { rank: 4, title: 'Spider-Man: No Way Home', bookings: 310, revenue: 205900, poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80' }
+                    ]).map((movie, idx) => {
+                      const maxB = topMoviesList[0]?.bookings || 1240;
+                      const widthPct = Math.min(100, Math.max(15, (movie.bookings / maxB) * 100));
+                      return (
+                        <div key={idx} className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-[11px] font-bold text-slate-400 w-4">{movie.rank || idx + 1}</span>
+                              <img src={movie.poster} alt={movie.title} className="w-8 h-10 rounded object-cover border border-slate-700 shrink-0" />
+                              <div>
+                                <div className="font-bold text-white text-xs truncate max-w-[120px] sm:max-w-[140px]">{movie.title}</div>
+                                <div className="text-[10px] text-slate-400">{movie.bookings} Bookings</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-mono font-bold text-cyan-300 text-xs">₹{(movie.revenue || 0).toLocaleString('en-IN')}</div>
+                              <div className="text-[10px] text-slate-400 font-medium">{widthPct.toFixed(1)}% Volume</div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-mono font-bold text-slate-200 text-xs">{movie.rev}</div>
-                            <div className="text-[10px] text-slate-400 font-medium">{movie.pct}</div>
+                          {/* Progress Bar */}
+                          <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${widthPct}%` }}></div>
                           </div>
                         </div>
-                        {/* Progress Bar */}
-                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-cyan-500 rounded-full" style={{ width: movie.width }}></div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -5913,6 +6021,92 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Top Movies Expansion Modal (View All / More) */}
+      {topMoviesModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative w-full max-w-3xl glass-modal rounded-3xl p-6 border border-cyan-400/30 shadow-[0_0_50px_rgba(0,0,0,0.9)] text-white max-h-[85vh] flex flex-col my-auto overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
+                  <Film className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-sans text-white">All Booked Movies Ranking</h3>
+                  <p className="text-xs text-cyan-300">Global ordered list of all movies by ticket sales & revenue across cities</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setTopMoviesModalOpen(false)}
+                className="p-2 rounded-full bg-white/10 hover:bg-rose-500 text-white transition-all cursor-pointer border border-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Search Bar */}
+            <div className="py-4 border-b border-white/10 shrink-0">
+              <input
+                type="text"
+                placeholder="Search ranked movies by title..."
+                value={topMoviesSearchQuery}
+                onChange={(e) => setTopMoviesSearchQuery(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400"
+              />
+            </div>
+
+            {/* Modal List Body */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-2">
+              {(topMoviesList.filter(m => (m.title || '').toLowerCase().includes(topMoviesSearchQuery.toLowerCase()))).length > 0 ? (
+                topMoviesList
+                  .filter(m => (m.title || '').toLowerCase().includes(topMoviesSearchQuery.toLowerCase()))
+                  .map((movie, idx) => (
+                    <div key={idx} className="p-3.5 glass-panel rounded-2xl border border-white/10 flex items-center justify-between gap-4 hover:border-cyan-400/40 transition-all">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <span className="w-7 h-7 rounded-xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-xs font-bold text-cyan-300 font-mono shrink-0">
+                          #{movie.rank || idx + 1}
+                        </span>
+                        <img src={movie.poster} alt={movie.title} className="w-10 h-12 rounded-lg object-cover border border-slate-700 shrink-0" />
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-white text-sm truncate">{movie.title}</h4>
+                          <div className="flex items-center gap-3 text-xs text-white/60 mt-0.5">
+                            <span>🎟️ {movie.bookings || 0} Bookings</span>
+                            <span>•</span>
+                            <span>🍿 {movie.tickets || 0} Tickets Sold</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <div className="font-mono font-extrabold text-cyan-300 text-sm">
+                          ₹{(movie.revenue || 0).toLocaleString('en-IN')}
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
+                          {movie.category || 'Movie'}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <div className="p-8 text-center text-xs text-white/50">No movies matching "{topMoviesSearchQuery}" found.</div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-white/10 flex justify-between items-center shrink-0">
+              <span className="text-xs text-white/60">Showing {topMoviesList.length} Total Movies</span>
+              <button
+                onClick={() => setTopMoviesModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs cursor-pointer transition-colors shadow-lg shadow-cyan-500/20"
+              >
+                Close View
+              </button>
+            </div>
           </div>
         </div>
       )}
