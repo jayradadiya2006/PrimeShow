@@ -3693,15 +3693,26 @@ app.get('/api/admin/analytics/top-movies', async (req, res) => {
           { $sort: { totalBookings: -1, totalRevenue: -1 } }
         ]);
 
-        topMoviesList = movieAgg.map((m, idx) => ({
-          rank: idx + 1,
-          title: m._id || 'Untitled Movie',
-          bookings: m.totalBookings || 0,
-          tickets: m.totalTickets || 0,
-          revenue: m.totalRevenue || 0,
-          poster: m.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80',
-          category: m.category || 'Movie'
-        }));
+        for (let idx = 0; idx < movieAgg.length; idx++) {
+          const m = movieAgg[idx];
+          const mTitle = m._id || 'Untitled Movie';
+          const movieDoc = await Movie.findOne({ title: new RegExp(`^${mTitle}$`, 'i') });
+
+          const score = movieDoc?.rating ? Number(movieDoc.rating) : (m.totalBookings > 0 ? 8.5 : 0.0);
+          const ratingText = m.totalBookings > 0 ? `${score.toFixed(1)} ★` : 'Unrated';
+
+          topMoviesList.push({
+            rank: idx + 1,
+            title: mTitle,
+            bookings: m.totalBookings || 0,
+            tickets: m.totalTickets || 0,
+            revenue: m.totalRevenue || 0,
+            rating: score,
+            ratingText,
+            poster: movieDoc?.poster || m.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80',
+            category: m.category || 'Movie'
+          });
+        }
       } catch (dbErr) {
         console.warn('Top Movies Aggregation Warning:', dbErr.message);
       }

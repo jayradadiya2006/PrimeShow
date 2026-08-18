@@ -2296,7 +2296,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                 <img src={movie.poster} alt={movie.title} className="w-8 h-10 rounded object-cover border border-slate-700 shrink-0" />
                                 <div>
                                   <div className="font-bold text-white text-xs truncate max-w-[140px] sm:max-w-[180px]">{movie.title}</div>
-                                  <div className="text-[10px] text-slate-400">{movie.bookings || 0} Bookings</div>
+                                  <div className="text-[10px] text-slate-400 flex items-center gap-2">
+                                    <span>{movie.bookings || 0} Bookings</span>
+                                    <span className="text-amber-400 font-bold">{movie.ratingText || (movie.rating > 0 ? movie.rating + ' ★' : 'Unrated')}</span>
+                                  </div>
                                 </div>
                               </div>
                               <div className="text-right">
@@ -2312,12 +2315,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         );
                       })
                     ) : (
-                      /* Clean Zero State Display for Top Movies */
+                      /* Explicit Realistic Zero State Display */
                       <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-cyan-400/20 space-y-2">
                         <Film className="w-8 h-8 text-cyan-400/50 mx-auto animate-pulse" />
-                        <div className="text-xs font-bold text-white">0 Bookings / ₹0 Revenue</div>
+                        <div className="text-xs font-bold text-white">0 Total Bookings / ₹0 Revenue / Unrated (0.0 ★)</div>
                         <p className="text-[11px] text-cyan-300/70">
-                          No ticket bookings recorded in MongoDB Atlas yet. Real-time movie rankings will populate automatically as users book tickets.
+                          No verified booking records in MongoDB Atlas yet. Rating scores and booking volumes rank dynamically upon live user ticket purchases.
                         </p>
                       </div>
                     )}
