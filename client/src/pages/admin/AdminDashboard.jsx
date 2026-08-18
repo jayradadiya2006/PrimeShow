@@ -1817,13 +1817,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold font-sans text-white">Analytics Overview</h1>
-                <p className="text-xs text-slate-400 mt-1">Real-time insights and performance metrics</p>
+                <p className="text-xs text-slate-400 mt-1">Real-time insights and live performance metrics from MongoDB Atlas</p>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <button
+                  onClick={() => fetchFinancialStats()}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-xs text-cyan-300 font-bold hover:bg-cyan-500 hover:text-black transition-all cursor-pointer shadow-lg shadow-cyan-500/10"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${financialStatsLoading ? 'animate-spin' : ''}`} />
+                  <span>Refresh Live Financials</span>
+                </button>
+
                 <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0e1626] border border-slate-700/60 text-xs text-slate-200 font-medium cursor-pointer hover:border-slate-500 transition-all">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  <span>May 11 – May 17, 2025</span>
+                  <span>Rolling 7 Days Data</span>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
                 </div>
 
@@ -1839,21 +1847,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
-            {/* TOP 4 KPI CARDS */}
+            {/* TOP 4 LIVE FINANCIAL METRIC CARDS (MongoDB Atlas Aggregation) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* KPI Card 1: Total Ticket Revenue */}
+              {/* KPI Card 1: Total Booking Revenue */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Total Ticket Revenue</span>
+                    <span className="text-xs text-slate-400 font-medium">Total Booking Revenue</span>
                     <div className="w-9 h-9 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
                       <DollarSign className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">₹2,485,900</div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                    ₹{(financialStats.totalRevenue || 0).toLocaleString('en-IN')}
+                  </div>
                   <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
-                    <span>+24.8%</span>
-                    <span className="text-slate-400 font-normal">vs last 7 days</span>
+                    <span>Live MongoDB Atlas Sync</span>
                   </div>
                 </div>
                 <div className="mt-4 -mb-1 -mx-2 h-10">
@@ -1870,19 +1879,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              {/* KPI Card 2: Confirmed Bookings */}
+              {/* KPI Card 2: Ticket Revenue / Seats Booked */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Confirmed Bookings</span>
+                    <span className="text-xs text-slate-400 font-medium">Ticket Revenue & Seats</span>
                     <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                       <Ticket className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">3,890</div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                    {(financialStats.totalTickets || 0).toLocaleString('en-IN')} Seats
+                  </div>
                   <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
-                    <span>+18.6%</span>
-                    <span className="text-slate-400 font-normal">vs last 7 days</span>
+                    <span>Across {financialStats.totalConfirmedBookings || 0} Confirmed Transactions</span>
                   </div>
                 </div>
                 <div className="mt-4 -mb-1 -mx-2 h-10">
@@ -1899,19 +1909,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              {/* KPI Card 3: Total Bookings */}
+              {/* KPI Card 3: Today's Activity & Revenue */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Total Bookings</span>
+                    <span className="text-xs text-slate-400 font-medium">Today's Activity & Revenue</span>
                     <div className="w-9 h-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                      <Layers className="w-4 h-4" />
+                      <Zap className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">4,205</div>
-                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
-                    <span>+16.3%</span>
-                    <span className="text-slate-400 font-normal">vs last 7 days</span>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                    {financialStats.todayBookings || 0} Bookings
+                  </div>
+                  <div className="text-[11px] font-bold text-purple-300 flex items-center gap-1 mt-1">
+                    <span>Revenue Today: ₹{(financialStats.todayRevenue || 0).toLocaleString('en-IN')}</span>
                   </div>
                 </div>
                 <div className="mt-4 -mb-1 -mx-2 h-10">
@@ -1928,19 +1939,24 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              {/* KPI Card 4: Occupancy Rate */}
+              {/* KPI Card 4: 7-Day Performance Overview */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Occupancy Rate</span>
+                    <span className="text-xs text-slate-400 font-medium">7-Day Rolling Performance</span>
                     <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                      <Percent className="w-4 h-4" />
+                      <TrendingUp className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">94.2%</div>
-                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
-                    <span>+7.2%</span>
-                    <span className="text-slate-400 font-normal">vs last 7 days</span>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                    ₹{(
+                      (financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.revenue || 0), 0)
+                    ).toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1 mt-1">
+                    <span>
+                      {(financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.bookings || 0), 0)} Confirmed Bookings (7 Days)
+                    </span>
                   </div>
                 </div>
                 <div className="mt-4 -mb-1 -mx-2 h-10">
@@ -2670,111 +2686,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
           </div>
         )}
 
-        {/* Tab: User Activity & Financial Desk */}
+        {/* Tab: User Activity & System Audit Desk */}
         {activeTab === 'user-activities' && (
           <div className="space-y-6 animate-fade-in pb-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold font-sans text-white flex items-center gap-3">
                   <ActivityIcon className="w-8 h-8 text-cyan-400" />
-                  <span>User Activity & Financial Desk</span>
+                  <span>User Activity & System Audit Desk</span>
                 </h1>
                 <p className="text-xs text-cyan-300 mt-1">
-                  Real-time system activity logs, event triggers, historical user payments, and reward balances directly from MongoDB Atlas.
+                  Real-time system activity logs, event triggers, historical user actions, and session logs directly from MongoDB Atlas.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => {
-                    fetchFinancialStats();
-                    fetchAdminUserActivities(activityCurrentPage, activitySearchQuery, activityCategoryTab);
-                  }}
-                  className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 hover:text-black border border-cyan-400/40 text-cyan-300 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/10"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${financialStatsLoading || adminActivitiesLoading ? 'animate-spin' : ''}`} />
-                  <span>Refresh Data & Financials</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Top 4 Live Financial Metric Cards (MongoDB Atlas Aggregation) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Card 1: Total Booking Revenue */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Total Booking Revenue</span>
-                    <div className="w-9 h-9 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
-                      <DollarSign className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
-                    ₹{(financialStats.totalRevenue || 0).toLocaleString('en-IN')}
-                  </div>
-                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
-                    <span>Live MongoDB Atlas Sync</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 2: Total Seats / Tickets Booked */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Total Tickets / Seats Booked</span>
-                    <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                      <Ticket className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
-                    {(financialStats.totalTickets || 0).toLocaleString('en-IN')}
-                  </div>
-                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
-                    <span>Across {financialStats.totalConfirmedBookings || 0} Confirmed Bookings</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 3: Today's Bookings */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Today's Bookings (24h)</span>
-                    <div className="w-9 h-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                      <Zap className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
-                    {financialStats.todayBookings || 0}
-                  </div>
-                  <div className="text-[11px] font-bold text-purple-300 flex items-center gap-1 mt-1">
-                    <span>Revenue: ₹{(financialStats.todayRevenue || 0).toLocaleString('en-IN')}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 4: 7-Day Performance */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">7-Day Rolling Revenue</span>
-                    <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                      <TrendingUp className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
-                    ₹{(
-                      (financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.revenue || 0), 0)
-                    ).toLocaleString('en-IN')}
-                  </div>
-                  <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1 mt-1">
-                    <span>
-                      {(financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.bookings || 0), 0)} Bookings in 7 Days
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <button
+                onClick={() => fetchAdminUserActivities(activityCurrentPage, activitySearchQuery, activityCategoryTab)}
+                className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 hover:text-black border border-cyan-400/40 text-cyan-300 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shrink-0"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${adminActivitiesLoading ? 'animate-spin' : ''}`} />
+                <span>Refresh Activity Logs</span>
+              </button>
             </div>
 
             {/* Event Category Filter Pills */}
