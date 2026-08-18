@@ -3379,6 +3379,157 @@ app.get(['/api/admin/overview', '/admin/overview'], async (req, res) => {
   }
 });
 
+// Admin Real-Time Financial Statistics & Booking Aggregation Endpoint
+app.get('/api/admin/financial-stats', async (req, res) => {
+  try {
+    let totalRevenue = 0;
+    let totalTickets = 0;
+    let totalConfirmedBookings = 0;
+    let todayRevenue = 0;
+    let todayBookings = 0;
+    let categoryBreakdown = { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 };
+    let categoryRevenue = { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 };
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        // Aggregate Total Revenue & Total Ticket Count
+        const revAgg = await Booking.aggregate([
+          { $match: { status: { $ne: 'CANCELLED' } } },
+          {
+            $group: {
+              _id: null,
+              totalRev: { $sum: '$totalAmount' },
+              totalCount: { $sum: 1 },
+              totalTicketSeats: {
+                $sum: {
+                  $cond: {
+                    if: { $isArray: '$seats' },
+                    then: { $size: '$seats' },
+                    else: { $ifNull: ['$totalSeats', 1] }
+                  }
+                }
+              }
+            }
+          }
+        ]);
+
+        if (revAgg.length > 0) {
+          totalRevenue = revAgg[0].totalRev || 0;
+          totalConfirmedBookings = revAgg[0].totalCount || 0;
+          totalTickets = revAgg[0].totalTicketSeats || 0;
+        }
+
+        // Aggregate Today's Revenue & Bookings
+        const todayAgg = await Booking.aggregate([
+          { $match: { createdAt: { $gte: startOfDay }, status: { $ne: 'CANCELLED' } } },
+          {
+            $group: {
+              _id: null,
+              todayRev: { $sum: '$totalAmount' },
+              todayCount: { $sum: 1 }
+            }
+          }
+        ]);
+
+        if (todayAgg.length > 0) {
+          todayRevenue = todayAgg[0].todayRev || 0;
+          todayBookings = todayAgg[0].todayCount || 0;
+        }
+
+        // Category Breakdown Aggregation
+        const catAgg = await Booking.aggregate([
+          { $match: { status: { $ne: 'CANCELLED' } } },
+          {
+            $group: {
+              _id: '$category',
+              count: { $sum: 1 },
+              revenue: { $sum: '$totalAmount' }
+            }
+          }
+        ]);
+
+        catAgg.forEach(c => {
+          const key = c._id || 'Movie';
+          categoryBreakdown[key] = (categoryBreakdown[key] || 0) + c.count;
+          categoryRevenue[key] = (categoryRevenue[key] || 0) + c.revenue;
+        });
+
+      } catch (dbErr) {
+        console.warn('Financial Stats Aggregation Warning:', dbErr.message);
+      }
+    }
+
+    // Fallback merge for in-memory bookings if any
+    if (Array.isArray(bookings) && bookings.length > 0) {
+      bookings.forEach(b => {
+        if (b.status !== 'CANCELLED') {
+          const amt = Number(b.totalAmount) || 0;
+          const seatsCount = Array.isArray(b.seats) ? b.seats.length : (Number(b.totalSeats) || 1);
+          if (amt > 0 && totalRevenue === 0) totalRevenue += amt;
+          if (totalConfirmedBookings === 0) totalConfirmedBookings += 1;
+          if (totalTickets === 0) totalTickets += seatsCount;
+        }
+      });
+    }
+
+    // Generate 7-Day Rolling Data
+    const rolling7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+      const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+
+      let dayRev = 0;
+      let dayCount = 0;
+
+      if (mongoose.connection.readyState === 1) {
+        try {
+          const dayAgg = await Booking.aggregate([
+            { $match: { createdAt: { $gte: dayStart, $lte: dayEnd }, status: { $ne: 'CANCELLED' } } },
+            { $group: { _id: null, rev: { $sum: '$totalAmount' }, count: { $sum: 1 } } }
+          ]);
+          if (dayAgg.length > 0) {
+            dayRev = dayAgg[0].rev || 0;
+            dayCount = dayAgg[0].count || 0;
+          }
+        } catch (e) {}
+      }
+
+      rolling7Days.push({
+        date: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+        revenue: dayRev,
+        bookings: dayCount
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      financials: {
+        totalRevenue,
+        totalTickets,
+        totalConfirmedBookings,
+        todayRevenue,
+        todayBookings,
+        categoryBreakdown,
+        categoryRevenue,
+        rolling7Days
+      }
+    });
+  } catch (error) {
+    console.error('Financial Stats Route Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to compute financial statistics',
+      error: error.message
+    });
+  }
+});
+
 const seedDatabaseIfEmpty = async () => {
   try {
     if (mongoose.connection.readyState !== 1) return;

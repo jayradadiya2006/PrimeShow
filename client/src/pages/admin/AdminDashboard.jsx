@@ -996,6 +996,33 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [activityTotalPages, setActivityTotalPages] = useState(1);
   const [activityTotalCount, setActivityTotalCount] = useState(0);
 
+  // Live MongoDB Atlas Financial Aggregation State
+  const [financialStats, setFinancialStats] = useState({
+    totalRevenue: 0,
+    totalTickets: 0,
+    totalConfirmedBookings: 0,
+    todayRevenue: 0,
+    todayBookings: 0,
+    categoryBreakdown: { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 },
+    categoryRevenue: { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 },
+    rolling7Days: []
+  });
+  const [financialStatsLoading, setFinancialStatsLoading] = useState(false);
+
+  const fetchFinancialStats = async () => {
+    setFinancialStatsLoading(true);
+    try {
+      const res = await API.get('/admin/financial-stats');
+      if (res.data?.financials) {
+        setFinancialStats(res.data.financials);
+      }
+    } catch (err) {
+      console.warn('Error fetching financial stats:', err.message);
+    } finally {
+      setFinancialStatsLoading(false);
+    }
+  };
+
   const fetchAdminUserActivities = async (page = 1, search = '', eventType = 'ALL') => {
     setAdminActivitiesLoading(true);
     try {
@@ -1022,6 +1049,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   useEffect(() => {
     fetchAdminData();
     fetchAdminUsers(1, '');
+    fetchFinancialStats();
   }, []);
 
   useEffect(() => {
@@ -1029,6 +1057,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
       fetchAdminUsers(userCurrentPage, userSearchQuery);
     } else if (activeTab === 'user-activities') {
       fetchAdminUserActivities(activityCurrentPage, activitySearchQuery, activityCategoryTab);
+      fetchFinancialStats();
+    } else if (activeTab === 'analytics' || activeTab === 'overview') {
+      fetchFinancialStats();
     }
   }, [activeTab, userCurrentPage, activityCurrentPage, activityCategoryTab]);
 
@@ -1045,8 +1076,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
     socket.on('NEW_USER_BOOKING', (data) => {
       console.log('⚡ [Admin Socket Alert]: New booking received', data);
       setActionSuccess(`⚡ New Live Booking! ${data.userName || 'Customer'} booked ${data.title || 'tickets'} for ₹${data.totalAmount || 480}`);
+      fetchFinancialStats();
       if (activeTab === 'bookings') {
         fetchCategorizedBookings(bookingCurrentPage, bookingCategoryTab, bookingSearchQuery);
+      } else if (activeTab === 'user-activities') {
+        fetchAdminUserActivities(activityCurrentPage, activitySearchQuery, activityCategoryTab);
       }
       setTimeout(() => setActionSuccess(''), 5000);
     });
@@ -2638,7 +2672,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab: User Activity & Financial Desk */}
         {activeTab === 'user-activities' && (
-          <div className="space-y-6 animate-fade-in">
+          <div className="space-y-6 animate-fade-in pb-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold font-sans text-white flex items-center gap-3">
@@ -2650,13 +2684,97 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </p>
               </div>
 
-              <button
-                onClick={() => fetchAdminUserActivities(activityCurrentPage, activitySearchQuery, activityCategoryTab)}
-                className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 hover:text-black border border-cyan-400/40 text-cyan-300 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shrink-0"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${adminActivitiesLoading ? 'animate-spin' : ''}`} />
-                <span>Refresh Activity Logs</span>
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => {
+                    fetchFinancialStats();
+                    fetchAdminUserActivities(activityCurrentPage, activitySearchQuery, activityCategoryTab);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 hover:text-black border border-cyan-400/40 text-cyan-300 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/10"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${financialStatsLoading || adminActivitiesLoading ? 'animate-spin' : ''}`} />
+                  <span>Refresh Data & Financials</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Top 4 Live Financial Metric Cards (MongoDB Atlas Aggregation) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Card 1: Total Booking Revenue */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">Total Booking Revenue</span>
+                    <div className="w-9 h-9 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                    ₹{(financialStats.totalRevenue || 0).toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                    <span>Live MongoDB Atlas Sync</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Total Seats / Tickets Booked */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">Total Tickets / Seats Booked</span>
+                    <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                      <Ticket className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                    {(financialStats.totalTickets || 0).toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                    <span>Across {financialStats.totalConfirmedBookings || 0} Confirmed Bookings</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Today's Bookings */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">Today's Bookings (24h)</span>
+                    <div className="w-9 h-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                      <Zap className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                    {financialStats.todayBookings || 0}
+                  </div>
+                  <div className="text-[11px] font-bold text-purple-300 flex items-center gap-1 mt-1">
+                    <span>Revenue: ₹{(financialStats.todayRevenue || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 4: 7-Day Performance */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">7-Day Rolling Revenue</span>
+                    <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                    ₹{(
+                      (financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.revenue || 0), 0)
+                    ).toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1 mt-1">
+                    <span>
+                      {(financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.bookings || 0), 0)} Bookings in 7 Days
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Event Category Filter Pills */}
