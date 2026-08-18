@@ -2046,7 +2046,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </div>
                   </div>
 
-                  {/* Time-Range Filter Dropdown */}
+                  {/* Time-Range Filter Dropdown: EXACT Options (1 Day, 7 Days, 15 Days, 30 Days) */}
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] text-slate-400 font-medium">Time Range:</span>
                     <select
@@ -2057,11 +2057,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       }}
                       className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 cursor-pointer"
                     >
-                      <option value="1day">1 Day (24 Hours)</option>
-                      <option value="2days">2 Days</option>
-                      <option value="3days">3 Days</option>
+                      <option value="1day">1 Day</option>
                       <option value="7days">7 Days</option>
-                      <option value="30days">More (30 Days / Custom)</option>
+                      <option value="15days">15 Days</option>
+                      <option value="30days">30 Days</option>
                     </select>
                   </div>
                 </div>
@@ -2071,13 +2070,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     {/* SVG Real-Time Stock Line/Area Chart */}
                     {(() => {
                       const data = revenueChartData.length > 0 ? revenueChartData : [
-                        { timeLabel: 'Day 1', revenue: 1400 },
-                        { timeLabel: 'Day 2', revenue: 2200 },
-                        { timeLabel: 'Day 3', revenue: 1800 },
-                        { timeLabel: 'Day 4', revenue: 3100 },
-                        { timeLabel: 'Day 5', revenue: 2800 },
-                        { timeLabel: 'Day 6', revenue: 4200 },
-                        { timeLabel: 'Day 7', revenue: 4900 }
+                        { timeLabel: 'Day 1', revenue: 0 },
+                        { timeLabel: 'Day 2', revenue: 0 },
+                        { timeLabel: 'Day 3', revenue: 0 },
+                        { timeLabel: 'Day 4', revenue: 0 },
+                        { timeLabel: 'Day 5', revenue: 0 },
+                        { timeLabel: 'Day 6', revenue: 0 },
+                        { timeLabel: 'Day 7', revenue: 0 }
                       ];
                       const maxRev = Math.max(...data.map(d => d.revenue || 0), 1000);
                       const points = data.map((d, i) => {
@@ -2156,11 +2155,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             .reduce((acc, curr) => acc + (curr.bookings || 0), 0)
                         ).toLocaleString('en-IN')} Bookings
                       </span>
-                      <span className="text-xs font-bold text-emerald-400">+18.4% volume</span>
+                      <span className="text-xs font-bold text-emerald-400">Live Volume</span>
                     </div>
                   </div>
 
-                  {/* Time-Range Filter Dropdown */}
+                  {/* Time-Range Filter Dropdown: EXACT Options (1 Day, 7 Days, 15 Days, 30 Days) */}
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] text-slate-400 font-medium">Time Range:</span>
                     <select
@@ -2171,11 +2170,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       }}
                       className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-emerald-300 font-bold focus:outline-none focus:border-emerald-400 cursor-pointer"
                     >
-                      <option value="1day">1 Day (24 Hours)</option>
-                      <option value="2days">2 Days</option>
-                      <option value="3days">3 Days</option>
+                      <option value="1day">1 Day</option>
                       <option value="7days">7 Days</option>
-                      <option value="30days">More (30 Days / Custom)</option>
+                      <option value="15days">15 Days</option>
+                      <option value="30days">30 Days</option>
                     </select>
                   </div>
                 </div>
@@ -2185,13 +2183,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     {/* SVG Candlestick / Bar Chart */}
                     {(() => {
                       const bData = bookingChartData.length > 0 ? bookingChartData : [
-                        { timeLabel: 'Day 1', bookings: 12, high: 24, low: 6 },
-                        { timeLabel: 'Day 2', bookings: 18, high: 32, low: 10 },
-                        { timeLabel: 'Day 3', bookings: 15, high: 28, low: 8 },
-                        { timeLabel: 'Day 4', bookings: 25, high: 40, low: 14 },
-                        { timeLabel: 'Day 5', bookings: 22, high: 38, low: 12 },
-                        { timeLabel: 'Day 6', bookings: 35, high: 52, low: 20 },
-                        { timeLabel: 'Day 7', bookings: 42, high: 60, low: 24 }
+                        { timeLabel: 'Day 1', bookings: 0, high: 0, low: 0 },
+                        { timeLabel: 'Day 2', bookings: 0, high: 0, low: 0 },
+                        { timeLabel: 'Day 3', bookings: 0, high: 0, low: 0 },
+                        { timeLabel: 'Day 4', bookings: 0, high: 0, low: 0 },
+                        { timeLabel: 'Day 5', bookings: 0, high: 0, low: 0 },
+                        { timeLabel: 'Day 6', bookings: 0, high: 0, low: 0 },
+                        { timeLabel: 'Day 7', bookings: 0, high: 0, low: 0 }
                       ];
                       const maxBookings = Math.max(...bData.map(d => Math.max(d.bookings || 0, d.high || 0)), 10);
 
@@ -2217,11 +2215,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             const lVal = bar.low || (bVal * 0.4);
 
                             const barY = 180 - (bVal / maxBookings) * 150;
-                            const barH = Math.max(10, (bVal / maxBookings) * 150);
+                            const barH = Math.max(6, (bVal / maxBookings) * 150);
                             const highY = 180 - (hVal / maxBookings) * 150;
                             const lowY = 180 - (lVal / maxBookings) * 150;
 
-                            const isGreen = i % 2 === 0 || bVal > 20;
+                            const isGreen = i % 2 === 0 || bVal > 0;
 
                             return (
                               <g key={i} className="group cursor-pointer">
@@ -2266,9 +2264,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
-            {/* MIDDLE SECTION (3 COLUMNS) */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Column 1: Top Movies by Bookings (Shows Top 4 + More Modal) */}
+            {/* MIDDLE SECTION (2 COLUMNS - 'BOOKING SOURCES' REMOVED) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Column 1: Top Movies by Bookings (Authentic MongoDB Sync & Zero State Display) */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -2280,138 +2278,54 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       onClick={() => setTopMoviesModalOpen(true)}
                       className="text-xs font-bold text-cyan-400 hover:text-cyan-300 hover:underline cursor-pointer flex items-center gap-1"
                     >
-                      <span>More / View All ({topMoviesList.length || 4})</span>
+                      <span>More / View All ({topMoviesList.length})</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   <div className="space-y-3.5">
-                    {(topMoviesList.length > 0 ? topMoviesList.slice(0, 4) : [
-                      { rank: 1, title: 'Avengers: Endgame', bookings: 1240, revenue: 1250000, poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80' },
-                      { rank: 2, title: 'John Wick: Chapter 4', bookings: 680, revenue: 620000, poster: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=300&auto=format&fit=crop&q=80' },
-                      { rank: 3, title: 'The Dark Knight', bookings: 450, revenue: 410000, poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&auto=format&fit=crop&q=80' },
-                      { rank: 4, title: 'Spider-Man: No Way Home', bookings: 310, revenue: 205900, poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80' }
-                    ]).map((movie, idx) => {
-                      const maxB = topMoviesList[0]?.bookings || 1240;
-                      const widthPct = Math.min(100, Math.max(15, (movie.bookings / maxB) * 100));
-                      return (
-                        <div key={idx} className="space-y-1.5">
-                          <div className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2.5">
-                              <span className="text-[11px] font-bold text-slate-400 w-4">{movie.rank || idx + 1}</span>
-                              <img src={movie.poster} alt={movie.title} className="w-8 h-10 rounded object-cover border border-slate-700 shrink-0" />
-                              <div>
-                                <div className="font-bold text-white text-xs truncate max-w-[120px] sm:max-w-[140px]">{movie.title}</div>
-                                <div className="text-[10px] text-slate-400">{movie.bookings} Bookings</div>
+                    {topMoviesList && topMoviesList.length > 0 ? (
+                      topMoviesList.slice(0, 4).map((movie, idx) => {
+                        const maxB = topMoviesList[0]?.bookings || 1;
+                        const widthPct = Math.min(100, Math.max(15, ((movie.bookings || 0) / maxB) * 100));
+                        return (
+                          <div key={idx} className="space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-[11px] font-bold text-slate-400 w-4">{movie.rank || idx + 1}</span>
+                                <img src={movie.poster} alt={movie.title} className="w-8 h-10 rounded object-cover border border-slate-700 shrink-0" />
+                                <div>
+                                  <div className="font-bold text-white text-xs truncate max-w-[140px] sm:max-w-[180px]">{movie.title}</div>
+                                  <div className="text-[10px] text-slate-400">{movie.bookings || 0} Bookings</div>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-mono font-bold text-cyan-300 text-xs">₹{(movie.revenue || 0).toLocaleString('en-IN')}</div>
+                                <div className="text-[10px] text-slate-400 font-medium">{movie.tickets || 0} Tickets</div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-mono font-bold text-cyan-300 text-xs">₹{(movie.revenue || 0).toLocaleString('en-IN')}</div>
-                              <div className="text-[10px] text-slate-400 font-medium">{widthPct.toFixed(1)}% Volume</div>
+                            {/* Progress Bar */}
+                            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                              <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${widthPct}%` }}></div>
                             </div>
                           </div>
-                          {/* Progress Bar */}
-                          <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${widthPct}%` }}></div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      /* Clean Zero State Display for Top Movies */
+                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-cyan-400/20 space-y-2">
+                        <Film className="w-8 h-8 text-cyan-400/50 mx-auto animate-pulse" />
+                        <div className="text-xs font-bold text-white">0 Bookings / ₹0 Revenue</div>
+                        <p className="text-[11px] text-cyan-300/70">
+                          No ticket bookings recorded in MongoDB Atlas yet. Real-time movie rankings will populate automatically as users book tickets.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Column 2: Bookings by Source */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-white mb-4">Bookings by Source</h3>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
-                    {/* SVG Donut Chart */}
-                    <div className="relative w-36 h-36 shrink-0">
-                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        {/* Background Ring */}
-                        <path
-                          className="text-slate-800"
-                          strokeWidth="4.5"
-                          stroke="currentColor"
-                          fill="none"
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                        {/* Web - 58.4% */}
-                        <path
-                          className="text-blue-500"
-                          strokeDasharray="58.4, 100"
-                          strokeWidth="4.5"
-                          strokeLinecap="round"
-                          stroke="currentColor"
-                          fill="none"
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                        {/* Mobile - 28.7% */}
-                        <path
-                          className="text-emerald-400"
-                          strokeDasharray="28.7, 100"
-                          strokeDashoffset="-58.4"
-                          strokeWidth="4.5"
-                          strokeLinecap="round"
-                          stroke="currentColor"
-                          fill="none"
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                        {/* Box Office - 9.3% */}
-                        <path
-                          className="text-amber-500"
-                          strokeDasharray="9.3, 100"
-                          strokeDashoffset="-87.1"
-                          strokeWidth="4.5"
-                          strokeLinecap="round"
-                          stroke="currentColor"
-                          fill="none"
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                        {/* Others - 3.6% */}
-                        <path
-                          className="text-purple-500"
-                          strokeDasharray="3.6, 100"
-                          strokeDashoffset="-96.4"
-                          strokeWidth="4.5"
-                          strokeLinecap="round"
-                          stroke="currentColor"
-                          fill="none"
-                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                      </svg>
-                    </div>
-
-                    {/* Donut Legend */}
-                    <div className="space-y-2.5 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-                        <span className="text-slate-300 font-medium">Web</span>
-                        <span className="text-slate-400 font-mono ml-auto">58.4% (2,456)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
-                        <span className="text-slate-300 font-medium">Mobile App</span>
-                        <span className="text-slate-400 font-mono ml-auto">28.7% (1,206)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-                        <span className="text-slate-300 font-medium">Box Office</span>
-                        <span className="text-slate-400 font-mono ml-auto">9.3% (391)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
-                        <span className="text-slate-300 font-medium">Others</span>
-                        <span className="text-slate-400 font-mono ml-auto">3.6% (152)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Column 3: Top Theatres by Occupancy */}
+              {/* Column 2: Top Theatres by Occupancy */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -2441,6 +2355,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
             </div>
+
+
+
+
 
             {/* LOWER SECTION (3 COLUMNS) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

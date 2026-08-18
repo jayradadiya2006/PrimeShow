@@ -3530,8 +3530,8 @@ app.get('/api/admin/financial-stats', async (req, res) => {
   }
 });
 
-// Admin Real-Time Analytics Chart Time-Range Aggregation Endpoint
-app.get('/api/admin/analytics/charts', async (req, res) => {
+// Admin Real-Time Analytics Chart Time-Range Aggregation Endpoint (1 Day, 7 Days, 15 Days, 30 Days)
+app.get(['/api/admin/analytics/charts', '/api/admin/analytics/revenue', '/api/admin/analytics/bookings'], async (req, res) => {
   try {
     const range = req.query.range || '7days';
     const mongoose = require('mongoose');
@@ -3539,19 +3539,16 @@ app.get('/api/admin/analytics/charts', async (req, res) => {
     let numDays = 7;
     let labelType = 'day';
 
-    if (range === '1day') {
+    if (range === '1day' || range === '1') {
       numDays = 1;
       labelType = 'hour';
-    } else if (range === '2days') {
-      numDays = 2;
-      labelType = 'dayhour';
-    } else if (range === '3days') {
-      numDays = 3;
-      labelType = 'day';
-    } else if (range === '7days') {
+    } else if (range === '7days' || range === '7') {
       numDays = 7;
       labelType = 'day';
-    } else if (range === '30days' || range === 'custom' || range === 'More') {
+    } else if (range === '15days' || range === '15') {
+      numDays = 15;
+      labelType = 'day';
+    } else if (range === '30days' || range === '30' || range === 'custom' || range === 'More') {
       numDays = 30;
       labelType = 'day';
     }
@@ -3605,7 +3602,7 @@ app.get('/api/admin/analytics/charts', async (req, res) => {
         });
       }
     } else {
-      // Daily breakdown for 2, 3, 7, 30 days
+      // Daily breakdown for 7, 15, 30 days
       for (let i = numDays - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -3665,7 +3662,7 @@ app.get('/api/admin/analytics/charts', async (req, res) => {
   }
 });
 
-// Admin Real-Time Top Movies Ranking Endpoint
+// Admin Real-Time Top Movies Ranking Endpoint (Authentic MongoDB Sync & Clean Zero State)
 app.get('/api/admin/analytics/top-movies', async (req, res) => {
   try {
     const mongoose = require('mongoose');
@@ -3710,16 +3707,7 @@ app.get('/api/admin/analytics/top-movies', async (req, res) => {
       }
     }
 
-    // Default fallback movies if database aggregation returned fewer than 4 or empty
-    if (topMoviesList.length === 0) {
-      topMoviesList = [
-        { rank: 1, title: 'Avengers: Endgame', bookings: 1240, tickets: 2480, revenue: 1250000, poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80', category: 'Movie' },
-        { rank: 2, title: 'John Wick: Chapter 4', bookings: 680, tickets: 1360, revenue: 620000, poster: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=300&auto=format&fit=crop&q=80', category: 'Movie' },
-        { rank: 3, title: 'The Dark Knight', bookings: 450, tickets: 900, revenue: 410000, poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&auto=format&fit=crop&q=80', category: 'Movie' },
-        { rank: 4, title: 'Spider-Man: No Way Home', bookings: 310, tickets: 620, revenue: 205900, poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&auto=format&fit=crop&q=80', category: 'Movie' }
-      ];
-    }
-
+    // Return authentic list directly from MongoDB Atlas (empty array if no bookings exist)
     return res.status(200).json({
       success: true,
       movies: topMoviesList,
