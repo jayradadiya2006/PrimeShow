@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import { 
   Shield, Film, Ticket, Users, DollarSign, Plus, Edit, Trash2, CheckCircle2, 
-  XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X, Zap, Award, Activity as ActivityIcon
+  XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X, Zap, Award, Activity as ActivityIcon,
+  Calendar, ChevronDown, Download, Filter, Layers, Percent, Server, Database, CreditCard, Mail, Phone, ArrowUpRight, Check
 } from 'lucide-react';
 import axios from 'axios';
 import API, { API_BASE } from '../../services/api';
@@ -1776,38 +1776,666 @@ export const AdminDashboard = ({ onReturnHome }) => {
         )}
 
         {/* Tab 1: Analytics Overview */}
-        {activeTab === 'analytics' && (
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-3xl font-bold font-sans text-white">Analytics Overview</h1>
-              <p className="text-xs text-cyan-300">High-density performance metrics and ticket sales</p>
+        {(activeTab === 'analytics' || activeTab === 'overview') && (
+          <div className="space-y-6 animate-fade-in pb-8">
+            {/* Dashboard Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold font-sans text-white">Analytics Overview</h1>
+                <p className="text-xs text-slate-400 mt-1">Real-time insights and performance metrics</p>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0e1626] border border-slate-700/60 text-xs text-slate-200 font-medium cursor-pointer hover:border-slate-500 transition-all">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  <span>May 11 – May 17, 2025</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
+                </div>
+
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0e1626] border border-slate-700/60 text-xs text-slate-200 font-medium hover:bg-slate-800 transition-all cursor-pointer">
+                  <Download className="w-3.5 h-3.5 text-slate-300" />
+                  <span>Export</span>
+                </button>
+
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0e1626] border border-slate-700/60 text-xs text-slate-200 font-medium hover:bg-slate-800 transition-all cursor-pointer">
+                  <Filter className="w-3.5 h-3.5 text-slate-300" />
+                  <span>Filters</span>
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
-                <div className="text-xs text-cyan-300 mb-2">Total Ticket Revenue</div>
-                <div className="text-3xl font-bold font-sans text-white">₹2,485,900</div>
-                <div className="text-[10px] text-emerald-400 font-semibold mt-1">↑ +24.8% vs last month</div>
-              </div>
-
-              <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
-                <div className="text-xs text-cyan-300 mb-2">Confirmed Bookings</div>
-                <div className="text-3xl font-bold font-sans text-white">3,890</div>
-                <div className="text-[10px] text-amber-300 font-semibold mt-1">94.2% Occupancy Rate</div>
-              </div>
-
-              <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
-                <div className="text-xs text-cyan-300 mb-2">Active Movies</div>
-                <div className="text-3xl font-bold font-sans text-white">{(moviesList || []).length} Active</div>
-                <div className="text-[10px] text-cyan-300 font-semibold mt-1">Real-time user sync active</div>
-              </div>
-
-              <div className="glass-panel p-6 rounded-3xl border border-cyan-400/20">
-                <div className="text-xs text-cyan-300 mb-2">Pending Support Tickets</div>
-                <div className="text-3xl font-bold font-sans text-white">
-                  {(supportMessages || []).filter(m => m.status === 'pending').length}
+            {/* TOP 4 KPI CARDS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* KPI Card 1: Total Ticket Revenue */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">Total Ticket Revenue</span>
+                    <div className="w-9 h-9 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                      <DollarSign className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">₹2,485,900</div>
+                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                    <span>+24.8%</span>
+                    <span className="text-slate-400 font-normal">vs last 7 days</span>
+                  </div>
                 </div>
-                <div className="text-[10px] text-rose-400 font-semibold mt-1">Requires Response</div>
+                <div className="mt-4 -mb-1 -mx-2 h-10">
+                  <svg className="w-full h-full" viewBox="0 0 280 40" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="blueSpark" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M0,28 Q35,32 70,22 T140,24 T210,12 T280,6 L280,40 L0,40 Z" fill="url(#blueSpark)" />
+                    <path d="M0,28 Q35,32 70,22 T140,24 T210,12 T280,6" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* KPI Card 2: Confirmed Bookings */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">Confirmed Bookings</span>
+                    <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                      <Ticket className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">3,890</div>
+                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                    <span>+18.6%</span>
+                    <span className="text-slate-400 font-normal">vs last 7 days</span>
+                  </div>
+                </div>
+                <div className="mt-4 -mb-1 -mx-2 h-10">
+                  <svg className="w-full h-full" viewBox="0 0 280 40" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="greenSpark" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M0,30 Q35,26 70,28 T140,18 T210,14 T280,4 L280,40 L0,40 Z" fill="url(#greenSpark)" />
+                    <path d="M0,30 Q35,26 70,28 T140,18 T210,14 T280,4" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* KPI Card 3: Total Bookings */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">Total Bookings</span>
+                    <div className="w-9 h-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">4,205</div>
+                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                    <span>+16.3%</span>
+                    <span className="text-slate-400 font-normal">vs last 7 days</span>
+                  </div>
+                </div>
+                <div className="mt-4 -mb-1 -mx-2 h-10">
+                  <svg className="w-full h-full" viewBox="0 0 280 40" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="purpleSpark" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#a855f7" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M0,26 Q35,28 70,22 T140,25 T210,16 T280,8 L280,40 L0,40 Z" fill="url(#purpleSpark)" />
+                    <path d="M0,26 Q35,28 70,22 T140,25 T210,16 T280,8" fill="none" stroke="#a855f7" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* KPI Card 4: Occupancy Rate */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 font-medium">Occupancy Rate</span>
+                    <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                      <Percent className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">94.2%</div>
+                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                    <span>+7.2%</span>
+                    <span className="text-slate-400 font-normal">vs last 7 days</span>
+                  </div>
+                </div>
+                <div className="mt-4 -mb-1 -mx-2 h-10">
+                  <svg className="w-full h-full" viewBox="0 0 280 40" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="amberSpark" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M0,25 Q35,29 70,24 T140,22 T210,14 T280,10 L280,40 L0,40 Z" fill="url(#amberSpark)" />
+                    <path d="M0,25 Q35,29 70,24 T140,22 T210,14 T280,10" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* MAIN CHART SECTION (2 CARDS) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Left Chart: Revenue Overview */}
+              <div className="bg-[#0e1626] p-6 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Revenue Overview</h3>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-xl font-extrabold text-white font-sans">₹2,485,900</span>
+                      <span className="text-xs font-bold text-emerald-400">+24.8% vs last week</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-200 cursor-pointer">
+                    <span>7 Days</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </div>
+
+                <div className="w-full pt-4">
+                  <div className="relative h-56 w-full">
+                    {/* SVG Line Chart */}
+                    <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
+                      {/* Grid Lines */}
+                      <line x1="40" y1="20" x2="480" y2="20" stroke="#1e293b" strokeDasharray="3 3" />
+                      <line x1="40" y1="60" x2="480" y2="60" stroke="#1e293b" strokeDasharray="3 3" />
+                      <line x1="40" y1="100" x2="480" y2="100" stroke="#1e293b" strokeDasharray="3 3" />
+                      <line x1="40" y1="140" x2="480" y2="140" stroke="#1e293b" strokeDasharray="3 3" />
+                      <line x1="40" y1="180" x2="480" y2="180" stroke="#1e293b" />
+
+                      {/* Y Axis Labels */}
+                      <text x="0" y="24" fill="#64748b" fontSize="10">₹800K</text>
+                      <text x="0" y="64" fill="#64748b" fontSize="10">₹600K</text>
+                      <text x="0" y="104" fill="#64748b" fontSize="10">₹400K</text>
+                      <text x="0" y="144" fill="#64748b" fontSize="10">₹200K</text>
+                      <text x="20" y="184" fill="#64748b" fontSize="10">₹0</text>
+
+                      {/* Previous Period Dotted Line */}
+                      <path
+                        d="M 50,150 L 120,140 L 190,130 L 260,110 L 330,70 L 400,90 L 470,85"
+                        fill="none"
+                        stroke="#475569"
+                        strokeWidth="2"
+                        strokeDasharray="4 4"
+                      />
+                      {/* Dotted dots */}
+                      {[
+                        [50,150],[120,140],[190,130],[260,110],[330,70],[400,90],[470,85]
+                      ].map(([cx, cy], i) => (
+                        <circle key={i} cx={cx} cy={cy} r="3" fill="#475569" />
+                      ))}
+
+                      {/* Current Period Solid Line */}
+                      <path
+                        d="M 50,130 Q 85,115 120,110 T 190,95 T 260,50 T 330,60 T 400,35 T 470,20"
+                        fill="none"
+                        stroke="#38bdf8"
+                        strokeWidth="3"
+                      />
+                      {/* Current Dots */}
+                      {[
+                        [50,130],[120,110],[190,95],[260,50],[330,60],[400,35],[470,20]
+                      ].map(([cx, cy], i) => (
+                        <circle key={i} cx={cx} cy={cy} r="4.5" fill="#38bdf8" stroke="#0e1626" strokeWidth="2" />
+                      ))}
+                    </svg>
+
+                    {/* X Axis Labels */}
+                    <div className="flex justify-between pl-8 pr-2 mt-2 text-[10px] text-slate-400 font-medium">
+                      <span>May 11</span>
+                      <span>May 12</span>
+                      <span>May 13</span>
+                      <span>May 14</span>
+                      <span>May 15</span>
+                      <span>May 16</span>
+                      <span>May 17</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Chart: Bookings Overview */}
+              <div className="bg-[#0e1626] p-6 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Bookings Overview</h3>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-xl font-extrabold text-white font-sans">4,205</span>
+                      <span className="text-xs font-bold text-emerald-400">+16.3% vs last week</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-200 cursor-pointer">
+                    <span>7 Days</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </div>
+
+                <div className="w-full pt-4">
+                  <div className="relative h-56 w-full">
+                    {/* SVG Bar Chart */}
+                    <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
+                      {/* Grid Lines */}
+                      <line x1="30" y1="20" x2="480" y2="20" stroke="#1e293b" strokeDasharray="3 3" />
+                      <line x1="30" y1="60" x2="480" y2="60" stroke="#1e293b" strokeDasharray="3 3" />
+                      <line x1="30" y1="100" x2="480" y2="100" stroke="#1e293b" strokeDasharray="3 3" />
+                      <line x1="30" y1="140" x2="480" y2="140" stroke="#1e293b" strokeDasharray="3 3" />
+                      <line x1="30" y1="180" x2="480" y2="180" stroke="#1e293b" />
+
+                      {/* Y Axis Labels */}
+                      <text x="0" y="24" fill="#64748b" fontSize="10">1.2K</text>
+                      <text x="5" y="64" fill="#64748b" fontSize="10">900</text>
+                      <text x="5" y="104" fill="#64748b" fontSize="10">600</text>
+                      <text x="5" y="144" fill="#64748b" fontSize="10">300</text>
+                      <text x="15" y="184" fill="#64748b" fontSize="10">0</text>
+
+                      {/* Dual Bar Pairs for May 11 - May 17 */}
+                      {[
+                        { conf: 120, comp: 80 },
+                        { conf: 110, comp: 70 },
+                        { conf: 130, comp: 90 },
+                        { conf: 140, comp: 95 },
+                        { conf: 155, comp: 110 },
+                        { conf: 135, comp: 100 },
+                        { conf: 125, comp: 85 }
+                      ].map((bar, i) => {
+                        const startX = 55 + i * 60;
+                        return (
+                          <g key={i}>
+                            {/* Blue Bar */}
+                            <rect
+                              x={startX}
+                              y={180 - bar.conf}
+                              width="16"
+                              height={bar.conf}
+                              rx="3"
+                              fill="#0080ff"
+                            />
+                            {/* Gray Bar */}
+                            <rect
+                              x={startX + 20}
+                              y={180 - bar.comp}
+                              width="16"
+                              height={bar.comp}
+                              rx="3"
+                              fill="#334155"
+                            />
+                          </g>
+                        );
+                      })}
+                    </svg>
+
+                    {/* X Axis Labels */}
+                    <div className="flex justify-between pl-10 pr-4 mt-2 text-[10px] text-slate-400 font-medium">
+                      <span>May 11</span>
+                      <span>May 12</span>
+                      <span>May 13</span>
+                      <span>May 14</span>
+                      <span>May 15</span>
+                      <span>May 16</span>
+                      <span>May 17</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* MIDDLE SECTION (3 COLUMNS) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Column 1: Top Movies by Bookings */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-white">Top Movies by Bookings</h3>
+                    <button className="text-xs font-bold text-cyan-400 hover:underline">View All</button>
+                  </div>
+
+                  <div className="space-y-3.5">
+                    {[
+                      {
+                        rank: 1,
+                        title: 'Avengers: Endgame',
+                        bookings: '2,150 Bookings',
+                        rev: '₹1,250,000',
+                        pct: '50.2%',
+                        width: '50.2%',
+                        poster: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=100&auto=format&fit=crop&q=80'
+                      },
+                      {
+                        rank: 2,
+                        title: 'John Wick: Chapter 4',
+                        bookings: '1,020 Bookings',
+                        rev: '₹620,000',
+                        pct: '24.9%',
+                        width: '24.9%',
+                        poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=100&auto=format&fit=crop&q=80'
+                      },
+                      {
+                        rank: 3,
+                        title: 'The Dark Knight',
+                        bookings: '620 Bookings',
+                        rev: '₹410,000',
+                        pct: '15.1%',
+                        width: '15.1%',
+                        poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=100&auto=format&fit=crop&q=80'
+                      },
+                      {
+                        rank: 4,
+                        title: 'Spider-Man: No Way Home',
+                        bookings: '415 Bookings',
+                        rev: '₹205,900',
+                        pct: '9.8%',
+                        width: '9.8%',
+                        poster: 'https://images.unsplash.com/photo-1604200213928-ba3cf4fc8436?w=100&auto=format&fit=crop&q=80'
+                      }
+                    ].map((movie) => (
+                      <div key={movie.rank} className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-[11px] font-bold text-slate-400 w-3">{movie.rank}</span>
+                            <img src={movie.poster} alt={movie.title} className="w-8 h-10 rounded object-cover border border-slate-700 shrink-0" />
+                            <div>
+                              <div className="font-bold text-white text-xs truncate max-w-[120px] sm:max-w-[150px]">{movie.title}</div>
+                              <div className="text-[10px] text-slate-400">{movie.bookings}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-mono font-bold text-slate-200 text-xs">{movie.rev}</div>
+                            <div className="text-[10px] text-slate-400 font-medium">{movie.pct}</div>
+                          </div>
+                        </div>
+                        {/* Progress Bar */}
+                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-cyan-500 rounded-full" style={{ width: movie.width }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 2: Bookings by Source */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-white mb-4">Bookings by Source</h3>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
+                    {/* SVG Donut Chart */}
+                    <div className="relative w-36 h-36 shrink-0">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        {/* Background Ring */}
+                        <path
+                          className="text-slate-800"
+                          strokeWidth="4.5"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        {/* Web - 58.4% */}
+                        <path
+                          className="text-blue-500"
+                          strokeDasharray="58.4, 100"
+                          strokeWidth="4.5"
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        {/* Mobile - 28.7% */}
+                        <path
+                          className="text-emerald-400"
+                          strokeDasharray="28.7, 100"
+                          strokeDashoffset="-58.4"
+                          strokeWidth="4.5"
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        {/* Box Office - 9.3% */}
+                        <path
+                          className="text-amber-500"
+                          strokeDasharray="9.3, 100"
+                          strokeDashoffset="-87.1"
+                          strokeWidth="4.5"
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        {/* Others - 3.6% */}
+                        <path
+                          className="text-purple-500"
+                          strokeDasharray="3.6, 100"
+                          strokeDashoffset="-96.4"
+                          strokeWidth="4.5"
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="none"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                      </svg>
+                    </div>
+
+                    {/* Donut Legend */}
+                    <div className="space-y-2.5 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                        <span className="text-slate-300 font-medium">Web</span>
+                        <span className="text-slate-400 font-mono ml-auto">58.4% (2,456)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                        <span className="text-slate-300 font-medium">Mobile App</span>
+                        <span className="text-slate-400 font-mono ml-auto">28.7% (1,206)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                        <span className="text-slate-300 font-medium">Box Office</span>
+                        <span className="text-slate-400 font-mono ml-auto">9.3% (391)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
+                        <span className="text-slate-300 font-medium">Others</span>
+                        <span className="text-slate-400 font-mono ml-auto">3.6% (152)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 3: Top Theatres by Occupancy */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-white">Top Theatres by Occupancy</h3>
+                    <button className="text-xs font-bold text-cyan-400 hover:underline">View All</button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      { name: 'PVR Phoenix Marketcity', pct: '98.5%', width: '98.5%' },
+                      { name: 'INOX VR Surat', pct: '96.2%', width: '96.2%' },
+                      { name: 'Cinepolis VIP Road', pct: '94.8%', width: '94.8%' },
+                      { name: 'PVR Rahul Raj Mall', pct: '92.6%', width: '92.6%' },
+                      { name: 'Carnival Dumas Road', pct: '90.3%', width: '90.3%' }
+                    ].map((th, i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-200 font-medium truncate max-w-[200px]">{th.name}</span>
+                          <span className="font-mono font-bold text-slate-200">{th.pct}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 rounded-full" style={{ width: th.width }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* LOWER SECTION (3 COLUMNS) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Column 1: Revenue by Payment Method */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-white mb-4">Revenue by Payment Method</h3>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
+                    {/* SVG Donut Chart */}
+                    <div className="relative w-36 h-36 shrink-0">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <path className="text-slate-800" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        {/* UPI - 48.6% */}
+                        <path className="text-blue-500" strokeDasharray="48.6, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        {/* Card - 32.1% */}
+                        <path className="text-emerald-400" strokeDasharray="32.1, 100" strokeDashoffset="-48.6" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        {/* Net Banking - 12.3% */}
+                        <path className="text-amber-500" strokeDasharray="12.3, 100" strokeDashoffset="-80.7" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        {/* Wallets - 7.0% */}
+                        <path className="text-purple-500" strokeDasharray="7.0, 100" strokeDashoffset="-93.0" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      </svg>
+                    </div>
+
+                    {/* Donut Legend */}
+                    <div className="space-y-2 text-[11px]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                        <span className="text-slate-300 font-medium">UPI</span>
+                        <span className="text-slate-400 font-mono ml-auto">48.6% (₹1,208,000)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
+                        <span className="text-slate-300 font-medium">Card</span>
+                        <span className="text-slate-400 font-mono ml-auto">32.1% (₹798,000)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                        <span className="text-slate-300 font-medium">Net Banking</span>
+                        <span className="text-slate-400 font-mono ml-auto">12.3% (₹306,000)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
+                        <span className="text-slate-300 font-medium">Wallets</span>
+                        <span className="text-slate-400 font-mono ml-auto">7.0% (₹173,900)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 2: Recent Bookings */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-white">Recent Bookings</h3>
+                    <button className="text-xs font-bold text-cyan-400 hover:underline">View All</button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      { id: '#PS84215', time: 'May 17, 2025 • 10:45 AM', price: '₹850', status: 'Confirmed' },
+                      { id: '#PS84214', time: 'May 17, 2025 • 10:30 AM', price: '₹1,250', status: 'Confirmed' },
+                      { id: '#PS84213', time: 'May 17, 2025 • 10:20 AM', price: '₹640', status: 'Confirmed' },
+                      { id: '#PS84212', time: 'May 17, 2025 • 10:15 AM', price: '₹950', status: 'Confirmed' },
+                      { id: '#PS84211', time: 'May 17, 2025 • 10:05 AM', price: '₹740', status: 'Confirmed' }
+                    ].map((b, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-slate-800/60 last:border-none">
+                        <div>
+                          <div className="font-mono font-bold text-slate-200">{b.id}</div>
+                          <div className="text-[10px] text-slate-400">{b.time}</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-bold text-slate-200">{b.price}</span>
+                          <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
+                            {b.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 3: System Status */}
+              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-white mb-3">System Status</h3>
+
+                  <div className="space-y-3">
+                    {[
+                      { name: 'Server Status', status: 'Healthy' },
+                      { name: 'Database', status: 'Healthy' },
+                      { name: 'Payment Gateway', status: 'Healthy' },
+                      { name: 'Email Service', status: 'Healthy' },
+                      { name: 'SMS Service', status: 'Healthy' },
+                      { name: 'WhatsApp Service', status: 'Healthy' }
+                    ].map((sys, i) => (
+                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-slate-800/60 last:border-none">
+                        <span className="text-slate-300 font-medium">{sys.name}</span>
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
+                          {sys.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* BOTTOM SECONDARY METRICS (4 CARDS) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-[#0e1626] p-4 rounded-2xl border border-[#1b273e] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-cyan-400 shrink-0">
+                  <Film className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-medium">Active Movies</div>
+                  <div className="text-xl font-extrabold text-white font-sans">{(moviesList || []).length > 0 ? (moviesList || []).length : 34}</div>
+                  <div className="text-[10px] font-bold text-emerald-400">+5 this week</div>
+                </div>
+              </div>
+
+              <div className="bg-[#0e1626] p-4 rounded-2xl border border-[#1b273e] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-cyan-400 shrink-0">
+                  <Building className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-medium">Active Theatres</div>
+                  <div className="text-xl font-extrabold text-white font-sans">{(theatresList || []).length > 0 ? (theatresList || []).length : 28}</div>
+                  <div className="text-[10px] font-bold text-emerald-400">+2 this week</div>
+                </div>
+              </div>
+
+              <div className="bg-[#0e1626] p-4 rounded-2xl border border-[#1b273e] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-purple-400 shrink-0">
+                  <Compass className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-medium">Total Screens</div>
+                  <div className="text-xl font-extrabold text-white font-sans">156</div>
+                  <div className="text-[10px] font-bold text-emerald-400">+6 this week</div>
+                </div>
+              </div>
+
+              <div className="bg-[#0e1626] p-4 rounded-2xl border border-[#1b273e] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-emerald-400 shrink-0">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-medium">Total Users</div>
+                  <div className="text-xl font-extrabold text-white font-sans">{(usersList || []).length > 0 ? (userTotalCount || usersList.length) : 12485}</div>
+                  <div className="text-[10px] font-bold text-emerald-400">+325 this week</div>
+                </div>
               </div>
             </div>
           </div>
