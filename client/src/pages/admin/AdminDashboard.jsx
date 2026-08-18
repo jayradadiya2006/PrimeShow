@@ -1302,26 +1302,30 @@ export const AdminDashboard = ({ onReturnHome }) => {
       return;
     }
 
+    const dateToAdd = schedDateInput;
+
     try {
-      const res = await API.post('/admin/movies/schedule', {
+      const res = await API.post('/admin/movies/add-date', {
+        targetMovieId: schedMovieId,
         selectedMovieId: schedMovieId,
-        action: 'ADD_DATE',
-        dateStr: schedDateInput
+        dateStr: dateToAdd
       });
 
-      if (res?.data?.movie) {
-        setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId) ? res.data.movie : m));
+      const updatedMovie = res?.data?.movie;
+
+      if (updatedMovie) {
+        setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId) ? updatedMovie : m));
       } else {
-        addShowDateToMovie(schedMovieId, schedDateInput);
+        addShowDateToMovie(schedMovieId, dateToAdd);
       }
 
-      setSelectedSchedDate(schedDateInput);
-      setActionSuccess(`Booking date ${schedDateInput} saved to MongoDB Atlas!`);
+      setSelectedSchedDate(dateToAdd);
+      setActionSuccess(`Booking date ${dateToAdd} saved to MongoDB Atlas!`);
     } catch (err) {
       console.warn('⚠️ Schedule date fallback:', err.message);
-      addShowDateToMovie(schedMovieId, schedDateInput);
-      setSelectedSchedDate(schedDateInput);
-      setActionSuccess(`Booking date ${schedDateInput} added!`);
+      addShowDateToMovie(schedMovieId, dateToAdd);
+      setSelectedSchedDate(dateToAdd);
+      setActionSuccess(`Booking date ${dateToAdd} added!`);
     }
 
     setSchedDateInput('');

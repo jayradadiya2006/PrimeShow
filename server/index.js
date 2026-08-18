@@ -2061,10 +2061,84 @@ app.delete(['/api/movies/:movieId/cast/:castId', '/api/admin/movies/:movieId/cas
   }
 });
 
+// Admin Dedicated Endpoint: Add Booking Date to Movie (MongoDB Atlas Persistence with $addToSet)
+app.post(['/api/admin/movies/add-date', '/api/movies/add-date'], async (req, res) => {
+  try {
+    const movieId = req.body.targetMovieId || req.body.selectedMovieId || req.body.movieId || req.body.id;
+    const dateStr = req.body.dateStr || req.body.date;
+
+    if (!movieId) {
+      return res.status(400).json({ success: false, error: 'targetMovieId is required' });
+    }
+    if (!dateStr) {
+      return res.status(400).json({ success: false, error: 'dateStr (YYYY-MM-DD) is required' });
+    }
+
+    const mongoose = require('mongoose');
+    let updatedMovie = null;
+
+    if (mongoose.connection.readyState === 1) {
+      let memMovie = movies.find(m => m.id === movieId || m._id === movieId) || { id: movieId, title: 'Untitled Movie' };
+
+      // Ensure movie document exists in Atlas using upsert and $addToSet
+      updatedMovie = await Movie.findOneAndUpdate(
+        { $or: [{ id: movieId }, { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }] },
+        {
+          $addToSet: { showDates: dateStr },
+          $setOnInsert: {
+            id: movieId,
+            title: memMovie.title || 'Untitled Movie',
+            poster: memMovie.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+            status: memMovie.status || 'Now Showing',
+            rating: memMovie.rating || 9.0,
+            cast: memMovie.cast || []
+          }
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
+
+    // Update in-memory fallback list
+    const index = movies.findIndex(m => m.id === movieId || m._id === movieId);
+    if (index !== -1) {
+      const existing = movies[index].showDates || [];
+      if (!existing.includes(dateStr)) {
+        movies[index].showDates = [...existing, dateStr];
+      }
+      if (updatedMovie) {
+        movies[index] = { ...movies[index], ...updatedMovie.toObject() };
+      }
+    } else if (updatedMovie) {
+      movies.unshift(updatedMovie.toObject ? updatedMovie.toObject() : updatedMovie);
+    }
+
+    if (!updatedMovie) {
+      updatedMovie = { id: movieId, showDates: [dateStr] };
+    }
+
+    // Broadcast real-time event to all clients
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('MOVIE_UPDATED', updatedMovie);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: updatedMovie });
+    }
+    broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
+
+    return res.status(200).json({
+      success: true,
+      message: `Booking date ${dateStr} persisted to MongoDB Atlas!`,
+      movie: updatedMovie,
+      showDates: updatedMovie.showDates || [dateStr]
+    });
+  } catch (err) {
+    console.error('❌ Error in /api/admin/movies/add-date:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Admin Movie Show Dates & Theatre Schedule Manager Endpoint (MongoDB Atlas Persistence)
 app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/movies/:id/schedule'], async (req, res) => {
   try {
-    const movieId = req.params.id || req.body.selectedMovieId || req.body.movieId || req.body.id;
+    const movieId = req.params.id || req.body.selectedMovieId || req.body.targetMovieId || req.body.movieId || req.body.id;
     const action = req.body.action || 'SYNC_SCHEDULE';
     const dateStr = req.body.dateStr || req.body.date;
     const theatreObj = req.body.theatreObj || req.body.theatre;
@@ -2078,12 +2152,25 @@ app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/
     let updatedMovie = null;
 
     if (mongoose.connection.readyState === 1) {
+      let memMovie = movies.find(m => m.id === movieId || m._id === movieId) || { id: movieId, title: 'Untitled Movie' };
+
       let movieDoc = await Movie.findOne({
         $or: [
           { id: movieId },
           { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }
         ]
       });
+
+      if (!movieDoc) {
+        movieDoc = new Movie({
+          id: movieId,
+          title: memMovie.title || 'Untitled Movie',
+          poster: memMovie.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+          status: memMovie.status || 'Now Showing',
+          showDates: memMovie.showDates || [],
+          schedules: memMovie.schedules || {}
+        });
+      }
 
       if (movieDoc) {
         if (!movieDoc.showDates) movieDoc.showDates = [];
@@ -2151,17 +2238,17 @@ app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/
     // Update in-memory fallback list
     const index = movies.findIndex(m => m.id === movieId || m._id === movieId);
     if (index !== -1) {
-      if (req.body.showDates) movies[index].showDates = req.body.showDates;
-      if (req.body.schedules) movies[index].schedules = req.body.schedules;
-
-      if (action === 'ADD_DATE' && dateStr) {
-        const existing = movies[index].showDates || [];
-        if (!existing.includes(dateStr)) movies[index].showDates = [...existing, dateStr];
-        if (!movies[index].schedules) movies[index].schedules = {};
-        if (!movies[index].schedules[dateStr]) movies[index].schedules[dateStr] = [];
+      if (updatedMovie) {
+        movies[index] = { ...movies[index], ...updatedMovie.toObject() };
+      } else {
+        if (action === 'ADD_DATE' && dateStr) {
+          const existing = movies[index].showDates || [];
+          if (!existing.includes(dateStr)) movies[index].showDates = [...existing, dateStr];
+        }
+        updatedMovie = movies[index];
       }
-
-      if (!updatedMovie) updatedMovie = movies[index];
+    } else if (updatedMovie) {
+      movies.unshift(updatedMovie.toObject ? updatedMovie.toObject() : updatedMovie);
     }
 
     if (!updatedMovie) {
