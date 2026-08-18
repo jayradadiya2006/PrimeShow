@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { 
   Shield, Film, Ticket, Users, DollarSign, Plus, Edit, Trash2, CheckCircle2, 
   XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X, Zap, Award, Activity as ActivityIcon,
