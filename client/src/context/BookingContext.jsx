@@ -301,8 +301,39 @@ export const BookingProvider = ({ children }) => {
   const fetchMovies = async () => {
     try {
       const res = await API.get('/movies');
-      if (res.data && res.data.length > 0) {
-        setMoviesList(res.data);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setMoviesList(prev => {
+          const serverMap = new Map(res.data.map(m => [m.id || m._id, m]));
+          const updatedList = prev.map(m => {
+            const serverM = serverMap.get(m.id) || serverMap.get(m._id);
+            if (serverM) {
+              const mergedDates = Array.from(new Set([
+                ...(m.showDates || []),
+                ...(serverM.showDates || [])
+              ]));
+              const mergedSchedules = {
+                ...(m.schedules || {}),
+                ...(serverM.schedules || {})
+              };
+              return {
+                ...m,
+                ...serverM,
+                showDates: mergedDates,
+                schedules: mergedSchedules
+              };
+            }
+            return m;
+          });
+
+          const prevIds = new Set(prev.map(m => m.id || m._id));
+          res.data.forEach(srvM => {
+            if (!prevIds.has(srvM.id) && !prevIds.has(srvM._id)) {
+              updatedList.unshift(srvM);
+            }
+          });
+
+          return updatedList;
+        });
       }
     } catch (err) {}
   };

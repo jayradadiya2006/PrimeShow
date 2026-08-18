@@ -1788,7 +1788,15 @@ app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
       const dbMovies = await Movie.find().sort({ createdAt: -1 }).lean();
       if (dbMovies && dbMovies.length > 0) {
         const dbIds = new Set(dbMovies.map(m => m.id));
-        const combined = [...dbMovies];
+        const combined = dbMovies.map(dbM => {
+          const memM = movies.find(m => m.id === dbM.id);
+          if (memM) {
+            const mergedDates = Array.from(new Set([...(memM.showDates || []), ...(dbM.showDates || [])]));
+            const mergedSchedules = { ...(memM.schedules || {}), ...(dbM.schedules || {}) };
+            return { ...memM, ...dbM, showDates: mergedDates, schedules: mergedSchedules };
+          }
+          return dbM;
+        });
         movies.forEach(m => {
           if (!dbIds.has(m.id)) combined.push(m);
         });
