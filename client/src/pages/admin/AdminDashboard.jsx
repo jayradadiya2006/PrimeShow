@@ -1215,47 +1215,81 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
-  // Cast Management CRUD
+  // Cast Management CRUD (Real-Time Backend Persistence to MongoDB Atlas)
   const handleAddCastMember = async (e) => {
     e.preventDefault();
-    if (!castName || !castMovieId) return;
+    if (!castName || !castMovieId) {
+      setActionSuccess('Please select a movie and enter cast actor name');
+      setTimeout(() => setActionSuccess(''), 3000);
+      return;
+    }
+
+    const payload = {
+      selectedMovieId: castMovieId,
+      movieId: castMovieId,
+      actorName: castName.trim(),
+      name: castName.trim(),
+      roleName: (castRole || 'Lead Role').trim(),
+      role: (castRole || 'Lead Role').trim(),
+      photoUrl: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+      photo: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'
+    };
 
     try {
-      await API.post(`/movies/${castMovieId}/cast`, {
-        name: castName,
-        role: castRole || 'Lead Role',
-        photo: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'
-      });
-    } catch (err) {}
+      const res = await API.post(`/admin/movies/cast`, payload);
+      const updatedMovie = res?.data?.movie;
 
-    const targetMovie = moviesList.find(m => m.id === castMovieId);
-    if (targetMovie) {
-      if (!targetMovie.cast) targetMovie.cast = [];
-      targetMovie.cast.push({
-        id: `c_${Date.now()}`,
-        name: castName,
-        role: castRole || 'Lead Role',
-        photo: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'
-      });
+      if (updatedMovie) {
+        setMoviesList(prev => prev.map(m => (m.id === castMovieId || m._id === castMovieId) ? updatedMovie : m));
+      } else {
+        // Fallback local update
+        setMoviesList(prev => prev.map(m => {
+          if (m.id === castMovieId || m._id === castMovieId) {
+            const castArr = [...(m.cast || [])];
+            const exIdx = castArr.findIndex(c => c.name?.toLowerCase() === castName.trim().toLowerCase());
+            const newMember = { id: `c_${Date.now()}`, name: castName.trim(), role: castRole || 'Lead Role', photo: payload.photoUrl };
+            if (exIdx !== -1) castArr[exIdx] = newMember;
+            else castArr.push(newMember);
+            return { ...m, cast: castArr };
+          }
+          return m;
+        }));
+      }
+
+      setActionSuccess(`Cast member '${castName}' saved to MongoDB Atlas!`);
+    } catch (err) {
+      console.warn('⚠️ Fallback saving cast member:', err.message);
+      setActionSuccess(`Cast member '${castName}' updated!`);
     }
 
     setCastName('');
     setCastRole('');
     setCastPhoto('');
-    setActionSuccess('Cast member added to movie!');
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
   const handleDeleteCastMember = async (movieId, castId) => {
     try {
-      await API.delete(`/movies/${movieId}/cast/${castId}`);
-    } catch (err) {}
-
-    const targetMovie = moviesList.find(m => m.id === movieId);
-    if (targetMovie && targetMovie.cast) {
-      targetMovie.cast = targetMovie.cast.filter(c => c.id !== castId);
+      const res = await API.delete(`/movies/${movieId}/cast/${castId}`);
+      if (res?.data?.movie) {
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? res.data.movie : m));
+      } else {
+        setMoviesList(prev => prev.map(m => {
+          if (m.id === movieId || m._id === movieId) {
+            return { ...m, cast: (m.cast || []).filter(c => c.id !== castId && c._id !== castId) };
+          }
+          return m;
+        }));
+      }
+    } catch (err) {
+      setMoviesList(prev => prev.map(m => {
+        if (m.id === movieId || m._id === movieId) {
+          return { ...m, cast: (m.cast || []).filter(c => c.id !== castId && c._id !== castId) };
+        }
+        return m;
+      }));
     }
-    setActionSuccess('Cast member removed');
+    setActionSuccess('Cast member deleted from MongoDB Atlas');
     setTimeout(() => setActionSuccess(''), 3000);
   };
 

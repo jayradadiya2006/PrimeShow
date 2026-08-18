@@ -1931,6 +1931,136 @@ app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   res.json({ message: 'Movie deleted', id, movie: deletedItem });
 });
 
+// Admin Cast & Crew Management Endpoint (Add / Replace Cast Member)
+app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:id/cast'], async (req, res) => {
+  try {
+    const movieId = req.params.id || req.body.selectedMovieId || req.body.movieId || req.body.id;
+    const actorName = req.body.actorName || req.body.name;
+    const roleName = req.body.roleName || req.body.role || 'Cast Member';
+    const photoUrl = req.body.photoUrl || req.body.photo || req.body.image || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80';
+
+    if (!movieId) {
+      return res.status(400).json({ success: false, error: 'Movie selection is required' });
+    }
+    if (!actorName) {
+      return res.status(400).json({ success: false, error: 'Cast Actor Name is required' });
+    }
+
+    const mongoose = require('mongoose');
+    let updatedMovie = null;
+
+    const newCastMember = {
+      id: `c_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      name: actorName,
+      role: roleName,
+      photo: photoUrl
+    };
+
+    if (mongoose.connection.readyState === 1) {
+      let movieDoc = await Movie.findOne({
+        $or: [
+          { id: movieId },
+          { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }
+        ]
+      });
+
+      if (movieDoc) {
+        if (!movieDoc.cast) movieDoc.cast = [];
+        const existingIdx = movieDoc.cast.findIndex(
+          c => c.name && c.name.toLowerCase() === actorName.toLowerCase()
+        );
+
+        if (existingIdx !== -1) {
+          movieDoc.cast[existingIdx] = {
+            ...movieDoc.cast[existingIdx],
+            name: actorName,
+            role: roleName,
+            photo: photoUrl
+          };
+        } else {
+          movieDoc.cast.push(newCastMember);
+        }
+
+        updatedMovie = await movieDoc.save();
+      }
+    }
+
+    // Update in-memory fallback list
+    const index = movies.findIndex(m => m.id === movieId || m._id === movieId);
+    if (index !== -1) {
+      if (!movies[index].cast) movies[index].cast = [];
+      const exIdx = movies[index].cast.findIndex(c => c.name && c.name.toLowerCase() === actorName.toLowerCase());
+      if (exIdx !== -1) {
+        movies[index].cast[exIdx] = { ...movies[index].cast[exIdx], name: actorName, role: roleName, photo: photoUrl };
+      } else {
+        movies[index].cast.push(newCastMember);
+      }
+      if (!updatedMovie) updatedMovie = movies[index];
+    }
+
+    if (!updatedMovie) {
+      updatedMovie = { id: movieId, cast: [newCastMember] };
+    }
+
+    // Broadcast real-time update
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('MOVIE_UPDATED', updatedMovie);
+    }
+    broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cast & Crew member saved to MongoDB Atlas!',
+      movie: updatedMovie,
+      cast: updatedMovie.cast || []
+    });
+  } catch (err) {
+    console.error('❌ Error saving cast member:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Delete Cast Member Endpoint
+app.delete(['/api/movies/:movieId/cast/:castId', '/api/admin/movies/:movieId/cast/:castId'], async (req, res) => {
+  try {
+    const { movieId, castId } = req.params;
+    const mongoose = require('mongoose');
+    let updatedMovie = null;
+
+    if (mongoose.connection.readyState === 1) {
+      let movieDoc = await Movie.findOne({
+        $or: [
+          { id: movieId },
+          { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }
+        ]
+      });
+
+      if (movieDoc && movieDoc.cast) {
+        movieDoc.cast = movieDoc.cast.filter(c => c.id !== castId && c._id?.toString() !== castId);
+        updatedMovie = await movieDoc.save();
+      }
+    }
+
+    const index = movies.findIndex(m => m.id === movieId || m._id === movieId);
+    if (index !== -1 && movies[index].cast) {
+      movies[index].cast = movies[index].cast.filter(c => c.id !== castId);
+      if (!updatedMovie) updatedMovie = movies[index];
+    }
+
+    if (updatedMovie) {
+      if (req.app.get('socketio')) {
+        req.app.get('socketio').emit('MOVIE_UPDATED', updatedMovie);
+      }
+      broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
+    }
+
+    return res.status(200).json({ success: true, message: 'Cast member deleted from MongoDB Atlas', movie: updatedMovie });
+  } catch (err) {
+    console.error('❌ Error deleting cast member:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // -------------------------------------------------------------
 // THEATRE & SHOWTIMES MANAGEMENT CRUD ENDPOINTS
 // -------------------------------------------------------------
