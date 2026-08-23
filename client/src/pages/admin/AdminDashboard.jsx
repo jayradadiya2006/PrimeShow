@@ -1541,6 +1541,84 @@ export const AdminDashboard = ({ onReturnHome }) => {
     } catch (err) {}
   };
 
+  // Date-Wise Theatre Pricing State & Handlers
+  const [pricingTheatreId, setPricingTheatreId] = useState('');
+  const [pricingDate, setPricingDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [pricingStandard, setPricingStandard] = useState(250);
+  const [pricingVip, setPricingVip] = useState(450);
+  const [pricingImax, setPricingImax] = useState(650);
+  const [pricingStatus, setPricingStatus] = useState('APPROVED');
+
+  useEffect(() => {
+    if (!pricingTheatreId && (theatresList || []).length > 0) {
+      setPricingTheatreId(theatresList[0].id);
+    }
+    const currentThId = pricingTheatreId || theatresList[0]?.id;
+    const targetTh = (theatresList || []).find(t => t.id === currentThId || t._id === currentThId);
+    if (targetTh) {
+      const dateConfig = targetTh.pricingByDate?.[pricingDate] || targetTh.datePricing?.[pricingDate];
+      if (dateConfig) {
+        setPricingStandard(dateConfig.standardPrice ?? 250);
+        setPricingVip(dateConfig.vipPrice ?? 450);
+        setPricingImax(dateConfig.imaxPrice ?? 650);
+        setPricingStatus(dateConfig.status || 'APPROVED');
+      }
+    }
+  }, [pricingTheatreId, pricingDate, theatresList]);
+
+  const handleSaveTheatrePricingByDate = async (e) => {
+    e.preventDefault();
+    const targetThId = pricingTheatreId || theatresList[0]?.id;
+    if (!targetThId || !pricingDate) {
+      setActionSuccess('Please select a theatre and a date');
+      setTimeout(() => setActionSuccess(''), 3000);
+      return;
+    }
+
+    const payload = {
+      theatreId: targetThId,
+      selectedDate: pricingDate,
+      dateStr: pricingDate,
+      standardPrice: Number(pricingStandard) || 250,
+      vipPrice: Number(pricingVip) || 450,
+      imaxPrice: Number(pricingImax) || 650,
+      status: pricingStatus,
+      isConfigured: pricingStatus === 'APPROVED' || pricingStatus === 'AVAILABLE'
+    };
+
+    try {
+      const res = await API.post('/admin/theatres/pricing-by-date', payload);
+      const updatedTheatre = res?.data?.theatre;
+
+      if (updatedTheatre) {
+        setTheatresList(prev => prev.map(t => (t.id === targetThId || t._id === targetThId) ? updatedTheatre : t));
+      } else {
+        setTheatresList(prev => prev.map(t => {
+          if (t.id === targetThId || t._id === targetThId) {
+            const currentPBD = { ...(t.pricingByDate || {}) };
+            currentPBD[pricingDate] = {
+              standardPrice: payload.standardPrice,
+              vipPrice: payload.vipPrice,
+              imaxPrice: payload.imaxPrice,
+              status: payload.status,
+              isConfigured: payload.isConfigured,
+              updatedAt: new Date().toISOString()
+            };
+            return { ...t, pricingByDate: currentPBD, datePricing: currentPBD };
+          }
+          return t;
+        }));
+      }
+
+      setActionSuccess(`Date-wise pricing for ${pricingDate} saved to MongoDB Atlas!`);
+    } catch (err) {
+      console.warn('⚠️ Fallback date-wise pricing:', err.message);
+      setActionSuccess(`Pricing for ${pricingDate} updated locally!`);
+    }
+
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
   const handleAddShowSlot = async (e) => {
     e.preventDefault();
     try {
@@ -4522,6 +4600,120 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </button>
               </div>
             </form>
+
+            {/* Section A2: Date-Wise Theatre Pricing & Configuration Manager */}
+            <div className="glass-panel p-6 rounded-3xl border border-amber-400/30 space-y-4 max-w-4xl">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
+                <div>
+                  <h3 className="text-lg font-bold font-sans text-white flex items-center gap-2">
+                    <span>📅 Date-Wise Theatre Pricing & Approval Manager</span>
+                  </h3>
+                  <p className="text-xs text-amber-300">Configure date-specific pricing and approval status per multiplex (MongoDB Atlas Synced)</p>
+                </div>
+                {(() => {
+                  const targetThId = pricingTheatreId || theatresList[0]?.id;
+                  const activeTh = theatresList.find(t => t.id === targetThId || t._id === targetThId);
+                  const activeConfig = activeTh?.pricingByDate?.[pricingDate] || activeTh?.datePricing?.[pricingDate];
+                  const isApproved = activeConfig && (activeConfig.status === 'APPROVED' || activeConfig.status === 'AVAILABLE');
+                  return (
+                    <div className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 ${
+                      isApproved ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                    }`}>
+                      <span>{isApproved ? '🟢 Approved for' : '⚠️ Unconfigured / Default Base Rates for'}</span>
+                      <span className="underline font-mono">{pricingDate}</span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <form onSubmit={handleSaveTheatrePricingByDate} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/5 p-4 rounded-2xl border border-white/10">
+                  {/* Select Multiplex */}
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">1. Select Target Multiplex / Theatre *</label>
+                    <select
+                      value={pricingTheatreId || theatresList[0]?.id || ''}
+                      onChange={e => setPricingTheatreId(e.target.value)}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                    >
+                      {theatresList.map(t => (
+                        <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Select Date */}
+                  <div>
+                    <label className="block text-xs font-bold text-cyan-300 mb-1">2. Select Target Date *</label>
+                    <input
+                      type="date"
+                      required
+                      value={pricingDate}
+                      onChange={e => setPricingDate(e.target.value)}
+                      className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Pricing Fields Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">Classic / Standard Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={pricingStandard}
+                      onChange={e => setPricingStandard(e.target.value)}
+                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">VIP Recliner Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={pricingVip}
+                      onChange={e => setPricingVip(e.target.value)}
+                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">IMAX 3D Surcharge Rate (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={pricingImax}
+                      onChange={e => setPricingImax(e.target.value)}
+                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-white/70 mb-1">Approval & Availability Status</label>
+                    <select
+                      value={pricingStatus}
+                      onChange={e => setPricingStatus(e.target.value)}
+                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                    >
+                      <option value="APPROVED">APPROVED (Active Pricing)</option>
+                      <option value="UNCONFIGURED">UNCONFIGURED (Default Base Price)</option>
+                      <option value="UNAVAILABLE">UNAVAILABLE (Show Slot Off-line)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 cursor-pointer flex items-center gap-2"
+                  >
+                    <span>💾 Save / Approve Pricing for {pricingDate}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
 
             {/* Section B: Manage Showtime Slots per Theatre */}
             <form onSubmit={handleAddShowSlot} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">

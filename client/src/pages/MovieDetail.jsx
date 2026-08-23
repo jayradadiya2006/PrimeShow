@@ -383,16 +383,35 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
 
                   {/* Show Time Slots Buttons */}
                   <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 pt-1">
-                    {theatre.shows?.map((show) => (
-                      <button
-                        key={show.id}
-                        onClick={() => handleShowClick(theatre, show)}
-                        className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl glass-panel hover:bg-amber-500 hover:text-black text-amber-400 border border-amber-400/40 font-bold transition-all text-center group cursor-pointer shadow-md hover:scale-105"
-                      >
-                        <div className="text-xs sm:text-sm font-extrabold group-hover:text-black">{show.time}</div>
-                        <div className="text-[9px] sm:text-[10px] text-white/60 group-hover:text-black font-medium">{show.format || 'IMAX 3D'} • ₹{show.price}</div>
-                      </button>
-                    ))}
+                    {theatre.shows?.map((show) => {
+                      const datePriceConfig = theatre.pricingByDate?.[currentDateSelection] || theatre.datePricing?.[currentDateSelection];
+                      const isUnavailable = datePriceConfig && datePriceConfig.status === 'UNAVAILABLE';
+                      const effectivePrice = datePriceConfig && (datePriceConfig.status === 'APPROVED' || datePriceConfig.status === 'AVAILABLE')
+                        ? ((show.format || '').toLowerCase().includes('imax') ? datePriceConfig.imaxPrice : ((show.format || '').toLowerCase().includes('vip') ? datePriceConfig.vipPrice : datePriceConfig.standardPrice))
+                        : (show.price || 250);
+
+                      if (isUnavailable) {
+                        return (
+                          <div key={show.id} className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl glass-panel text-white/30 border border-white/10 text-center font-bold opacity-60 cursor-not-allowed">
+                            <div className="text-xs sm:text-sm font-extrabold">{show.time}</div>
+                            <div className="text-[9px] sm:text-[10px] text-rose-400 font-medium">Slot Offline ({currentDateSelection})</div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={show.id}
+                          onClick={() => handleShowClick(theatre, { ...show, price: effectivePrice })}
+                          className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl glass-panel hover:bg-amber-500 hover:text-black text-amber-400 border border-amber-400/40 font-bold transition-all text-center group cursor-pointer shadow-md hover:scale-105"
+                        >
+                          <div className="text-xs sm:text-sm font-extrabold group-hover:text-black">{show.time}</div>
+                          <div className="text-[9px] sm:text-[10px] text-white/60 group-hover:text-black font-medium">
+                            {show.format || 'IMAX 3D'} • ₹{effectivePrice}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))

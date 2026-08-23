@@ -123,7 +123,9 @@ const TheatreSchema = new mongoose.Schema({
     format: String,
     time: String,
     price: Number
-  }]
+  }],
+  pricingByDate: { type: mongoose.Schema.Types.Mixed, default: {} },
+  datePricing: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
 const BookingSchema = new mongoose.Schema({

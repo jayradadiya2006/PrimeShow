@@ -2375,7 +2375,85 @@ app.post(['/api/theatres', '/api/admin/theatres'], async (req, res) => {
   broadcastToAllClients('THEATRE_UPDATED', newTheatre);
   broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'THEATRE', theatre: newTheatre });
 
-  res.status(201).json(newTheatre);
+  return res.status(201).json(newTheatre);
+});
+
+// Admin Endpoint: Save Date-Wise Theatre Pricing & Configuration to MongoDB Atlas
+app.post(['/api/admin/theatres/pricing-by-date', '/api/theatres/pricing-by-date'], async (req, res) => {
+  try {
+    const { theatreId, selectedDate, dateStr, standardPrice, vipPrice, imaxPrice, pricing, status, isConfigured } = req.body;
+    const targetTheatreId = theatreId || req.body.id;
+    const targetDate = selectedDate || dateStr || req.body.date;
+
+    if (!targetTheatreId || !targetDate) {
+      return res.status(400).json({ success: false, error: 'theatreId and selectedDate (YYYY-MM-DD) are required' });
+    }
+
+    const priceConfig = {
+      standardPrice: Number(standardPrice ?? pricing?.standardPrice ?? 250),
+      vipPrice: Number(vipPrice ?? pricing?.vipPrice ?? 450),
+      imaxPrice: Number(imaxPrice ?? pricing?.imaxPrice ?? 650),
+      isConfigured: isConfigured !== false,
+      status: status || 'APPROVED',
+      updatedAt: new Date().toISOString()
+    };
+
+    let updatedTheatre = null;
+
+    if (mongoose.connection.readyState === 1) {
+      let thDoc = await Theatre.findOne({
+        $or: [
+          { id: targetTheatreId },
+          { _id: mongoose.Types.ObjectId.isValid(targetTheatreId) ? targetTheatreId : null }
+        ]
+      });
+
+      if (thDoc) {
+        let currentPBD = thDoc.pricingByDate || {};
+        if (currentPBD instanceof Map) {
+          currentPBD = Object.fromEntries(currentPBD);
+        } else {
+          currentPBD = { ...currentPBD };
+        }
+
+        currentPBD[targetDate] = priceConfig;
+        thDoc.pricingByDate = currentPBD;
+        thDoc.datePricing = currentPBD;
+        thDoc.markModified('pricingByDate');
+        thDoc.markModified('datePricing');
+        updatedTheatre = await thDoc.save();
+      }
+    }
+
+    // Update in-memory fallback list
+    const idx = theatres.findIndex(t => t.id === targetTheatreId || t._id === targetTheatreId);
+    if (idx !== -1) {
+      theatres[idx].pricingByDate = { ...(theatres[idx].pricingByDate || {}), [targetDate]: priceConfig };
+      theatres[idx].datePricing = { ...(theatres[idx].datePricing || {}), [targetDate]: priceConfig };
+      if (!updatedTheatre) updatedTheatre = theatres[idx];
+    }
+
+    if (!updatedTheatre) {
+      updatedTheatre = { id: targetTheatreId, pricingByDate: { [targetDate]: priceConfig } };
+    }
+
+    // Broadcast real-time update to all connected clients
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('THEATRE_UPDATED', updatedTheatre);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'THEATRE', theatre: updatedTheatre });
+    }
+    broadcastToAllClients('THEATRE_UPDATED', updatedTheatre);
+
+    return res.status(200).json({
+      success: true,
+      message: `Date-wise pricing for ${targetDate} saved to MongoDB Atlas!`,
+      theatre: updatedTheatre,
+      pricingByDate: updatedTheatre.pricingByDate || {}
+    });
+  } catch (err) {
+    console.error('❌ Error saving date-wise pricing:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Admin Update Theatre

@@ -268,6 +268,12 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
                         (b.date === selectedDateStr || !b.date)
                       );
 
+                      const datePriceConfig = theatre.pricingByDate?.[selectedDateStr] || theatre.datePricing?.[selectedDateStr];
+                      const isUnavailable = datePriceConfig && datePriceConfig.status === 'UNAVAILABLE';
+                      const effectivePrice = datePriceConfig && (datePriceConfig.status === 'APPROVED' || datePriceConfig.status === 'AVAILABLE')
+                        ? ((show.format || '').toLowerCase().includes('imax') ? datePriceConfig.imaxPrice : ((show.format || '').toLowerCase().includes('vip') ? datePriceConfig.vipPrice : datePriceConfig.standardPrice))
+                        : (show.price || 250);
+
                       return (
                         <div
                           key={show.id}
@@ -278,14 +284,22 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
                               <span className="text-sm font-bold text-amber-400 flex items-center gap-1">
                                 <Clock className="w-4 h-4" /> {show.time}
                               </span>
-                              <span className="text-xs font-semibold text-emerald-400">₹{show.price || 450} / Seat</span>
+                              <span className="text-xs font-semibold text-emerald-400">
+                                ₹{effectivePrice} / Seat {datePriceConfig?.status === 'APPROVED' ? '⚡' : ''}
+                              </span>
                             </div>
                             <div className="text-xs font-medium text-white/80">{show.screenName}</div>
-                            <div className="text-[10px] text-white/50">{show.format || 'IMAX 3D'}</div>
+                            <div className="text-[10px] text-white/50">
+                              {show.format || 'IMAX 3D'} • Date: {selectedDateStr}
+                            </div>
                           </div>
 
                           {/* Action Buttons */}
-                          {isPrivateBooked ? (
+                          {isUnavailable ? (
+                            <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold text-center">
+                              Show Slot Offline on {selectedDateStr}
+                            </div>
+                          ) : isPrivateBooked ? (
                             <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center justify-center gap-2 text-center">
                               <Lock className="w-4 h-4 shrink-0" />
                               <span>Already Booked (Private VIP Hall Lock)</span>
@@ -293,7 +307,7 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
                           ) : (
                             <div className="grid grid-cols-2 gap-2 pt-1">
                               <button
-                                onClick={() => onBookShowSlot(show)}
+                                onClick={() => onBookShowSlot({ ...show, price: effectivePrice, date: selectedDateStr })}
                                 className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
                               >
                                 Book Seats
