@@ -100,27 +100,13 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const availableDates = generateDynamicDates();
   const currentDateSelection = selectedDate || (availableDates[0]?.date || '2026-07-31');
 
-  // Dynamic Theatre & Showtimes Retrieval based strictly on selected date, Admin schedules & live theatres store
+  // Dynamic Theatre & Showtimes Retrieval based STRICTLY on selected date and Admin schedules in MongoDB Atlas
   const getTheatresForCurrentDate = () => {
-    if (movie && movie.schedules && movie.schedules[currentDateSelection] && movie.schedules[currentDateSelection].length > 0) {
+    if (movie && movie.schedules && Array.isArray(movie.schedules[currentDateSelection]) && movie.schedules[currentDateSelection].length > 0) {
       return movie.schedules[currentDateSelection];
     }
-    if (movie && movie.theatres && movie.theatres.length > 0) {
+    if (movie && Array.isArray(movie.theatres) && movie.theatres.length > 0) {
       return movie.theatres;
-    }
-    if (theatresList && theatresList.length > 0) {
-      return theatresList.map((th, idx) => ({
-        id: th.id || `th_${idx}`,
-        name: th.name,
-        city: th.city,
-        address: th.address || `${th.city} Multiplex Complex`,
-        facilities: th.facilities || ['VIP Recliners', 'IMAX 3D', 'Dolby Atmos'],
-        shows: th.shows && th.shows.length > 0 ? th.shows : [
-          { id: `sh_auto_${th.id || idx}_1`, time: '10:30 AM', format: 'IMAX 3D', price: movie.price || 450, tier: 'Classic' },
-          { id: `sh_auto_${th.id || idx}_2`, time: '04:15 PM', format: 'Dolby Atmos', price: movie.price ? movie.price + 50 : 500, tier: 'Premium' },
-          { id: `sh_auto_${th.id || idx}_3`, time: '07:30 PM', format: 'IMAX 3D', price: movie.price ? movie.price + 100 : 550, tier: 'VIP Recliner' }
-        ]
-      }));
     }
     return [];
   };
