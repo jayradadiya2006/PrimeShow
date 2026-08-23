@@ -1630,6 +1630,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [activeConfigDate, setActiveConfigDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   const [hallSlotForm, setHallSlotForm] = useState({
+    theatreId: 'th_1',
+    movieId: 'mov_1',
     hallName: 'Hall 1 - IMAX Laser',
     format: 'IMAX 3D',
     price: 450,
@@ -1650,7 +1652,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleSaveHallSlot = async (e) => {
     e.preventDefault();
-    const targetThId = pricingTheatreId || theatresList[0]?.id || 'th_1';
+    const targetThId = hallSlotForm.theatreId || pricingTheatreId || theatresList[0]?.id || 'th_1';
+    const selectedMov = moviesList.find(m => m.id === hallSlotForm.movieId) || { title: 'Avatar: Fire and Ash' };
+
     if (!targetThId || !activeConfigDate) {
       setActionSuccess('Please select a theatre and an active date slot');
       setTimeout(() => setActionSuccess(''), 3000);
@@ -1660,6 +1664,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
     const payload = {
       theatreId: targetThId,
       targetTheaterId: targetThId,
+      movieId: hallSlotForm.movieId || 'mov_1',
+      movieTitle: selectedMov.title,
       activeConfigDate,
       selectedDate: activeConfigDate,
       dateStr: activeConfigDate,
@@ -4769,7 +4775,33 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <span className="underline font-mono text-white text-sm">{activeConfigDate}</span>
                   </div>
 
-                  <form onSubmit={handleSaveHallSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <form onSubmit={handleSaveHallSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                    <div>
+                      <label className="block text-[11px] font-bold text-cyan-300 mb-1">Target Theatre *</label>
+                      <select
+                        value={hallSlotForm.theatreId || theatresList[0]?.id || ''}
+                        onChange={e => setHallSlotForm({ ...hallSlotForm, theatreId: e.target.value })}
+                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                      >
+                        {theatresList.map(t => (
+                          <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-cyan-300 mb-1">Target Movie *</label>
+                      <select
+                        value={hallSlotForm.movieId || moviesList[0]?.id || ''}
+                        onChange={e => setHallSlotForm({ ...hallSlotForm, movieId: e.target.value })}
+                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                      >
+                        {moviesList.map(m => (
+                          <option key={m.id} value={m.id}>{m.title}</option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div>
                       <label className="block text-[11px] font-bold text-white/70 mb-1">Hall Name / Number *</label>
                       <input
@@ -4820,12 +4852,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       />
                     </div>
 
-                    <div className="flex items-end">
+                    <div className="sm:col-span-2 lg:col-span-3 flex justify-end pt-2">
                       <button
                         type="submit"
-                        className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+                        className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer flex items-center gap-2"
                       >
-                        + Add / Save Hall Slot
+                        <span>💾 Save Hall & Price Slot for {activeConfigDate}</span>
                       </button>
                     </div>
                   </form>
