@@ -297,6 +297,7 @@ const MOCK_MOVIES = [
 
 export const BookingProvider = ({ children }) => {
   const [moviesList, setMoviesList] = useState(MOCK_MOVIES);
+  const [theatresList, setTheatresList] = useState([]);
   
   const fetchMovies = async () => {
     try {
@@ -338,8 +339,52 @@ export const BookingProvider = ({ children }) => {
     } catch (err) {}
   };
 
+  const fetchTheatres = async (city = '') => {
+    try {
+      const url = city && city !== 'All' ? `/admin/theatres?city=${encodeURIComponent(city)}` : '/admin/theatres';
+      const res = await API.get(url);
+      if (res.data && Array.isArray(res.data)) {
+        setTheatresList(res.data);
+        return res.data;
+      }
+    } catch (err) {
+      console.warn('⚠️ Error fetching theatres from MongoDB Atlas:', err.message);
+    }
+    return [];
+  };
+
+  const addTheatreToGlobalStore = async (theatreObj) => {
+    const newTh = {
+      id: theatreObj.id || `th_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      ...theatreObj
+    };
+    setTheatresList(prev => [newTh, ...prev.filter(t => t.id !== newTh.id)]);
+    try {
+      const res = await API.post('/admin/theatres', newTh);
+      if (res.data && res.data.id) {
+        setTheatresList(prev => [res.data, ...prev.filter(t => t.id !== res.data.id)]);
+      }
+    } catch (err) {}
+    return newTh;
+  };
+
+  const updateTheatreInGlobalStore = async (theatreId, updatedFields) => {
+    setTheatresList(prev => prev.map(t => t.id === theatreId ? { ...t, ...updatedFields } : t));
+    try {
+      await API.put(`/admin/theatres/${theatreId}`, updatedFields);
+    } catch (err) {}
+  };
+
+  const deleteTheatreFromGlobalStore = async (theatreId) => {
+    setTheatresList(prev => prev.filter(t => t.id !== theatreId));
+    try {
+      await API.delete(`/admin/theatres/${theatreId}`);
+    } catch (err) {}
+  };
+
   useEffect(() => {
     fetchMovies();
+    fetchTheatres();
   }, []);
 
   // Master Dynamic Screen Seat Configuration Store
@@ -920,6 +965,7 @@ export const BookingProvider = ({ children }) => {
 
   const fetchAllGlobalData = () => {
     fetchMovies();
+    fetchTheatres();
     fetchFeatureStrips();
     fetchHeroSlides();
     fetchUpcomingMovies();
@@ -1145,6 +1191,11 @@ export const BookingProvider = ({ children }) => {
       addFeatureStrip,
       updateFeatureStrip,
       deleteFeatureStrip,
+      theatresList,
+      fetchTheatres,
+      addTheatreToGlobalStore,
+      updateTheatreInGlobalStore,
+      deleteTheatreFromGlobalStore,
       upcomingMoviesList,
       addUpcomingMovie,
       updateUpcomingMovie,

@@ -2293,6 +2293,8 @@ app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/
 
 app.get(['/api/theatres', '/api/admin/theatres'], async (req, res) => {
   try {
+    const { city } = req.query;
+    let list = [];
     if (mongoose.connection.readyState === 1) {
       const dbTheatres = await Theatre.find().sort({ createdAt: -1 }).lean();
       if (dbTheatres && dbTheatres.length > 0) {
@@ -2301,9 +2303,19 @@ app.get(['/api/theatres', '/api/admin/theatres'], async (req, res) => {
         theatres.forEach(t => {
           if (!dbIds.has(t.id)) combined.push(t);
         });
-        return res.json(combined);
+        list = combined;
       }
     }
+    if (!list || list.length === 0) {
+      list = [...theatres];
+    }
+
+    if (city && city !== 'All') {
+      const filterCity = city.trim().toLowerCase();
+      list = list.filter(t => t && t.city && t.city.trim().toLowerCase() === filterCity);
+    }
+
+    return res.json(list);
   } catch (err) {
     console.warn('⚠️ Error fetching theatres from MongoDB Atlas:', err.message);
   }

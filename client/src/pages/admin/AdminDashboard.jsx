@@ -23,6 +23,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     screenLayoutsMap, getScreenLayout, updateScreenRowsConfig, updateRowPriceInScreenLayout, toggleBlockSeatForScreen, setManualSeatStatusForScreen, addRowToScreenLayout, deleteRowFromScreenLayout, showBookedSeatsMap,
     heroSlidesList, addHeroSlide, updateHeroSlide, deleteHeroSlide,
     featureStripsList, addFeatureStrip, updateFeatureStrip, deleteFeatureStrip,
+    theatresList, fetchTheatres, addTheatreToGlobalStore, updateTheatreInGlobalStore, deleteTheatreFromGlobalStore,
     upcomingMoviesList, addUpcomingMovie, updateUpcomingMovie, deleteUpcomingMovie
   } = useBooking();
   const [activeTab, setActiveTab] = useState('analytics');
@@ -226,7 +227,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [actionSuccess, setActionSuccess] = useState('');
 
   // Cinema & Screen Scoped Seat State
-  const [theatresList, setTheatresList] = useState([]);
   const [selectedCity, setSelectedCity] = useState('Surat');
   const [selectedTheatreId, setSelectedTheatreId] = useState('th_1');
   const [selectedScreenId, setSelectedScreenId] = useState('sc_1');
@@ -1546,28 +1546,25 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingTheatreId) {
-        const res = await API.put(`/theatres/${editingTheatreId}`, theatreForm);
-        setTheatresList(theatresList.map(t => t.id === editingTheatreId ? res.data : t));
-        setActionSuccess('Theatre details updated successfully!');
+        await updateTheatreInGlobalStore(editingTheatreId, theatreForm);
+        setActionSuccess('Theatre details updated successfully & saved to MongoDB Atlas!');
       } else {
-        const res = await API.post('/theatres', theatreForm);
-        setTheatresList([res.data, ...theatresList]);
-        setActionSuccess('New Theatre added to platform!');
+        await addTheatreToGlobalStore(theatreForm);
+        setActionSuccess('New Theatre added to platform & saved to MongoDB Atlas!');
       }
-      setTheatreForm({ name: '', city: 'Mumbai', state: 'Maharashtra', address: '', logo: '', image: '', facilities: 'VIP Recliners, IMAX 3D', screensCount: 6, totalSeats: 200 });
+      setTheatreForm({ name: '', city: 'Surat', state: 'Gujarat', address: '', logo: '', image: '', facilities: 'VIP Recliners, IMAX 3D', screensCount: 6, totalSeats: 200 });
       setEditingTheatreId(null);
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {
-      setActionSuccess('Error saving theatre details');
+      setActionSuccess('Error saving theatre details: ' + err.message);
       setTimeout(() => setActionSuccess(''), 3000);
     }
   };
 
   const handleDeleteTheatre = async (id) => {
     try {
-      await API.delete(`/theatres/${id}`);
-      setTheatresList(theatresList.filter(t => t.id !== id));
-      setActionSuccess('Theatre deleted!');
+      await deleteTheatreFromGlobalStore(id);
+      setActionSuccess('Theatre deleted permanently from MongoDB Atlas!');
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {}
   };
@@ -3914,20 +3911,68 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 <form onSubmit={handleAddDateScopedShowSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
                   <div>
-                    <label className="block text-[11px] font-bold text-white/70 mb-1">Theatre Name *</label>
-                    <input type="text" required value={schedTheatreName} onChange={e => setSchedTheatreName(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-bold text-white/70 mb-1">City *</label>
-                    <select value={schedCity || 'Surat'} onChange={e => setSchedCity(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black">
-                      {GUJARAT_CITIES.map(c => (
+                    <label className="block text-[11px] font-bold text-cyan-300 mb-1">City Filter *</label>
+                    <select
+                      value={schedCity || 'Surat'}
+                      onChange={e => {
+                        const newCity = e.target.value;
+                        setSchedCity(newCity);
+                        const cityTheatres = (theatresList || []).filter(
+                          t => t && (t.city || '').trim().toLowerCase() === newCity.trim().toLowerCase()
+                        );
+                        if (cityTheatres.length > 0) {
+                          setSchedTheatreName(cityTheatres[0].name);
+                          setSchedAddress(cityTheatres[0].address || '');
+                          if (cityTheatres[0].screens && cityTheatres[0].screens.length > 0) {
+                            setSchedScreen(cityTheatres[0].screens[0].name);
+                          }
+                        } else {
+                          setSchedTheatreName('');
+                          setSchedAddress('');
+                        }
+                      }}
+                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                    >
+                      {availableCities.map(c => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
                   </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-amber-300 mb-1">Select Theatre (Live MongoDB Atlas) *</label>
+                    <select
+                      value={schedTheatreName}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setSchedTheatreName(val);
+                        const matchedTh = (theatresList || []).find(t => t && t.name === val);
+                        if (matchedTh) {
+                          setSchedAddress(matchedTh.address || '');
+                          if (matchedTh.screens && matchedTh.screens.length > 0) {
+                            setSchedScreen(matchedTh.screens[0].name);
+                          }
+                        }
+                      }}
+                      className="w-full p-2.5 rounded-xl glass-input text-xs text-amber-300 bg-black font-bold"
+                    >
+                      {(() => {
+                        const filtered = (theatresList || []).filter(
+                          t => t && (t.city || '').trim().toLowerCase() === (schedCity || 'Surat').trim().toLowerCase()
+                        );
+                        if (filtered.length > 0) {
+                          return filtered.map(t => (
+                            <option key={t.id || t.name} value={t.name}>{t.name} ({t.city})</option>
+                          ));
+                        }
+                        return <option value="">No theatres found for {schedCity}</option>;
+                      })()}
+                    </select>
+                  </div>
+
                   <div>
                     <label className="block text-[11px] font-bold text-white/70 mb-1">Address</label>
-                    <input type="text" value={schedAddress} onChange={e => setSchedAddress(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                    <input type="text" value={schedAddress} onChange={e => setSchedAddress(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" placeholder="Auto-filled address" />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-white/70 mb-1">Screen Name</label>
