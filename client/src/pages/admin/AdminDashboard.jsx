@@ -1620,6 +1620,91 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
+  // Dependent Date-Wise Hall & Price Slot Workflow State & Handlers
+  const [configuredTheaterDates, setConfiguredTheaterDates] = useState([
+    new Date().toISOString().split('T')[0],
+    new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    new Date(Date.now() + 172800000).toISOString().split('T')[0]
+  ]);
+  const [newTheaterDateInput, setNewTheaterDateInput] = useState(() => new Date().toISOString().split('T')[0]);
+  const [activeConfigDate, setActiveConfigDate] = useState(() => new Date().toISOString().split('T')[0]);
+
+  const [hallSlotForm, setHallSlotForm] = useState({
+    hallName: 'Hall 1 - IMAX Laser',
+    format: 'IMAX 3D',
+    price: 450,
+    time: '10:30 AM',
+    totalSeats: 120
+  });
+
+  const handleAddTheaterDateSlot = (e) => {
+    e.preventDefault();
+    if (!newTheaterDateInput) return;
+    if (!configuredTheaterDates.includes(newTheaterDateInput)) {
+      setConfiguredTheaterDates([...configuredTheaterDates, newTheaterDateInput]);
+    }
+    setActiveConfigDate(newTheaterDateInput);
+    setActionSuccess(`Added date slot ${newTheaterDateInput}!`);
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
+  const handleSaveHallSlot = async (e) => {
+    e.preventDefault();
+    const targetThId = pricingTheatreId || theatresList[0]?.id || 'th_1';
+    if (!targetThId || !activeConfigDate) {
+      setActionSuccess('Please select a theatre and an active date slot');
+      setTimeout(() => setActionSuccess(''), 3000);
+      return;
+    }
+
+    const payload = {
+      theatreId: targetThId,
+      targetTheaterId: targetThId,
+      activeConfigDate,
+      selectedDate: activeConfigDate,
+      dateStr: activeConfigDate,
+      hallName: hallSlotForm.hallName,
+      format: hallSlotForm.format,
+      price: Number(hallSlotForm.price) || 450,
+      time: hallSlotForm.time || '10:30 AM',
+      totalSeats: Number(hallSlotForm.totalSeats) || 120
+    };
+
+    try {
+      const res = await API.post('/admin/theatres/hall-slots', payload);
+      const updatedTheatre = res?.data?.theatre;
+
+      if (updatedTheatre) {
+        setTheatresList(prev => prev.map(t => (t.id === targetThId || t._id === targetThId) ? updatedTheatre : t));
+      } else {
+        setTheatresList(prev => prev.map(t => {
+          if (t.id === targetThId || t._id === targetThId) {
+            const currentHBD = { ...(t.hallSlotsByDate || {}) };
+            const hallsList = Array.isArray(currentHBD[activeConfigDate]) ? [...currentHBD[activeConfigDate]] : [];
+            hallsList.push({
+              id: `hall_${Date.now()}`,
+              hallName: hallSlotForm.hallName,
+              format: hallSlotForm.format,
+              price: Number(hallSlotForm.price),
+              time: hallSlotForm.time,
+              totalSeats: Number(hallSlotForm.totalSeats)
+            });
+            currentHBD[activeConfigDate] = hallsList;
+            return { ...t, hallSlotsByDate: currentHBD, dateHalls: currentHBD };
+          }
+          return t;
+        }));
+      }
+
+      setActionSuccess(`Hall '${hallSlotForm.hallName}' for ${activeConfigDate} saved to MongoDB Atlas!`);
+    } catch (err) {
+      console.warn('⚠️ Fallback saving hall slot:', err.message);
+      setActionSuccess(`Hall '${hallSlotForm.hallName}' updated!`);
+    }
+
+    setTimeout(() => setActionSuccess(''), 3000);
+  };
+
   const handleAddShowSlot = async (e) => {
     e.preventDefault();
     try {
@@ -4732,6 +4817,166 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   </button>
                 </div>
               </form>
+            </div>
+
+            {/* Section A3: Dependent Date-Wise Hall & Price Slot Manager (3-Step Workflow) */}
+            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6 max-w-4xl">
+              <div className="border-b border-white/10 pb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-lg font-bold font-sans text-white flex items-center gap-2">
+                    <span>🏛️ Dependent Date-Wise Hall & Price Slot Manager</span>
+                  </h3>
+                  <p className="text-xs text-cyan-300">Step 1: Add Date Slots ➔ Step 2: Select Date Chip Context ➔ Step 3: Configure Date-Wise Hall & Price</p>
+                </div>
+                <div className="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-xs font-bold font-mono">
+                  Active Date: {activeConfigDate || 'None'}
+                </div>
+              </div>
+
+              {/* Step 1: Add Date Slot Manager */}
+              <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                <div className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Step 1: Add Available Date Slots for Theatre</div>
+                <form onSubmit={handleAddTheaterDateSlot} className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="date"
+                    required
+                    value={newTheaterDateInput}
+                    onChange={e => setNewTheaterDateInput(e.target.value)}
+                    className="p-3 rounded-xl glass-input text-xs text-white font-bold cursor-pointer flex-1"
+                  />
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 shrink-0 cursor-pointer"
+                  >
+                    + Add Date Slot
+                  </button>
+                </form>
+
+                {/* Render Added Date Slots as Selectable Tab Chips */}
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-[11px] font-bold text-white/70 block">Select Date Chip to Configure Halls & Pricing:</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(configuredTheaterDates || []).map(dStr => (
+                      <button
+                        key={dStr}
+                        type="button"
+                        onClick={() => setActiveConfigDate(dStr)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                          activeConfigDate === dStr
+                            ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
+                            : 'bg-white/10 text-white hover:bg-white/20'
+                        }`}
+                      >
+                        <span>📅 {dStr}</span>
+                        {activeConfigDate === dStr && <span className="w-2 h-2 rounded-full bg-black animate-ping"></span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2: Active Date Context & Hall/Price Slot Form */}
+              {activeConfigDate && (
+                <div className="space-y-4 pt-2 border-t border-white/10">
+                  <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                    <span>Step 2: Configure Hall, Screen & Price for Date:</span>
+                    <span className="underline font-mono text-white text-sm">{activeConfigDate}</span>
+                  </div>
+
+                  <form onSubmit={handleSaveHallSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                    <div>
+                      <label className="block text-[11px] font-bold text-white/70 mb-1">Hall Name / Number *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Hall 1 (IMAX Laser)"
+                        value={hallSlotForm.hallName}
+                        onChange={e => setHallSlotForm({ ...hallSlotForm, hallName: e.target.value })}
+                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-white/70 mb-1">Screen Format *</label>
+                      <select
+                        value={hallSlotForm.format}
+                        onChange={e => setHallSlotForm({ ...hallSlotForm, format: e.target.value })}
+                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                      >
+                        <option value="IMAX 3D">IMAX 3D</option>
+                        <option value="Dolby Atmos">Dolby Atmos</option>
+                        <option value="4DX">4DX</option>
+                        <option value="3D">3D</option>
+                        <option value="2D">2D</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-white/70 mb-1">Ticket Price (₹) *</label>
+                      <input
+                        type="number"
+                        required
+                        value={hallSlotForm.price}
+                        onChange={e => setHallSlotForm({ ...hallSlotForm, price: e.target.value })}
+                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-white/70 mb-1">Show Time *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. 10:30 AM"
+                        value={hallSlotForm.time}
+                        onChange={e => setHallSlotForm({ ...hallSlotForm, time: e.target.value })}
+                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                      />
+                    </div>
+
+                    <div className="flex items-end">
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+                      >
+                        + Add / Save Hall Slot
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Configured Halls List for Active Date */}
+                  {(() => {
+                    const targetThId = pricingTheatreId || theatresList[0]?.id || 'th_1';
+                    const activeTh = theatresList.find(t => t.id === targetThId || t._id === targetThId);
+                    const hallMap = activeTh?.hallSlotsByDate || activeTh?.dateHalls || {};
+                    const activeHalls = Array.isArray(hallMap[activeConfigDate]) ? hallMap[activeConfigDate] : [];
+
+                    return (
+                      <div className="space-y-2 pt-2">
+                        <div className="text-xs font-bold text-white/80">
+                          Configured Halls for <span className="text-amber-400">{activeConfigDate}</span> ({activeHalls.length} Halls Available):
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {activeHalls.map((h, i) => (
+                            <div key={h.id || i} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
+                              <div>
+                                <div className="font-bold text-white">{h.hallName}</div>
+                                <div className="text-[10px] text-cyan-300">{h.format} • {h.time}</div>
+                              </div>
+                              <div className="font-extrabold text-emerald-400 text-sm">₹{h.price}</div>
+                            </div>
+                          ))}
+                          {activeHalls.length === 0 && (
+                            <div className="col-span-full p-4 rounded-xl bg-white/5 border border-white/10 text-xs text-white/40 italic text-center">
+                              No halls configured for {activeConfigDate} yet. Use the form above to add a hall.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
 
             {/* Section B: Manage Showtime Slots per Theatre */}

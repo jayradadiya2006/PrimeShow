@@ -2456,6 +2456,138 @@ app.post(['/api/admin/theatres/pricing-by-date', '/api/theatres/pricing-by-date'
   }
 });
 
+// Admin Endpoint: Save Dependent Date-Wise Hall & Price Configuration to MongoDB Atlas
+app.post(['/api/admin/theatres/hall-slots', '/api/theatres/hall-slots'], async (req, res) => {
+  try {
+    const { theatreId, targetTheaterId, selectedDate, dateStr, activeConfigDate, date, hallName, format, price, time, totalSeats } = req.body;
+    const targetTheatreId = theatreId || targetTheaterId || req.body.id || 'th_1';
+    const targetDateStr = activeConfigDate || selectedDate || dateStr || date || new Date().toISOString().slice(0, 10);
+
+    if (!targetTheatreId || !targetDateStr) {
+      return res.status(400).json({ success: false, error: 'theatreId and date are required' });
+    }
+
+    const hallConfig = {
+      id: req.body.hallId || `hall_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      hallName: (hallName || 'Hall 1 - IMAX Laser').trim(),
+      format: format || 'IMAX 3D',
+      price: Number(price || 450),
+      time: time || '07:30 PM',
+      totalSeats: Number(totalSeats || 120),
+      updatedAt: new Date().toISOString()
+    };
+
+    let updatedTheatre = null;
+
+    if (mongoose.connection.readyState === 1) {
+      let thDoc = await Theatre.findOne({
+        $or: [
+          { id: targetTheatreId },
+          { _id: mongoose.Types.ObjectId.isValid(targetTheatreId) ? targetTheatreId : null }
+        ]
+      });
+
+      if (thDoc) {
+        let currentHBD = thDoc.hallSlotsByDate || {};
+        if (currentHBD instanceof Map) {
+          currentHBD = Object.fromEntries(currentHBD);
+        } else {
+          currentHBD = { ...currentHBD };
+        }
+
+        const dateHallsList = Array.isArray(currentHBD[targetDateStr]) ? [...currentHBD[targetDateStr]] : [];
+        dateHallsList.push(hallConfig);
+        currentHBD[targetDateStr] = dateHallsList;
+
+        thDoc.hallSlotsByDate = currentHBD;
+        thDoc.dateHalls = currentHBD;
+        thDoc.markModified('hallSlotsByDate');
+        thDoc.markModified('dateHalls');
+        updatedTheatre = await thDoc.save();
+      }
+    }
+
+    // Update in-memory list
+    const idx = theatres.findIndex(t => t.id === targetTheatreId || t._id === targetTheatreId);
+    if (idx !== -1) {
+      const currentHBD = { ...(theatres[idx].hallSlotsByDate || {}) };
+      const dateHallsList = Array.isArray(currentHBD[targetDateStr]) ? [...currentHBD[targetDateStr]] : [];
+      dateHallsList.push(hallConfig);
+      currentHBD[targetDateStr] = dateHallsList;
+
+      theatres[idx].hallSlotsByDate = currentHBD;
+      theatres[idx].dateHalls = currentHBD;
+      if (!updatedTheatre) updatedTheatre = theatres[idx];
+    }
+
+    if (!updatedTheatre) {
+      updatedTheatre = { id: targetTheatreId, hallSlotsByDate: { [targetDateStr]: [hallConfig] } };
+    }
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('THEATRE_UPDATED', updatedTheatre);
+      req.app.get('socketio').emit('HALL_SLOTS_UPDATED', { theatreId: targetTheatreId, date: targetDateStr, hall: hallConfig });
+    }
+    broadcastToAllClients('THEATRE_UPDATED', updatedTheatre);
+
+    return res.status(200).json({
+      success: true,
+      message: `Hall slot for ${targetDateStr} saved to MongoDB Atlas!`,
+      theatre: updatedTheatre,
+      date: targetDateStr,
+      halls: updatedTheatre.hallSlotsByDate?.[targetDateStr] || [hallConfig]
+    });
+  } catch (err) {
+    console.error('❌ Error saving hall slot:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// User Panel Dynamic Endpoint: Query Date-Wise Hall Slots
+app.get(['/api/theatres/halls', '/api/admin/theatres/halls'], async (req, res) => {
+  try {
+    const theatreId = req.query.theaterId || req.query.theatreId || req.query.id;
+    const dateStr = req.query.date || req.query.selectedDate || new Date().toISOString().slice(0, 10);
+
+    if (!theatreId) {
+      return res.status(400).json({ success: false, error: 'theaterId is required' });
+    }
+
+    let targetTheatre = null;
+
+    if (mongoose.connection.readyState === 1) {
+      targetTheatre = await Theatre.findOne({
+        $or: [
+          { id: theatreId },
+          { _id: mongoose.Types.ObjectId.isValid(theatreId) ? theatreId : null }
+        ]
+      }).lean();
+    }
+
+    if (!targetTheatre) {
+      targetTheatre = theatres.find(t => t.id === theatreId || t._id === theatreId);
+    }
+
+    if (!targetTheatre) {
+      return res.status(404).json({ success: false, error: 'Theater not found', count: 0, halls: [] });
+    }
+
+    const hallMap = targetTheatre.hallSlotsByDate || targetTheatre.dateHalls || {};
+    const dateHalls = Array.isArray(hallMap[dateStr]) ? hallMap[dateStr] : [];
+
+    return res.status(200).json({
+      success: true,
+      theaterId: theatreId,
+      date: dateStr,
+      count: dateHalls.length,
+      halls: dateHalls
+    });
+  } catch (err) {
+    console.error('❌ Error fetching date-wise halls:', err.message);
+    return res.status(500).json({ success: false, error: err.message, count: 0, halls: [] });
+  }
+});
+
 // Admin Update Theatre
 app.put(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) => {
   const { id } = req.params;

@@ -218,6 +218,54 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
           })}
         </div>
 
+        {/* Date-Wise Available Halls Section */}
+        {(() => {
+          const hallMap = theatre.hallSlotsByDate || theatre.dateHalls || {};
+          const activeDateHalls = Array.isArray(hallMap[selectedDateStr]) ? hallMap[selectedDateStr] : [];
+
+          return (
+            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-4 mb-8">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <span>🏛️ Configured Halls for {selectedDateStr}</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold">
+                    {activeDateHalls.length} {activeDateHalls.length === 1 ? 'Hall' : 'Halls'} Available
+                  </span>
+                </h3>
+                <span className="text-xs text-cyan-300">Live MongoDB Synced</span>
+              </div>
+
+              {activeDateHalls.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {activeDateHalls.map((hall, idx) => (
+                    <div key={hall.id || idx} className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 hover:border-cyan-400/40 transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-white text-sm">{hall.hallName}</span>
+                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold">{hall.format}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-white/60">
+                        <span>Showtime: <strong className="text-white">{hall.time}</strong></span>
+                        <span className="font-extrabold text-emerald-400 text-sm">₹{hall.price} / Seat</span>
+                      </div>
+                      <button
+                        onClick={() => onBookShowSlot({ id: hall.id, time: hall.time, format: hall.format, price: hall.price, screenName: hall.hallName, date: selectedDateStr })}
+                        className="w-full py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs shadow-md cursor-pointer transition-all mt-1"
+                      >
+                        Reserve Seat in {hall.hallName}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-1">
+                  <div className="text-sm font-bold text-white/60">No Available Halls Configured for {selectedDateStr}</div>
+                  <div className="text-xs text-white/40">No halls were added for this specific date. Please pick another date above to view available screens.</div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Movies & Showtimes Matrix */}
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-white/10 pb-3">
