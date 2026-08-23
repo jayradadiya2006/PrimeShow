@@ -27,6 +27,7 @@ import { Settings } from './pages/Settings';
 
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminErrorBoundary } from './components/AdminErrorBoundary';
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 
 const MainAppContent = () => {
   const { user, selectedCity } = useAuth();
@@ -145,6 +146,11 @@ const MainAppContent = () => {
         {activeTab === 'theatre-detail' && (
           <TheatreDetail 
             theatreId={selectedTheatreId}
+            onBackToTheatres={() => setActiveTab('theatres')}
+            onBookShowSlot={(show) => {
+              if (show?.movieId) setSelectedMovieId(show.movieId);
+              setIsSeatPickerOpen(true);
+            }}
             onBookMovieShow={(movieId) => handleBookNow(movieId)}
           />
         )}
@@ -262,11 +268,13 @@ const MainAppContent = () => {
 
 export function App() {
   return (
-    <AuthProvider>
-      <BookingProvider>
-        <MainAppContent />
-      </BookingProvider>
-    </AuthProvider>
+    <GlobalErrorBoundary>
+      <AuthProvider>
+        <BookingProvider>
+          <MainAppContent />
+        </BookingProvider>
+      </AuthProvider>
+    </GlobalErrorBoundary>
   );
 }
 
