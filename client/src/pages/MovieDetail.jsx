@@ -4,6 +4,7 @@ import { CastCarousel } from '../components/CastCarousel';
 import { TheatreMapModal } from '../components/TheatreMapModal';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
+import { API } from '../services/api';
 
 export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackToMovies }) => {
   const { user, selectedCity } = useAuth();
@@ -14,6 +15,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [selectedTheatreForMap, setSelectedTheatreForMap] = useState(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [liveSchedules, setLiveSchedules] = useState(null);
 
   useEffect(() => {
     if (selectedCity) {
@@ -65,8 +67,6 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
     ]);
   }, [movieId, moviesList]);
 
-  if (!movie) return null;
-
   // Reliable Back Button Handler
   const handleBackClick = () => {
     if (typeof onBackToMovies === 'function') {
@@ -78,7 +78,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
 
   // Dynamic Date Chips Generator based strictly on movie.showDates configured by Admin
   const generateDynamicDates = () => {
-    if (Array.isArray(movie.showDates) && movie.showDates.length > 0) {
+    if (movie && Array.isArray(movie.showDates) && movie.showDates.length > 0) {
       return movie.showDates.map((dStr, idx) => {
         const dObj = new Date(dStr);
         const dayLabel = idx === 0 ? 'TODAY' : (idx === 1 ? 'TOMORROW' : dObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase());
@@ -100,8 +100,6 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const availableDates = generateDynamicDates();
   const currentDateSelection = selectedDate || (availableDates[0]?.date || '2026-07-31');
 
-  const [liveSchedules, setLiveSchedules] = useState(null);
-
   useEffect(() => {
     let isMounted = true;
     const fetchLiveSchedules = async () => {
@@ -121,6 +119,8 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
     fetchLiveSchedules();
     return () => { isMounted = false; };
   }, [movieId, currentDateSelection, selectedCityFilter, selectedCity]);
+
+  if (!movie) return null;
 
   // Dynamic Theatre & Showtimes Retrieval based STRICTLY on selected date and Admin schedules in MongoDB Atlas
   const getTheatresForCurrentDate = () => {
