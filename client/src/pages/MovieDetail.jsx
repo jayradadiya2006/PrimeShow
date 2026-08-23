@@ -102,11 +102,8 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
 
   // Dynamic Theatre & Showtimes Retrieval based STRICTLY on selected date and Admin schedules in MongoDB Atlas
   const getTheatresForCurrentDate = () => {
-    if (movie && movie.schedules && Array.isArray(movie.schedules[currentDateSelection]) && movie.schedules[currentDateSelection].length > 0) {
+    if (movie && movie.schedules && Array.isArray(movie.schedules[currentDateSelection])) {
       return movie.schedules[currentDateSelection];
-    }
-    if (movie && Array.isArray(movie.theatres) && movie.theatres.length > 0) {
-      return movie.theatres;
     }
     return [];
   };

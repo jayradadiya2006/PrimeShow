@@ -1823,6 +1823,53 @@ app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   res.json(movie);
 });
 
+app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async (req, res) => {
+  const { id } = req.params;
+  const { date, city } = req.query;
+
+  try {
+    const mongoose = require('mongoose');
+    let movieDoc = null;
+    if (mongoose.connection.readyState === 1) {
+      movieDoc = await Movie.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+    }
+    if (!movieDoc) {
+      movieDoc = movies.find(m => m.id === id || m._id === id);
+    }
+    if (!movieDoc) {
+      return res.status(404).json({ success: false, error: 'Movie not found', schedules: [] });
+    }
+
+    let schedulesMap = movieDoc.schedules || {};
+    if (schedulesMap instanceof Map) {
+      schedulesMap = Object.fromEntries(schedulesMap);
+    }
+
+    let dateSchedules = [];
+    if (date && schedulesMap[date]) {
+      dateSchedules = Array.isArray(schedulesMap[date]) ? schedulesMap[date] : [];
+    } else if (movieDoc.theatres && Array.isArray(movieDoc.theatres)) {
+      dateSchedules = movieDoc.theatres;
+    }
+
+    if (city && city !== 'All') {
+      const filterCity = city.trim().toLowerCase();
+      dateSchedules = dateSchedules.filter(t => t && t.city && t.city.trim().toLowerCase() === filterCity);
+    }
+
+    return res.json({
+      success: true,
+      movieId: id,
+      date: date || null,
+      city: city || 'All',
+      schedules: dateSchedules
+    });
+  } catch (err) {
+    console.error('❌ Error fetching movie schedules:', err.message);
+    return res.status(500).json({ success: false, error: err.message, schedules: [] });
+  }
+});
+
 app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
   const newMovie = {
     id: req.body.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
