@@ -1415,21 +1415,41 @@ export const AdminDashboard = ({ onReturnHome }) => {
     };
 
     try {
-      const res = await API.post('/admin/movies/schedule', {
-        selectedMovieId: schedMovieId,
-        movieId: schedMovieId,
-        targetMovieId: schedMovieId,
-        action: 'ADD_SHOW_SLOT',
-        dateStr: selectedSchedDate,
-        date: selectedSchedDate,
-        theatreObj,
-        theatre: theatreObj,
-        showSlotObj,
-        show: showSlotObj
-      });
+      let res;
+      try {
+        res = await API.post('/admin/movies/add-slot', {
+          selectedMovieId: schedMovieId,
+          movieId: schedMovieId,
+          targetMovieId: schedMovieId,
+          targetCity: effectiveCity,
+          city: effectiveCity,
+          bookingDate: selectedSchedDate,
+          dateStr: selectedSchedDate,
+          date: selectedSchedDate,
+          theatreName: effectiveTheatreName,
+          theatreId: theatreObj.id,
+          theatreObj,
+          theatre: theatreObj,
+          showTime: effectiveTime,
+          format: schedFormat,
+          price: Number(schedPrice) || 250,
+          showSlotObj,
+          show: showSlotObj,
+          action: 'ADD_SHOW_SLOT'
+        });
+      } catch (e1) {
+        res = await API.post('/admin/movies/schedule', {
+          selectedMovieId: schedMovieId,
+          movieId: schedMovieId,
+          action: 'ADD_SHOW_SLOT',
+          dateStr: selectedSchedDate,
+          theatreObj,
+          showSlotObj
+        });
+      }
 
       if (res?.data?.movie) {
-        setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId) ? res.data.movie : m));
+        setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId) ? res.data.movie : m));
       } else {
         await addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
       }

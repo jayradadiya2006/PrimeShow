@@ -2208,30 +2208,69 @@ app.post(['/api/admin/movies/add-date', '/api/movies/add-date'], async (req, res
 });
 
 // Admin Movie Show Dates & Theatre Schedule Manager Endpoint (MongoDB Atlas Persistence)
-app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/movies/:id/schedule'], async (req, res) => {
+app.post(['/api/admin/movies/add-slot', '/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/movies/:id/schedule'], async (req, res) => {
   try {
     const movieId = req.params.id || req.body.selectedMovieId || req.body.targetMovieId || req.body.movieId || req.body.id;
-    const action = req.body.action || 'SYNC_SCHEDULE';
-    const dateStr = req.body.dateStr || req.body.date;
-    const theatreObj = req.body.theatreObj || req.body.theatre;
-    const showSlotObj = req.body.showSlotObj || req.body.show;
+    let action = req.body.action || 'ADD_SHOW_SLOT';
 
     if (!movieId) {
       return res.status(400).json({ success: false, error: 'Target Movie ID is required' });
     }
 
+    // Extract & normalize date
+    let rawDate = req.body.dateStr || req.body.date || req.body.bookingDate;
+    let dateStr = rawDate ? String(rawDate).trim() : null;
+    if (dateStr) {
+      try {
+        const parsedDate = new Date(dateStr);
+        if (!isNaN(parsedDate.getTime()) && dateStr.length > 10) {
+          dateStr = parsedDate.toISOString().split('T')[0];
+        }
+      } catch (e) {}
+    }
+
+    // Extract theatreObj
+    let targetCity = req.body.targetCity || req.body.city || req.body.theatreObj?.city || req.body.theatre?.city || 'Surat';
+    let theatreName = req.body.theatreName || req.body.theatreObj?.name || req.body.theatre?.name || 'PVR Multiplex';
+    let theatreId = req.body.theatreId || req.body.theatreObj?.id || `th_${theatreName.replace(/\s+/g, '_').toLowerCase()}`;
+    let theatreAddress = req.body.address || req.body.theatreObj?.address || `${targetCity} Multiplex`;
+    
+    let theatreObj = req.body.theatreObj || req.body.theatre || {
+      id: theatreId,
+      name: theatreName,
+      city: targetCity,
+      address: theatreAddress,
+      facilities: req.body.facilities || ['IMAX 3D', 'VIP Recliners']
+    };
+    if (!theatreObj.city) theatreObj.city = targetCity;
+
+    // Extract showSlotObj
+    let showTime = req.body.showTime || req.body.time || req.body.showSlotObj?.time || '07:30 PM';
+    let format = req.body.format || req.body.showSlotObj?.format || 'IMAX 3D';
+    let price = Number(req.body.price || req.body.showSlotObj?.price) || 250;
+    
+    let showSlotObj = req.body.showSlotObj || req.body.show || {
+      id: req.body.showId || `sh_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      time: showTime,
+      format: format,
+      price: price,
+      tier: req.body.tier || 'VIP',
+      screen: req.body.screen || 'Screen 1',
+      availableSeats: 120
+    };
+
     const mongoose = require('mongoose');
     let updatedMovie = null;
 
     if (mongoose.connection.readyState === 1) {
-      let memMovie = movies.find(m => m.id === movieId || m._id === movieId) || { id: movieId, title: 'Untitled Movie' };
+      let memMovie = movies.find(m => m.id === movieId || m._id === movieId || (m.title && m.title.toLowerCase() === movieId.toLowerCase())) || { id: movieId, title: 'Untitled Movie' };
 
       let movieDoc = await Movie.findOne(buildIdFilter(movieId));
 
       if (!movieDoc) {
         movieDoc = new Movie({
           id: movieId,
-          title: memMovie.title || 'Untitled Movie',
+          title: memMovie.title || movieId || 'Untitled Movie',
           poster: memMovie.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
           status: memMovie.status || 'Now Showing',
           showDates: memMovie.showDates || [],
@@ -2260,7 +2299,7 @@ app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/
         } else if (action === 'DELETE_DATE' && dateStr) {
           movieDoc.showDates = movieDoc.showDates.filter(d => d !== dateStr);
           delete schedulesObj[dateStr];
-        } else if (action === 'ADD_SHOW_SLOT' && dateStr && theatreObj && showSlotObj) {
+        } else if ((action === 'ADD_SHOW_SLOT' || !action) && dateStr && theatreObj && showSlotObj) {
           if (!movieDoc.showDates.includes(dateStr)) {
             movieDoc.showDates.push(dateStr);
           }
@@ -2275,8 +2314,8 @@ app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/
             dateTheatres.push({
               id: theatreObj.id || `th_${Date.now()}`,
               name: theatreObj.name || 'PVR Cinemas',
-              city: theatreObj.city || 'Surat',
-              address: theatreObj.address || 'Central Complex',
+              city: theatreObj.city || targetCity || 'Surat',
+              address: theatreObj.address || `${targetCity} Multiplex`,
               facilities: theatreObj.facilities || ['IMAX 3D', 'VIP Recliners'],
               shows: [showSlotObj]
             });
@@ -2299,11 +2338,12 @@ app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/
         movieDoc.markModified('schedules');
         movieDoc.markModified('showDates');
         updatedMovie = await movieDoc.save();
+        console.log(`✅ MongoDB Atlas Schedule Persisted: Movie '${movieDoc.title}' (${movieId}) on ${dateStr} in ${targetCity}`);
       }
     }
 
     // Update in-memory fallback list
-    const index = movies.findIndex(m => m.id === movieId || m._id === movieId);
+    const index = movies.findIndex(m => m.id === movieId || m._id === movieId || (m.title && m.title.toLowerCase() === movieId.toLowerCase()));
     if (index !== -1) {
       if (updatedMovie) {
         movies[index] = { ...movies[index], ...updatedMovie.toObject() };
@@ -2329,18 +2369,18 @@ app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/
     }
     broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
 
-    return res.status(200).json({
+    return res.json({
       success: true,
-      message: 'Movie Show Schedule saved to MongoDB Atlas!',
-      movie: updatedMovie,
-      showDates: updatedMovie.showDates || [],
-      schedules: updatedMovie.schedules || {}
+      message: `Show slot '${showSlotObj.time}' (${showSlotObj.format}) persisted to MongoDB Atlas for ${dateStr}!`,
+      movie: updatedMovie
     });
   } catch (err) {
-    console.error('❌ Error saving movie schedule:', err.message);
+    console.error('❌ CRITICAL ERROR in /api/admin/movies/schedule persistence:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
+
+
 
 // -------------------------------------------------------------
 // THEATRE & SHOWTIMES MANAGEMENT CRUD ENDPOINTS
