@@ -186,28 +186,28 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center pt-20 sm:pt-24 pb-8 px-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-y-auto font-sans">
-      <div className="relative w-full max-w-2xl bg-[#0b0c16] rounded-3xl border border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] my-auto">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-16 sm:pt-20 pb-4 px-3 bg-black/85 backdrop-blur-xl animate-fade-in font-sans overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#0b0c16] rounded-2xl sm:rounded-3xl border border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[80vh] my-auto">
         
-        {/* Sticky Header Bar with High Visibility Close (X) Button */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0b0c16]/95 backdrop-blur-md shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
-              <Ticket className="w-4 h-4" />
+        {/* Compact Sticky Header Bar */}
+        <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0b0c16]/95 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
+              <Ticket className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white font-serif">Activity Pass Booking</h3>
-              <p className="text-[11px] text-amber-300">PrimeShow Adventure & Theme Park Pass System</p>
+              <h3 className="text-sm font-bold text-white font-serif">Activity Pass Checkout</h3>
+              <p className="text-[10px] text-amber-300">PrimeShow Adventure & Theme Park Pass</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2.5 rounded-full bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 shadow-lg transition-all cursor-pointer flex items-center justify-center group"
+            className="p-2 rounded-full bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 shadow-lg transition-all cursor-pointer flex items-center justify-center group"
             title="Close Modal"
             aria-label="Close Modal"
           >
-            <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <X className="w-4 h-4 group-hover:scale-110 transition-transform" />
           </button>
         </div>
 
@@ -215,41 +215,41 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
         <div className="overflow-y-auto flex-1">
           {/* STEP 1: Pass Configuration & Quantity Selection */}
           {step === 'config' && (
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-3.5">
             {/* Activity Card Banner */}
-            <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
               <img
                 src={activeActivity.image}
                 alt={activeActivity.title}
-                className="w-24 h-24 rounded-xl object-cover border border-amber-400/40 shrink-0"
+                className="w-16 h-16 rounded-lg object-cover border border-amber-400/40 shrink-0"
               />
-              <div className="space-y-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold uppercase">
+              <div className="space-y-0.5 min-w-0">
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[9px] font-bold uppercase inline-block">
                   {activeActivity.category}
                 </span>
-                <h4 className="text-lg font-bold text-white leading-tight">{activeActivity.title}</h4>
-                <p className="text-xs text-white/60 flex items-center gap-1.5 pt-0.5">
-                  <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>{activeActivity.location}</span>
+                <h4 className="text-sm font-bold text-white leading-tight truncate">{activeActivity.title}</h4>
+                <p className="text-[11px] text-white/60 flex items-center gap-1 pt-0.5 truncate">
+                  <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                  <span className="truncate">{activeActivity.location}</span>
                 </p>
-                <p className="text-xs text-white/60 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>{activeActivity.validity}</span>
+                <p className="text-[11px] text-white/60 flex items-center gap-1 truncate">
+                  <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                  <span className="truncate">{activeActivity.validity}</span>
                 </p>
               </div>
             </div>
 
             {/* Pass Benefits List */}
             {activeActivity.benefits && activeActivity.benefits.length > 0 && (
-              <div className="space-y-2">
-                <h5 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5" /> Included Pass Benefits & Perks:
+              <div className="space-y-1.5">
+                <h5 className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> Included Benefits:
                 </h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {activeActivity.benefits.map((b, idx) => (
-                    <div key={idx} className="flex items-center gap-2 p-2 rounded-xl bg-white/5 text-xs text-white/90 border border-white/5">
-                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>{b}</span>
+                    <div key={idx} className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white/5 text-[11px] text-white/90 border border-white/5">
+                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="truncate">{b}</span>
                     </div>
                   ))}
                 </div>
@@ -257,31 +257,31 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
             )}
 
             {/* Quantity Selector */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-white block">Select Number of Passes</span>
-                <span className="text-[11px] text-white/50">Maximum 10 passes per transaction</span>
+                <span className="text-xs font-bold text-white block">Number of Passes</span>
+                <span className="text-[10px] text-white/50">Max 10 passes per checkout</span>
               </div>
 
-              <div className="flex items-center gap-3 bg-black/40 p-1.5 rounded-xl border border-white/10">
+              <div className="flex items-center gap-2.5 bg-black/40 p-1 rounded-lg border border-white/10">
                 <button
                   onClick={() => setPassCount(Math.max(1, passCount - 1))}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer"
+                  className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer text-xs"
                 >
                   -
                 </button>
-                <span className="text-base font-bold text-amber-400 w-6 text-center">{passCount}</span>
+                <span className="text-sm font-bold text-amber-400 w-5 text-center">{passCount}</span>
                 <button
                   onClick={() => setPassCount(Math.min(10, passCount + 1))}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer"
+                  className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer text-xs"
                 >
                   +
                 </button>
               </div>
             </div>
 
-            {/* Price Breakdown */}
-            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/20 space-y-2 text-xs">
+            {/* Compact Price Breakdown */}
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/20 space-y-1.5 text-[11px]">
               <div className="flex justify-between text-white/70">
                 <span>Pass Price ({passCount} x ₹{basePrice})</span>
                 <span>₹{totalBasePrice.toLocaleString('en-IN')}</span>
@@ -294,115 +294,114 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
                 <span>GST Tax (5%)</span>
                 <span>₹{gstTax.toLocaleString('en-IN')}</span>
               </div>
-              <div className="border-t border-amber-400/30 pt-2 flex justify-between text-sm font-bold text-amber-300">
-                <span>Grand Total Amount</span>
-                <span className="text-base font-extrabold text-amber-400">₹{grandTotal.toLocaleString('en-IN')}</span>
+              <div className="border-t border-amber-400/30 pt-1.5 flex justify-between text-xs font-bold text-amber-300">
+                <span>Grand Total</span>
+                <span className="text-sm font-extrabold text-amber-400">₹{grandTotal.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
             {/* Proceed Button */}
             <button
               onClick={() => setStep('payment')}
-              className="w-full py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm shadow-xl shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <span>Proceed to Payment (₹{grandTotal.toLocaleString('en-IN')})</span>
             </button>
           </div>
         )}
 
-        {/* STEP 2: 4 Payment Gateway Tabs & Dynamic UPI QR */}
+        {/* STEP 2: Payment Gateway Tabs & Dynamic UPI QR */}
         {step === 'payment' && (
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-3.5">
             
             {/* Payee Info Banner */}
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between text-xs">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between text-[11px]">
               <div>
-                <span className="text-[10px] text-amber-300 uppercase font-bold tracking-wider block">Official Beneficiary Payee</span>
-                <span className="text-sm font-bold text-white">{payeeName}</span>
-                <span className="text-xs text-amber-400/80 block font-mono">{payeeUpiId}</span>
+                <span className="text-[9px] text-amber-300 uppercase font-bold tracking-wider block">Beneficiary Payee</span>
+                <span className="text-xs font-bold text-white">{payeeName}</span>
+                <span className="text-[10px] text-amber-400/80 block font-mono">{payeeUpiId}</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-white/50 block">Amount Due</span>
-                <span className="text-lg font-black text-amber-400">₹{grandTotal.toLocaleString('en-IN')}</span>
+                <span className="text-[9px] text-white/50 block">Due Amount</span>
+                <span className="text-base font-black text-amber-400">₹{grandTotal.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
-            {/* 4 Payment Gateway Options Tabs */}
-            <div className="grid grid-cols-4 gap-2 border-b border-white/10 pb-3 text-xs font-bold">
+            {/* Payment Options Tabs */}
+            <div className="grid grid-cols-4 gap-1 border-b border-white/10 pb-2 text-[11px] font-bold">
               <button
                 onClick={() => setActivePaymentTab('upi')}
-                className={`py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   activePaymentTab === 'upi'
-                    ? 'bg-amber-500 text-black font-bold shadow-lg shadow-amber-500/20'
+                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
                     : 'glass-panel text-white/70 hover:text-white'
                 }`}
               >
-                <QrCode className="w-4 h-4" />
+                <QrCode className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">UPI & QR</span>
               </button>
 
               <button
                 onClick={() => setActivePaymentTab('netbanking')}
-                className={`py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   activePaymentTab === 'netbanking'
-                    ? 'bg-amber-500 text-black font-bold shadow-lg shadow-amber-500/20'
+                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
                     : 'glass-panel text-white/70 hover:text-white'
                 }`}
               >
-                <Building2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Net Banking</span>
+                <Building2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Banking</span>
               </button>
 
               <button
                 onClick={() => setActivePaymentTab('card')}
-                className={`py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   activePaymentTab === 'card'
-                    ? 'bg-amber-500 text-black font-bold shadow-lg shadow-amber-500/20'
+                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
                     : 'glass-panel text-white/70 hover:text-white'
                 }`}
               >
-                <CreditCard className="w-4 h-4" />
+                <CreditCard className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Cards</span>
               </button>
 
               <button
                 onClick={() => setActivePaymentTab('wallet')}
-                className={`py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
                   activePaymentTab === 'wallet'
-                    ? 'bg-amber-500 text-black font-bold shadow-lg shadow-amber-500/20'
+                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
                     : 'glass-panel text-white/70 hover:text-white'
                 }`}
               >
-                <Wallet className="w-4 h-4" />
+                <Wallet className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Wallets</span>
               </button>
             </div>
 
             {/* Tab 1: Dynamic UPI QR Code */}
             {activePaymentTab === 'upi' && (
-              <div className="text-center space-y-4 py-2">
-                <p className="text-xs text-amber-300 font-semibold">
-                  Scan QR with GPay, PhonePe, Paytm, or BHIM to pay <strong className="text-white">₹{grandTotal.toLocaleString('en-IN')}</strong>
+              <div className="text-center space-y-2.5 py-1">
+                <p className="text-[11px] text-amber-300 font-semibold">
+                  Scan QR with GPay / PhonePe / Paytm to pay <strong className="text-white">₹{grandTotal.toLocaleString('en-IN')}</strong>
                 </p>
 
-                {/* High Correction SVG QR Code */}
-                <div className="inline-block p-4 rounded-3xl bg-white shadow-2xl border-4 border-amber-400">
+                <div className="inline-block p-3 rounded-2xl bg-white shadow-xl border-2 border-amber-400">
                   <QRCodeSVG
                     value={dynamicUpiUri}
-                    size={200}
+                    size={140}
                     level="H"
                     includeMargin={true}
                   />
                 </div>
 
-                <div className="flex items-center justify-center gap-2 pt-1">
-                  <span className="text-xs text-white/70">UPI ID: <strong className="text-amber-400 font-mono">{payeeUpiId}</strong></span>
+                <div className="flex items-center justify-center gap-1.5 pt-0.5">
+                  <span className="text-[11px] text-white/70">UPI ID: <strong className="text-amber-400 font-mono">{payeeUpiId}</strong></span>
                   <button
                     onClick={handleCopyUpi}
-                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+                    className="p-1 rounded bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
                     title="Copy UPI ID"
                   >
-                    {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedUpi ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                   </button>
                 </div>
               </div>
@@ -410,11 +409,11 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
 
             {/* Tab 2: Net Banking */}
             {activePaymentTab === 'netbanking' && (
-              <div className="space-y-3 py-4 text-xs">
-                <p className="text-white/70">Select your bank for instant net banking transfer:</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 'Punjab National Bank'].map(bank => (
-                    <button key={bank} className="p-3 rounded-xl bg-white/5 border border-white/10 hover:border-amber-400 text-white font-semibold text-center cursor-pointer">
+              <div className="space-y-2 py-2 text-[11px]">
+                <p className="text-white/70">Select bank for net banking transfer:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 'PNB Bank'].map(bank => (
+                    <button key={bank} className="p-2 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400 text-white font-semibold text-center cursor-pointer">
                       {bank}
                     </button>
                   ))}
@@ -424,23 +423,23 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
 
             {/* Tab 3: Credit/Debit Cards */}
             {activePaymentTab === 'card' && (
-              <div className="space-y-3 py-2 text-xs">
+              <div className="space-y-2 py-1 text-[11px]">
                 <div>
-                  <label className="block text-white/70 mb-1">Cardholder Name</label>
-                  <input type="text" placeholder="e.g. Jay Radadiya" className="w-full p-2.5 rounded-xl glass-input text-white text-xs" />
+                  <label className="block text-white/70 mb-0.5">Cardholder Name</label>
+                  <input type="text" placeholder="e.g. Jay Radadiya" className="w-full p-2 rounded-lg glass-input text-white text-[11px]" />
                 </div>
                 <div>
-                  <label className="block text-white/70 mb-1">Card Number</label>
-                  <input type="text" placeholder="4532 •••• •••• 8921" className="w-full p-2.5 rounded-xl glass-input text-white text-xs" />
+                  <label className="block text-white/70 mb-0.5">Card Number</label>
+                  <input type="text" placeholder="4532 •••• •••• 8921" className="w-full p-2 rounded-lg glass-input text-white text-[11px]" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-white/70 mb-1">Expiry Date</label>
-                    <input type="text" placeholder="MM/YY" className="w-full p-2.5 rounded-xl glass-input text-white text-xs" />
+                    <label className="block text-white/70 mb-0.5">Expiry Date</label>
+                    <input type="text" placeholder="MM/YY" className="w-full p-2 rounded-lg glass-input text-white text-[11px]" />
                   </div>
                   <div>
-                    <label className="block text-white/70 mb-1">CVV</label>
-                    <input type="password" maxLength={4} placeholder="•••" className="w-full p-2.5 rounded-xl glass-input text-white text-xs" />
+                    <label className="block text-white/70 mb-0.5">CVV</label>
+                    <input type="password" maxLength={4} placeholder="•••" className="w-full p-2 rounded-lg glass-input text-white text-[11px]" />
                   </div>
                 </div>
               </div>
@@ -448,11 +447,11 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
 
             {/* Tab 4: Wallets */}
             {activePaymentTab === 'wallet' && (
-              <div className="space-y-3 py-4 text-xs">
+              <div className="space-y-2 py-2 text-[11px]">
                 <p className="text-white/70">Select digital wallet:</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   {['Paytm Wallet', 'Amazon Pay', 'PhonePe Wallet', 'Mobikwik'].map(w => (
-                    <button key={w} className="p-3.5 rounded-xl bg-white/5 border border-white/10 hover:border-amber-400 text-white font-semibold cursor-pointer">
+                    <button key={w} className="p-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400 text-white font-semibold cursor-pointer">
                       {w}
                     </button>
                   ))}
@@ -461,20 +460,20 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setStep('config')}
-                className="w-1/3 py-3 rounded-xl glass-panel text-white/70 font-bold text-xs hover:text-white cursor-pointer"
+                className="w-1/3 py-2.5 rounded-xl glass-panel text-white/70 font-bold text-xs hover:text-white cursor-pointer"
               >
                 Back
               </button>
               <button
                 onClick={handleConfirmPayment}
                 disabled={isProcessing}
-                className="w-2/3 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-xl shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-2/3 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Verify & Complete Payment</span>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Complete Payment</span>
               </button>
             </div>
 
@@ -483,94 +482,80 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
 
         {/* STEP 3: Banking Verification Loader */}
         {step === 'verifying' && (
-          <div className="p-12 text-center space-y-4">
-            <div className="w-12 h-12 rounded-full border-4 border-amber-400 border-t-transparent animate-spin mx-auto"></div>
-            <h4 className="text-lg font-bold text-white font-serif">Verifying UPI Payment...</h4>
-            <p className="text-xs text-amber-300 font-mono">Communicating with NPCI Bank Gateway for ₹{grandTotal.toLocaleString('en-IN')}...</p>
+          <div className="p-8 text-center space-y-3">
+            <div className="w-10 h-10 rounded-full border-4 border-amber-400 border-t-transparent animate-spin mx-auto"></div>
+            <h4 className="text-base font-bold text-white font-serif">Verifying Payment...</h4>
+            <p className="text-xs text-amber-300 font-mono">Processing NPCI settlement for ₹{grandTotal.toLocaleString('en-IN')}...</p>
           </div>
         )}
 
-        {/* STEP 4: VIP Digital Entry Pass Ticket Output */}
+        {/* STEP 4: Digital Entry Pass Ticket Output */}
         {step === 'pass' && confirmedBooking && (
-          <div className="p-6 space-y-6">
-            <div className="text-center space-y-1">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 mx-auto mb-2">
-                <CheckCircle2 className="w-6 h-6" />
+          <div className="p-4 space-y-3.5">
+            <div className="text-center space-y-0.5">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 mx-auto mb-1">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
-              <h3 className="text-xl font-bold text-white font-serif">Activity Pass Confirmed!</h3>
+              <h3 className="text-base font-bold text-white font-serif">Activity Pass Confirmed!</h3>
               <p className="text-xs text-emerald-400 font-semibold">Pass ID: {confirmedBooking.id}</p>
             </div>
 
             {/* Printable Pass Card */}
-            <div id="printable-pass" className="p-5 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-amber-400/40 shadow-2xl space-y-4 relative overflow-hidden">
-              <div className="flex justify-between items-start border-b border-white/10 pb-3">
+            <div id="printable-pass" className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-amber-400/40 shadow-xl space-y-3 relative overflow-hidden">
+              <div className="flex justify-between items-start border-b border-white/10 pb-2">
                 <div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold uppercase">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold uppercase">
                     {confirmedBooking.category}
                   </span>
-                  <h4 className="text-lg font-bold text-white mt-1">{confirmedBooking.activityTitle}</h4>
-                  <p className="text-xs text-white/60">{confirmedBooking.location}</p>
+                  <h4 className="text-sm font-bold text-white mt-0.5">{confirmedBooking.activityTitle}</h4>
+                  <p className="text-[11px] text-white/60">{confirmedBooking.location}</p>
                 </div>
-                <div className="p-2 bg-white rounded-xl">
-                  <QRCodeSVG value={`PRIMESHOW-PASS-${confirmedBooking.id}`} size={64} level="H" />
+                <div className="p-1.5 bg-white rounded-lg">
+                  <QRCodeSVG value={`PRIMESHOW-PASS-${confirmedBooking.id}`} size={52} level="H" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div>
-                  <span className="text-white/40 block text-[10px]">Validity Period</span>
+                  <span className="text-white/40 block text-[9px]">Validity</span>
                   <span className="text-white font-semibold">{confirmedBooking.validity}</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">Passes Quantity</span>
+                  <span className="text-white/40 block text-[9px]">Passes</span>
                   <span className="text-amber-400 font-bold">{confirmedBooking.ticketCount} Entry Pass(es)</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">Total Paid</span>
+                  <span className="text-white/40 block text-[9px]">Paid</span>
                   <span className="text-emerald-400 font-bold">₹{confirmedBooking.totalAmount.toLocaleString('en-IN')}</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">Transaction Ref</span>
-                  <span className="text-white/80 font-mono text-[11px]">{confirmedBooking.transactionId}</span>
+                  <span className="text-white/40 block text-[9px]">Transaction Ref</span>
+                  <span className="text-white/80 font-mono text-[10px]">{confirmedBooking.transactionId}</span>
                 </div>
               </div>
-
-              {/* Pass Benefits List */}
-              {confirmedBooking.benefits && confirmedBooking.benefits.length > 0 && (
-                <div className="border-t border-white/10 pt-3 space-y-1.5">
-                  <span className="text-[10px] text-amber-400 uppercase font-bold tracking-wider block">Included Pass Perks:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {confirmedBooking.benefits.map((b, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[11px] text-white/80">
-                        ✓ {b}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Action Buttons: PDF Download, Print & Share */}
-            <div className="grid grid-cols-3 gap-2 pt-2">
+            <div className="grid grid-cols-3 gap-1.5 pt-1">
               <button
                 onClick={handleDownloadPDF}
-                className="py-3 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20 cursor-pointer"
+                className="py-2.5 px-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center justify-center gap-1 shadow-md shadow-amber-500/20 cursor-pointer"
               >
-                <Download className="w-4 h-4" /> Download PDF
+                <Download className="w-3.5 h-3.5" /> PDF
               </button>
 
               <button
                 onClick={handlePrintPass}
-                className="py-3 px-3 rounded-xl glass-panel text-white hover:bg-white/10 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-2.5 px-2 rounded-xl glass-panel text-white hover:bg-white/10 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
               >
-                <Printer className="w-4 h-4 text-purple-400" /> Print Ticket
+                <Printer className="w-3.5 h-3.5 text-purple-400" /> Print
               </button>
 
               <button
                 onClick={handleSharePass}
-                className="py-3 px-3 rounded-xl glass-panel text-white hover:bg-white/10 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-2.5 px-2 rounded-xl glass-panel text-white hover:bg-white/10 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
               >
-                <Share2 className="w-4 h-4 text-emerald-400" /> Share Pass
+                <Share2 className="w-3.5 h-3.5 text-emerald-400" /> Share
               </button>
             </div>
 
