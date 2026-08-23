@@ -2588,6 +2588,77 @@ app.get(['/api/theatres/halls', '/api/admin/theatres/halls'], async (req, res) =
   }
 });
 
+// Admin Endpoint: Delete Date-Wise Hall Slot from MongoDB Atlas
+app.delete(['/api/admin/theatres/:id/halls/:hallId', '/api/theatres/:id/halls/:hallId'], async (req, res) => {
+  const { id, hallId } = req.params;
+  const targetDateStr = req.query.date || req.body?.date;
+
+  try {
+    let updatedTheatre = null;
+
+    if (mongoose.connection.readyState === 1) {
+      let thDoc = await Theatre.findOne({
+        $or: [
+          { id },
+          { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }
+        ]
+      });
+
+      if (thDoc) {
+        let currentHBD = thDoc.hallSlotsByDate || {};
+        if (currentHBD instanceof Map) {
+          currentHBD = Object.fromEntries(currentHBD);
+        } else {
+          currentHBD = { ...currentHBD };
+        }
+
+        if (targetDateStr && Array.isArray(currentHBD[targetDateStr])) {
+          currentHBD[targetDateStr] = currentHBD[targetDateStr].filter(h => h.id !== hallId);
+        } else {
+          Object.keys(currentHBD).forEach(dKey => {
+            if (Array.isArray(currentHBD[dKey])) {
+              currentHBD[dKey] = currentHBD[dKey].filter(h => h.id !== hallId);
+            }
+          });
+        }
+
+        thDoc.hallSlotsByDate = currentHBD;
+        thDoc.dateHalls = currentHBD;
+        thDoc.markModified('hallSlotsByDate');
+        thDoc.markModified('dateHalls');
+        updatedTheatre = await thDoc.save();
+      }
+    }
+
+    const idx = theatres.findIndex(t => t.id === id || t._id === id);
+    if (idx !== -1) {
+      let currentHBD = { ...(theatres[idx].hallSlotsByDate || {}) };
+      if (targetDateStr && Array.isArray(currentHBD[targetDateStr])) {
+        currentHBD[targetDateStr] = currentHBD[targetDateStr].filter(h => h.id !== hallId);
+      } else {
+        Object.keys(currentHBD).forEach(dKey => {
+          if (Array.isArray(currentHBD[dKey])) {
+            currentHBD[dKey] = currentHBD[dKey].filter(h => h.id !== hallId);
+          }
+        });
+      }
+      theatres[idx].hallSlotsByDate = currentHBD;
+      theatres[idx].dateHalls = currentHBD;
+      if (!updatedTheatre) updatedTheatre = theatres[idx];
+    }
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('THEATRE_UPDATED', updatedTheatre);
+    }
+    broadcastToAllClients('THEATRE_UPDATED', updatedTheatre);
+
+    return res.status(200).json({ success: true, message: 'Hall slot deleted', theatre: updatedTheatre });
+  } catch (err) {
+    console.error('❌ Error deleting hall slot:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Admin Update Theatre
 app.put(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) => {
   const { id } = req.params;

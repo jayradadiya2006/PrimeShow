@@ -1711,6 +1711,37 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
+  const handleDeleteHallSlot = async (theatreId, hallId, dateStr) => {
+    try {
+      const res = await API.delete(`/theatres/${theatreId}/halls/${hallId}?date=${dateStr || ''}`);
+      const updatedTheatre = res?.data?.theatre;
+      if (updatedTheatre) {
+        setTheatresList(prev => prev.map(t => (t.id === theatreId || t._id === theatreId) ? updatedTheatre : t));
+      } else {
+        setTheatresList(prev => prev.map(t => {
+          if (t.id === theatreId || t._id === theatreId) {
+            const currentHBD = { ...(t.hallSlotsByDate || {}) };
+            if (dateStr && Array.isArray(currentHBD[dateStr])) {
+              currentHBD[dateStr] = currentHBD[dateStr].filter(h => h.id !== hallId);
+            } else {
+              Object.keys(currentHBD).forEach(dKey => {
+                if (Array.isArray(currentHBD[dKey])) {
+                  currentHBD[dKey] = currentHBD[dKey].filter(h => h.id !== hallId);
+                }
+              });
+            }
+            return { ...t, hallSlotsByDate: currentHBD, dateHalls: currentHBD };
+          }
+          return t;
+        }));
+      }
+      setActionSuccess('Hall slot deleted from MongoDB Atlas!');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      console.warn('⚠️ Error deleting hall slot:', err.message);
+    }
+  };
+
   const handleAddShowSlot = async (e) => {
     e.preventDefault();
     try {
@@ -4950,26 +4981,74 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </div>
                   </div>
 
-                  {/* Showtimes List */}
-                  <div>
-                    <h5 className="text-xs font-bold text-white/70 mb-2">Scheduled Showtimes:</h5>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                      {(t.shows || []).map(s => (
-                        <div key={s.id} className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
-                          <div>
-                            <div className="font-bold text-amber-300">{s.movieTitle}</div>
-                            <div className="text-[10px] text-white/50">{s.format} • {s.time} (₹{s.price})</div>
-                          </div>
-                          <button
-                            onClick={() => handleDeleteShowSlot(t.id, s.id)}
-                            className="p-1 rounded bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                  {/* Scheduled Showtimes & Date-Wise Configured Halls */}
+                  {(() => {
+                    const venueHallsList = [];
+                    const hallMap = t.hallSlotsByDate || t.dateHalls || {};
+                    if (hallMap && typeof hallMap === 'object') {
+                      Object.entries(hallMap).forEach(([dateKey, hallsArr]) => {
+                        if (Array.isArray(hallsArr)) {
+                          hallsArr.forEach(h => {
+                            venueHallsList.push({
+                              id: h.id,
+                              title: h.movieTitle || h.hallName || 'Hall Slot',
+                              hallName: h.hallName,
+                              format: h.format,
+                              time: h.time,
+                              price: h.price,
+                              date: dateKey,
+                              isHall: true
+                            });
+                          });
+                        }
+                      });
+                    }
+                    if (Array.isArray(t.shows)) {
+                      t.shows.forEach(s => {
+                        venueHallsList.push({
+                          id: s.id,
+                          title: s.movieTitle || s.screenName || 'Show Slot',
+                          hallName: s.screenName,
+                          format: s.format,
+                          time: s.time,
+                          price: s.price,
+                          date: s.date || 'Default Date',
+                          isHall: false
+                        });
+                      });
+                    }
+
+                    return (
+                      <div>
+                        <h5 className="text-xs font-bold text-white/70 mb-2 flex items-center justify-between">
+                          <span>Scheduled Showtimes & Date-Wise Halls ({venueHallsList.length}):</span>
+                        </h5>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                          {venueHallsList.map((slot, idx) => (
+                            <div key={slot.id || idx} className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs hover:border-cyan-400/40 transition-all">
+                              <div>
+                                <div className="font-bold text-amber-300">{slot.title}</div>
+                                <div className="text-[10px] text-cyan-300 font-semibold">{slot.hallName ? `${slot.hallName} • ` : ''}{slot.format} • {slot.time}</div>
+                                <div className="text-[9px] text-white/50">📅 Date: {slot.date} • ₹{slot.price}</div>
+                              </div>
+                              <button
+                                onClick={() => slot.isHall ? handleDeleteHallSlot(t.id, slot.id, slot.date) : handleDeleteShowSlot(t.id, slot.id)}
+                                className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white transition-all cursor-pointer"
+                                title="Delete Slot"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                          {venueHallsList.length === 0 && (
+                            <div className="col-span-full p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/40 italic text-center">
+                              No scheduled showtimes or date-wise halls configured for this venue yet.
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
