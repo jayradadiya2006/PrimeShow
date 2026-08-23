@@ -17,6 +17,16 @@ const { connectDB, movies, theatres, events, eventBookings, plays, playBookings,
 const { User, UserNotification, UserActivityLog, Movie, Theatre, Show, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
 const { generateGeminiSupportReply } = require('./geminiAssistant');
 
+// Safe MongoDB ID filter helper preventing CastError: Cast to ObjectId failed for value "null"
+function buildIdFilter(idVal) {
+  if (!idVal) return { id: 'non_existent_id' };
+  const str = String(idVal).trim();
+  if (mongoose.Types.ObjectId.isValid(str) && str.length === 24) {
+    return { $or: [{ id: str }, { _id: str }] };
+  }
+  return { id: str };
+}
+
 const app = express();
 const server = http.createServer(app);
 
@@ -1825,7 +1835,7 @@ app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   try {
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
-      const dbMovie = await Movie.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      const dbMovie = await Movie.findOne(buildIdFilter(id)).lean();
       if (dbMovie) return res.json(dbMovie);
     }
   } catch (err) {}
@@ -1842,7 +1852,7 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
     const mongoose = require('mongoose');
     let movieDoc = null;
     if (mongoose.connection.readyState === 1) {
-      movieDoc = await Movie.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      movieDoc = await Movie.findOne(buildIdFilter(id)).lean();
     }
     if (!movieDoc) {
       movieDoc = movies.find(m => m.id === id || m._id === id);
@@ -2023,12 +2033,7 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
     };
 
     if (mongoose.connection.readyState === 1) {
-      let movieDoc = await Movie.findOne({
-        $or: [
-          { id: movieId },
-          { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }
-        ]
-      });
+      let movieDoc = await Movie.findOne(buildIdFilter(movieId));
 
       if (movieDoc) {
         if (!movieDoc.cast) movieDoc.cast = [];
@@ -2094,12 +2099,7 @@ app.delete(['/api/movies/:movieId/cast/:castId', '/api/admin/movies/:movieId/cas
     let updatedMovie = null;
 
     if (mongoose.connection.readyState === 1) {
-      let movieDoc = await Movie.findOne({
-        $or: [
-          { id: movieId },
-          { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }
-        ]
-      });
+      let movieDoc = await Movie.findOne(buildIdFilter(movieId));
 
       if (movieDoc && movieDoc.cast) {
         movieDoc.cast = movieDoc.cast.filter(c => c.id !== castId && c._id?.toString() !== castId);
@@ -2148,7 +2148,7 @@ app.post(['/api/admin/movies/add-date', '/api/movies/add-date'], async (req, res
 
       // Ensure movie document exists in Atlas using upsert and $addToSet
       updatedMovie = await Movie.findOneAndUpdate(
-        { $or: [{ id: movieId }, { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }] },
+        buildIdFilter(movieId),
         {
           $addToSet: { showDates: dateStr },
           $setOnInsert: {
@@ -2220,12 +2220,7 @@ app.post(['/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/
     if (mongoose.connection.readyState === 1) {
       let memMovie = movies.find(m => m.id === movieId || m._id === movieId) || { id: movieId, title: 'Untitled Movie' };
 
-      let movieDoc = await Movie.findOne({
-        $or: [
-          { id: movieId },
-          { _id: mongoose.Types.ObjectId.isValid(movieId) ? movieId : null }
-        ]
-      });
+      let movieDoc = await Movie.findOne(buildIdFilter(movieId));
 
       if (!movieDoc) {
         movieDoc = new Movie({
@@ -2384,7 +2379,7 @@ app.get(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) => {
   const { id } = req.params;
   try {
     if (mongoose.connection.readyState === 1) {
-      const dbTheatre = await Theatre.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      const dbTheatre = await Theatre.findOne(buildIdFilter(id)).lean();
       if (dbTheatre) return res.json(dbTheatre);
     }
   } catch (err) {}
@@ -2471,12 +2466,7 @@ app.post(['/api/admin/theatres/pricing-by-date', '/api/theatres/pricing-by-date'
     let updatedTheatre = null;
 
     if (mongoose.connection.readyState === 1) {
-      let thDoc = await Theatre.findOne({
-        $or: [
-          { id: targetTheatreId },
-          { _id: mongoose.Types.ObjectId.isValid(targetTheatreId) ? targetTheatreId : null }
-        ]
-      });
+      let thDoc = await Theatre.findOne(buildIdFilter(targetTheatreId));
 
       if (thDoc) {
         let currentPBD = thDoc.pricingByDate || {};
@@ -2550,12 +2540,7 @@ app.post(['/api/admin/theatres/hall-slots', '/api/theatres/hall-slots'], async (
     let updatedTheatre = null;
 
     if (mongoose.connection.readyState === 1) {
-      let thDoc = await Theatre.findOne({
-        $or: [
-          { id: targetTheatreId },
-          { _id: mongoose.Types.ObjectId.isValid(targetTheatreId) ? targetTheatreId : null }
-        ]
-      });
+      let thDoc = await Theatre.findOne(buildIdFilter(targetTheatreId));
 
       if (thDoc) {
         let currentHBD = thDoc.hallSlotsByDate || {};
@@ -2626,12 +2611,7 @@ app.get(['/api/theatres/halls', '/api/admin/theatres/halls'], async (req, res) =
     let targetTheatre = null;
 
     if (mongoose.connection.readyState === 1) {
-      targetTheatre = await Theatre.findOne({
-        $or: [
-          { id: theatreId },
-          { _id: mongoose.Types.ObjectId.isValid(theatreId) ? theatreId : null }
-        ]
-      }).lean();
+      targetTheatre = await Theatre.findOne(buildIdFilter(theatreId)).lean();
     }
 
     if (!targetTheatre) {
@@ -2667,12 +2647,7 @@ app.delete(['/api/admin/theatres/:id/halls/:hallId', '/api/theatres/:id/halls/:h
     let updatedTheatre = null;
 
     if (mongoose.connection.readyState === 1) {
-      let thDoc = await Theatre.findOne({
-        $or: [
-          { id },
-          { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }
-        ]
-      });
+      let thDoc = await Theatre.findOne(buildIdFilter(id));
 
       if (thDoc) {
         let currentHBD = thDoc.hallSlotsByDate || {};
@@ -2808,12 +2783,7 @@ app.post(['/api/admin/theatres/shows', '/api/theatres/shows'], async (req, res) 
     let updatedTheatre = null;
 
     if (mongoose.connection.readyState === 1) {
-      let thDoc = await Theatre.findOne({
-        $or: [
-          { id: targetTheatreId },
-          { _id: mongoose.Types.ObjectId.isValid(targetTheatreId) ? targetTheatreId : null }
-        ]
-      });
+      let thDoc = await Theatre.findOne(buildIdFilter(targetTheatreId));
 
       if (thDoc) {
         if (!thDoc.shows) thDoc.shows = [];
@@ -3224,7 +3194,7 @@ app.get(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
   const { id } = req.params;
   try {
     if (mongoose.connection.readyState === 1) {
-      const dbEvent = await Event.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      const dbEvent = await Event.findOne(buildIdFilter(id)).lean();
       if (dbEvent) return res.json(dbEvent);
     }
   } catch (err) {}
@@ -3332,7 +3302,7 @@ app.put(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
       dbUpdated = await Event.findOneAndUpdate(
-        { $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] },
+        buildIdFilter(id),
         { $set: updateData },
         { new: true, upsert: true, setDefaultsOnInsert: true }
       ).lean();
@@ -3364,7 +3334,7 @@ app.delete(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
 
   try {
     if (mongoose.connection.readyState === 1) {
-      await Event.deleteOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] });
+      await Event.deleteOne(buildIdFilter(id));
     }
   } catch (err) {
     console.warn('⚠️ Error deleting event from MongoDB Atlas:', err.message);
@@ -3481,7 +3451,7 @@ app.get(['/api/plays/:id', '/api/admin/plays/:id'], async (req, res) => {
   const { id } = req.params;
   try {
     if (mongoose.connection.readyState === 1) {
-      const dbPlay = await Play.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      const dbPlay = await Play.findOne(buildIdFilter(id)).lean();
       if (dbPlay) return res.json(dbPlay);
     }
   } catch (err) {}
@@ -3599,12 +3569,7 @@ app.post(['/api/bookings/playlist', '/api/playlist/book', '/api/plays/book', '/a
     let targetPlay = null;
     if (mongoose.connection.readyState === 1) {
       try {
-        targetPlay = await Play.findOne({
-          $or: [
-            { id: targetPlayId },
-            { _id: mongoose.Types.ObjectId.isValid(targetPlayId) ? targetPlayId : null }
-          ]
-        }).lean();
+        targetPlay = await Play.findOne(buildIdFilter(targetPlayId)).lean();
       } catch (err) {}
     }
     if (!targetPlay) {
@@ -3925,7 +3890,7 @@ app.get(['/api/activities/:id', '/api/admin/activities/:id'], async (req, res) =
   const { id } = req.params;
   try {
     if (mongoose.connection.readyState === 1) {
-      const dbActivity = await Activity.findOne({ $or: [{ id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] }).lean();
+      const dbActivity = await Activity.findOne(buildIdFilter(id)).lean();
       if (dbActivity) return res.json(dbActivity);
     }
   } catch (err) {}
@@ -4046,12 +4011,7 @@ app.post(['/api/bookings/activity', '/api/activities/book', '/api/activities/boo
     let targetActivity = null;
     if (mongoose.connection.readyState === 1) {
       try {
-        targetActivity = await Activity.findOne({
-          $or: [
-            { id: targetActivityId },
-            { _id: mongoose.Types.ObjectId.isValid(targetActivityId) ? targetActivityId : null }
-          ]
-        }).lean();
+        targetActivity = await Activity.findOne(buildIdFilter(targetActivityId)).lean();
       } catch (err) {}
     }
     if (!targetActivity) {
