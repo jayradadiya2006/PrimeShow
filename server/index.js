@@ -463,10 +463,23 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'primeshow_ultra_secret_key_2026';
 
 // STEP 1: Global CORS Middleware (Allows ALL origins including Vercel production & preview builds with credentials)
+const allowedOrigins = [
+  'https://prime-show-tau.vercel.app',
+  'https://primeshow-tau.vercel.app',
+  'https://primeshow.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173'
+];
+
 app.use(cors({
   origin: function (origin, callback) {
-    // Dynamic origin reflection allows credentials: true without wildcard CORS browser rejection
-    callback(null, origin || '*');
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-Id', 'Accept'],
@@ -476,14 +489,12 @@ app.use(cors({
 app.options('*', cors());
 
 app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
+  const origin = req.headers.origin || 'https://prime-show-tau.vercel.app';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-Id, Accept');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

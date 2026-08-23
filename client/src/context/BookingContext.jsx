@@ -1192,6 +1192,7 @@ export const BookingProvider = ({ children }) => {
       updateFeatureStrip,
       deleteFeatureStrip,
       theatresList,
+      setTheatresList,
       fetchTheatres,
       addTheatreToGlobalStore,
       updateTheatreInGlobalStore,

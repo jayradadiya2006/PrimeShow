@@ -23,7 +23,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     screenLayoutsMap, getScreenLayout, updateScreenRowsConfig, updateRowPriceInScreenLayout, toggleBlockSeatForScreen, setManualSeatStatusForScreen, addRowToScreenLayout, deleteRowFromScreenLayout, showBookedSeatsMap,
     heroSlidesList, addHeroSlide, updateHeroSlide, deleteHeroSlide,
     featureStripsList, addFeatureStrip, updateFeatureStrip, deleteFeatureStrip,
-    theatresList, fetchTheatres, addTheatreToGlobalStore, updateTheatreInGlobalStore, deleteTheatreFromGlobalStore,
+    theatresList, setTheatresList, fetchTheatres, addTheatreToGlobalStore, updateTheatreInGlobalStore, deleteTheatreFromGlobalStore,
     upcomingMoviesList, addUpcomingMovie, updateUpcomingMovie, deleteUpcomingMovie
   } = useBooking();
   const [activeTab, setActiveTab] = useState('analytics');
