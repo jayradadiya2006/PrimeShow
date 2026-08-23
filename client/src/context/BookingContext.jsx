@@ -381,6 +381,28 @@ export const BookingProvider = ({ children }) => {
     localStorage.setItem('primeshow_screen_layouts_v1', JSON.stringify(screenLayoutsMap));
   }, [screenLayoutsMap]);
 
+  const fetchScreenLayoutsFromBackend = async () => {
+    try {
+      const res = await API.get('/screen-layouts');
+      if (res.data && typeof res.data === 'object' && Object.keys(res.data).length > 0) {
+        setScreenLayoutsMap(prev => ({ ...prev, ...res.data }));
+      }
+    } catch (err) {}
+  };
+
+  const saveScreenLayoutToBackend = async (screenId, layoutObj) => {
+    try {
+      await API.post('/screen-layouts/save', {
+        screenId,
+        rows: layoutObj.rows || [],
+        blockedSeats: layoutObj.blockedSeats || [],
+        customStatuses: layoutObj.customStatuses || {}
+      });
+    } catch (err) {
+      console.warn('⚠️ Error persisting screen layout to MongoDB Atlas:', err.message);
+    }
+  };
+
   const getScreenLayout = (screenId = 'sc_1') => {
     return screenLayoutsMap[screenId] || {
       screenId,
@@ -391,17 +413,44 @@ export const BookingProvider = ({ children }) => {
     };
   };
 
-  const updateScreenRowsConfig = (screenId = 'sc_1', updatedRows) => {
+  const updateRowPriceInScreenLayout = async (screenId = 'sc_1', rowChar, newPrice) => {
+    const priceNum = Number(newPrice);
+    let updatedLayout = null;
+
     setScreenLayoutsMap(prev => {
       const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const existingRows = current.rows || [];
+      const updatedRows = existingRows.map(r => r.row === rowChar ? { ...r, price: priceNum } : r);
+      updatedLayout = { ...current, rows: updatedRows };
       return {
         ...prev,
-        [screenId]: { ...current, rows: updatedRows }
+        [screenId]: updatedLayout
       };
     });
+
+    if (updatedLayout) {
+      saveScreenLayoutToBackend(screenId, updatedLayout);
+    }
+  };
+
+  const updateScreenRowsConfig = (screenId = 'sc_1', updatedRows) => {
+    let updatedLayout = null;
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      updatedLayout = { ...current, rows: updatedRows };
+      return {
+        ...prev,
+        [screenId]: updatedLayout
+      };
+    });
+
+    if (updatedLayout) {
+      saveScreenLayoutToBackend(screenId, updatedLayout);
+    }
   };
 
   const toggleBlockSeatForScreen = (screenId = 'sc_1', seatId) => {
+    let updatedLayout = null;
     setScreenLayoutsMap(prev => {
       const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
       const blocked = current.blockedSeats || [];
@@ -417,14 +466,20 @@ export const BookingProvider = ({ children }) => {
         delete custom[seatId];
       }
 
+      updatedLayout = { ...current, blockedSeats: updatedBlocked, customStatuses: custom };
       return {
         ...prev,
-        [screenId]: { ...current, blockedSeats: updatedBlocked, customStatuses: custom }
+        [screenId]: updatedLayout
       };
     });
+
+    if (updatedLayout) {
+      saveScreenLayoutToBackend(screenId, updatedLayout);
+    }
   };
 
   const setManualSeatStatusForScreen = (screenId = 'sc_1', seatId, newStatus) => {
+    let updatedLayout = null;
     setScreenLayoutsMap(prev => {
       const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
       const custom = { ...(current.customStatuses || {}) };
@@ -440,11 +495,16 @@ export const BookingProvider = ({ children }) => {
         custom[seatId] = newStatus;
       }
 
+      updatedLayout = { ...current, blockedSeats: blocked, customStatuses: custom };
       return {
         ...prev,
-        [screenId]: { ...current, blockedSeats: blocked, customStatuses: custom }
+        [screenId]: updatedLayout
       };
     });
+
+    if (updatedLayout) {
+      saveScreenLayoutToBackend(screenId, updatedLayout);
+    }
   };
 
   const addRowToScreenLayout = (screenId = 'sc_1', rowChar, tierName, price, seatsCount) => {
@@ -1061,6 +1121,8 @@ export const BookingProvider = ({ children }) => {
       screenLayoutsMap,
       getScreenLayout,
       updateScreenRowsConfig,
+      updateRowPriceInScreenLayout,
+      fetchScreenLayoutsFromBackend,
       toggleBlockSeatForScreen,
       setManualSeatStatusForScreen,
       addRowToScreenLayout,

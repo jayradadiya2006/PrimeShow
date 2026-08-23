@@ -2903,6 +2903,148 @@ app.post('/api/theatres/:theatreId/screens/:screenId/toggle-seat-block', async (
 });
 
 // -------------------------------------------------------------
+// REAL-TIME SEAT & SCREEN LAYOUT MANAGEMENT (MongoDB Atlas)
+// -------------------------------------------------------------
+
+const inMemoryScreenLayouts = {};
+
+app.get('/api/screen-layouts', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const docs = await EditorLayout.find({ section: 'screen_layout' }).lean();
+      if (docs && docs.length > 0) {
+        const layoutsMap = {};
+        docs.forEach(doc => {
+          if (doc.id) {
+            layoutsMap[doc.id] = doc.elements?.[0] || doc.metadata || doc;
+          }
+        });
+        return res.json(layoutsMap);
+      }
+    }
+  } catch (err) {}
+  res.json(inMemoryScreenLayouts);
+});
+
+app.post('/api/screen-layouts/save', async (req, res) => {
+  try {
+    const { screenId, rows, blockedSeats, customStatuses } = req.body;
+    if (!screenId) return res.status(400).json({ error: 'screenId is required' });
+
+    const layoutData = {
+      screenId,
+      rows: rows || [],
+      blockedSeats: blockedSeats || [],
+      customStatuses: customStatuses || {},
+      updatedAt: new Date().toISOString()
+    };
+
+    inMemoryScreenLayouts[screenId] = layoutData;
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await EditorLayout.findOneAndUpdate(
+          { id: screenId },
+          {
+            id: screenId,
+            section: 'screen_layout',
+            elements: [layoutData],
+            enabled: true,
+            updatedBy: 'Admin Seat Manager'
+          },
+          { upsert: true, new: true }
+        );
+
+        // Also persist blocked seats in BlockedSeat collection
+        await BlockedSeat.findOneAndUpdate(
+          { key: screenId },
+          { key: screenId, theatreId: screenId.split('_')[0] || 'th_1', screenId, blockedSeats: blockedSeats || [] },
+          { upsert: true, new: true }
+        );
+      } catch (dbErr) {
+        console.warn('⚠️ Error updating screen layout in MongoDB Atlas:', dbErr.message);
+      }
+    }
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('SCREEN_LAYOUT_UPDATED', { screenId, layout: layoutData });
+      req.app.get('socketio').emit('SEAT_PRICES_UPDATED', { screenId, rows });
+      req.app.get('socketio').emit('SEATS_BLOCKED_UPDATED', { screenId, blockedSeats });
+    }
+    broadcastToAllClients('SCREEN_LAYOUT_UPDATED', { screenId, layout: layoutData });
+    broadcastToAllClients('SEAT_PRICES_UPDATED', { screenId, rows });
+    broadcastToAllClients('SEATS_BLOCKED_UPDATED', { screenId, blockedSeats });
+
+    return res.json({ success: true, screenId, layout: layoutData });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Live Booking Seat Tracking by City, Movie, Date, Theatre, Show Time
+app.get(['/api/bookings/live-seats', '/api/admin/bookings/live-seats'], async (req, res) => {
+  try {
+    const { city, movieId, date, theatreId, showTime, showId } = req.query;
+
+    let allBookingsList = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const query = {};
+        if (showId) query.showId = showId;
+        if (movieId) query.movieId = movieId;
+        if (city && city !== 'All') query.city = new RegExp(city, 'i');
+        if (date) query.$or = [{ date }, { slotDate: date }];
+
+        allBookingsList = await Booking.find(query).sort({ createdAt: -1 }).lean();
+      } catch (e) {}
+    }
+
+    if (!allBookingsList || allBookingsList.length === 0) {
+      allBookingsList = bookings || [];
+    }
+
+    const matchedBookings = allBookingsList.filter(b => {
+      if (showId && b.showId === showId) return true;
+
+      let match = true;
+      if (movieId && b.movieId && b.movieId !== movieId) match = false;
+      if (city && city !== 'All' && b.city && b.city.toLowerCase() !== city.toLowerCase()) match = false;
+      if (date && (b.date || b.slotDate) && b.date !== date && b.slotDate !== date) match = false;
+      if (theatreId && b.theatreId && b.theatreId !== theatreId) match = false;
+      if (showTime && (b.time || b.showTime || b.slotTime) && b.time !== showTime && b.showTime !== showTime && b.slotTime !== showTime) match = false;
+
+      return match;
+    });
+
+    const bookedSeatsMap = {};
+    matchedBookings.forEach(b => {
+      const seatsArr = b.seats || b.seatsBooked || [];
+      seatsArr.forEach(s => {
+        bookedSeatsMap[s] = {
+          seatId: s,
+          userName: b.userName || b.userEmail || 'Customer',
+          userEmail: b.userEmail || '',
+          bookingId: b.id,
+          totalAmount: b.totalAmount || b.totalPrice,
+          bookedAt: b.createdAt
+        };
+      });
+    });
+
+    return res.json({
+      success: true,
+      filters: { city, movieId, date, theatreId, showTime, showId },
+      totalBookingsCount: matchedBookings.length,
+      bookedSeatsCount: Object.keys(bookedSeatsMap).length,
+      bookedSeats: bookedSeatsMap,
+      bookedSeatsList: Object.keys(bookedSeatsMap)
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
 // PRIVATE THEATRE BOOKING & DOUBLE-BOOKING PREVENTION ENDPOINTS
 // -------------------------------------------------------------
 

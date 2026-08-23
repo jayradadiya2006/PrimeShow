@@ -20,7 +20,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const { 
     moviesList, addMovieToGlobalStore, updateMovieInGlobalStore, deleteMovieFromGlobalStore,
     addShowDateToMovie, deleteShowDateFromMovie, addShowSlotToMovieTheatre, deleteShowSlotFromMovieTheatre, deleteTheatreFromMovieDate,
-    screenLayoutsMap, getScreenLayout, updateScreenRowsConfig, toggleBlockSeatForScreen, setManualSeatStatusForScreen, addRowToScreenLayout, deleteRowFromScreenLayout, showBookedSeatsMap,
+    screenLayoutsMap, getScreenLayout, updateScreenRowsConfig, updateRowPriceInScreenLayout, toggleBlockSeatForScreen, setManualSeatStatusForScreen, addRowToScreenLayout, deleteRowFromScreenLayout, showBookedSeatsMap,
     heroSlidesList, addHeroSlide, updateHeroSlide, deleteHeroSlide,
     featureStripsList, addFeatureStrip, updateFeatureStrip, deleteFeatureStrip,
     upcomingMoviesList, addUpcomingMovie, updateUpcomingMovie, deleteUpcomingMovie
@@ -4030,44 +4030,25 @@ export const AdminDashboard = ({ onReturnHome }) => {
         )}
 
         {/* Tab 3: Cinema & Screen Specific Seat Operations */}
+        {/* Tab 3: Real-Time Cinema & Seat Management (Dynamic Pricing, Admin Blocking & Live Tracking) */}
         {activeTab === 'seats' && (
           <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
-                <h1 className="text-3xl font-bold font-sans text-white">Authentic Show & Seat Management</h1>
-                <p className="text-xs text-cyan-300">Live API connected. Follow Step 1 ➔ Step 2 ➔ Step 3 ➔ Step 4 to manage authentic show layouts.</p>
+                <h1 className="text-3xl font-bold font-sans text-white">Real-Time Seat Management & Live Tracking</h1>
+                <p className="text-xs text-cyan-300">Synchronized with MongoDB Atlas. Edit prices, block seats & monitor live bookings per City, Movie, Date, Theatre & Show Time.</p>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold shrink-0">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Live API Connected</span>
+                <span>Live MongoDB Atlas Synced</span>
               </div>
             </div>
 
-            {/* Step Progress Stepper Bar */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 text-center text-xs">
-              <div className={`p-3 rounded-2xl border transition-all ${selectedCity ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200' : 'bg-white/5 border-white/10 text-white/40'}`}>
-                <div className="text-[10px] uppercase font-bold text-cyan-400">Step 1</div>
-                <div className="font-bold truncate">🌆 City: {selectedCity || 'Surat'}</div>
-              </div>
-              <div className={`p-3 rounded-2xl border transition-all ${selectedTheatreId ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200' : 'bg-white/5 border-white/10 text-white/40'}`}>
-                <div className="text-[10px] uppercase font-bold text-cyan-400">Step 2</div>
-                <div className="font-bold truncate">🎭 {activeTheatreObj?.name ? activeTheatreObj.name.split(',')[0] : 'Select Cinema'}</div>
-              </div>
-              <div className={`p-3 rounded-2xl border transition-all ${selectedShowSlotId ? 'bg-amber-500/20 border-amber-400/50 text-amber-200' : 'bg-white/5 border-white/10 text-white/40'}`}>
-                <div className="text-[10px] uppercase font-bold text-amber-400">Step 3</div>
-                <div className="font-bold truncate">🎬 {activeShowSlotObj?.movieTitle || 'Select Show'}</div>
-              </div>
-              <div className="p-3 rounded-2xl border bg-emerald-500/20 border-emerald-400/50 text-emerald-200">
-                <div className="text-[10px] uppercase font-bold text-emerald-400">Step 4</div>
-                <div className="font-bold truncate">💺 Seat Layout & Controls</div>
-              </div>
-            </div>
-
-            {/* Cascading 3-Tier Dynamic Dropdowns Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Dropdown 1: Select City */}
+            {/* Cascading 5-Tier Controls Row: City -> Movie -> Date -> Theatre -> Show Time */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+              {/* Filter 1: Select City */}
               <div>
-                <label className="block text-xs font-bold text-cyan-300 mb-1">1. Select City (Live Backend) *</label>
+                <label className="block text-[11px] font-bold text-cyan-300 mb-1">1. City (18 Gujarat Cities) *</label>
                 <select
                   value={selectedCity || 'Surat'}
                   onChange={e => {
@@ -4084,7 +4065,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedShowSlotId(`${firstTh.id}_${firstSc}`);
                     }
                   }}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                  className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
                 >
                   {(availableCities || []).map(city => (
                     <option key={city} value={city}>{city}</option>
@@ -4092,9 +4073,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </select>
               </div>
 
-              {/* Dropdown 2: Select Theatre (Filtered by City) */}
+              {/* Filter 2: Select Theatre */}
               <div>
-                <label className="block text-xs font-bold text-cyan-300 mb-1">2. Select Cinema / Theatre *</label>
+                <label className="block text-[11px] font-bold text-cyan-300 mb-1">2. Cinema / Theatre *</label>
                 <select
                   value={selectedTheatreId || 'th_1'}
                   onChange={e => {
@@ -4107,7 +4088,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedShowSlotId(`${targetTh.id}_${firstSc}`);
                     }
                   }}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                  className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
                 >
                   {(theatresInSelectedCity || []).length > 0 ? (
                     (theatresInSelectedCity || []).map(t => (
@@ -4119,9 +4100,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </select>
               </div>
 
-              {/* Dropdown 3: Select Show Slot / Movie Instance */}
+              {/* Filter 3: Select Show Slot / Movie Instance */}
               <div>
-                <label className="block text-xs font-bold text-cyan-300 mb-1">3. Select Movie Show Slot *</label>
+                <label className="block text-[11px] font-bold text-amber-300 mb-1">3. Show Slot & Movie *</label>
                 <select
                   value={selectedShowSlotId || isolatedLayoutKey}
                   onChange={e => {
@@ -4132,7 +4113,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedScreenId(matchedSlot.screenId || 'sc_1');
                     }
                   }}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-amber-300 bg-black font-bold"
+                  className="w-full p-2.5 rounded-xl glass-input text-xs text-amber-300 bg-black font-bold"
                 >
                   {(activeShowSlots || []).map(slot => (
                     <option key={slot.id} value={slot.id}>
@@ -4141,21 +4122,55 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   ))}
                 </select>
               </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs text-cyan-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              {/* Filter 4: Target Date */}
               <div>
-                📍 Managing Layout for: <strong className="text-white">{selectedCity}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Theatre'}</strong> → <strong className="text-amber-400">{activeShowSlotObj?.label || '07:30 PM Show'}</strong>
+                <label className="block text-[11px] font-bold text-emerald-300 mb-1">4. Show Date *</label>
+                <input
+                  type="date"
+                  value={selectedSchedDate || new Date().toISOString().slice(0, 10)}
+                  onChange={e => setSelectedSchedDate(e.target.value)}
+                  className="w-full p-2.5 rounded-xl glass-input text-xs text-emerald-200 bg-black font-bold"
+                />
               </div>
-              <div className="flex items-center gap-2 text-[11px]">
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-white/10 border border-white/20 inline-block"></span> Available</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-rose-500/30 border border-rose-500 inline-block"></span> Blocked 🔒</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-white/5 text-white/30 inline-block text-center">✕</span> Booked</span>
+
+              {/* Filter 5: Quick Refresh */}
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (fetchScreenLayoutsFromBackend) fetchScreenLayoutsFromBackend();
+                    setActionSuccess('Refreshed seat layout & live booked status from MongoDB Atlas!');
+                    setTimeout(() => setActionSuccess(''), 3000);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Sync Real-Time</span>
+                </button>
               </div>
             </div>
 
-            {/* Interactive Visual Layout Grid */}
-            <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-4">
+            {/* Live Filter Indicator Bar */}
+            <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs text-cyan-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+              <div>
+                📍 Live Tracking Filter: <strong className="text-white">{selectedCity}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Theatre'}</strong> → <strong className="text-amber-400">{activeShowSlotObj?.label || 'Show Slot'}</strong> → <strong className="text-emerald-300">{selectedSchedDate}</strong>
+              </div>
+              <div className="flex items-center gap-3 text-xs flex-wrap">
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Booked ({Object.keys(liveBookedSeatsMap).length})
+                </span>
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-400/40 text-rose-300 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Admin Blocked 🔒 ({(currentLayout?.blockedSeats || []).length})
+                </span>
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 text-white/80 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-white/40"></span> Available
+                </span>
+              </div>
+            </div>
+
+            {/* Interactive Visual Layout Grid & Seat Price Editor */}
+            <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-5">
               <div className="w-full max-w-xl mx-auto text-center shrink-0">
                 <div className="screen-curve mb-2"></div>
                 <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
@@ -4163,73 +4178,118 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </span>
               </div>
 
-              <div className="w-full overflow-auto max-h-[55vh] sm:max-h-[62vh] p-2 sm:p-4 my-2 rounded-2xl bg-black/30 border border-white/10 flex flex-col items-center select-none">
-                <div className="min-w-max flex flex-col items-center justify-center space-y-3 sm:space-y-4 py-2 px-2">
-                  {(seatRowsList || []).map((tierObj) => (
-                    <div key={tierObj.row} className="flex flex-col items-center w-full">
-                      <div className="text-xs font-bold text-amber-400 mb-1.5 uppercase tracking-wider flex items-center gap-2 flex-wrap justify-center">
-                        <span>Row {tierObj.row}: {tierObj.tier}</span>
-                        <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">₹{tierObj.price}</span>
-                        <button
-                          type="button"
-                          onClick={() => deleteRowFromScreenLayout(isolatedLayoutKey, tierObj.row)}
-                          className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-1 cursor-pointer"
-                          title="Delete entire row"
-                        >
-                          [Delete]
-                        </button>
-                      </div>
+              <div className="w-full overflow-auto max-h-[60vh] sm:max-h-[68vh] p-3 sm:p-5 my-2 rounded-2xl bg-black/30 border border-white/10 flex flex-col items-center select-none">
+                <div className="min-w-max flex flex-col items-center justify-center space-y-5 py-2 px-2">
+                  {(seatRowsList || []).map((tierObj) => {
+                    const rowCurrentPrice = seatPriceInputs[tierObj.row] !== undefined ? seatPriceInputs[tierObj.row] : tierObj.price;
+                    return (
+                      <div key={tierObj.row} className="flex flex-col items-center w-full bg-white/5 p-3 rounded-2xl border border-white/10 space-y-2">
+                        
+                        {/* Seat Row Header with Inline 'Edit Seat Price' Input & Button */}
+                        <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between gap-3 flex-wrap w-full border-b border-white/10 pb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black">Row {tierObj.row}</span>
+                            <span className="text-white font-bold">{tierObj.tier}</span>
+                            <span className="text-white/40 font-normal">({tierObj.seatsCount} seats)</span>
+                          </div>
 
-                      <div className="flex items-center justify-center gap-2 sm:gap-3 w-full">
-                        <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
-
-                        <div className="flex items-center gap-1.5 sm:gap-2.5">
-                          {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
-                            const seatNum = idx + 1;
-                            const seatId = `${tierObj.row}${seatNum}`;
-                            const isBlocked = (currentLayout?.blockedSeats || []).includes(seatId);
-                            const customStat = currentLayout?.customStatuses?.[seatId];
-                            const isBooked = customStat === 'BOOKED';
-
-                            return (
-                              <button
-                                key={seatId}
-                                type="button"
-                                onClick={() => {
-                                  if (isBlocked) {
-                                    setManualSeatStatusForScreen(isolatedLayoutKey, seatId, 'AVAILABLE');
-                                  } else if (isBooked) {
-                                    setManualSeatStatusForScreen(isolatedLayoutKey, seatId, 'AVAILABLE');
-                                  } else {
-                                    handleToggleScopedSeatBlock(seatId);
-                                  }
-                                }}
-                                className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all flex items-center justify-center cursor-pointer shrink-0 ${
-                                  isBooked
-                                    ? 'bg-white/5 border border-white/5 text-white/30 cursor-not-allowed'
-                                    : isBlocked
-                                    ? 'bg-rose-500/30 border-2 border-rose-500 text-rose-300 shadow-lg shadow-rose-500/20'
-                                    : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/90 hover:text-white'
-                                }`}
-                                title={`Click to toggle status for ${seatId}`}
-                              >
-                                {isBooked ? '✕' : (isBlocked ? '🔒' : seatNum)}
-                              </button>
-                            );
-                          })}
+                          {/* Dynamic Inline Price Editor */}
+                          <div className="flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-xl border border-amber-400/40">
+                            <span className="text-[11px] text-amber-300 font-bold">Edit Ticket Price (₹):</span>
+                            <input
+                              type="number"
+                              min={50}
+                              max={5000}
+                              value={rowCurrentPrice}
+                              onChange={e => setSeatPriceInputs({ ...seatPriceInputs, [tierObj.row]: e.target.value })}
+                              className="w-20 p-1.5 rounded-lg bg-black text-amber-300 font-bold text-xs border border-white/20 text-center"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateRowPriceInScreenLayout(isolatedLayoutKey, tierObj.row, Number(rowCurrentPrice));
+                                setActionSuccess(`Updated Row ${tierObj.row} price to ₹${rowCurrentPrice} in MongoDB Atlas!`);
+                                setTimeout(() => setActionSuccess(''), 3000);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black text-[11px] font-extrabold cursor-pointer shadow-md shadow-amber-500/30"
+                            >
+                              Save Price
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteRowFromScreenLayout(isolatedLayoutKey, tierObj.row)}
+                              className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-1 cursor-pointer"
+                              title="Delete entire row"
+                            >
+                              [Delete]
+                            </button>
+                          </div>
                         </div>
 
-                        <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+                        {/* Interactive Seat Grid */}
+                        <div className="flex items-center justify-center gap-2 sm:gap-3 w-full pt-1">
+                          <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+
+                          <div className="flex items-center gap-1.5 sm:gap-2.5">
+                            {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
+                              const seatNum = idx + 1;
+                              const seatId = `${tierObj.row}${seatNum}`;
+                              const isBlocked = (currentLayout?.blockedSeats || []).includes(seatId);
+                              const customStat = currentLayout?.customStatuses?.[seatId];
+                              const liveBooking = liveBookedSeatsMap[seatId];
+                              const isBooked = !!liveBooking || customStat === 'BOOKED';
+
+                              return (
+                                <button
+                                  key={seatId}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isBooked) {
+                                      setActionSuccess(`Seat ${seatId} is booked by user (${liveBooking?.userName || 'Customer'})`);
+                                      setTimeout(() => setActionSuccess(''), 3000);
+                                    } else if (isBlocked || customStat === 'BLOCKED') {
+                                      setManualSeatStatusForScreen(isolatedLayoutKey, seatId, 'AVAILABLE');
+                                      setActionSuccess(`Unblocked seat ${seatId} for users!`);
+                                      setTimeout(() => setActionSuccess(''), 3000);
+                                    } else {
+                                      toggleBlockSeatForScreen(isolatedLayoutKey, seatId);
+                                      setActionSuccess(`Admin blocked seat ${seatId} (Saved to MongoDB Atlas)!`);
+                                      setTimeout(() => setActionSuccess(''), 3000);
+                                    }
+                                  }}
+                                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center cursor-pointer shrink-0 ${
+                                    isBooked
+                                      ? 'bg-emerald-500 text-black border-2 border-emerald-400 font-extrabold shadow-lg shadow-emerald-500/30'
+                                      : (isBlocked || customStat === 'BLOCKED')
+                                      ? 'bg-rose-500/30 border-2 border-rose-500 text-rose-300 font-extrabold shadow-lg shadow-rose-500/20'
+                                      : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/90 hover:text-white'
+                                  }`}
+                                  title={
+                                    isBooked
+                                      ? `🟩 User Booked: ${liveBooking?.userName || 'Customer'} (${liveBooking?.userEmail || ''}) - Ref: ${liveBooking?.bookingId || seatId}`
+                                      : (isBlocked || customStat === 'BLOCKED')
+                                      ? `🟥 Admin Blocked Seat: ${seatId} (Click to Unblock)`
+                                      : `⬜ Available Seat: ${seatId} (₹${rowCurrentPrice} - Click to Admin Block)`
+                                  }
+                                >
+                                  {isBooked ? '✓' : ((isBlocked || customStat === 'BLOCKED') ? '🔒' : seatNum)}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* Add / Custom Row Form */}
+            {/* Add / Customize Seat Row Form */}
             <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4">
-              <h3 className="text-sm font-bold text-cyan-300 uppercase">Add / Customize Seat Row & Category Pricing</h3>
+              <h3 className="text-sm font-bold text-cyan-300 uppercase">+ Add New Seat Row & Category Tier</h3>
               <form onSubmit={handleAddRowForm} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-white/70 mb-1">Row Letter (e.g. A, H, K) *</label>
@@ -4263,15 +4323,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-2 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Save Changes / Commit Isolated Layout to Backend</span>
+                <span>Save Changes / Commit Layout to MongoDB Atlas</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => {
                   updateScreenRowsConfig(isolatedLayoutKey, [
-                    { row: 'N', tier: 'Classic Normal', price: 250, seatsCount: 12 },
-                    { row: 'P', tier: 'Premium Tier', price: 450, seatsCount: 12 },
+                    { row: 'N', tier: 'Classic Normal', price: 280, seatsCount: 12 },
+                    { row: 'P', tier: 'Premium Tier', price: 480, seatsCount: 12 },
                     { row: 'R', tier: 'Luxury Recliner', price: 650, seatsCount: 10 },
                     { row: 'V', tier: 'VIP Gold Lounge', price: 950, seatsCount: 8 }
                   ]);
