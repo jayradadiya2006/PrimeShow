@@ -257,9 +257,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [schedDateInput, setSchedDateInput] = useState('');
   const [selectedSchedDate, setSelectedSchedDate] = useState('2026-07-31');
 
-  const [schedTheatreName, setSchedTheatreName] = useState('PVR Director\'s Cut, Palladium Mall');
-  const [schedCity, setSchedCity] = useState('Mumbai');
-  const [schedAddress, setSchedAddress] = useState('Lower Parel, Mumbai');
+  const [schedTheatreName, setSchedTheatreName] = useState('PVR Multiplex');
+  const [schedCity, setSchedCity] = useState('Surat');
+  const [schedAddress, setSchedAddress] = useState('Yogi Chowk, Surat');
   const [schedFacilities, setSchedFacilities] = useState('VIP Recliners, Dolby Atmos, Gourmet Dining');
   const [schedScreen, setSchedScreen] = useState('Screen 1 - IMAX 3D');
   const [schedFormat, setSchedFormat] = useState('IMAX 3D');

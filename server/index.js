@@ -1876,17 +1876,20 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
       dateSchedules = movieDoc.theatres;
     }
 
+    let filteredByCity = dateSchedules;
     if (city && city !== 'All') {
       const filterCity = city.trim().toLowerCase();
-      dateSchedules = dateSchedules.filter(t => t && t.city && t.city.trim().toLowerCase() === filterCity);
+      filteredByCity = dateSchedules.filter(t => t && t.city && t.city.trim().toLowerCase() === filterCity);
     }
+
+    const finalSchedules = (filteredByCity && filteredByCity.length > 0) ? filteredByCity : dateSchedules;
 
     return res.json({
       success: true,
       movieId: id,
       date: date || null,
       city: city || 'All',
-      schedules: dateSchedules
+      schedules: finalSchedules
     });
   } catch (err) {
     console.error('❌ Error fetching movie schedules:', err.message);
