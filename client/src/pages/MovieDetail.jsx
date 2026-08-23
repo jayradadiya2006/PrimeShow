@@ -103,11 +103,12 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   useEffect(() => {
     let isMounted = true;
     const fetchLiveSchedules = async () => {
-      if (!movieId) return;
+      const targetMovieId = movieId || movie?.id || movie?._id;
+      if (!targetMovieId) return;
       try {
-        const cityParam = selectedCityFilter || selectedCity || 'All';
+        const cityParam = (selectedCityFilter && selectedCityFilter !== 'All') ? selectedCityFilter : (selectedCity || 'All');
         const targetDate = currentDateSelection;
-        const res = await API.get(`/movies/${movieId}/schedules?date=${targetDate}&city=${encodeURIComponent(cityParam)}`);
+        const res = await API.get(`/movies/${targetMovieId}/schedules?date=${targetDate}&city=${encodeURIComponent(cityParam)}`);
         if (isMounted && res.data && Array.isArray(res.data.schedules)) {
           setLiveSchedules(res.data.schedules);
         }
@@ -118,7 +119,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
 
     fetchLiveSchedules();
     return () => { isMounted = false; };
-  }, [movieId, currentDateSelection, selectedCityFilter, selectedCity]);
+  }, [movieId, movie, currentDateSelection, selectedCityFilter, selectedCity]);
 
   if (!movie) return null;
 

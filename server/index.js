@@ -17,14 +17,17 @@ const { connectDB, movies, theatres, events, eventBookings, plays, playBookings,
 const { User, UserNotification, UserActivityLog, Movie, Theatre, Show, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
 const { generateGeminiSupportReply } = require('./geminiAssistant');
 
-// Safe MongoDB ID filter helper preventing CastError: Cast to ObjectId failed for value "null"
+// Safe MongoDB ID filter helper supporting custom id, _id, and title matching
 function buildIdFilter(idVal) {
   if (!idVal) return { id: 'non_existent_id' };
   const str = String(idVal).trim();
+  const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const safeRegex = new RegExp('^' + escapeRegex(str) + '$', 'i');
+
   if (mongoose.Types.ObjectId.isValid(str) && str.length === 24) {
-    return { $or: [{ id: str }, { _id: str }] };
+    return { $or: [{ id: str }, { _id: str }, { title: safeRegex }] };
   }
-  return { id: str };
+  return { $or: [{ id: str }, { title: safeRegex }] };
 }
 
 const app = express();
