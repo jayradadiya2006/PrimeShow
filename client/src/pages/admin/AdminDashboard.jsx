@@ -1384,24 +1384,30 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleAddDateScopedShowSlot = async (e) => {
     e.preventDefault();
-    if (!schedMovieId || !selectedSchedDate || !schedTheatreName || !schedTime) {
-      setActionSuccess('Please complete Theatre Name and Show Time');
+    if (!schedMovieId || !selectedSchedDate) {
+      setActionSuccess('Please select a target movie and date first');
       setTimeout(() => setActionSuccess(''), 3000);
       return;
     }
 
+    const effectiveTheatreName = (schedTheatreName || '').trim() || 'PVR Cinemas';
+    const effectiveTime = (schedTime || '').trim() || '07:30 PM';
+    const effectiveCity = schedCity || 'Surat';
+
+    const matchedTheatre = (theatresList || []).find(t => t && t.name && t.name.trim().toLowerCase() === effectiveTheatreName.toLowerCase());
+
     const theatreObj = {
-      id: `th_${schedTheatreName.replace(/\s+/g, '_').toLowerCase()}`,
-      name: schedTheatreName.trim(),
-      city: schedCity,
-      address: schedAddress.trim() || `${schedCity} Multiplex`,
-      facilities: schedFacilities ? schedFacilities.split(',').map(s => s.trim()) : ['IMAX 3D', 'VIP Recliners']
+      id: matchedTheatre?.id || `th_${effectiveTheatreName.replace(/\s+/g, '_').toLowerCase()}`,
+      name: effectiveTheatreName,
+      city: effectiveCity,
+      address: (schedAddress || '').trim() || matchedTheatre?.address || `${effectiveCity} Multiplex`,
+      facilities: schedFacilities ? schedFacilities.split(',').map(s => s.trim()) : (matchedTheatre?.facilities || ['IMAX 3D', 'VIP Recliners'])
     };
 
     const showSlotObj = {
       id: `sh_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      time: schedTime.trim(),
-      format: schedFormat,
+      time: effectiveTime,
+      format: schedFormat || 'IMAX 3D',
       price: Number(schedPrice) || 250,
       tier: schedTier || 'VIP',
       screen: schedScreen || 'Screen 1',
@@ -1411,23 +1417,28 @@ export const AdminDashboard = ({ onReturnHome }) => {
     try {
       const res = await API.post('/admin/movies/schedule', {
         selectedMovieId: schedMovieId,
+        movieId: schedMovieId,
+        targetMovieId: schedMovieId,
         action: 'ADD_SHOW_SLOT',
         dateStr: selectedSchedDate,
+        date: selectedSchedDate,
         theatreObj,
-        showSlotObj
+        theatre: theatreObj,
+        showSlotObj,
+        show: showSlotObj
       });
 
       if (res?.data?.movie) {
         setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId) ? res.data.movie : m));
       } else {
-        addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
+        await addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
       }
 
-      setActionSuccess(`Show slot '${schedTime}' (${schedFormat}) saved to MongoDB Atlas for ${selectedSchedDate}!`);
+      setActionSuccess(`Show slot '${effectiveTime}' (${schedFormat}) saved to MongoDB Atlas for ${selectedSchedDate}!`);
     } catch (err) {
       console.warn('⚠️ Fallback adding show slot:', err.message);
-      addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
-      setActionSuccess(`Added show slot '${schedTime}'!`);
+      await addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
+      setActionSuccess(`Added show slot '${effectiveTime}'!`);
     }
 
     setTimeout(() => setActionSuccess(''), 3000);
