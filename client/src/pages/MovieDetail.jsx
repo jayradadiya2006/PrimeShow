@@ -100,8 +100,33 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const availableDates = generateDynamicDates();
   const currentDateSelection = selectedDate || (availableDates[0]?.date || '2026-07-31');
 
+  const [liveSchedules, setLiveSchedules] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveSchedules = async () => {
+      if (!movieId) return;
+      try {
+        const cityParam = selectedCityFilter || selectedCity || 'All';
+        const targetDate = currentDateSelection;
+        const res = await API.get(`/movies/${movieId}/schedules?date=${targetDate}&city=${encodeURIComponent(cityParam)}`);
+        if (isMounted && res.data && Array.isArray(res.data.schedules)) {
+          setLiveSchedules(res.data.schedules);
+        }
+      } catch (err) {
+        console.warn('⚠️ Error fetching live schedules from API:', err.message);
+      }
+    };
+
+    fetchLiveSchedules();
+    return () => { isMounted = false; };
+  }, [movieId, currentDateSelection, selectedCityFilter, selectedCity]);
+
   // Dynamic Theatre & Showtimes Retrieval based STRICTLY on selected date and Admin schedules in MongoDB Atlas
   const getTheatresForCurrentDate = () => {
+    if (Array.isArray(liveSchedules) && liveSchedules.length > 0) {
+      return liveSchedules;
+    }
     if (movie && movie.schedules && Array.isArray(movie.schedules[currentDateSelection])) {
       return movie.schedules[currentDateSelection];
     }

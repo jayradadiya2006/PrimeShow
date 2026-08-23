@@ -795,10 +795,10 @@ export const BookingProvider = ({ children }) => {
     setMoviesList(prev => prev.filter(m => m.id !== movieId));
   };
 
-  // Show Management Helpers
-  const addShowDateToMovie = (movieId, dateStr) => {
+  // Show Management Helpers with Async Backend Persistence to MongoDB Atlas
+  const addShowDateToMovie = async (movieId, dateStr) => {
     setMoviesList(prev => prev.map(m => {
-      if (m.id === movieId) {
+      if (m.id === movieId || m._id === movieId) {
         const existingDates = m.showDates || [];
         if (!existingDates.includes(dateStr)) {
           return { ...m, showDates: [...existingDates, dateStr] };
@@ -806,11 +806,26 @@ export const BookingProvider = ({ children }) => {
       }
       return m;
     }));
+
+    try {
+      const res = await API.post('/admin/movies/add-date', {
+        targetMovieId: movieId,
+        movieId,
+        dateStr,
+        date: dateStr
+      });
+      if (res.data && res.data.movie) {
+        const updatedMovie = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? { ...m, ...updatedMovie } : m));
+      }
+    } catch (err) {
+      console.error('❌ Error persisting show date to MongoDB Atlas:', err.message);
+    }
   };
 
-  const deleteShowDateFromMovie = (movieId, dateStr) => {
+  const deleteShowDateFromMovie = async (movieId, dateStr) => {
     setMoviesList(prev => prev.map(m => {
-      if (m.id === movieId) {
+      if (m.id === movieId || m._id === movieId) {
         const existingDates = m.showDates || [];
         const updatedDates = existingDates.filter(d => d !== dateStr);
         const updatedSchedules = { ...(m.schedules || {}) };
@@ -819,14 +834,29 @@ export const BookingProvider = ({ children }) => {
       }
       return m;
     }));
+
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        action: 'DELETE_DATE',
+        movieId,
+        targetMovieId: movieId,
+        dateStr
+      });
+      if (res.data && res.data.movie) {
+        const updatedMovie = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? { ...m, ...updatedMovie } : m));
+      }
+    } catch (err) {
+      console.error('❌ Error deleting show date from MongoDB Atlas:', err.message);
+    }
   };
 
-  const addShowSlotToMovieTheatre = (movieId, dateStr, theatreObj, showSlotObj) => {
+  const addShowSlotToMovieTheatre = async (movieId, dateStr, theatreObj, showSlotObj) => {
     setMoviesList(prev => prev.map(m => {
-      if (m.id === movieId) {
+      if (m.id === movieId || m._id === movieId) {
         const schedules = { ...(m.schedules || {}) };
-        const dateTheatres = schedules[dateStr] ? JSON.parse(JSON.stringify(schedules[dateStr])) : (m.theatres ? JSON.parse(JSON.stringify(m.theatres)) : []);
-        const theatreIndex = dateTheatres.findIndex(t => t.id === theatreObj.id || t.name === theatreObj.name);
+        const dateTheatres = schedules[dateStr] ? JSON.parse(JSON.stringify(schedules[dateStr])) : [];
+        const theatreIndex = dateTheatres.findIndex(t => t.id === theatreObj.id || (t.name && t.name.trim().toLowerCase() === (theatreObj.name || '').trim().toLowerCase()));
 
         if (theatreIndex > -1) {
           const targetTheatre = dateTheatres[theatreIndex];
@@ -835,8 +865,8 @@ export const BookingProvider = ({ children }) => {
           dateTheatres.push({
             id: theatreObj.id || `th_${Date.now()}`,
             name: theatreObj.name || 'PVR Cinemas',
-            city: theatreObj.city || 'Mumbai',
-            address: theatreObj.address || 'Central City Mall',
+            city: theatreObj.city || 'Surat',
+            address: theatreObj.address || 'Central Complex',
             facilities: theatreObj.facilities || ['IMAX 3D', 'VIP Recliners'],
             shows: [showSlotObj]
           });
@@ -848,32 +878,61 @@ export const BookingProvider = ({ children }) => {
       }
       return m;
     }));
+
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        movieId,
+        targetMovieId: movieId,
+        action: 'ADD_SHOW_SLOT',
+        dateStr,
+        date: dateStr,
+        theatreObj,
+        theatre: theatreObj,
+        showSlotObj,
+        show: showSlotObj
+      });
+      if (res.data && res.data.movie) {
+        const updatedMovie = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? { ...m, ...updatedMovie } : m));
+      }
+    } catch (err) {
+      console.error('❌ Error persisting show slot to MongoDB Atlas:', err.message);
+    }
   };
 
-  const deleteShowSlotFromMovieTheatre = (movieId, dateStr, theatreId, showId) => {
+  const deleteShowSlotFromMovieTheatre = async (movieId, dateStr, theatreId, showId) => {
     setMoviesList(prev => prev.map(m => {
-      if (m.id === movieId) {
+      if (m.id === movieId || m._id === movieId) {
         const schedules = { ...(m.schedules || {}) };
         if (schedules[dateStr]) {
           schedules[dateStr] = schedules[dateStr].map(t => {
             if (t.id === theatreId) {
-              return { ...t, shows: t.shows.filter(s => s.id !== showId) };
+              return { ...t, shows: (t.shows || []).filter(s => s.id !== showId) };
             }
             return t;
-          }).filter(t => t.shows.length > 0);
-        } else if (m.theatres) {
-          const updatedTheatres = m.theatres.map(t => {
-            if (t.id === theatreId) {
-              return { ...t, shows: t.shows.filter(s => s.id !== showId) };
-            }
-            return t;
-          }).filter(t => t.shows.length > 0);
-          return { ...m, theatres: updatedTheatres };
+          }).filter(t => t.shows && t.shows.length > 0);
         }
         return { ...m, schedules };
       }
       return m;
     }));
+
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        action: 'DELETE_SHOW_SLOT',
+        movieId,
+        targetMovieId: movieId,
+        dateStr,
+        theatreId,
+        showId
+      });
+      if (res.data && res.data.movie) {
+        const updatedMovie = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? { ...m, ...updatedMovie } : m));
+      }
+    } catch (err) {
+      console.error('❌ Error deleting show slot from MongoDB Atlas:', err.message);
+    }
   };
 
   const deleteTheatreFromMovieDate = (movieId, dateStr, theatreId) => {
