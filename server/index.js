@@ -3372,72 +3372,126 @@ app.delete(['/api/plays/:id', '/api/admin/plays/:id'], async (req, res) => {
   res.json({ message: 'Play deleted', id, play: deleted });
 });
 
-app.post('/api/plays/book', async (req, res) => {
-  const { playId, ticketCount, paymentMethod, userEmail, userName } = req.body;
-  
-  let play = null;
+// Playlist & Theater Plays Booking Endpoint (MongoDB Atlas Persistence)
+app.post(['/api/bookings/playlist', '/api/playlist/book', '/api/plays/book', '/api/plays/bookings'], async (req, res) => {
   try {
-    if (mongoose.connection.readyState === 1) {
-      play = await Play.findOne({ id: playId });
-    }
-  } catch (err) {}
-  if (!play) play = plays.find(p => p.id === playId);
-  if (!play) return res.status(404).json({ error: 'Play not found' });
+    const { 
+      playlistId, playId, selectedDate, date, slotTime, time, showTime, 
+      ticketCount, quantity, seats, totalAmount, totalPrice, price, 
+      userId, userEmail, userName, paymentMethod 
+    } = req.body;
 
-  const count = Number(ticketCount || 1);
-  if (play.availableSeats < count) {
-    return res.status(400).json({ error: 'Insufficient seats available for this play' });
+    const targetPlayId = playlistId || playId || req.body.id;
+    
+    // 1. Fetch play/playlist document from MongoDB Atlas or in-memory fallback
+    let targetPlay = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        targetPlay = await Play.findOne({
+          $or: [
+            { id: targetPlayId },
+            { _id: mongoose.Types.ObjectId.isValid(targetPlayId) ? targetPlayId : null }
+          ]
+        }).lean();
+      } catch (err) {}
+    }
+    if (!targetPlay) {
+      targetPlay = plays.find(p => p.id === targetPlayId || p._id === targetPlayId);
+    }
+
+    const playTitle = targetPlay?.title || req.body.title || req.body.playTitle || req.body.playlistTitle || 'Theater Play Performance';
+    const playVenue = targetPlay?.venue || req.body.venue || 'Sardar Patel Smarak Bhavan, Surat';
+    const playCity = targetPlay?.city || req.body.city || 'Surat';
+    const playCategory = targetPlay?.category || req.body.category || 'Comedy Drama';
+    const playLang = targetPlay?.language || req.body.language || 'Gujarati';
+
+    const count = Number(ticketCount || quantity || seats || 1);
+    const unitPrice = Number(targetPlay?.price || price || 500);
+    const calculatedTotal = totalAmount || totalPrice || (unitPrice * count);
+
+    // Update seat count if targetPlay exists
+    if (targetPlay && targetPlay.availableSeats !== undefined) {
+      targetPlay.availableSeats = Math.max(0, targetPlay.availableSeats - count);
+      if (mongoose.connection.readyState === 1) {
+        try {
+          await Play.findOneAndUpdate({ id: targetPlay.id }, { availableSeats: targetPlay.availableSeats });
+        } catch (err) {}
+      }
+    }
+
+    const bookingId = `PL-PASS-${Math.floor(100000 + Math.random() * 900000)}`;
+    const transactionId = `TXN-PAY-${Math.floor(1000000 + Math.random() * 9000000)}`;
+
+    const newPlaylistBooking = {
+      id: bookingId,
+      transactionId,
+      playlistId: targetPlayId || `pl_${Date.now()}`,
+      playId: targetPlayId || `pl_${Date.now()}`,
+      title: playTitle,
+      playTitle: playTitle,
+      category: playCategory,
+      language: playLang,
+      venue: playVenue,
+      city: playCity,
+      date: selectedDate || date || targetPlay?.date || new Date().toISOString().split('T')[0],
+      selectedDate: selectedDate || date || targetPlay?.date || new Date().toISOString().split('T')[0],
+      slotDate: selectedDate || date || targetPlay?.date || new Date().toISOString().split('T')[0],
+      time: slotTime || time || showTime || targetPlay?.time || '08:00 PM',
+      slotTime: slotTime || time || showTime || targetPlay?.time || '08:00 PM',
+      ticketCount: count,
+      quantity: count,
+      pricePerTicket: unitPrice,
+      totalAmount: Number(calculatedTotal),
+      totalPrice: Number(calculatedTotal),
+      paymentMethod: paymentMethod || 'Dynamic UPI (Instant)',
+      userId: userId || 'usr_guest',
+      userEmail: userEmail || 'guest@primeshow.com',
+      userName: userName || 'VIP Guest',
+      status: 'CONFIRMED',
+      createdAt: new Date().toISOString()
+    };
+
+    // 2. Persist directly to MongoDB Atlas in 'bookings' collection
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await Booking.create({
+          ...newPlaylistBooking,
+          category: 'Play'
+        });
+      } catch (dbErr) {
+        console.warn('⚠️ Error inserting playlist booking to MongoDB Atlas:', dbErr.message);
+      }
+    }
+
+    // 3. Update in-memory arrays
+    playBookings.unshift(newPlaylistBooking);
+    bookings.unshift(newPlaylistBooking);
+
+    // 4. Real-time Socket.io Broadcast
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('PLAYLIST_BOOKING_CREATED', newPlaylistBooking);
+      req.app.get('socketio').emit('BOOKING_CREATED', newPlaylistBooking);
+    }
+    broadcastToAllClients('PLAYLIST_BOOKING_CREATED', newPlaylistBooking);
+    broadcastToAllClients('BOOKING_CREATED', newPlaylistBooking);
+
+    return res.status(201).json(newPlaylistBooking);
+  } catch (err) {
+    console.error('❌ Error processing playlist booking:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
+});
 
-  play.availableSeats -= count;
-
+app.get(['/api/bookings/playlist', '/api/playlist/bookings', '/api/plays/bookings'], async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
-      await Play.findOneAndUpdate({ id: play.id }, { availableSeats: play.availableSeats });
+      const dbBookings = await Booking.find({ category: { $in: ['Play', 'Playlist'] } }).sort({ createdAt: -1 }).lean();
+      if (dbBookings && dbBookings.length > 0) {
+        return res.json(dbBookings);
+      }
     }
   } catch (err) {}
-
-  const bookingId = `PLAY-PASS-${Math.floor(100000 + Math.random() * 900000)}`;
-  const transactionId = `TXN-PAY-${Math.floor(1000000 + Math.random() * 9000000)}`;
-  const totalPrice = play.price * count;
-
-  const newBooking = {
-    id: bookingId,
-    transactionId,
-    playId: play.id,
-    playTitle: play.title,
-    category: play.category || 'Play',
-    venue: play.venue,
-    city: play.city,
-    date: play.date,
-    time: play.time,
-    ticketCount: count,
-    pricePerTicket: play.price,
-    totalAmount: totalPrice,
-    paymentMethod: paymentMethod || 'UPI (Instant)',
-    userEmail: userEmail || 'guest@primeshow.com',
-    userName: userName || 'VIP Guest',
-    status: 'CONFIRMED',
-    createdAt: new Date().toISOString()
-  };
-
-  try {
-    if (mongoose.connection.readyState === 1) {
-      await Booking.create({ ...newBooking, category: 'Play', title: play.title });
-    }
-  } catch (err) {}
-
-  playBookings.unshift(newBooking);
-  bookings.unshift(newBooking);
-
-  if (req.app.get('socketio')) {
-    req.app.get('socketio').emit('PLAY_UPDATED', play);
-    req.app.get('socketio').emit('BOOKING_CREATED', newBooking);
-  }
-  broadcastToAllClients('PLAY_UPDATED', play);
-  broadcastToAllClients('BOOKING_CREATED', newBooking);
-
-  res.status(201).json(newBooking);
+  res.json(playBookings);
 });
 
 // -------------------------------------------------------------

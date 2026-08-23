@@ -8,9 +8,11 @@ import confetti from 'canvas-confetti';
 import { jsPDF } from 'jspdf';
 import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useBooking } from '../context/BookingContext';
 
 export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) => {
   const { user } = useAuth();
+  const { setMyBookings } = useBooking();
 
   const [step, setStep] = useState('summary'); // 'summary' | 'payment' | 'confirmation'
   const [ticketCount, setTicketCount] = useState(1);
@@ -62,17 +64,39 @@ export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) =>
     setTimeout(async () => {
       try {
         const payload = {
+          playlistId: play.id,
           playId: play.id,
+          title: play.title,
+          playTitle: play.title,
+          venue: play.venue,
+          city: play.city,
+          selectedDate: play.date || new Date().toISOString().split('T')[0],
+          date: play.date || new Date().toISOString().split('T')[0],
+          slotTime: play.time || '08:00 PM',
+          time: play.time || '08:00 PM',
           ticketCount,
+          quantity: ticketCount,
+          totalAmount: grandTotal,
+          totalPrice: grandTotal,
+          userId: user?.id || user?._id || 'usr_guest',
+          userEmail: user?.email || 'guest@primeshow.com',
+          userName: user?.name || 'VIP Guest',
           paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` :
                          paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` :
                          paymentMethod === 'Wallet' ? `Wallet (${selectedWallet})` : 'Credit/Debit Card',
-          userEmail: user?.email || 'guest@primeshow.com',
-          userName: user?.name || 'VIP Guest'
         };
 
-        const res = await API.post('/plays/book', payload);
+        let res;
+        try {
+          res = await API.post('/bookings/playlist', payload);
+        } catch (postErr) {
+          res = await API.post('/plays/book', payload);
+        }
+
         setConfirmedBooking(res.data);
+        if (setMyBookings) {
+          setMyBookings(prev => [res.data, ...(Array.isArray(prev) ? prev : [])]);
+        }
         setIsProcessing(false);
         setVerificationStep('');
         setStep('confirmation');
