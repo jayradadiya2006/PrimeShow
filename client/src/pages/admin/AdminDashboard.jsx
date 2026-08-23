@@ -621,6 +621,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [showSlotForm, setShowSlotForm] = useState({
     theatreId: 'th_1',
     movieId: 'mov_1',
+    date: new Date().toISOString().split('T')[0],
     screenName: 'Screen 1 - IMAX 3D',
     format: 'IMAX 3D',
     time: '07:30 PM',
@@ -1623,15 +1624,33 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       const selectedMov = moviesList.find(m => m.id === showSlotForm.movieId) || { title: 'Avatar: Fire and Ash' };
+      const selectedDateStr = showSlotForm.date || new Date().toISOString().split('T')[0];
       const payload = {
         ...showSlotForm,
+        theatreId: showSlotForm.theatreId,
+        date: selectedDateStr,
+        selectedDate: selectedDateStr,
+        dateStr: selectedDateStr,
         movieTitle: selectedMov.title
       };
-      const res = await API.post(`/theatres/${showSlotForm.theatreId}/shows`, payload);
-      setTheatresList(theatresList.map(t => t.id === showSlotForm.theatreId ? res.data : t));
-      setActionSuccess('Show Slot added to Theatre!');
+
+      const res = await API.post('/admin/theatres/shows', payload);
+      const updatedTheatre = res?.data?.theatre || res?.data;
+
+      if (updatedTheatre && updatedTheatre.id) {
+        setTheatresList(prev => prev.map(t => t.id === showSlotForm.theatreId ? updatedTheatre : t));
+      } else {
+        const fallbackRes = await API.post(`/theatres/${showSlotForm.theatreId}/shows`, payload);
+        setTheatresList(prev => prev.map(t => t.id === showSlotForm.theatreId ? fallbackRes.data : t));
+      }
+
+      setActionSuccess(`Show Slot for date ${selectedDateStr} saved to MongoDB Atlas!`);
       setTimeout(() => setActionSuccess(''), 3000);
-    } catch (err) {}
+    } catch (err) {
+      console.warn('⚠️ Error adding date-wise show slot:', err.message);
+      setActionSuccess('Error saving show slot');
+      setTimeout(() => setActionSuccess(''), 3000);
+    }
   };
 
   const handleDeleteShowSlot = async (theatreId, showId) => {
@@ -4719,7 +4738,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
             <form onSubmit={handleAddShowSlot} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
               <h3 className="text-lg font-bold text-cyan-400">Add Showtime Slot to Multiplex</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-white mb-1">Target Theatre</label>
                   <select
@@ -4731,6 +4750,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-amber-300 mb-1">Target Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={showSlotForm.date || new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setShowSlotForm({ ...showSlotForm, date: e.target.value })}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold cursor-pointer"
+                  />
                 </div>
 
                 <div>

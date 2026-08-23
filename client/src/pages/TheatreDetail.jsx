@@ -112,23 +112,26 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
     );
   }
 
-  // Group shows by movie
+  const selectedDateStr = dates[selectedDateIndex]?.date || new Date().toISOString().split('T')[0];
+
+  // Group shows by movie strictly filtered by selected date
   const showsByMovieMap = {};
   if (theatre.shows && theatre.shows.length > 0) {
     theatre.shows.forEach(s => {
-      if (!showsByMovieMap[s.movieId]) {
-        showsByMovieMap[s.movieId] = {
-          movieId: s.movieId,
-          movieTitle: s.movieTitle,
-          shows: []
-        };
+      if (s.date === selectedDateStr || !s.date) {
+        if (!showsByMovieMap[s.movieId]) {
+          showsByMovieMap[s.movieId] = {
+            movieId: s.movieId,
+            movieTitle: s.movieTitle,
+            shows: []
+          };
+        }
+        showsByMovieMap[s.movieId].shows.push(s);
       }
-      showsByMovieMap[s.movieId].shows.push(s);
     });
   }
 
   const movieGroupList = Object.values(showsByMovieMap);
-  const selectedDateStr = dates[selectedDateIndex].date;
 
   return (
     <div className="min-h-screen bg-[#050508] text-white pt-6 pb-20 font-sans">

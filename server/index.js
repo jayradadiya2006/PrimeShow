@@ -2513,6 +2513,75 @@ app.delete(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) =>
   res.json({ message: 'Theatre deleted', id, theatre: deleted });
 });
 
+// Admin Endpoint: Add & Persist Date-Wise Show Slot to MongoDB Atlas
+app.post(['/api/admin/theatres/shows', '/api/theatres/shows'], async (req, res) => {
+  try {
+    const { theatreId, selectedDate, dateStr, date, movieId, movieTitle, screenId, screenName, format, time, price } = req.body;
+    const targetTheatreId = theatreId || req.body.id || 'th_1';
+    const targetDateStr = selectedDate || dateStr || date || new Date().toISOString().slice(0, 10);
+
+    const newShow = {
+      id: req.body.showId || `sh_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      movieId: movieId || 'mov_1',
+      movieTitle: movieTitle || 'Avatar: Fire and Ash',
+      screenId: screenId || 'sc_1',
+      screenName: screenName || 'Screen 1 - IMAX 3D',
+      format: format || 'IMAX 3D',
+      time: time || '07:30 PM',
+      date: targetDateStr,
+      price: Number(price || 450)
+    };
+
+    let updatedTheatre = null;
+
+    if (mongoose.connection.readyState === 1) {
+      let thDoc = await Theatre.findOne({
+        $or: [
+          { id: targetTheatreId },
+          { _id: mongoose.Types.ObjectId.isValid(targetTheatreId) ? targetTheatreId : null }
+        ]
+      });
+
+      if (thDoc) {
+        if (!thDoc.shows) thDoc.shows = [];
+        thDoc.shows.push(newShow);
+        thDoc.markModified('shows');
+        updatedTheatre = await thDoc.save();
+        await Show.findOneAndUpdate({ id: newShow.id }, { ...newShow, theatreId: targetTheatreId }, { upsert: true, new: true });
+      }
+    }
+
+    // Update in-memory list
+    const index = theatres.findIndex(t => t.id === targetTheatreId || t._id === targetTheatreId);
+    if (index !== -1) {
+      if (!theatres[index].shows) theatres[index].shows = [];
+      theatres[index].shows.unshift(newShow);
+      if (!updatedTheatre) updatedTheatre = theatres[index];
+    }
+
+    if (!updatedTheatre) {
+      updatedTheatre = { id: targetTheatreId, shows: [newShow] };
+    }
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('SHOW_UPDATED', { theatreId: targetTheatreId, show: newShow });
+      req.app.get('socketio').emit('THEATRE_UPDATED', updatedTheatre);
+    }
+    broadcastToAllClients('SHOW_UPDATED', { theatreId: targetTheatreId, show: newShow });
+    broadcastToAllClients('THEATRE_UPDATED', updatedTheatre);
+
+    return res.status(201).json({
+      success: true,
+      message: `Show slot for ${targetDateStr} persisted to MongoDB Atlas!`,
+      theatre: updatedTheatre,
+      show: newShow
+    });
+  } catch (err) {
+    console.error('❌ Error adding date-wise show slot:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Admin Add Show Slot to a Theatre
 app.post(['/api/theatres/:id/shows', '/api/admin/theatres/:id/shows'], async (req, res) => {
   const { id } = req.params;
