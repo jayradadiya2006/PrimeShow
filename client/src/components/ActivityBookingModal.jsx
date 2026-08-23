@@ -186,11 +186,11 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-[#0b0c16] rounded-3xl border border-white/15 shadow-2xl overflow-hidden my-8">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center pt-20 sm:pt-24 pb-8 px-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-y-auto font-sans">
+      <div className="relative w-full max-w-2xl bg-[#0b0c16] rounded-3xl border border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] my-auto">
         
-        {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
+        {/* Sticky Header Bar with High Visibility Close (X) Button */}
+        <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0b0c16]/95 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
               <Ticket className="w-4 h-4" />
@@ -203,14 +203,18 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
+            className="p-2.5 rounded-full bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 shadow-lg transition-all cursor-pointer flex items-center justify-center group"
+            title="Close Modal"
+            aria-label="Close Modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
           </button>
         </div>
 
-        {/* STEP 1: Pass Configuration & Quantity Selection */}
-        {step === 'config' && (
+        {/* Scrollable Content Body */}
+        <div className="overflow-y-auto flex-1">
+          {/* STEP 1: Pass Configuration & Quantity Selection */}
+          {step === 'config' && (
           <div className="p-6 space-y-6">
             {/* Activity Card Banner */}
             <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
@@ -573,6 +577,7 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
           </div>
         )}
 
+        </div>
       </div>
     </div>
   );

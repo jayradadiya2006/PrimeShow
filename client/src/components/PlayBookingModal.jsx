@@ -157,15 +157,17 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-fade-in font-sans">
-      <div className="relative w-full max-w-2xl glass-modal rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl text-white max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center pt-20 sm:pt-24 pb-8 px-4 bg-black/90 backdrop-blur-2xl animate-fade-in font-sans overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-[#0b0c16] rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl text-white max-h-[85vh] overflow-y-auto my-auto">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white cursor-pointer"
+          className="absolute top-5 right-5 p-2.5 rounded-full bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 shadow-lg transition-all cursor-pointer flex items-center justify-center group z-30"
+          title="Close Modal"
+          aria-label="Close Modal"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
         </button>
 
         {/* STEP 1: SUMMARY & TICKET QUANTITY */}
