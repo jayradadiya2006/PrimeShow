@@ -1652,7 +1652,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleSaveHallSlot = async (e) => {
     e.preventDefault();
-    const targetThId = hallSlotForm.theatreId || pricingTheatreId || theatresList[0]?.id || 'th_1';
+    const targetThId = hallSlotForm.theatreId || theatresList[0]?.id || 'th_1';
     const selectedMov = moviesList.find(m => m.id === hallSlotForm.movieId) || { title: 'Avatar: Fire and Ash' };
 
     if (!targetThId || !activeConfigDate) {
@@ -4864,29 +4864,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                   {/* Configured Halls List for Active Date */}
                   {(() => {
-                    const targetThId = pricingTheatreId || theatresList[0]?.id || 'th_1';
+                    const targetThId = hallSlotForm.theatreId || theatresList[0]?.id || 'th_1';
                     const activeTh = theatresList.find(t => t.id === targetThId || t._id === targetThId);
                     const hallMap = activeTh?.hallSlotsByDate || activeTh?.dateHalls || {};
                     const activeHalls = Array.isArray(hallMap[activeConfigDate]) ? hallMap[activeConfigDate] : [];
+                    const activeThName = activeTh?.name || 'Selected Theatre';
 
                     return (
                       <div className="space-y-2 pt-2">
-                        <div className="text-xs font-bold text-white/80">
-                          Configured Halls for <span className="text-amber-400">{activeConfigDate}</span> ({activeHalls.length} Halls Available):
+                        <div className="text-xs font-bold text-white/80 flex items-center justify-between">
+                          <span>
+                            Configured Halls for <strong className="text-cyan-300">{activeThName}</strong> on <span className="text-amber-400">{activeConfigDate}</span> ({activeHalls.length} Halls Available):
+                          </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           {activeHalls.map((h, i) => (
-                            <div key={h.id || i} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
+                            <div key={h.id || i} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs hover:border-cyan-400/40 transition-all">
                               <div>
                                 <div className="font-bold text-white">{h.hallName}</div>
                                 <div className="text-[10px] text-cyan-300">{h.format} • {h.time}</div>
+                                {h.movieTitle && <div className="text-[9px] text-amber-300/80">Movie: {h.movieTitle}</div>}
                               </div>
-                              <div className="font-extrabold text-emerald-400 text-sm">₹{h.price}</div>
+                              <div className="text-right">
+                                <div className="font-extrabold text-emerald-400 text-sm">₹{h.price}</div>
+                                <div className="text-[9px] text-white/40">Capacity: {h.totalSeats || 120}</div>
+                              </div>
                             </div>
                           ))}
                           {activeHalls.length === 0 && (
                             <div className="col-span-full p-4 rounded-xl bg-white/5 border border-white/10 text-xs text-white/40 italic text-center">
-                              No halls configured for {activeConfigDate} yet. Use the form above to add a hall.
+                              No halls configured for {activeThName} on {activeConfigDate} yet. Use the form above to add a hall.
                             </div>
                           )}
                         </div>
