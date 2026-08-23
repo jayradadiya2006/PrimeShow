@@ -6,14 +6,20 @@ import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 
 export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackToMovies }) => {
-  const { user } = useAuth();
+  const { user, selectedCity } = useAuth();
   const { moviesList, selectShowForBooking } = useBooking();
   const [movie, setMovie] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedCityFilter, setSelectedCityFilter] = useState('All');
+  const [selectedCityFilter, setSelectedCityFilter] = useState(selectedCity || 'All');
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [selectedTheatreForMap, setSelectedTheatreForMap] = useState(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (selectedCity) {
+      setSelectedCityFilter(selectedCity);
+    }
+  }, [selectedCity]);
   
   // Read More / Read Less States
   const [isAboutReadMore, setIsAboutReadMore] = useState(false);
@@ -103,9 +109,10 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   };
 
   const theatreShows = getTheatresForCurrentDate();
-  const filteredTheatres = selectedCityFilter === 'All'
+  const activeCityToUse = selectedCityFilter || selectedCity || 'All';
+  const filteredTheatres = (!activeCityToUse || activeCityToUse === 'All')
     ? theatreShows
-    : theatreShows.filter(t => t.city?.toLowerCase() === selectedCityFilter.toLowerCase());
+    : theatreShows.filter(t => t && t.city && t.city.trim().toLowerCase() === activeCityToUse.trim().toLowerCase());
 
   const handleReviewSubmit = (e) => {
     e.preventDefault();
@@ -416,10 +423,23 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
                 </div>
               ))
             ) : (
-              <div className="p-6 sm:p-8 rounded-3xl glass-panel border border-white/10 text-center space-y-2">
+              <div className="p-6 sm:p-8 rounded-3xl glass-panel border border-white/10 text-center space-y-3">
                 <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
-                <h4 className="text-base font-bold text-white">No Theatre Schedules Configured for {currentDateSelection}</h4>
-                <p className="text-xs text-white/60">This movie is not scheduled for screening on this specific date. Please select another date above or check back later for Admin updates.</p>
+                <h4 className="text-base font-bold text-white">No Theatre Schedules Found in {activeCityToUse} for {currentDateSelection}</h4>
+                <p className="text-xs text-white/60 max-w-md mx-auto">
+                  No showtimes currently scheduled for {activeCityToUse} on this date. You can select another date above or view showtimes across all cities.
+                </p>
+                {activeCityToUse !== 'All' && (
+                  <div className="pt-1 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCityFilter('All')}
+                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs cursor-pointer shadow-lg shadow-amber-500/20"
+                    >
+                      View All Cities
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
