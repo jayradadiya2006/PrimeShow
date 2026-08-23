@@ -594,6 +594,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const currentLayout = getScreenLayout(isolatedLayoutKey);
   const seatRowsList = currentLayout?.rows || DEFAULT_SEAT_ROWS;
 
+  // Live Seat Tracking & Dynamic Pricing State
+  const [liveBookedSeatsMap, setLiveBookedSeatsMap] = useState({});
+  const [seatPriceInputs, setSeatPriceInputs] = useState({});
+
+  useEffect(() => {
+    if (activeTab !== 'seats') return;
+
+    const fetchLiveBookedSeats = async () => {
+      try {
+        const res = await API.get('/bookings/live-seats', {
+          params: {
+            city: selectedCity || 'Surat',
+            movieId: activeShowSlotObj?.movieId || 'mov_1',
+            date: selectedSchedDate || new Date().toISOString().slice(0, 10),
+            theatreId: selectedTheatreId || 'th_1',
+            showTime: activeShowSlotObj?.time || '07:30 PM',
+            showId: isolatedLayoutKey
+          }
+        });
+        if (res.data && res.data.bookedSeats) {
+          setLiveBookedSeatsMap(res.data.bookedSeats);
+        }
+      } catch (err) {}
+    };
+
+    fetchLiveBookedSeats();
+    const interval = setInterval(fetchLiveBookedSeats, 4000);
+    return () => clearInterval(interval);
+  }, [activeTab, selectedCity, selectedTheatreId, isolatedLayoutKey, activeShowSlotObj, selectedSchedDate]);
+
   const handleAddRowForm = (e) => {
     e.preventDefault();
     if (!newRowChar) return;
