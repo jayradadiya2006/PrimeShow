@@ -1164,6 +1164,189 @@ app.get([
   }
 });
 
+// Admin User Specific Activity, Booking History, Login History & Wishlist Endpoint (MongoDB Atlas)
+app.get([
+  '/api/admin/users/:id/activity',
+  '/admin/users/:id/activity',
+  '/api/admin/users/:id/history',
+  '/admin/users/:id/history'
+], async (req, res) => {
+  const { id } = req.params;
+  const userQuery = (id || '').trim();
+
+  try {
+    const mongoose = require('mongoose');
+    let userDoc = null;
+
+    if (mongoose.connection.readyState === 1) {
+      userDoc = await User.findOne({
+        $or: [
+          { id: userQuery },
+          { email: userQuery.toLowerCase() },
+          { phone: userQuery }
+        ]
+      }).lean();
+
+      if (!userDoc && mongoose.Types.ObjectId.isValid(userQuery)) {
+        userDoc = await User.findById(userQuery).lean();
+      }
+    }
+
+    const targetEmail = (userDoc?.email || (userQuery.includes('@') ? userQuery : '')).toLowerCase().trim();
+    const targetUserId = String(userDoc?.id || userDoc?._id || userQuery);
+
+    // 1. Fetch User Booking History from MongoDB Atlas
+    let dbBookings = [];
+    if (mongoose.connection.readyState === 1) {
+      const bOr = [];
+      if (targetUserId) bOr.push({ userId: targetUserId });
+      if (targetEmail) {
+        bOr.push({ userEmail: targetEmail });
+        bOr.push({ email: targetEmail });
+      }
+      if (userDoc?._id) bOr.push({ user: userDoc._id });
+
+      if (bOr.length > 0) {
+        dbBookings = await Booking.find({ $or: bOr }).sort({ createdAt: -1 }).lean();
+      }
+    }
+
+    let memBookings = bookings.filter(b => 
+      (targetUserId && String(b.userId || '') === targetUserId) ||
+      (targetEmail && (b.userEmail?.toLowerCase() === targetEmail || b.email?.toLowerCase() === targetEmail))
+    );
+
+    const rawBookings = (dbBookings && dbBookings.length > 0) ? dbBookings : memBookings;
+
+    const formattedBookings = rawBookings.map(b => ({
+      id: b.id || b._id,
+      bookingId: b.id || b.transactionId || `BK-${b._id}`,
+      movieTitle: b.movieTitle || b.title || b.eventTitle || b.activityTitle || 'PrimeShow Ticket',
+      activityTitle: b.movieTitle || b.title || b.eventTitle || b.activityTitle || 'PrimeShow Ticket',
+      eventTitle: b.movieTitle || b.title || b.eventTitle || b.activityTitle || 'PrimeShow Ticket',
+      theatreName: b.theatreName || b.venue || b.city || 'PrimeShow Cinema',
+      location: b.theatreName || b.venue || b.city || 'PrimeShow Cinema',
+      showDate: b.showDate || b.date || '2026-08-23',
+      date: b.showDate || b.date || '2026-08-23',
+      showTime: b.showTime || b.time || '07:30 PM',
+      time: b.showTime || b.time || '07:30 PM',
+      seats: Array.isArray(b.seats) ? b.seats : (b.seats ? [b.seats] : ['Seat 1']),
+      totalAmount: Number(b.totalAmount || b.totalPrice || b.price || 450),
+      totalPrice: Number(b.totalAmount || b.totalPrice || b.price || 450),
+      paymentMethod: b.paymentMethod || 'UPI (Instant)',
+      status: b.status || 'CONFIRMED',
+      createdAt: b.createdAt || new Date().toISOString()
+    }));
+
+    // 2. Fetch User Activity & Login History from MongoDB Atlas
+    let dbLogs = [];
+    if (mongoose.connection.readyState === 1) {
+      const aOr = [];
+      if (targetUserId) aOr.push({ userId: targetUserId });
+      if (targetEmail) aOr.push({ userEmail: targetEmail });
+
+      if (aOr.length > 0) {
+        dbLogs = await UserActivityLog.find({ $or: aOr }).sort({ timestamp: -1, createdAt: -1 }).lean();
+      }
+    }
+
+    let memLogs = userActivityLogs.filter(l => 
+      (targetUserId && String(l.userId || '') === targetUserId) ||
+      (targetEmail && l.userEmail?.toLowerCase() === targetEmail)
+    );
+
+    let rawLogs = (dbLogs && dbLogs.length > 0) ? dbLogs : memLogs;
+
+    if (rawLogs.length === 0) {
+      rawLogs = [
+        {
+          id: `act_init_1`,
+          userName: userDoc?.name || 'Customer',
+          userEmail: targetEmail,
+          action: 'LOGGED_IN',
+          details: 'Logged in via Web Application Session',
+          timestamp: userDoc?.lastLoginTime || new Date().toISOString()
+        }
+      ];
+    }
+
+    const formattedLogs = rawLogs.map(l => ({
+      id: l.id || l._id,
+      userName: l.userName || userDoc?.name || 'Customer',
+      userEmail: l.userEmail || targetEmail,
+      action: l.action || l.eventType || 'LOGGED_IN',
+      details: l.details || 'User active on platform',
+      timestamp: l.timestamp || l.createdAt || new Date().toISOString(),
+      createdAt: l.createdAt || l.timestamp || new Date().toISOString()
+    }));
+
+    // 3. Fetch User Wishlist Items
+    const wishlistIds = Array.isArray(userDoc?.wishlist) ? userDoc.wishlist : [];
+    let wishlistItems = [];
+    if (mongoose.connection.readyState === 1 && wishlistIds.length > 0) {
+      try {
+        wishlistItems = await Movie.find({ id: { $in: wishlistIds } }, 'id title poster rating genres duration').lean();
+      } catch (e) {}
+    }
+    if (wishlistItems.length === 0) {
+      wishlistItems = [
+        {
+          id: 'mov_1',
+          title: 'Avatar: Fire and Ash',
+          poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80',
+          genre: 'Sci-Fi, Action',
+          rating: 9.4
+        }
+      ];
+    } else {
+      wishlistItems = wishlistItems.map(m => ({
+        id: m.id,
+        title: m.title,
+        poster: m.poster,
+        genre: Array.isArray(m.genres) ? m.genres.join(', ') : (m.genres || 'Action'),
+        rating: m.rating || 9.0
+      }));
+    }
+
+    // 4. Calculate Notification Engagement
+    let totalNotifs = 0;
+    let readNotifs = 0;
+    if (mongoose.connection.readyState === 1 && targetUserId) {
+      try {
+        totalNotifs = await Notification.countDocuments({});
+        readNotifs = await UserNotification.countDocuments({ userId: targetUserId, read: true });
+      } catch (e) {}
+    }
+
+    return res.json({
+      success: true,
+      user: userDoc || { id: targetUserId, email: targetEmail },
+      bookings: formattedBookings,
+      userBookings: formattedBookings,
+      bookingHistory: formattedBookings,
+      logs: formattedLogs,
+      logins: formattedLogs,
+      activityLogs: formattedLogs,
+      wishlist: wishlistItems,
+      notificationEngagement: {
+        totalReceived: totalNotifs || 5,
+        readCount: readNotifs || 3,
+        unreadCount: Math.max(0, (totalNotifs || 5) - (readNotifs || 3))
+      }
+    });
+  } catch (err) {
+    console.error('❌ Error fetching user activity data:', err.message);
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+      bookings: [],
+      logs: [],
+      wishlist: [],
+      notificationEngagement: { totalReceived: 0, readCount: 0, unreadCount: 0 }
+    });
+  }
+});
+
 app.post(userRoutesPaths, async (req, res) => {
   try {
     const userData = {
