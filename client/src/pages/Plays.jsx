@@ -494,7 +494,9 @@ export const Plays = () => {
         <PlayBookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
+          play={selectedPlay}
           playItem={selectedPlay}
+          onBookingSuccess={handleBookingSuccess}
           onSuccess={handleBookingSuccess}
         />
       )}

@@ -10,9 +10,12 @@ import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 
-export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) => {
+export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem, onBookingSuccess, onSuccess }) => {
   const { user } = useAuth();
   const { setMyBookings } = useBooking();
+
+  const activePlay = play || playItem || playlistItem;
+  const handleSuccessCallback = onBookingSuccess || onSuccess;
 
   const [step, setStep] = useState('summary'); // 'summary' | 'payment' | 'confirmation'
   const [ticketCount, setTicketCount] = useState(1);
@@ -36,10 +39,10 @@ export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) =>
   const [verificationStep, setVerificationStep] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState(null);
 
-  if (!isOpen || !play) return null;
+  if (!isOpen || !activePlay) return null;
 
   // Price calculations
-  const pricePerTicket = Number(play.price || 500);
+  const pricePerTicket = Number(activePlay.price || 500);
   const basePrice = pricePerTicket * ticketCount;
   const convenienceFee = Math.round(basePrice * 0.08);
   const tax = Math.round(basePrice * 0.05);
@@ -64,16 +67,16 @@ export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) =>
     setTimeout(async () => {
       try {
         const payload = {
-          playlistId: play.id,
-          playId: play.id,
-          title: play.title,
-          playTitle: play.title,
-          venue: play.venue,
-          city: play.city,
-          selectedDate: play.date || new Date().toISOString().split('T')[0],
-          date: play.date || new Date().toISOString().split('T')[0],
-          slotTime: play.time || '08:00 PM',
-          time: play.time || '08:00 PM',
+          playlistId: activePlay.id,
+          playId: activePlay.id,
+          title: activePlay.title,
+          playTitle: activePlay.title,
+          venue: activePlay.venue,
+          city: activePlay.city,
+          selectedDate: activePlay.date || new Date().toISOString().split('T')[0],
+          date: activePlay.date || new Date().toISOString().split('T')[0],
+          slotTime: activePlay.time || '08:00 PM',
+          time: activePlay.time || '08:00 PM',
           ticketCount,
           quantity: ticketCount,
           totalAmount: grandTotal,
@@ -103,7 +106,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) =>
 
         confetti({ particleCount: 140, spread: 85, origin: { y: 0.6 } });
 
-        if (onBookingSuccess) onBookingSuccess(res.data);
+        if (handleSuccessCallback) handleSuccessCallback(res.data);
       } catch (err) {
         setIsProcessing(false);
         setVerificationStep('');
@@ -171,19 +174,19 @@ export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) =>
             <div className="border-b border-white/10 pb-4">
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold text-[10px] uppercase">
-                  {play.language || 'Gujarati'} Theater
+                  {activePlay.language || 'Gujarati'} Theater
                 </span>
                 <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
-                  {play.category || 'Drama'}
+                  {activePlay.category || 'Drama'}
                 </span>
               </div>
-              <h2 className="text-2xl font-bold font-serif text-white">{play.title}</h2>
+              <h2 className="text-2xl font-bold font-serif text-white">{activePlay.title}</h2>
               <p className="text-xs text-white/60 flex items-center gap-2 mt-1">
                 <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                <span>{play.venue}</span>
+                <span>{activePlay.venue}</span>
                 <span>•</span>
                 <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                <span>{play.date} @ {play.time}</span>
+                <span>{activePlay.date} @ {activePlay.time}</span>
               </p>
             </div>
 
