@@ -3819,6 +3819,123 @@ app.delete(['/api/activities/:id', '/api/admin/activities/:id'], async (req, res
   res.json({ message: 'Activity pass deleted', id, activity: deleted });
 });
 
+// Activity & Theme Park Booking Endpoint (MongoDB Atlas Persistence)
+app.post(['/api/bookings/activity', '/api/activities/book', '/api/activities/bookings'], async (req, res) => {
+  try {
+    const { 
+      activityId, title, activityTitle, category, location, city, 
+      validity, timings, passRate, price, ticketCount, quantity, 
+      totalAmount, totalPrice, userId, userEmail, userName, paymentMethod 
+    } = req.body;
+
+    const targetActivityId = activityId || req.body.id;
+    
+    // Fetch activity document from MongoDB Atlas or in-memory fallback
+    let targetActivity = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        targetActivity = await Activity.findOne({
+          $or: [
+            { id: targetActivityId },
+            { _id: mongoose.Types.ObjectId.isValid(targetActivityId) ? targetActivityId : null }
+          ]
+        }).lean();
+      } catch (err) {}
+    }
+    if (!targetActivity) {
+      targetActivity = activities.find(a => a.id === targetActivityId || a._id === targetActivityId);
+    }
+
+    const actTitle = targetActivity?.title || activityTitle || title || 'Theme Park Activity Pass';
+    const actCategory = targetActivity?.category || category || 'Water Park';
+    const actLocation = targetActivity?.location || location || 'Surat';
+    const actValidity = targetActivity?.validity || validity || timings || 'Full Day Pass (10:00 AM - 07:00 PM)';
+    const count = Number(ticketCount || quantity || 1);
+    const unitPrice = Number(targetActivity?.price || passRate || price || 1299);
+    const calculatedTotal = totalAmount || totalPrice || (unitPrice * count);
+
+    // Update seat count if targetActivity exists
+    if (targetActivity && targetActivity.availableSeats !== undefined) {
+      targetActivity.availableSeats = Math.max(0, targetActivity.availableSeats - count);
+      if (mongoose.connection.readyState === 1) {
+        try {
+          await Activity.findOneAndUpdate({ id: targetActivity.id }, { availableSeats: targetActivity.availableSeats });
+        } catch (err) {}
+      }
+    }
+
+    const bookingId = `ACT-PASS-${Math.floor(100000 + Math.random() * 900000)}`;
+    const transactionId = `TXN-PAY-${Math.floor(1000000 + Math.random() * 9000000)}`;
+
+    const newActivityBooking = {
+      id: bookingId,
+      transactionId,
+      activityId: targetActivityId || `act_${Date.now()}`,
+      title: actTitle,
+      activityTitle: actTitle,
+      category: actCategory,
+      location: actLocation,
+      city: targetActivity?.city || city || 'Surat',
+      validity: actValidity,
+      timings: actValidity,
+      ticketCount: count,
+      quantity: count,
+      pricePerTicket: unitPrice,
+      passRate: unitPrice,
+      totalAmount: Number(calculatedTotal),
+      totalPrice: Number(calculatedTotal),
+      benefits: targetActivity?.benefits || ['Unlimited Rides', 'Free Entry'],
+      paymentMethod: paymentMethod || 'UPI (Jay Hiralal Radadiya)',
+      userId: userId || 'usr_guest',
+      userEmail: userEmail || 'guest@primeshow.com',
+      userName: userName || 'VIP Guest',
+      status: 'CONFIRMED',
+      createdAt: new Date().toISOString()
+    };
+
+    // Persist directly to MongoDB Atlas in 'bookings' collection
+    if (mongoose.connection.readyState === 1) {
+      try {
+        await Booking.create({
+          ...newActivityBooking,
+          category: 'Activity'
+        });
+      } catch (dbErr) {
+        console.warn('⚠️ Error inserting activity booking to MongoDB Atlas:', dbErr.message);
+      }
+    }
+
+    // Update in-memory arrays
+    activityBookings.unshift(newActivityBooking);
+    bookings.unshift(newActivityBooking);
+
+    // Real-time Socket.io Broadcast
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('ACTIVITY_BOOKING_CREATED', newActivityBooking);
+      req.app.get('socketio').emit('BOOKING_CREATED', newActivityBooking);
+    }
+    broadcastToAllClients('ACTIVITY_BOOKING_CREATED', newActivityBooking);
+    broadcastToAllClients('BOOKING_CREATED', newActivityBooking);
+
+    return res.status(201).json(newActivityBooking);
+  } catch (err) {
+    console.error('❌ Error processing activity booking:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get(['/api/bookings/activity', '/api/activities/bookings'], async (req, res) => {
+  try {
+    if (mongoose.connection.readyState === 1) {
+      const dbBookings = await Booking.find({ category: 'Activity' }).sort({ createdAt: -1 }).lean();
+      if (dbBookings && dbBookings.length > 0) {
+        return res.json(dbBookings);
+      }
+    }
+  } catch (err) {}
+  res.json(activityBookings);
+});
+
 // -------------------------------------------------------------
 // WHATSAPP SUPPORT & BOOKINGS
 // -------------------------------------------------------------

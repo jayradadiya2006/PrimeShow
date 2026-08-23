@@ -376,7 +376,9 @@ export const Activities = () => {
         <ActivityBookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
+          activity={selectedActivity}
           activityItem={selectedActivity}
+          onBookingSuccess={handleBookingSuccess}
           onSuccess={handleBookingSuccess}
         />
       )}

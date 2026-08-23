@@ -7,10 +7,15 @@ import { QRCodeSVG } from 'qrcode.react';
 import jsPDF from 'jspdf';
 import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useBooking } from '../context/BookingContext';
 
-export const ActivityBookingModal = ({ isOpen, onClose, activity, onBookingSuccess }) => {
+export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, onBookingSuccess, onSuccess }) => {
   const { user } = useAuth();
+  const { setMyBookings } = useBooking();
   
+  const activeActivity = activity || activityItem;
+  const handleSuccessCallback = onBookingSuccess || onSuccess;
+
   // State
   const [step, setStep] = useState('config'); // 'config' | 'payment' | 'verifying' | 'pass'
   const [passCount, setPassCount] = useState(1);
@@ -19,14 +24,14 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, onBookingSucce
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  if (!isOpen || !activity) return null;
+  if (!isOpen || !activeActivity) return null;
 
   // Payee & Dynamic UPI Details
   const payeeName = 'Jay Hiralal Radadiya';
   const payeeUpiId = 'jay.radadiya@ptaxis';
   
   // Dynamic Pricing Calculation
-  const basePrice = Number(activity.price || 999);
+  const basePrice = Number(activeActivity.price || 999);
   const totalBasePrice = basePrice * passCount;
   const convenienceFee = Math.round(totalBasePrice * 0.08); // 8% fee
   const gstTax = Math.round(totalBasePrice * 0.05); // 5% GST
@@ -49,19 +54,42 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, onBookingSucce
       // Simulate real-time banking verification network delay
       await new Promise(r => setTimeout(r, 2200));
 
-      const response = await API.post('/activities/book', {
-        activityId: activity.id,
+      const payload = {
+        activityId: activeActivity.id,
+        title: activeActivity.title,
+        activityTitle: activeActivity.title,
+        category: activeActivity.category || 'Water Park',
+        location: activeActivity.location || 'Surat',
+        city: activeActivity.city || 'Surat',
+        validity: activeActivity.validity || 'Full Day Pass (10:00 AM - 07:00 PM)',
+        timings: activeActivity.validity || 'Full Day Pass (10:00 AM - 07:00 PM)',
+        passRate: Number(activeActivity.price || 1299),
+        price: Number(activeActivity.price || 1299),
         ticketCount: passCount,
+        quantity: passCount,
+        totalAmount: grandTotal,
+        totalPrice: grandTotal,
+        userId: user?.id || user?._id || 'usr_guest',
+        userEmail: user?.email || 'guest@primeshow.com',
+        userName: user?.name || 'VIP Guest',
         paymentMethod: activePaymentTab === 'upi' ? 'UPI (Jay Hiralal Radadiya)' :
                        activePaymentTab === 'netbanking' ? 'Net Banking (HDFC/ICICI)' :
                        activePaymentTab === 'card' ? 'Credit/Debit Card' : 'Digital Wallet',
-        userEmail: user?.email || 'guest@primeshow.com',
-        userName: user?.name || 'VIP Guest'
-      });
+      };
+
+      let response;
+      try {
+        response = await API.post('/bookings/activity', payload);
+      } catch (errPost) {
+        response = await API.post('/activities/book', payload);
+      }
 
       setConfirmedBooking(response.data);
+      if (setMyBookings) {
+        setMyBookings(prev => [response.data, ...(Array.isArray(prev) ? prev : [])]);
+      }
       setStep('pass');
-      if (onBookingSuccess) onBookingSuccess();
+      if (handleSuccessCallback) handleSuccessCallback(response.data);
     } catch (err) {
       alert(err.response?.data?.error || 'Payment process failed. Please try again.');
       setStep('payment');
@@ -187,34 +215,34 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, onBookingSucce
             {/* Activity Card Banner */}
             <div className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
               <img
-                src={activity.image}
-                alt={activity.title}
+                src={activeActivity.image}
+                alt={activeActivity.title}
                 className="w-24 h-24 rounded-xl object-cover border border-amber-400/40 shrink-0"
               />
               <div className="space-y-1">
                 <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold uppercase">
-                  {activity.category}
+                  {activeActivity.category}
                 </span>
-                <h4 className="text-lg font-bold text-white leading-tight">{activity.title}</h4>
+                <h4 className="text-lg font-bold text-white leading-tight">{activeActivity.title}</h4>
                 <p className="text-xs text-white/60 flex items-center gap-1.5 pt-0.5">
                   <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>{activity.location}</span>
+                  <span>{activeActivity.location}</span>
                 </p>
                 <p className="text-xs text-white/60 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                  <span>{activity.validity}</span>
+                  <span>{activeActivity.validity}</span>
                 </p>
               </div>
             </div>
 
             {/* Pass Benefits List */}
-            {activity.benefits && activity.benefits.length > 0 && (
+            {activeActivity.benefits && activeActivity.benefits.length > 0 && (
               <div className="space-y-2">
                 <h5 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5" /> Included Pass Benefits & Perks:
                 </h5>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {activity.benefits.map((b, idx) => (
+                  {activeActivity.benefits.map((b, idx) => (
                     <div key={idx} className="flex items-center gap-2 p-2 rounded-xl bg-white/5 text-xs text-white/90 border border-white/5">
                       <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       <span>{b}</span>
