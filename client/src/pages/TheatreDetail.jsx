@@ -20,109 +20,6 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
   const [selectedShowForPrivate, setSelectedShowForPrivate] = useState(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
-  // Dynamic Date List Generator (combines Admin Configured Dates + Upcoming 7 Days)
-  const getDynamicDatesList = () => {
-    const today = new Date();
-    const isoDates = new Set();
-
-    // 1. Add next 7 days starting from today (YYYY-MM-DD)
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      isoDates.add(d.toISOString().split('T')[0]);
-    }
-
-    // 2. Add any dates configured in theatre.hallSlotsByDate, dateHalls, pricingByDate
-    if (theatre) {
-      const hallMap = theatre.hallSlotsByDate || theatre.dateHalls || {};
-      Object.keys(hallMap).forEach(dKey => {
-        if (dKey && dKey.length === 10) isoDates.add(dKey);
-      });
-      if (theatre.pricingByDate) {
-        Object.keys(theatre.pricingByDate).forEach(dKey => {
-          if (dKey && dKey.length === 10) isoDates.add(dKey);
-        });
-      }
-      if (Array.isArray(theatre.shows)) {
-        theatre.shows.forEach(s => {
-          if (s.date && s.date.length === 10) isoDates.add(s.date);
-        });
-      }
-    }
-
-    const sortedIsoList = Array.from(isoDates).sort();
-
-    return sortedIsoList.map((isoStr, index) => {
-      const dObj = new Date(isoStr + 'T00:00:00');
-      const dayName = dObj.toLocaleDateString('en-US', { weekday: 'short' });
-      const monthName = dObj.toLocaleDateString('en-US', { month: 'short' });
-      const dayNum = dObj.getDate();
-
-      let label = `${dayNum} ${monthName}`;
-      if (isoStr === today.toISOString().split('T')[0]) label = 'TODAY';
-      else if (index === 1) label = 'TOMORROW';
-
-      return {
-        label: label,
-        date: isoStr,
-        day: dayName,
-        monthDay: `${dayNum} ${monthName}`
-      };
-    });
-  };
-
-  const dates = getDynamicDatesList();
-
-  const selectedDateStr = dates[selectedDateIndex]?.date || new Date().toISOString().split('T')[0];
-
-  // Group shows & halls by movie strictly filtered by selected date
-  const showsByMovieMap = {};
-
-  // 1. Collect from theatre.shows
-  if (theatre.shows && theatre.shows.length > 0) {
-    theatre.shows.forEach(s => {
-      if (s.date === selectedDateStr || !s.date) {
-        const mId = s.movieId || 'mov_1';
-        if (!showsByMovieMap[mId]) {
-          showsByMovieMap[mId] = {
-            movieId: mId,
-            movieTitle: s.movieTitle || 'Avatar: Fire and Ash',
-            shows: []
-          };
-        }
-        showsByMovieMap[mId].shows.push(s);
-      }
-    });
-  }
-
-  // 2. Collect from theatre.hallSlotsByDate or dateHalls for selectedDateStr
-  const hallMap = theatre.hallSlotsByDate || theatre.dateHalls || {};
-  const activeDateHalls = Array.isArray(hallMap[selectedDateStr]) ? hallMap[selectedDateStr] : [];
-  if (activeDateHalls.length > 0) {
-    activeDateHalls.forEach(h => {
-      const mId = h.movieId || 'mov_1';
-      if (!showsByMovieMap[mId]) {
-        showsByMovieMap[mId] = {
-          movieId: mId,
-          movieTitle: h.movieTitle || 'Toxic',
-          shows: []
-        };
-      }
-      showsByMovieMap[mId].shows.push({
-        id: h.id,
-        movieId: mId,
-        movieTitle: h.movieTitle || 'Toxic',
-        screenName: h.hallName || 'Hall 1',
-        format: h.format || 'IMAX 3D',
-        time: h.time || '10:30 AM',
-        price: h.price || 4500,
-        date: selectedDateStr
-      });
-    });
-  }
-
-  const movieGroupList = Object.values(showsByMovieMap);
-
   const fetchTheatreDetails = async () => {
     setLoading(true);
     try {
@@ -207,6 +104,109 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
       </div>
     );
   }
+
+  // Dynamic Date List Generator (combines Admin Configured Dates + Upcoming 7 Days)
+  const getDynamicDatesList = () => {
+    const today = new Date();
+    const isoDates = new Set();
+
+    // 1. Add next 7 days starting from today (YYYY-MM-DD)
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      isoDates.add(d.toISOString().split('T')[0]);
+    }
+
+    // 2. Add any dates configured in theatre.hallSlotsByDate, dateHalls, pricingByDate
+    if (theatre) {
+      const hallMap = theatre.hallSlotsByDate || theatre.dateHalls || {};
+      Object.keys(hallMap).forEach(dKey => {
+        if (dKey && dKey.length === 10) isoDates.add(dKey);
+      });
+      if (theatre.pricingByDate) {
+        Object.keys(theatre.pricingByDate).forEach(dKey => {
+          if (dKey && dKey.length === 10) isoDates.add(dKey);
+        });
+      }
+      if (Array.isArray(theatre.shows)) {
+        theatre.shows.forEach(s => {
+          if (s.date && s.date.length === 10) isoDates.add(s.date);
+        });
+      }
+    }
+
+    const sortedIsoList = Array.from(isoDates).sort();
+
+    return sortedIsoList.map((isoStr, index) => {
+      const dObj = new Date(isoStr + 'T00:00:00');
+      const dayName = dObj.toLocaleDateString('en-US', { weekday: 'short' });
+      const monthName = dObj.toLocaleDateString('en-US', { month: 'short' });
+      const dayNum = dObj.getDate();
+
+      let label = `${dayNum} ${monthName}`;
+      if (isoStr === today.toISOString().split('T')[0]) label = 'TODAY';
+      else if (index === 1) label = 'TOMORROW';
+
+      return {
+        label: label,
+        date: isoStr,
+        day: dayName,
+        monthDay: `${dayNum} ${monthName}`
+      };
+    });
+  };
+
+  const dates = getDynamicDatesList();
+
+  const selectedDateStr = dates[selectedDateIndex]?.date || new Date().toISOString().split('T')[0];
+
+  // Group shows & halls by movie strictly filtered by selected date
+  const showsByMovieMap = {};
+
+  // 1. Collect from theatre.shows
+  if (theatre?.shows && Array.isArray(theatre.shows)) {
+    theatre.shows.forEach(s => {
+      if (s.date === selectedDateStr || !s.date) {
+        const mId = s.movieId || 'mov_1';
+        if (!showsByMovieMap[mId]) {
+          showsByMovieMap[mId] = {
+            movieId: mId,
+            movieTitle: s.movieTitle || 'Avatar: Fire and Ash',
+            shows: []
+          };
+        }
+        showsByMovieMap[mId].shows.push(s);
+      }
+    });
+  }
+
+  // 2. Collect from theatre.hallSlotsByDate or dateHalls for selectedDateStr
+  const hallMap = theatre?.hallSlotsByDate || theatre?.dateHalls || {};
+  const activeDateHalls = Array.isArray(hallMap[selectedDateStr]) ? hallMap[selectedDateStr] : [];
+  if (activeDateHalls.length > 0) {
+    activeDateHalls.forEach(h => {
+      const mId = h.movieId || 'mov_1';
+      if (!showsByMovieMap[mId]) {
+        showsByMovieMap[mId] = {
+          movieId: mId,
+          movieTitle: h.movieTitle || 'Toxic',
+          shows: []
+        };
+      }
+      showsByMovieMap[mId].shows.push({
+        id: h.id,
+        movieId: mId,
+        movieTitle: h.movieTitle || 'Toxic',
+        screenName: h.hallName || 'Hall 1',
+        format: h.format || 'IMAX 3D',
+        time: h.time || '10:30 AM',
+        price: h.price || 4500,
+        date: selectedDateStr
+      });
+    });
+  }
+
+  const movieGroupList = Object.values(showsByMovieMap);
 
   return (
     <div className="min-h-screen bg-[#050508] text-white pt-6 pb-20 font-sans">
