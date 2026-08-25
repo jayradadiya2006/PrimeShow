@@ -46,10 +46,28 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   };
 
   useEffect(() => {
+    let isMounted = true;
     const found = moviesList.find(m => m.id === movieId || m._id === movieId || m.title === movieId) || moviesList[0];
     if (found) {
       setMovie(found);
     }
+
+    // Fetch live movie document directly from MongoDB Atlas API to obtain fresh showDates and schedules
+    const fetchLiveMovie = async () => {
+      const targetId = movieId || found?.id || found?._id || found?.title;
+      if (!targetId) return;
+      try {
+        const res = await API.get(`/movies/${encodeURIComponent(targetId)}`);
+        if (isMounted && res.data) {
+          setMovie(prev => ({ ...(prev || {}), ...res.data }));
+        }
+      } catch (err) {
+        console.warn('⚠️ Live movie fetch warning:', err.message);
+      }
+    };
+
+    fetchLiveMovie();
+
     setReviewsList([
       {
         id: 'rev_1',
@@ -66,6 +84,8 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
         createdAt: '3 days ago'
       }
     ]);
+
+    return () => { isMounted = false; };
   }, [movieId, moviesList]);
 
   // Reliable Back Button Handler
@@ -77,16 +97,26 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
     }
   };
 
-  // Dynamic Date Chips Generator based strictly on movie.showDates configured by Admin
+  // Dynamic Date Chips Generator combining showDates and schedules keys configured by Admin in MongoDB Atlas
   const generateDynamicDates = () => {
-    if (movie && Array.isArray(movie.showDates) && movie.showDates.length > 0) {
-      return movie.showDates.map((dStr, idx) => {
+    const schedulesKeys = (movie && movie.schedules && typeof movie.schedules === 'object')
+      ? Object.keys(movie.schedules)
+      : [];
+    const showDatesList = (movie && Array.isArray(movie.showDates)) ? movie.showDates : [];
+
+    const rawDates = Array.from(new Set([...showDatesList, ...schedulesKeys])).filter(Boolean);
+
+    if (rawDates.length > 0) {
+      rawDates.sort((a, b) => new Date(a) - new Date(b));
+
+      return rawDates.map((dStr, idx) => {
         const dObj = new Date(dStr);
-        const dayLabel = idx === 0 ? 'TODAY' : (idx === 1 ? 'TOMORROW' : dObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase());
+        const dayLabel = idx === 0 ? 'CONFIGURED' : dObj.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
         const dayFormatted = isNaN(dObj.getTime()) ? dStr : dObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }).toUpperCase();
         return { date: dStr, label: dayLabel, day: dayFormatted };
       });
     }
+
     const today = new Date();
     return [0, 1, 2].map(offset => {
       const d = new Date(today);

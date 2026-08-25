@@ -2057,7 +2057,7 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
     let dateSchedules = [];
 
     if (targetDate) {
-      if (Array.isArray(schedulesMap[targetDate])) {
+      if (Array.isArray(schedulesMap[targetDate]) && schedulesMap[targetDate].length > 0) {
         dateSchedules = schedulesMap[targetDate];
       } else {
         const foundKey = Object.keys(schedulesMap).find(k => {
@@ -2068,12 +2068,21 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
             return false;
           }
         });
-        if (foundKey && Array.isArray(schedulesMap[foundKey])) {
+        if (foundKey && Array.isArray(schedulesMap[foundKey]) && schedulesMap[foundKey].length > 0) {
           dateSchedules = schedulesMap[foundKey];
         }
       }
     }
 
+    // Fallback 1: If requested date has 0 schedules, check any configured date in schedulesMap
+    if ((!dateSchedules || dateSchedules.length === 0) && Object.keys(schedulesMap).length > 0) {
+      const allConfigured = Object.values(schedulesMap).filter(Array.isArray).flat();
+      if (allConfigured.length > 0) {
+        dateSchedules = allConfigured;
+      }
+    }
+
+    // Fallback 2: Fallback to movieDoc.theatres
     if ((!dateSchedules || dateSchedules.length === 0) && movieDoc.theatres && Array.isArray(movieDoc.theatres)) {
       dateSchedules = movieDoc.theatres;
     }
