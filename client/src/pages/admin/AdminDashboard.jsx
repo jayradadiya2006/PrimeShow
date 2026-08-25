@@ -1414,10 +1414,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
       availableSeats: 120
     };
 
+    // Immediately update local state so UI updates to (1 THEATRES) with slot badge instantly
+    await addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
+
     try {
       let res;
       try {
-        res = await API.post('/admin/movies/schedules', {
+        res = await API.post('/admin/movies/add-slot', {
           selectedMovieId: schedMovieId,
           movieId: schedMovieId,
           targetMovieId: schedMovieId,
@@ -1439,7 +1442,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
         });
       } catch (e1) {
         try {
-          res = await API.post('/admin/movies/add-slot', {
+          res = await API.post('/admin/movies/schedules', {
             selectedMovieId: schedMovieId,
             movieId: schedMovieId,
             targetCity: effectiveCity,
@@ -1462,15 +1465,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
       }
 
       if (res?.data?.movie) {
-        setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId) ? res.data.movie : m));
-      } else {
-        await addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
+        const dbM = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId || (m.title && m.title.toLowerCase() === (schedMovieId || '').toLowerCase())) ? dbM : m));
       }
 
       setActionSuccess(`Show slot '${effectiveTime}' (${schedFormat}) saved to MongoDB Atlas for ${selectedSchedDate}!`);
     } catch (err) {
       console.warn('⚠️ Fallback adding show slot:', err.message);
-      await addShowSlotToMovieTheatre(schedMovieId, selectedSchedDate, theatreObj, showSlotObj);
       setActionSuccess(`Added show slot '${effectiveTime}'!`);
     }
 
@@ -3909,7 +3910,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Configured Dates Badges */}
               {(() => {
-                const targetM = moviesList.find(m => m.id === schedMovieId);
+                const targetM = moviesList.find(m => m && (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId || (m.title && m.title.toLowerCase() === (schedMovieId || '').toLowerCase())));
                 const showDates = targetM?.showDates || [];
                 return (
                   <div className="space-y-2">
@@ -4050,7 +4051,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Configured Theatres & Showtimes List for Selected Date */}
               {(() => {
-                const targetM = moviesList.find(m => m.id === schedMovieId);
+                const targetM = moviesList.find(m => m && (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId || (m.title && m.title.toLowerCase() === (schedMovieId || '').toLowerCase())));
                 const schedsForDate = targetM?.schedules?.[selectedSchedDate] || (selectedSchedDate === '2026-07-31' ? targetM?.theatres : []);
                 
                 return (

@@ -2041,7 +2041,8 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
       movieDoc = await Movie.findOne(buildIdFilter(id)).lean();
     }
     if (!movieDoc) {
-      movieDoc = movies.find(m => m.id === id || m._id === id);
+      const cleanId = String(id || '').trim().toLowerCase();
+      movieDoc = movies.find(m => m.id === id || m._id === id || (m.title && m.title.trim().toLowerCase() === cleanId));
     }
     if (!movieDoc) {
       return res.status(404).json({ success: false, error: 'Movie not found', schedules: [] });
@@ -2052,10 +2053,28 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
       schedulesMap = Object.fromEntries(schedulesMap);
     }
 
+    let targetDate = date ? String(date).trim() : null;
     let dateSchedules = [];
-    if (date && schedulesMap[date]) {
-      dateSchedules = Array.isArray(schedulesMap[date]) ? schedulesMap[date] : [];
-    } else if (movieDoc.theatres && Array.isArray(movieDoc.theatres)) {
+
+    if (targetDate) {
+      if (Array.isArray(schedulesMap[targetDate])) {
+        dateSchedules = schedulesMap[targetDate];
+      } else {
+        const foundKey = Object.keys(schedulesMap).find(k => {
+          if (k === targetDate) return true;
+          try {
+            return new Date(k).toISOString().split('T')[0] === targetDate;
+          } catch (e) {
+            return false;
+          }
+        });
+        if (foundKey && Array.isArray(schedulesMap[foundKey])) {
+          dateSchedules = schedulesMap[foundKey];
+        }
+      }
+    }
+
+    if ((!dateSchedules || dateSchedules.length === 0) && movieDoc.theatres && Array.isArray(movieDoc.theatres)) {
       dateSchedules = movieDoc.theatres;
     }
 
@@ -2070,7 +2089,7 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
     return res.json({
       success: true,
       movieId: id,
-      date: date || null,
+      date: targetDate || null,
       city: city || 'All',
       schedules: finalSchedules
     });
