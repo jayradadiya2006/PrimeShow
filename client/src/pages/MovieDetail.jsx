@@ -16,6 +16,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const [selectedTheatreForMap, setSelectedTheatreForMap] = useState(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [liveSchedules, setLiveSchedules] = useState(null);
+  const [isScheduleLoading, setIsScheduleLoading] = useState(false);
 
   useEffect(() => {
     if (selectedCity) {
@@ -45,7 +46,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   };
 
   useEffect(() => {
-    const found = moviesList.find(m => m.id === movieId) || moviesList[0];
+    const found = moviesList.find(m => m.id === movieId || m._id === movieId || m.title === movieId) || moviesList[0];
     if (found) {
       setMovie(found);
     }
@@ -100,39 +101,48 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const availableDates = generateDynamicDates();
   const currentDateSelection = selectedDate || (availableDates[0]?.date || '2026-07-31');
 
+  // Explicit Live Schedule Fetch Hook (Triggers active Fetch/XHR GET request on date or city change)
   useEffect(() => {
     let isMounted = true;
-    const fetchLiveSchedules = async () => {
+    const fetchShowtimes = async () => {
       const targetMovieId = movieId || movie?.id || movie?._id || movie?.title;
       if (!targetMovieId) return;
+
+      setIsScheduleLoading(true);
       try {
         const cityParam = (selectedCityFilter && selectedCityFilter !== 'All') ? selectedCityFilter : (selectedCity || 'All');
-        const targetDate = currentDateSelection;
-        const res = await API.get(`/movies/${encodeURIComponent(targetMovieId)}/schedules?date=${targetDate}&city=${encodeURIComponent(cityParam)}`);
-        if (isMounted && res.data && Array.isArray(res.data.schedules)) {
-          setLiveSchedules(res.data.schedules);
+        const dateParam = currentDateSelection;
+
+        const res = await API.get(`/movies/${encodeURIComponent(targetMovieId)}/schedules?city=${encodeURIComponent(cityParam)}&date=${encodeURIComponent(dateParam)}`);
+        
+        if (isMounted) {
+          if (res.data && Array.isArray(res.data.schedules)) {
+            setLiveSchedules(res.data.schedules);
+          } else {
+            setLiveSchedules([]);
+          }
         }
       } catch (err) {
         console.warn('⚠️ Error fetching live schedules from API:', err.message);
+        if (isMounted) setLiveSchedules([]);
+      } finally {
+        if (isMounted) setIsScheduleLoading(false);
       }
     };
 
-    fetchLiveSchedules();
+    fetchShowtimes();
     return () => { isMounted = false; };
   }, [movieId, movie, currentDateSelection, selectedCityFilter, selectedCity]);
 
   if (!movie) return null;
 
-  // Dynamic Theatre & Showtimes Retrieval based STRICTLY on selected date and Admin schedules in MongoDB Atlas
+  // Dynamic Theatre & Showtimes Retrieval based STRICTLY on live MongoDB Atlas API response
   const getTheatresForCurrentDate = () => {
-    if (Array.isArray(liveSchedules) && liveSchedules.length > 0) {
+    if (Array.isArray(liveSchedules)) {
       return liveSchedules;
     }
     if (movie && movie.schedules && Array.isArray(movie.schedules[currentDateSelection]) && movie.schedules[currentDateSelection].length > 0) {
       return movie.schedules[currentDateSelection];
-    }
-    if (Array.isArray(liveSchedules)) {
-      return liveSchedules;
     }
     return [];
   };
@@ -383,7 +393,12 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
 
           {/* Theatre Shows List */}
           <div className="space-y-4">
-            {filteredTheatres.length > 0 ? (
+            {isScheduleLoading ? (
+              <div className="p-8 text-center glass-panel rounded-3xl text-amber-300 text-xs font-bold animate-pulse flex items-center justify-center gap-2 border border-amber-400/20">
+                <Clock className="w-4 h-4 animate-spin text-amber-400" />
+                <span>Fetching live showtime schedules from MongoDB Atlas...</span>
+              </div>
+            ) : filteredTheatres.length > 0 ? (
               filteredTheatres.map((theatre) => (
                 <div key={theatre.id} className="glass-panel p-4 sm:p-6 rounded-3xl border border-white/10 space-y-4 shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
