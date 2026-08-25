@@ -247,6 +247,7 @@ async function connectDB() {
 
     console.log(`🔄 Connecting strictly to MongoDB Atlas Cloud Database...`);
     await mongoose.connect(uri, {
+      maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 10000
     });

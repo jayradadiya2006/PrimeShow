@@ -1989,6 +1989,9 @@ app.post(['/api/user/wishlist/toggle', '/user/wishlist/toggle'], async (req, res
 // -------------------------------------------------------------
 
 app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   try {
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
@@ -2017,6 +2020,9 @@ app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
 });
 
 app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   const { id } = req.params;
   try {
     const mongoose = require('mongoose');
@@ -2031,6 +2037,10 @@ app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
 });
 
 app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   const { id } = req.params;
   const { date, city } = req.query;
 
