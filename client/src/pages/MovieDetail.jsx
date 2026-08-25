@@ -179,9 +179,13 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
 
   const theatreShows = getTheatresForCurrentDate();
   const activeCityToUse = selectedCityFilter || selectedCity || 'All';
-  const filteredTheatres = (!activeCityToUse || activeCityToUse === 'All')
+  let filteredTheatres = (!activeCityToUse || activeCityToUse === 'All')
     ? theatreShows
     : theatreShows.filter(t => t && t.city && t.city.trim().toLowerCase() === activeCityToUse.trim().toLowerCase());
+
+  if (filteredTheatres.length === 0 && theatreShows.length > 0) {
+    filteredTheatres = theatreShows;
+  }
 
   const handleReviewSubmit = (e) => {
     e.preventDefault();

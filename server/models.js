@@ -93,8 +93,11 @@ const MovieSchema = new mongoose.Schema({
   status: { type: String, default: 'Now Showing' },
   featured: { type: Boolean, default: true },
   city: { type: String, default: 'All' },
-  cities: [{ type: String }]
-}, { timestamps: true });
+  cities: [{ type: String }],
+  showDates: [{ type: String }],
+  schedules: { type: mongoose.Schema.Types.Mixed, default: {} },
+  theatres: [{ type: mongoose.Schema.Types.Mixed }]
+}, { timestamps: true, strict: false });
 
 const TheatreSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -114,21 +117,12 @@ const TheatreSchema = new mongoose.Schema({
     formats: [String],
     totalSeats: Number
   }],
-  shows: [{
-    id: String,
-    movieId: String,
-    movieTitle: String,
-    screenId: String,
-    screenName: String,
-    format: String,
-    time: String,
-    price: Number
-  }],
+  shows: [{ type: mongoose.Schema.Types.Mixed }],
   pricingByDate: { type: mongoose.Schema.Types.Mixed, default: {} },
   datePricing: { type: mongoose.Schema.Types.Mixed, default: {} },
   hallSlotsByDate: { type: mongoose.Schema.Types.Mixed, default: {} },
   dateHalls: { type: mongoose.Schema.Types.Mixed, default: {} }
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const BookingSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
