@@ -2391,7 +2391,17 @@ app.post(['/api/admin/movies/add-date', '/api/movies/add-date'], async (req, res
 });
 
 // Admin Movie Show Dates & Theatre Schedule Manager Endpoint (MongoDB Atlas Persistence)
-app.post(['/api/admin/movies/add-slot', '/api/admin/movies/schedule', '/api/movies/:id/schedule', '/api/admin/movies/:id/schedule'], async (req, res) => {
+app.post([
+  '/api/admin/movies/schedules',
+  '/api/admin/movies/schedule',
+  '/api/admin/movies/add-slot',
+  '/api/movies/schedules',
+  '/api/movies/schedule',
+  '/api/movies/:id/schedules',
+  '/api/movies/:id/schedule',
+  '/api/admin/movies/:id/schedules',
+  '/api/admin/movies/:id/schedule'
+], async (req, res) => {
   try {
     const movieId = req.params.id || req.body.selectedMovieId || req.body.targetMovieId || req.body.movieId || req.body.id;
     let action = req.body.action || 'ADD_SHOW_SLOT';

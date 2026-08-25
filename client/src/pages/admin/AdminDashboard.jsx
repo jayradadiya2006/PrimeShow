@@ -1417,7 +1417,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     try {
       let res;
       try {
-        res = await API.post('/admin/movies/add-slot', {
+        res = await API.post('/admin/movies/schedules', {
           selectedMovieId: schedMovieId,
           movieId: schedMovieId,
           targetMovieId: schedMovieId,
@@ -1438,14 +1438,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
           action: 'ADD_SHOW_SLOT'
         });
       } catch (e1) {
-        res = await API.post('/admin/movies/schedule', {
-          selectedMovieId: schedMovieId,
-          movieId: schedMovieId,
-          action: 'ADD_SHOW_SLOT',
-          dateStr: selectedSchedDate,
-          theatreObj,
-          showSlotObj
-        });
+        try {
+          res = await API.post('/admin/movies/add-slot', {
+            selectedMovieId: schedMovieId,
+            movieId: schedMovieId,
+            targetCity: effectiveCity,
+            city: effectiveCity,
+            dateStr: selectedSchedDate,
+            theatreObj,
+            showSlotObj,
+            action: 'ADD_SHOW_SLOT'
+          });
+        } catch (e2) {
+          res = await API.post('/admin/movies/schedule', {
+            selectedMovieId: schedMovieId,
+            movieId: schedMovieId,
+            action: 'ADD_SHOW_SLOT',
+            dateStr: selectedSchedDate,
+            theatreObj,
+            showSlotObj
+          });
+        }
       }
 
       if (res?.data?.movie) {
