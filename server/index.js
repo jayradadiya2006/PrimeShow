@@ -30,6 +30,19 @@ function buildIdFilter(idVal) {
   return { $or: [{ id: str }, { title: safeRegex }] };
 }
 
+// Convert Google Drive shareable URLs to direct viewable CDN URLs
+function convertGoogleDriveUrl(url) {
+  if (!url || typeof url !== 'string') return url || '';
+  const str = url.trim();
+  if (str.includes('drive.google.com') || str.includes('docs.google.com')) {
+    const match = str.match(/[-\w]{25,}/);
+    if (match && match[0]) {
+      return `https://lh3.googleusercontent.com/d/${match[0]}`;
+    }
+  }
+  return str;
+}
+
 const app = express();
 const server = http.createServer(app);
 
