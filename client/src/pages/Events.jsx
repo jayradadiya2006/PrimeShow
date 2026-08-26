@@ -23,21 +23,32 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
 
   const fetchEvents = async () => {
     setLoading(true);
+    let isCancelled = false;
+
+    // Safety Timeout: Never keep user stuck on infinite loading spinner
+    const timer = setTimeout(() => {
+      if (!isCancelled) setLoading(false);
+    }, 6000);
+
     try {
       const res = await API.get('/events', {
-        params: { city: selectedCity || 'Surat', t: Date.now() },
-        headers: { 'Cache-Control': 'no-store' }
+        params: { city: selectedCity || 'Surat', t: Date.now() }
       });
-      if (res.data && Array.isArray(res.data)) {
-        setEventsList(res.data);
-      } else {
-        setEventsList([]);
+      if (!isCancelled) {
+        if (res.data && Array.isArray(res.data)) {
+          setEventsList(res.data);
+        } else if (res.data && Array.isArray(res.data?.events)) {
+          setEventsList(res.data.events);
+        } else {
+          setEventsList([]);
+        }
       }
     } catch (err) {
       console.warn('⚠️ Error fetching live events from MongoDB Atlas:', err.message);
-      setEventsList([]);
+      if (!isCancelled) setEventsList([]);
     } finally {
-      setLoading(false);
+      clearTimeout(timer);
+      if (!isCancelled) setLoading(false);
     }
   };
 

@@ -22,30 +22,38 @@ export const EventDetail = ({ eventId, onBackToEvents, onSelectMovie }) => {
     if (!eventId) return;
     setLoading(true);
     setError(null);
+    let isCancelled = false;
+
+    const timer = setTimeout(() => {
+      if (!isCancelled) setLoading(false);
+    }, 6000);
+
     try {
       const res = await API.get(`/events/${eventId}`, {
-        params: { t: Date.now() },
-        headers: { 'Cache-Control': 'no-store' }
+        params: { t: Date.now() }
       });
-      if (res.data) {
-        setEventData(res.data);
-        
-        // Auto-select initial date
-        const slotsMap = res.data.slots || res.data.schedules || {};
-        const availableDates = res.data.eventDates || res.data.dates || Object.keys(slotsMap);
-        if (availableDates && availableDates.length > 0) {
-          setSelectedDate(availableDates[0]);
-        } else if (res.data.date || res.data.eventDate) {
-          setSelectedDate(res.data.date || res.data.eventDate);
+      if (!isCancelled) {
+        if (res.data) {
+          setEventData(res.data);
+          
+          // Auto-select initial date
+          const slotsMap = res.data.slots || res.data.schedules || {};
+          const availableDates = res.data.eventDates || res.data.dates || Object.keys(slotsMap);
+          if (availableDates && availableDates.length > 0) {
+            setSelectedDate(availableDates[0]);
+          } else if (res.data.date || res.data.eventDate) {
+            setSelectedDate(res.data.date || res.data.eventDate);
+          }
+        } else {
+          setError('Event not found.');
         }
-      } else {
-        setError('Event not found.');
       }
     } catch (err) {
       console.warn('⚠️ Error fetching live event from MongoDB Atlas:', err.message);
-      setError('Unable to load event details from database.');
+      if (!isCancelled) setError('Unable to load event details from database.');
     } finally {
-      setLoading(false);
+      clearTimeout(timer);
+      if (!isCancelled) setLoading(false);
     }
   };
 
