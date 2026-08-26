@@ -130,13 +130,15 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-fade-in font-sans">
-      <div className="relative w-full max-w-2xl glass-modal rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl text-white max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center pt-20 sm:pt-24 pb-6 px-3 sm:px-6 bg-black/90 backdrop-blur-2xl animate-fade-in font-sans overflow-y-auto">
+      <div className="relative w-full max-w-xl glass-modal rounded-3xl p-5 sm:p-7 border border-white/15 shadow-2xl text-white max-h-[82vh] overflow-y-auto my-auto scrollbar-thin">
         
-        {/* Close Button */}
+        {/* Prominent Exit / Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white cursor-pointer"
+          className="absolute top-4 right-4 p-2.5 rounded-full bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 shadow-xl transition-all cursor-pointer z-[220] flex items-center justify-center"
+          title="Close Modal"
+          aria-label="Close Modal"
         >
           <X className="w-5 h-5" />
         </button>
@@ -462,10 +464,10 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-3 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
               <button
                 onClick={handleDownloadPDF}
-                className="py-3 px-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-2.5 px-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Pass (PDF)</span>
@@ -473,7 +475,7 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
               <button
                 onClick={handlePrint}
-                className="py-3 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-amber-400" />
                 <span>Print Ticket</span>
@@ -481,19 +483,22 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
               <button
                 onClick={handleShare}
-                className="py-3 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Share2 className="w-4 h-4 text-emerald-400" />
                 <span>Share Pass</span>
               </button>
             </div>
 
-            <button
-              onClick={onClose}
-              className="w-full py-3 rounded-xl glass-panel border border-white/10 text-white font-bold text-xs hover:bg-white/10 cursor-pointer"
-            >
-              Close & Done
-            </button>
+            <div className="pt-2">
+              <button
+                onClick={onClose}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/20 hover:scale-[1.02] transition-transform cursor-pointer flex items-center justify-center gap-2"
+              >
+                <X className="w-4 h-4" />
+                <span>Close & Return to Events</span>
+              </button>
+            </div>
           </div>
         )}
 
