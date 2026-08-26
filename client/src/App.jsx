@@ -17,6 +17,7 @@ import { CheckoutModal } from './pages/CheckoutModal';
 import { Theatres } from './pages/Theatres';
 import { TheatreDetail } from './pages/TheatreDetail';
 import { Events } from './pages/Events';
+import { EventDetail } from './pages/EventDetail';
 import { Plays } from './pages/Plays';
 import { Activities } from './pages/Activities';
 import { Offers } from './pages/Offers';
@@ -44,6 +45,7 @@ const MainAppContent = () => {
   });
   const [selectedMovieId, setSelectedMovieId] = useState('mov_1');
   const [selectedTheatreId, setSelectedTheatreId] = useState('th_1');
+  const [selectedEventId, setSelectedEventId] = useState('');
 
   // Modals
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -156,7 +158,22 @@ const MainAppContent = () => {
         )}
 
         {activeTab === 'events' && (
-          <Events onBookEvent={(evt) => handleBookNow('mov_1')} />
+          <Events 
+            onSelectEvent={(eventId) => {
+              setSelectedEventId(eventId);
+              setActiveTab('event-detail');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onBookEvent={(evt) => handleBookNow('mov_1')} 
+          />
+        )}
+
+        {activeTab === 'event-detail' && (
+          <EventDetail
+            eventId={selectedEventId}
+            onBackToEvents={() => setActiveTab('events')}
+            onSelectMovie={handleSelectMovie}
+          />
         )}
 
         {activeTab === 'plays' && (

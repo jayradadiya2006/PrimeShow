@@ -3449,6 +3449,11 @@ app.post('/api/private-theatre/book', (req, res) => {
 // -------------------------------------------------------------
 
 app.get(['/api/events', '/api/admin/events'], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  const { city } = req.query;
   try {
     if (mongoose.connection.readyState === 1) {
       const dbEvents = await Event.find().sort({ createdAt: -1 }).lean();
@@ -3458,16 +3463,40 @@ app.get(['/api/events', '/api/admin/events'], async (req, res) => {
         events.forEach(e => {
           if (!dbIds.has(e.id)) combined.push(e);
         });
+
+        if (city && city.toLowerCase() !== 'all') {
+          const filtered = combined.filter(ev => {
+            const evCity = (ev.city || '').trim().toLowerCase();
+            const targetCity = city.trim().toLowerCase();
+            return !evCity || evCity === 'all' || evCity === targetCity;
+          });
+          return res.json(filtered);
+        }
+
         return res.json(combined);
       }
     }
   } catch (err) {
     console.warn('⚠️ Error fetching events from MongoDB Atlas:', err.message);
   }
-  res.json(events);
+
+  let fallbackList = [...events];
+  if (city && city.toLowerCase() !== 'all') {
+    fallbackList = fallbackList.filter(ev => {
+      const evCity = (ev.city || '').trim().toLowerCase();
+      const targetCity = city.trim().toLowerCase();
+      return !evCity || evCity === 'all' || evCity === targetCity;
+    });
+  }
+
+  res.json(fallbackList);
 });
 
 app.get(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   const { id } = req.params;
   try {
     if (mongoose.connection.readyState === 1) {
