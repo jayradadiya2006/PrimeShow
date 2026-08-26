@@ -3448,6 +3448,123 @@ app.post('/api/private-theatre/book', (req, res) => {
 // EVENTS & FESTIVALS CRUD ENDPOINTS (MongoDB Atlas)
 // -------------------------------------------------------------
 
+const defaultSeedEvents = [
+  {
+    id: 'ev_surat_1',
+    title: 'Surat International Live Music Fest 2027',
+    category: 'Live Concert',
+    badge: 'SELLING FAST',
+    languages: ['Gujarati', 'Hindi', 'English'],
+    ageRating: 'All Ages',
+    venue: 'Pandit Dindayal Upadhyay Indoor Stadium',
+    venueLocation: 'Dumas Road, Near VR Mall, Surat - 395007',
+    address: 'Dumas Road, Near VR Mall, Surat - 395007',
+    mapLocationUrl: 'https://maps.google.com/?q=Pandit+Dindayal+Upadhyay+Indoor+Stadium+Surat',
+    city: 'Surat',
+    date: '2027-02-18',
+    eventDate: '2027-02-18',
+    eventDates: ['2027-02-18', '2027-02-19'],
+    dates: ['2027-02-18', '2027-02-19'],
+    time: '07:00 PM',
+    eventTime: '07:00 PM',
+    price: 1499,
+    ticketPrice: 1499,
+    totalCapacity: 15000,
+    availableSeats: 3200,
+    image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
+    poster: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80',
+    bannerUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80',
+    banner: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80',
+    description: 'Experience Surat\'s biggest live music night featuring top Bollywood singers, acoustic bands, and LED stage laser light shows.',
+    synopsis: 'Experience Surat\'s biggest live music night featuring top Bollywood singers, acoustic bands, and LED stage laser light shows.',
+    termsAndConditions: 'Non-refundable ticket. Entry permits 1 person per ticket. Valid ID proof required.',
+    bookingStatus: true,
+    slots: {
+      '2027-02-18': [
+        { id: 'slot_ev_1_1', date: '2027-02-18', startTime: '07:00 PM', endTime: '10:30 PM', time: '07:00 PM', screen: 'Main Concert Arena', hall: 'Main Concert Arena', tier: 'VIP', price: 2999, totalCapacity: 500, availableSeats: 420 },
+        { id: 'slot_ev_1_2', date: '2027-02-18', startTime: '07:00 PM', endTime: '10:30 PM', time: '07:00 PM', screen: 'Main Concert Arena', hall: 'Main Concert Arena', tier: 'Gold', price: 1499, totalCapacity: 3000, availableSeats: 1800 }
+      ],
+      '2027-02-19': [
+        { id: 'slot_ev_1_3', date: '2027-02-19', startTime: '06:30 PM', endTime: '10:00 PM', time: '06:30 PM', screen: 'Main Concert Arena', hall: 'Main Concert Arena', tier: 'VIP', price: 2999, totalCapacity: 500, availableSeats: 500 }
+      ]
+    }
+  },
+  {
+    id: 'ev_surat_2',
+    title: 'Surat Standup Comedy Special with Manan Desai',
+    category: 'Standup Comedy',
+    badge: 'POPULAR',
+    languages: ['Gujarati', 'Hindi'],
+    ageRating: 'UA 16+',
+    venue: 'Sanjeev Kumar Auditorium',
+    venueLocation: 'Pal Hazira Road, Adajan, Surat - 395009',
+    address: 'Pal Hazira Road, Adajan, Surat - 395009',
+    mapLocationUrl: 'https://maps.google.com/?q=Sanjeev+Kumar+Auditorium+Surat',
+    city: 'Surat',
+    date: '2027-02-25',
+    eventDate: '2027-02-25',
+    eventDates: ['2027-02-25'],
+    dates: ['2027-02-25'],
+    time: '08:00 PM',
+    eventTime: '08:00 PM',
+    price: 799,
+    ticketPrice: 799,
+    totalCapacity: 1200,
+    availableSeats: 350,
+    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+    poster: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
+    bannerUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
+    banner: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
+    description: 'Get ready for an evening of non-stop laughter packed with hilarious Gujarati observational comedy and crowd work.',
+    synopsis: 'Get ready for an evening of non-stop laughter packed with hilarious Gujarati observational comedy and crowd work.',
+    termsAndConditions: 'Age limit: 16 years and above. Tickets once booked cannot be cancelled or transferred.',
+    bookingStatus: true,
+    slots: {
+      '2027-02-25': [
+        { id: 'slot_ev_2_1', date: '2027-02-25', startTime: '08:00 PM', endTime: '10:00 PM', time: '08:00 PM', screen: 'Main Auditorium', hall: 'Main Auditorium', tier: 'Gold', price: 799, totalCapacity: 1200, availableSeats: 350 }
+      ]
+    }
+  },
+  {
+    id: 'ev_ahmedabad_1',
+    title: 'Ahmedabad Sunburn Electro EDM Night',
+    category: 'Live Concert',
+    badge: 'LIVE',
+    languages: ['English', 'Hindi'],
+    ageRating: '18+',
+    venue: 'EKA Arena, Kankaria',
+    venueLocation: 'Gate 3, Kankaria, Ahmedabad - 380022',
+    address: 'Gate 3, Kankaria, Ahmedabad - 380022',
+    mapLocationUrl: 'https://maps.google.com/?q=EKA+Arena+Ahmedabad',
+    city: 'Ahmedabad',
+    date: '2027-03-05',
+    eventDate: '2027-03-05',
+    eventDates: ['2027-03-05'],
+    dates: ['2027-03-05'],
+    time: '06:00 PM',
+    eventTime: '06:00 PM',
+    price: 1999,
+    ticketPrice: 1999,
+    totalCapacity: 8000,
+    availableSeats: 1500,
+    image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
+    poster: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80',
+    bannerUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+    banner: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+    description: 'India\'s premier electronic dance music festival featuring international DJs and high-energy bass music.',
+    synopsis: 'India\'s premier electronic dance music festival featuring international DJs and high-energy bass music.',
+    termsAndConditions: 'Strictly 18+ event. Government ID required at entry.',
+    bookingStatus: true,
+    slots: {
+      '2027-03-05': [
+        { id: 'slot_ev_3_2', date: '2027-03-05', startTime: '06:00 PM', endTime: '11:30 PM', time: '06:00 PM', screen: 'Stadium Main Pitch', hall: 'Stadium Main Pitch', tier: 'General Phase 1', price: 1999, totalCapacity: 7000, availableSeats: 1100 }
+      ]
+    }
+  }
+];
+
+const eventsMemoryList = [...defaultSeedEvents];
+
 app.get(['/api/events', '/api/admin/events'], async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -3456,40 +3573,48 @@ app.get(['/api/events', '/api/admin/events'], async (req, res) => {
   const { city } = req.query;
   try {
     if (mongoose.connection.readyState === 1) {
+      // Auto-seed default events if MongoDB Atlas collection is empty
+      const count = await Event.countDocuments().catch(() => 0);
+      if (count === 0 && defaultSeedEvents.length > 0) {
+        await Event.insertMany(defaultSeedEvents).catch(() => {});
+      }
+
       const dbEvents = await Event.find().sort({ createdAt: -1 }).lean();
-      if (dbEvents && dbEvents.length > 0) {
-        const dbIds = new Set(dbEvents.map(e => e.id));
-        const combined = [...dbEvents];
-        events.forEach(e => {
-          if (!dbIds.has(e.id)) combined.push(e);
+      let combined = (dbEvents && dbEvents.length > 0) ? [...dbEvents] : [...defaultSeedEvents];
+      
+      const dbIds = new Set(combined.map(e => e.id));
+      eventsMemoryList.forEach(e => {
+        if (!dbIds.has(e.id)) combined.push(e);
+      });
+
+      if (city && city.toLowerCase() !== 'all') {
+        const targetCity = city.trim().toLowerCase();
+        const filtered = combined.filter(ev => {
+          const evCity = (ev.city || '').trim().toLowerCase();
+          return !evCity || evCity === 'all' || evCity === targetCity;
         });
 
-        if (city && city.toLowerCase() !== 'all') {
-          const filtered = combined.filter(ev => {
-            const evCity = (ev.city || '').trim().toLowerCase();
-            const targetCity = city.trim().toLowerCase();
-            return !evCity || evCity === 'all' || evCity === targetCity;
-          });
-          return res.json(filtered);
-        }
-
-        return res.json(combined);
+        // If target city filtering returns results, return filtered; otherwise return all combined
+        return res.json(filtered.length > 0 ? filtered : combined);
       }
+
+      return res.json(combined);
     }
   } catch (err) {
     console.warn('⚠️ Error fetching events from MongoDB Atlas:', err.message);
   }
 
-  let fallbackList = [...events];
+  let fallbackList = [...eventsMemoryList];
   if (city && city.toLowerCase() !== 'all') {
-    fallbackList = fallbackList.filter(ev => {
+    const targetCity = city.trim().toLowerCase();
+    const filtered = fallbackList.filter(ev => {
       const evCity = (ev.city || '').trim().toLowerCase();
-      const targetCity = city.trim().toLowerCase();
       return !evCity || evCity === 'all' || evCity === targetCity;
     });
+    if (filtered.length > 0) fallbackList = filtered;
   }
 
-  res.json(fallbackList);
+  return res.json(fallbackList);
 });
 
 app.get(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
@@ -3504,9 +3629,9 @@ app.get(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
       if (dbEvent) return res.json(dbEvent);
     }
   } catch (err) {}
-  const event = events.find(e => e.id === id);
+  const event = eventsMemoryList.find(e => e.id === id) || defaultSeedEvents.find(e => e.id === id);
   if (!event) return res.status(404).json({ error: 'Event not found' });
-  res.json(event);
+  return res.json(event);
 });
 
 app.post(['/api/events', '/api/admin/events'], async (req, res) => {
@@ -3584,9 +3709,9 @@ app.post(['/api/events', '/api/admin/events'], async (req, res) => {
 
     const finalEvent = dbSaved || newEvent;
 
-    const existingIdx = events.findIndex(e => e.id === finalEvent.id);
-    if (existingIdx !== -1) events[existingIdx] = finalEvent;
-    else events.unshift(finalEvent);
+    const existingIdx = eventsMemoryList.findIndex(e => e.id === finalEvent.id);
+    if (existingIdx !== -1) eventsMemoryList[existingIdx] = finalEvent;
+    else eventsMemoryList.unshift(finalEvent);
 
     if (req.app.get('socketio')) {
       req.app.get('socketio').emit('EVENT_UPDATED', finalEvent);

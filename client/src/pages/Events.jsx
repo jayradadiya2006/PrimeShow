@@ -381,10 +381,20 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
         )}
 
         {!loading && filteredEvents.length === 0 && (
-          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6 max-w-lg mx-auto">
-            <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No active events in {selectedCity || 'this city'} currently</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60">No active events in {selectedCity || 'this city'} currently. Switch city to explore more live concerts and shows.</p>
+          <div className="text-center py-16 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6 max-w-lg mx-auto space-y-3">
+            <Sparkles className="w-10 h-10 text-amber-400 mx-auto" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">No active events matching "{activeCategory !== 'All' ? activeCategory : (selectedCity || 'this city')}"</h3>
+            <p className="text-xs text-slate-500 dark:text-white/60">No specific events found for this filter. Switch city or clear filters to explore live concerts and shows.</p>
+            <button
+              onClick={() => {
+                setActiveCategory('All');
+                setSearchQuery('');
+                fetchEvents();
+              }}
+              className="mt-2 px-6 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg transition cursor-pointer"
+            >
+              Explore All Live Events & Concerts
+            </button>
           </div>
         )}
       </div>
