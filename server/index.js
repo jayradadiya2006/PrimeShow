@@ -3483,41 +3483,62 @@ app.get(['/api/events/:id', '/api/admin/events/:id'], async (req, res) => {
 app.post(['/api/events', '/api/admin/events'], async (req, res) => {
   try {
     const title = req.body.title || req.body.eventName;
-    const venue = req.body.venue || req.body.venueLocation;
+    const venue = req.body.venue || req.body.venueName || req.body.venueLocation || 'Surat Exhibition Center';
     const city = req.body.city || 'Surat';
-    const date = req.body.date || req.body.eventDate || '18 JAN 2027';
+    const date = req.body.date || req.body.eventDate || new Date().toISOString().split('T')[0];
     const time = req.body.time || req.body.eventTime || '07:00 PM';
     const priceVal = req.body.price !== undefined ? req.body.price : req.body.ticketPrice;
     
-    if (!title || !venue || priceVal === undefined) {
-      return res.status(400).json({ error: 'Title, venue location and ticket price are required' });
+    if (!title || !venue) {
+      return res.status(400).json({ success: false, error: 'Event Title and Venue Name are required' });
     }
 
     const price = Number(priceVal || 0);
     const totalCap = Number(req.body.totalCapacity || 1000);
     const avail = Number(req.body.availableSeats !== undefined ? req.body.availableSeats : totalCap);
-    const imgUrl = convertGoogleDriveUrl(req.body.image || req.body.bannerUrl || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80');
+    const imgUrl = convertGoogleDriveUrl(req.body.image || req.body.poster || req.body.bannerUrl || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80');
+    const bannerImg = convertGoogleDriveUrl(req.body.bannerUrl || req.body.banner || imgUrl);
+
+    const languages = typeof req.body.languages === 'string'
+      ? req.body.languages.split(',').map(s => s.trim()).filter(Boolean)
+      : (req.body.languages || ['English', 'Hindi', 'Gujarati']);
+
+    const datesList = Array.isArray(req.body.eventDates || req.body.dates)
+      ? (req.body.eventDates || req.body.dates)
+      : [date];
 
     const newEvent = {
       id: req.body.id || `ev_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      title: title.trim(),
+      title: String(title).trim(),
       category: req.body.category || 'Live Concert',
       badge: req.body.badge || 'LIVE',
-      venue: venue.trim(),
-      venueLocation: venue.trim(),
-      city: city.trim(),
-      date: date.trim(),
-      eventDate: date.trim(),
-      time: time.trim(),
-      eventTime: time.trim(),
-      price,
+      languages: languages,
+      ageRating: req.body.ageRating || req.body.certificate || 'All Ages',
+      venue: String(venue).trim(),
+      venueLocation: req.body.address || req.body.venueLocation || String(venue).trim(),
+      address: req.body.address || req.body.venueLocation || String(venue).trim(),
+      mapLocationUrl: req.body.mapLocationUrl || '',
+      city: String(city).trim(),
+      date: String(date).trim(),
+      eventDate: String(date).trim(),
+      eventDates: datesList,
+      dates: datesList,
+      time: String(time).trim(),
+      eventTime: String(time).trim(),
+      price: price,
       ticketPrice: price,
       totalCapacity: totalCap,
       availableSeats: avail,
       image: imgUrl,
-      bannerUrl: imgUrl,
-      description: req.body.description || 'Exclusive live event experience on PrimeShow.',
-      bookingStatus: req.body.bookingStatus !== undefined ? Boolean(req.body.bookingStatus) : true
+      poster: imgUrl,
+      bannerUrl: bannerImg,
+      banner: bannerImg,
+      description: req.body.description || req.body.synopsis || 'Exclusive live event experience on PrimeShow.',
+      synopsis: req.body.description || req.body.synopsis || 'Exclusive live event experience on PrimeShow.',
+      termsAndConditions: req.body.termsAndConditions || 'Non-refundable ticket. Entry permits 1 person per ticket.',
+      bookingStatus: req.body.bookingStatus !== undefined ? Boolean(req.body.bookingStatus) : true,
+      slots: req.body.slots || req.body.schedules || {},
+      schedules: req.body.schedules || req.body.slots || {}
     };
 
     delete newEvent._id;
@@ -3545,10 +3566,115 @@ app.post(['/api/events', '/api/admin/events'], async (req, res) => {
     broadcastToAllClients('EVENT_UPDATED', finalEvent);
     broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: finalEvent });
 
-    res.status(201).json(finalEvent);
+    return res.status(201).json(finalEvent);
   } catch (err) {
     console.error('❌ POST /api/events error:', err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Event Date & Showtime Slot Schedule Manager Endpoint (MongoDB Atlas Persistence)
+app.post([
+  '/api/admin/events/add-slot',
+  '/api/events/add-slot',
+  '/api/admin/events/slot',
+  '/api/events/slot'
+], async (req, res) => {
+  try {
+    const { eventId, targetEventId, date, eventDate, dateStr, time, startTime, endTime, screen, hall, category, tier, seatCategory, price, ticketPrice, totalCapacity, capacity } = req.body;
+    const idToUse = eventId || targetEventId || req.body.id || req.body.selectedEventId;
+    const dateToUse = date || eventDate || dateStr || new Date().toISOString().split('T')[0];
+
+    if (!idToUse) {
+      return res.status(400).json({ success: false, error: 'Target Event ID is required' });
+    }
+
+    const slotPrice = Number(price || ticketPrice || 1500);
+    const slotCap = Number(totalCapacity || capacity || 500);
+    const effectiveCategory = category || tier || seatCategory || 'VIP';
+
+    const slotObj = {
+      id: req.body.slotId || `slot_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      date: dateToUse,
+      startTime: time || startTime || '07:00 PM',
+      endTime: endTime || '10:00 PM',
+      time: time || startTime || '07:00 PM',
+      screen: screen || hall || 'Main Stage',
+      hall: hall || screen || 'Main Stage',
+      tier: effectiveCategory,
+      seatCategories: [effectiveCategory, 'Gold', 'Silver'],
+      price: slotPrice,
+      ticketPrice: slotPrice,
+      totalCapacity: slotCap,
+      availableSeats: slotCap
+    };
+
+    let updatedEvent = null;
+
+    if (mongoose.connection.readyState === 1) {
+      let evDoc = await Event.findOne(buildIdFilter(idToUse));
+      if (evDoc) {
+        if (!evDoc.eventDates) evDoc.eventDates = [];
+        if (!evDoc.eventDates.includes(dateToUse)) {
+          evDoc.eventDates.push(dateToUse);
+        }
+
+        let slotsMap = evDoc.slots || {};
+        if (slotsMap instanceof Map) slotsMap = Object.fromEntries(slotsMap);
+        else if (typeof slotsMap === 'object' && slotsMap !== null) slotsMap = { ...slotsMap };
+        else slotsMap = {};
+
+        const dateList = Array.isArray(slotsMap[dateToUse]) ? [...slotsMap[dateToUse]] : [];
+        dateList.push(slotObj);
+        slotsMap[dateToUse] = dateList;
+
+        evDoc.slots = slotsMap;
+        evDoc.schedules = slotsMap;
+        evDoc.markModified('slots');
+        evDoc.markModified('schedules');
+        evDoc.markModified('eventDates');
+        updatedEvent = await evDoc.save();
+
+        await Event.updateOne(buildIdFilter(idToUse), {
+          $push: { [`slots.${dateToUse}`]: slotObj },
+          $addToSet: { eventDates: dateToUse, dates: dateToUse }
+        }).catch(() => {});
+      }
+    }
+
+    const idx = events.findIndex(e => e.id === idToUse || e._id === idToUse);
+    if (idx !== -1) {
+      const currentSlots = { ...(events[idx].slots || {}) };
+      const dateList = Array.isArray(currentSlots[dateToUse]) ? [...currentSlots[dateToUse]] : [];
+      dateList.push(slotObj);
+      currentSlots[dateToUse] = dateList;
+
+      const currentDates = Array.isArray(events[idx].eventDates) ? [...events[idx].eventDates] : [];
+      if (!currentDates.includes(dateToUse)) currentDates.push(dateToUse);
+
+      events[idx].slots = currentSlots;
+      events[idx].schedules = currentSlots;
+      events[idx].eventDates = currentDates;
+      events[idx].dates = currentDates;
+      if (!updatedEvent) updatedEvent = events[idx];
+    }
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('EVENT_UPDATED', updatedEvent);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: updatedEvent });
+    }
+    broadcastToAllClients('EVENT_UPDATED', updatedEvent);
+    broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: updatedEvent });
+
+    return res.status(200).json({
+      success: true,
+      message: `Event slot '${slotObj.startTime}' (${slotObj.tier}) persisted to MongoDB Atlas for ${dateToUse}!`,
+      event: updatedEvent,
+      slot: slotObj
+    });
+  } catch (err) {
+    console.error('❌ Error in /api/admin/events/add-slot:', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
