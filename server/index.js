@@ -3818,17 +3818,110 @@ app.post([
       req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: updatedEvent });
     }
     broadcastToAllClients('EVENT_UPDATED', updatedEvent);
-    broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'EVENT', event: updatedEvent });
-
     return res.status(200).json({
       success: true,
-      message: `Event slot '${slotObj.startTime}' (${slotObj.tier}) persisted to MongoDB Atlas for ${dateToUse}!`,
+      message: `Event slot persisted to MongoDB Atlas!`,
       event: updatedEvent,
       slot: slotObj
     });
   } catch (err) {
     console.error('❌ Error in /api/admin/events/add-slot:', err);
     return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
+// EVENT PASS BOOKING & SETTLEMENT ENDPOINT (MongoDB Atlas)
+// -------------------------------------------------------------
+app.post([
+  '/api/events/book',
+  '/api/events/booking',
+  '/api/admin/events/book',
+  '/api/admin/events/booking'
+], async (req, res) => {
+  try {
+    const { eventId, targetEventId, ticketCount, count, paymentMethod, userEmail, userName, date, time } = req.body;
+    const targetId = eventId || targetEventId || req.body.id;
+
+    let targetEvent = null;
+    if (targetId) {
+      if (mongoose.connection.readyState === 1) {
+        targetEvent = await Event.findOne(buildIdFilter(targetId)).lean().catch(() => null);
+      }
+      if (!targetEvent) {
+        targetEvent = eventsMemoryList.find(e => e.id === targetId) || defaultSeedEvents.find(e => e.id === targetId);
+      }
+    }
+
+    const numTickets = Number(ticketCount || count || 1);
+    const unitPrice = Number(targetEvent?.price || targetEvent?.ticketPrice || req.body.price || 1500);
+    const baseAmount = unitPrice * numTickets;
+    const convenienceFee = Math.round(baseAmount * 0.08);
+    const tax = Math.round(baseAmount * 0.05);
+    const totalAmount = baseAmount + convenienceFee + tax;
+
+    const bookingId = `EVT-PASS-${Math.floor(100000 + Math.random() * 900000)}`;
+    const transactionId = `TXN-UPI-${Math.floor(1000000 + Math.random() * 9000000)}`;
+
+    const bookingRecord = {
+      id: bookingId,
+      bookingId: bookingId,
+      transactionId: transactionId,
+      type: 'EVENT',
+      category: 'Event',
+      eventId: targetId || 'ev_surat_1',
+      eventTitle: targetEvent?.title || req.body.eventTitle || req.body.title || 'Surat Live Concert & Fest',
+      title: targetEvent?.title || req.body.eventTitle || req.body.title || 'Surat Live Concert & Fest',
+      movieTitle: targetEvent?.title || req.body.eventTitle || req.body.title || 'Surat Live Concert & Fest',
+      venue: targetEvent?.venue || req.body.venue || 'Pandit Dindayal Upadhyay Indoor Stadium',
+      city: targetEvent?.city || req.body.city || 'Surat',
+      date: date || targetEvent?.date || targetEvent?.eventDate || new Date().toISOString().split('T')[0],
+      time: time || targetEvent?.time || targetEvent?.eventTime || '07:00 PM',
+      tickets: numTickets,
+      ticketCount: numTickets,
+      unitPrice: unitPrice,
+      totalAmount: totalAmount,
+      totalPrice: totalAmount,
+      paymentMethod: paymentMethod || 'Dynamic UPI (jay.radadiya@ptaxis)',
+      paymentStatus: 'PAID',
+      status: 'CONFIRMED',
+      userEmail: (userEmail || 'guest@primeshow.com').toLowerCase().trim(),
+      userName: userName || 'VIP Guest',
+      createdAt: new Date().toISOString()
+    };
+
+    // 1. Save to MongoDB Atlas user_bookings
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const doc = new Booking(bookingRecord);
+        await doc.save();
+      } catch (dbErr) {
+        console.warn('⚠️ Error saving Event Pass booking to MongoDB Atlas:', dbErr.message);
+      }
+    }
+
+    // 2. Add to in-memory bookings array
+    bookings.unshift(bookingRecord);
+
+    // 3. Log user activity log
+    logUserActivity(
+      bookingRecord.userEmail,
+      bookingRecord.userName,
+      'EVENT_BOOKING_SUCCESS',
+      `Booked ${numTickets} VIP Pass(es) for ${bookingRecord.title} at ${bookingRecord.venue} (₹${totalAmount})`,
+      { bookingId, transactionId, amountPaid: totalAmount, eventTitle: bookingRecord.title }
+    );
+
+    // 4. Emit live socket update
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('NEW_BOOKING', bookingRecord);
+    }
+    broadcastToAllClients('NEW_BOOKING', bookingRecord);
+
+    return res.status(200).json(bookingRecord);
+  } catch (err) {
+    console.error('❌ Error processing event booking:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Booking verification failed' });
   }
 });
 
