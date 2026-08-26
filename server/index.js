@@ -210,7 +210,8 @@ async function triggerAiAutoReply(msg, req = null) {
       if (currentMsg && currentMsg.reply) return; // Admin already replied manually
 
       console.log(`🤖 [Gemini AI Auto-Reply]: Processing user query "${msg.message}"...`);
-      const aiResponse = await generateGeminiSupportReply(msg.message, { userName: msg.userName });
+      const userHistory = supportMessages.filter(m => (m.userId && m.userId === msg.userId) || (m.userEmail && m.userEmail === msg.userEmail));
+      const aiResponse = await generateGeminiSupportReply(msg.message, { userName: msg.userName, history: userHistory });
       const formattedReply = `🤖 [AI Assistant]: ${aiResponse}`;
 
       let updatedMsg = null;
@@ -4835,6 +4836,48 @@ app.post(['/api/support/messages', '/support/messages'], async (req, res) => {
     return res.status(201).json(savedDoc);
   } catch (err) {
     console.error('❌ MongoDB Write Error in POST /api/support/messages:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Dedicated Gemini AI Chatbot & WhatsApp Webhook API Endpoint
+app.post([
+  '/api/chat/ai',
+  '/api/chat',
+  '/api/support/ai',
+  '/api/whatsapp/webhook',
+  '/whatsapp/webhook'
+], async (req, res) => {
+  try {
+    const userPrompt = req.body.message || req.body.prompt || req.body.query || req.body.text || '';
+    const userName = req.body.userName || req.body.name || req.body.from || 'VIP Guest';
+    const userEmail = req.body.userEmail || req.body.email || '';
+    const history = req.body.history || [];
+
+    if (!userPrompt || !String(userPrompt).trim()) {
+      return res.status(400).json({ success: false, error: 'User message query is required' });
+    }
+
+    let conversationHistory = history;
+    if ((!conversationHistory || conversationHistory.length === 0) && (userEmail || userName)) {
+      conversationHistory = supportMessages.filter(m => 
+        (userEmail && m.userEmail === userEmail.toLowerCase().trim()) || 
+        (userName && m.userName === userName)
+      );
+    }
+
+    const aiReply = await generateGeminiSupportReply(userPrompt, { userName, history: conversationHistory });
+
+    return res.json({
+      success: true,
+      botName: 'PrimeBot',
+      reply: aiReply,
+      message: aiReply,
+      response: aiReply,
+      text: aiReply
+    });
+  } catch (err) {
+    console.error('❌ Error in /api/chat/ai:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
