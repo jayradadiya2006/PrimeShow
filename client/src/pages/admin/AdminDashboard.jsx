@@ -582,15 +582,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
       return;
     }
     try {
-      const res = await API.get(`/theatres/${thId}/movies/${movId}/showtimes`);
-      if (res.data && Array.isArray(res.data.dates)) {
-        setDynamicShowtimesData({
-          dates: res.data.dates,
-          slotsByDate: res.data.slotsByDate || {}
-        });
-      } else {
-        setDynamicShowtimesData({ dates: [], slotsByDate: {} });
-      }
+      const datesRes = await API.get('/showtimes/dates', {
+        params: { theatreId: thId, movieId: movId }
+      });
+      const showtimesRes = await API.get(`/theatres/${thId}/movies/${movId}/showtimes`);
+
+      const datesList = (datesRes.data && Array.isArray(datesRes.data.dates)) 
+        ? datesRes.data.dates 
+        : (showtimesRes.data?.dates || []);
+      const slotsMap = showtimesRes.data?.slotsByDate || {};
+
+      setDynamicShowtimesData({
+        dates: datesList,
+        slotsByDate: slotsMap
+      });
     } catch (err) {
       setDynamicShowtimesData({ dates: [], slotsByDate: {} });
     }
@@ -627,7 +632,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
       Object.keys(hallMap).forEach(dStr => {
         const halls = Array.isArray(hallMap[dStr]) ? hallMap[dStr] : [];
         halls.forEach(h => {
-          const matchesMovie = !h.movieId || (h.movieId === selectedSeatMovieId || h.movieId === activeSeatMovieObj?.id) ||
+          const matchesMovie = (h.movieId && (h.movieId === selectedSeatMovieId || h.movieId === activeSeatMovieObj?.id)) ||
             (h.movieTitle && activeSeatMovieObj?.title && h.movieTitle.toLowerCase().trim() === activeSeatMovieObj.title.toLowerCase().trim());
           if (matchesMovie) {
             datesSet.add(dStr);
@@ -4589,7 +4594,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <label className="block text-[11px] font-bold text-emerald-300 mb-1">4. Show Date *</label>
                 <select
                   value={selectedSchedDate || ''}
-                  disabled={!selectedSeatMovieId}
+                  disabled={!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0}
                   onChange={e => {
                     const newDate = e.target.value;
                     setSelectedSchedDate(newDate);
@@ -4598,12 +4603,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedShowSlotTime(availableShowtimesForSeatCombo[0]);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedSeatMovieId ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-emerald-300 bg-black'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${(!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0) ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-emerald-300 bg-black'}`}
                 >
                   <option value="">-- Select Show Date --</option>
-                  {(availableDatesForSeatCombo || []).map(d => (
-                    <option key={d} value={d}>📅 {d}</option>
-                  ))}
+                  {(availableDatesForSeatCombo || []).length > 0 ? (
+                    (availableDatesForSeatCombo || []).map(d => (
+                      <option key={d} value={d}>📅 {d}</option>
+                    ))
+                  ) : (
+                    <option value="" disabled>-- No Show Dates Configured --</option>
+                  )}
                 </select>
               </div>
 

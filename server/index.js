@@ -2952,6 +2952,99 @@ app.get(['/api/theatres/halls', '/api/admin/theatres/halls'], async (req, res) =
   }
 });
 
+// Query Exact Show Dates for Theatre + Movie Pair from MongoDB Atlas
+app.get([
+  '/api/showtimes/dates',
+  '/api/admin/showtimes/dates'
+], async (req, res) => {
+  try {
+    const theatreId = req.query.theatreId || req.query.theaterId || req.query.selectedTheatreId;
+    const movieId = req.query.movieId || req.query.selectedMovieId;
+
+    if (!theatreId || !movieId) {
+      return res.status(200).json({ success: true, theatreId, movieId, dates: [], count: 0 });
+    }
+
+    let targetTheatre = null;
+    let targetMovie = null;
+    let dbShows = [];
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        targetTheatre = await Theatre.findOne(buildIdFilter(theatreId)).lean();
+      } catch (e1) {}
+
+      try {
+        targetMovie = await Movie.findOne(buildIdFilter(movieId)).lean();
+      } catch (e2) {}
+
+      try {
+        const queryMovTitle = targetMovie?.title ? new RegExp(targetMovie.title.trim(), 'i') : null;
+        const movQuery = queryMovTitle ? [{ movieId }, { movieTitle: queryMovTitle }] : [{ movieId }];
+        dbShows = await Show.find({
+          theatreId,
+          $or: movQuery
+        }).lean();
+      } catch (e3) {}
+    }
+
+    if (!targetTheatre) {
+      targetTheatre = theatres.find(t => t.id === theatreId || t._id === theatreId);
+    }
+    if (!targetMovie) {
+      targetMovie = movies.find(m => m.id === movieId || m._id === movieId);
+    }
+
+    const datesSet = new Set();
+
+    // 1. Process dbShows from MongoDB Atlas
+    if (dbShows && dbShows.length > 0) {
+      dbShows.forEach(s => {
+        if (s.date) datesSet.add(s.date);
+      });
+    }
+
+    // 2. Process Theatre.shows array for matching movie
+    if (targetTheatre?.shows && Array.isArray(targetTheatre.shows)) {
+      targetTheatre.shows.forEach(s => {
+        const matchesMovie = (s.movieId && (s.movieId === movieId || s.movieId === targetMovie?.id)) ||
+          (s.movieTitle && targetMovie?.title && s.movieTitle.toLowerCase().trim() === targetMovie.title.toLowerCase().trim());
+        if (matchesMovie && s.date) {
+          datesSet.add(s.date);
+        }
+      });
+    }
+
+    // 3. Process Theatre.hallSlotsByDate map
+    const hallMap = targetTheatre?.hallSlotsByDate || targetTheatre?.dateHalls || {};
+    if (hallMap && typeof hallMap === 'object') {
+      Object.keys(hallMap).forEach(dStr => {
+        const halls = Array.isArray(hallMap[dStr]) ? hallMap[dStr] : [];
+        halls.forEach(h => {
+          const matchesMovie = (h.movieId && (h.movieId === movieId || h.movieId === targetMovie?.id)) ||
+            (h.movieTitle && targetMovie?.title && h.movieTitle.toLowerCase().trim() === targetMovie.title.toLowerCase().trim());
+          if (matchesMovie) {
+            datesSet.add(dStr);
+          }
+        });
+      });
+    }
+
+    const sortedDates = Array.from(datesSet).sort();
+
+    return res.status(200).json({
+      success: true,
+      theatreId,
+      movieId,
+      dates: sortedDates,
+      count: sortedDates.length
+    });
+  } catch (err) {
+    console.error('❌ Error fetching showtimes dates:', err.message);
+    return res.status(500).json({ success: false, error: err.message, dates: [], count: 0 });
+  }
+});
+
 // Dynamic Showtime Fetching Endpoint for Theatre + Movie Pair from MongoDB Atlas
 app.get([
   '/api/theatres/:theatreId/movies/:movieId/showtimes',
