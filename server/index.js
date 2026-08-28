@@ -4938,13 +4938,42 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
     const numSeats = Number(req.body.seatsBookedCount || req.body.ticketCount || req.body.tickets || req.body.quantity || seatsList.length || 1);
     const mTitle = movieTitle || req.body.title || req.body.movieName || 'PrimeShow Feature';
 
+    let resolvedMovieId = movieId || `mov_${Date.now()}`;
+    let resolvedPoster = req.body.poster || req.body.posterUrl || req.body.image || '';
+
+    // Dynamically lookup Movie in MongoDB Atlas if poster/id is missing
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const foundMovie = await Movie.findOne({
+          $or: [
+            { id: movieId },
+            { title: new RegExp(`^${mTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+          ]
+        }).lean();
+        if (foundMovie) {
+          if (!movieId) resolvedMovieId = foundMovie.id || foundMovie._id;
+          if (!resolvedPoster) resolvedPoster = foundMovie.poster || foundMovie.banner;
+        }
+      } catch (e) {}
+    }
+    if (!resolvedPoster && mTitle) {
+      const memM = movies.find(m => m.title && m.title.toLowerCase() === mTitle.toLowerCase());
+      if (memM) {
+        if (!movieId) resolvedMovieId = memM.id;
+        resolvedPoster = memM.poster;
+      }
+    }
+
     const newBooking = {
       id: orderId,
       transactionId,
       showId: showId || 'sh_101',
-      movieId: movieId || 'mov_1',
+      movieId: resolvedMovieId,
       movieTitle: mTitle,
       title: mTitle,
+      poster: resolvedPoster,
+      posterUrl: resolvedPoster,
       theatreId: theatreId || 'th_1',
       theatreName: theatreName || 'PVR Cinema',
       screenName: screenName || 'Screen 1',
@@ -4970,7 +4999,6 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
 
     bookings.unshift(newBooking);
 
-    const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
       try {
         const userDoc = await User.findOne({ email: finalEmail });

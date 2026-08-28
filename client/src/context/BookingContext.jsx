@@ -679,19 +679,25 @@ export const BookingProvider = ({ children }) => {
     const bookingId = `bk_${Math.floor(100000 + Math.random() * 900000)}`;
     
     const targetMovie = activeBooking.movie || {};
+    const movieId = bookingDetails.movieId || targetMovie.id || targetMovie._id || 'mov_1';
     const movieTitle = bookingDetails.movieTitle || targetMovie.title || 'Movie';
-    const poster = bookingDetails.poster || targetMovie.poster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80';
+    const poster = bookingDetails.poster || targetMovie.poster || targetMovie.banner || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80';
     const theatreName = bookingDetails.theatreName || activeBooking.theatre?.name || 'Multiplex';
+    const numSeats = Number(bookingDetails.ticketCount || bookingDetails.seatsBookedCount || (bookingDetails.seats ? bookingDetails.seats.length : 1));
 
     const newBooking = {
       id: bookingId,
       ...bookingDetails,
+      movieId,
       movieTitle,
       poster,
       theatreName,
+      seatsBookedCount: numSeats,
+      ticketCount: numSeats,
+      tickets: numSeats,
       bookingDate: new Date().toISOString(),
       status: 'CONFIRMED',
-      qrCodeData: `PRIMESHOW-${bookingId}-${movieTitle.replace(/\s+/g, '')}-${bookingDetails.seats.join('')}`
+      qrCodeData: `PRIMESHOW-${bookingId}-${movieTitle.replace(/\s+/g, '')}-${bookingDetails.seats ? bookingDetails.seats.join('') : ''}`
     };
 
     setMyBookings(prev => [newBooking, ...prev]);
@@ -700,24 +706,40 @@ export const BookingProvider = ({ children }) => {
       const showId = activeBooking.show.id;
       setShowBookedSeatsMap(prev => ({
         ...prev,
-        [showId]: [...(prev[showId] || []), ...bookingDetails.seats]
+        [showId]: Array.from(new Set([...(prev[showId] || []), ...(bookingDetails.seats || [])]))
       }));
     }
 
     try {
       await API.post('/bookings/create', {
         showId: activeBooking.show?.id || 'sh_101',
-        seats: bookingDetails.seats,
-        tier: bookingDetails.tier,
-        totalAmount: bookingDetails.totalAmount,
-        couponCode: bookingDetails.couponCode,
-        paymentMethod: bookingDetails.paymentMethod,
-        basePrice: bookingDetails.basePrice,
-        convenienceFee: bookingDetails.convenienceFee,
-        tax: bookingDetails.tax,
-        discount: bookingDetails.discount
+        movieId: movieId,
+        movieTitle: movieTitle,
+        title: movieTitle,
+        poster: poster,
+        posterUrl: poster,
+        theatreId: activeBooking.theatre?.id || 'th_1',
+        theatreName: theatreName,
+        screenName: activeBooking.show?.screenName || 'Screen 1',
+        seats: bookingDetails.seats || ['C4'],
+        seatsBooked: bookingDetails.seats || ['C4'],
+        seatsBookedCount: numSeats,
+        ticketCount: numSeats,
+        tickets: numSeats,
+        tier: bookingDetails.tier || 'Recliner',
+        totalAmount: bookingDetails.totalAmount || 480,
+        couponCode: bookingDetails.couponCode || '',
+        paymentMethod: bookingDetails.paymentMethod || 'UPI (Instant)',
+        basePrice: bookingDetails.basePrice || 400,
+        convenienceFee: bookingDetails.convenienceFee || 40,
+        tax: bookingDetails.tax || 20,
+        discount: bookingDetails.discount || 0,
+        category: 'Movie',
+        bookingType: 'movie'
       });
-    } catch (err) {}
+    } catch (err) {
+      console.warn('⚠️ Error posting booking to server:', err);
+    }
 
     return newBooking;
   };
