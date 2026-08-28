@@ -273,6 +273,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [newRowPrice, setNewRowPrice] = useState(500);
   const [newRowSeatsCount, setNewRowSeatsCount] = useState(10);
 
+  // Seat Management Cascading State (MongoDB Atlas Live Sync)
+  const [selectedSeatMovieId, setSelectedSeatMovieId] = useState('mov_1');
+  const [selectedShowSlotTime, setSelectedShowSlotTime] = useState('07:30 PM');
+
   // Cast Management State per Selected Movie
   const [castMovieId, setCastMovieId] = useState('mov_1');
   const [castName, setCastName] = useState('');
@@ -564,33 +568,57 @@ export const AdminDashboard = ({ onReturnHome }) => {
     || (currentTheatresList || []).find(t => t?.id === selectedTheatreId)
     || (currentTheatresList || [])[0];
 
-  // 5. Active Screens List for Active Theatre
-  const activeScreensList = activeTheatreObj?.screens || [
-    { id: 'sc_1', name: 'Screen 1 - IMAX 3D' },
-    { id: 'sc_2', name: 'Screen 2 - 4DX' }
-  ];
+  // 5. Active Seat Movie Object (Synced directly with MongoDB Atlas moviesList)
+  const activeSeatMovieObj = (moviesList || []).find(m => m && (m.id === selectedSeatMovieId || m._id === selectedSeatMovieId || m.title === selectedSeatMovieId)) 
+    || (moviesList || [])[0] 
+    || { id: 'mov_1', title: 'Avatar: Fire and Ash' };
 
-  // 6. Layer 3 Active Show Slots ([Movie Name] - [Show Time])
-  const activeShowSlots = (activeTheatreObj?.showSlots && activeTheatreObj.showSlots.length > 0)
-    ? activeTheatreObj.showSlots
-    : (activeScreensList || []).map((sc, idx) => {
-        const m = (moviesList || [])[idx % (moviesList || []).length] || { title: idx === 0 ? 'Avatar: The Way of Water' : 'Pushpa 2: The Rule' };
-        const time = idx === 0 ? '07:30 PM' : idx === 1 ? '10:15 AM' : '04:00 PM';
-        return {
-          id: `${activeTheatreObj?.id || 'th_1'}_${sc.id || 'sc_1'}`,
-          screenId: sc.id || 'sc_1',
-          movieTitle: m.title || 'Featured Movie',
-          time: time,
-          format: sc.name || 'IMAX 3D',
-          label: `${m.title || 'Featured Movie'} - ${time} (${sc.name || 'Screen 1'})`
-        };
+  // 6. Dynamic Dates for Selected Theatre + Movie Combo
+  const availableDatesForSeatCombo = (() => {
+    const datesSet = new Set();
+    if (activeSeatMovieObj?.showDates && Array.isArray(activeSeatMovieObj.showDates)) {
+      activeSeatMovieObj.showDates.forEach(d => datesSet.add(d));
+    }
+    if (activeTheatreObj?.hallSlotsByDate) {
+      Object.keys(activeTheatreObj.hallSlotsByDate).forEach(d => datesSet.add(d));
+    }
+    if (activeTheatreObj?.shows && Array.isArray(activeTheatreObj.shows)) {
+      activeTheatreObj.shows.forEach(s => { if (s.date) datesSet.add(s.date); });
+    }
+    const arr = Array.from(datesSet).sort();
+    if (arr.length === 0) {
+      arr.push(new Date().toISOString().slice(0, 10));
+    }
+    return arr;
+  })();
+
+  // 7. Dynamic Showtimes for Selected Theatre + Movie + Date Combo
+  const availableShowtimesForSeatCombo = (() => {
+    const timesSet = new Set();
+    const currentDate = selectedSchedDate || availableDatesForSeatCombo[0] || new Date().toISOString().slice(0, 10);
+
+    if (activeTheatreObj?.hallSlotsByDate && activeTheatreObj.hallSlotsByDate[currentDate]) {
+      const halls = activeTheatreObj.hallSlotsByDate[currentDate];
+      if (Array.isArray(halls)) {
+        halls.forEach(h => {
+          if (h.time || h.showTime) timesSet.add(h.time || h.showTime);
+        });
+      }
+    }
+    if (activeTheatreObj?.shows && Array.isArray(activeTheatreObj.shows)) {
+      activeTheatreObj.shows.forEach(s => {
+        if (s.time) timesSet.add(s.time);
       });
+    }
+    const arr = Array.from(timesSet);
+    if (arr.length === 0) {
+      return ['07:30 PM (IMAX 3D)', '10:15 AM (Recliner)', '04:00 PM (Dolby Atmos)', '10:30 PM (VIP Lounge)'];
+    }
+    return arr;
+  })();
 
-  // 7. Isolated Layout Key
-  const activeShowSlotObj = (activeShowSlots || []).find(s => s?.id === selectedShowSlotId) || (activeShowSlots || [])[0];
-  const isolatedLayoutKey = activeShowSlotObj?.id || selectedShowSlotId || selectedScreenId || 'sc_1';
-
-  // 8. Isolated Layout Resolution
+  // 8. Isolated Layout Key & Resolution
+  const isolatedLayoutKey = `${activeTheatreObj?.id || 'th_1'}_${activeSeatMovieObj?.id || 'mov_1'}_${selectedSchedDate || 'date'}_${selectedShowSlotTime || '07:30 PM'}`;
   const currentLayout = getScreenLayout(isolatedLayoutKey);
   const seatRowsList = currentLayout?.rows || DEFAULT_SEAT_ROWS;
 
@@ -4375,11 +4403,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
-            {/* Cascading 5-Tier Controls Row: City -> Movie -> Date -> Theatre -> Show Time */}
+            {/* Cascading 5-Tier Controls Row: City -> Theatre -> Movie -> Show Date -> Show Time */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
               {/* Filter 1: Select City */}
               <div>
-                <label className="block text-[11px] font-bold text-cyan-300 mb-1">1. City (18 Gujarat Cities) *</label>
+                <label className="block text-[11px] font-bold text-cyan-300 mb-1">1. City (MongoDB Atlas) *</label>
                 <select
                   value={selectedCity || 'Surat'}
                   onChange={e => {
@@ -4389,11 +4417,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       t => t && (t.city || '').toLowerCase() === (newCity || '').toLowerCase()
                     );
                     if (thsInCity.length > 0) {
-                      const firstTh = thsInCity[0];
-                      setSelectedTheatreId(firstTh.id);
-                      const firstSc = firstTh.screens?.[0]?.id || 'sc_1';
-                      setSelectedScreenId(firstSc);
-                      setSelectedShowSlotId(`${firstTh.id}_${firstSc}`);
+                      setSelectedTheatreId(thsInCity[0].id);
                     }
                   }}
                   className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
@@ -4404,21 +4428,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </select>
               </div>
 
-              {/* Filter 2: Select Theatre */}
+              {/* Filter 2: Select Cinema / Theatre */}
               <div>
                 <label className="block text-[11px] font-bold text-cyan-300 mb-1">2. Cinema / Theatre *</label>
                 <select
                   value={selectedTheatreId || 'th_1'}
-                  onChange={e => {
-                    const newThId = e.target.value;
-                    setSelectedTheatreId(newThId);
-                    const targetTh = (currentTheatresList || []).find(t => t?.id === newThId);
-                    if (targetTh) {
-                      const firstSc = targetTh.screens?.[0]?.id || 'sc_1';
-                      setSelectedScreenId(firstSc);
-                      setSelectedShowSlotId(`${targetTh.id}_${firstSc}`);
-                    }
-                  }}
+                  onChange={e => setSelectedTheatreId(e.target.value)}
                   className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
                 >
                   {(theatresInSelectedCity || []).length > 0 ? (
@@ -4431,61 +4446,55 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </select>
               </div>
 
-              {/* Filter 3: Select Show Slot / Movie Instance */}
+              {/* Filter 3: Select Movie (Database Live) */}
               <div>
-                <label className="block text-[11px] font-bold text-amber-300 mb-1">3. Show Slot & Movie *</label>
+                <label className="block text-[11px] font-bold text-amber-300 mb-1">3. Movie (Database Live) *</label>
                 <select
-                  value={selectedShowSlotId || isolatedLayoutKey}
-                  onChange={e => {
-                    const newSlotId = e.target.value;
-                    setSelectedShowSlotId(newSlotId);
-                    const matchedSlot = (activeShowSlots || []).find(s => s.id === newSlotId);
-                    if (matchedSlot) {
-                      setSelectedScreenId(matchedSlot.screenId || 'sc_1');
-                    }
-                  }}
+                  value={selectedSeatMovieId || (moviesList[0]?.id || 'mov_1')}
+                  onChange={e => setSelectedSeatMovieId(e.target.value)}
                   className="w-full p-2.5 rounded-xl glass-input text-xs text-amber-300 bg-black font-bold"
                 >
-                  {(activeShowSlots || []).map(slot => (
-                    <option key={slot.id} value={slot.id}>
-                      🎬 {slot.label || `${slot.movieTitle} - ${slot.time}`}
+                  {(moviesList || []).map(m => (
+                    <option key={m.id || m._id} value={m.id || m._id}>
+                      🎬 {m.title}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Filter 4: Target Date */}
+              {/* Filter 4: Show Date */}
               <div>
                 <label className="block text-[11px] font-bold text-emerald-300 mb-1">4. Show Date *</label>
-                <input
-                  type="date"
-                  value={selectedSchedDate || new Date().toISOString().slice(0, 10)}
+                <select
+                  value={selectedSchedDate || availableDatesForSeatCombo[0]}
                   onChange={e => setSelectedSchedDate(e.target.value)}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs text-emerald-200 bg-black font-bold"
-                />
+                  className="w-full p-2.5 rounded-xl glass-input text-xs text-emerald-300 bg-black font-bold"
+                >
+                  {(availableDatesForSeatCombo || []).map(d => (
+                    <option key={d} value={d}>📅 {d}</option>
+                  ))}
+                </select>
               </div>
 
-              {/* Filter 5: Quick Refresh */}
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (fetchScreenLayoutsFromBackend) fetchScreenLayoutsFromBackend();
-                    setActionSuccess('Refreshed seat layout & live booked status from MongoDB Atlas!');
-                    setTimeout(() => setActionSuccess(''), 3000);
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 cursor-pointer flex items-center justify-center gap-1.5"
+              {/* Filter 5: Show Time Slot */}
+              <div>
+                <label className="block text-[11px] font-bold text-purple-300 mb-1">5. Show Time Slot *</label>
+                <select
+                  value={selectedShowSlotTime || availableShowtimesForSeatCombo[0]}
+                  onChange={e => setSelectedShowSlotTime(e.target.value)}
+                  className="w-full p-2.5 rounded-xl glass-input text-xs text-purple-300 bg-black font-bold"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Sync Real-Time</span>
-                </button>
+                  {(availableShowtimesForSeatCombo || []).map(t => (
+                    <option key={t} value={t}>⏰ {t}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
             {/* Live Filter Indicator Bar */}
             <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs text-cyan-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div>
-                📍 Live Tracking Filter: <strong className="text-white">{selectedCity}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Theatre'}</strong> → <strong className="text-amber-400">{activeShowSlotObj?.label || 'Show Slot'}</strong> → <strong className="text-emerald-300">{selectedSchedDate}</strong>
+                📍 Live Tracking Filter: <strong className="text-white">{selectedCity}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Theatre'}</strong> → <strong className="text-amber-400">{activeSeatMovieObj?.title || 'Movie'}</strong> → <strong className="text-emerald-300">{selectedSchedDate}</strong> → <strong className="text-purple-300">{selectedShowSlotTime}</strong>
               </div>
               <div className="flex items-center gap-3 text-xs flex-wrap">
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">
