@@ -1,50 +1,52 @@
 /* PrimeShow Cinema Theme System (Harmonized Dark & Light Themes) */
 
 :root {
-  --admin-bg-primary: #092328;
-  --admin-bg-secondary: #12544F;
-  --admin-accent-action: #2A835F;
-  --admin-text-highlight: #8BBB92;
+  --admin-bg-primary: #06181B;
+  --admin-bg-secondary: #0E3835;
+  --admin-accent-action: #1F6048;
+  --admin-border-muted: #2A835F;
+  --admin-text-primary: #FFFFFF;
+  --admin-text-secondary: #D1E7DD;
 
-  --bg-main: #092328;
+  --bg-main: #06181B;
   --text-main: #FFFFFF;
-  --text-muted: #8BBB92;
-  --card-bg: rgba(18, 84, 79, 0.90);
-  --modal-bg: rgba(18, 84, 79, 0.97);
-  --border-main: rgba(42, 131, 95, 0.45);
-  --input-bg: rgba(9, 35, 40, 0.85);
-  --accent-red: #2A835F;
-  --accent-gold: #8BBB92;
+  --text-muted: #D1E7DD;
+  --card-bg: rgba(14, 56, 53, 0.94);
+  --modal-bg: rgba(14, 56, 53, 0.98);
+  --border-main: rgba(42, 131, 95, 0.5);
+  --input-bg: rgba(6, 24, 27, 0.9);
+  --accent-red: #1F6048;
+  --accent-gold: #D1E7DD;
 }
 
 html.light, body.light, html:not(.dark), body:not(.dark) {
-  --bg-main: #092328;
+  --bg-main: #06181B;
   --text-main: #FFFFFF;
-  --text-muted: #8BBB92;
-  --card-bg: rgba(18, 84, 79, 0.90);
-  --modal-bg: rgba(18, 84, 79, 0.97);
-  --border-main: rgba(42, 131, 95, 0.45);
-  --input-bg: rgba(9, 35, 40, 0.85);
-  --accent-red: #2A835F;
-  --accent-gold: #8BBB92;
+  --text-muted: #D1E7DD;
+  --card-bg: rgba(14, 56, 53, 0.94);
+  --modal-bg: rgba(14, 56, 53, 0.98);
+  --border-main: rgba(42, 131, 95, 0.5);
+  --input-bg: rgba(6, 24, 27, 0.9);
+  --accent-red: #1F6048;
+  --accent-gold: #D1E7DD;
 
-  background-color: #092328;
-  color: #FFFFFF;
+  background-color: #06181B !important;
+  color: #FFFFFF !important;
 }
 
 html.dark, body.dark {
-  --bg-main: #092328;
+  --bg-main: #06181B;
   --text-main: #FFFFFF;
-  --text-muted: #8BBB92;
-  --card-bg: rgba(18, 84, 79, 0.90);
-  --modal-bg: rgba(18, 84, 79, 0.97);
-  --border-main: rgba(42, 131, 95, 0.45);
-  --input-bg: rgba(9, 35, 40, 0.85);
-  --accent-red: #2A835F;
-  --accent-gold: #8BBB92;
+  --text-muted: #D1E7DD;
+  --card-bg: rgba(14, 56, 53, 0.94);
+  --modal-bg: rgba(14, 56, 53, 0.98);
+  --border-main: rgba(42, 131, 95, 0.5);
+  --input-bg: rgba(6, 24, 27, 0.9);
+  --accent-red: #1F6048;
+  --accent-gold: #D1E7DD;
 
-  background-color: #092328;
-  color: #FFFFFF;
+  background-color: #06181B !important;
+  color: #FFFFFF !important;
 }
 
 body {
@@ -134,9 +136,20 @@ html.light .glass-input {
 
 .glass-input:focus {
   background: var(--card-bg);
-  border-color: #8BBB92;
-  box-shadow: 0 0 24px rgba(42, 131, 95, 0.4);
+  border-color: #D1E7DD;
+  box-shadow: 0 0 24px rgba(42, 131, 95, 0.5);
   outline: none;
+}
+
+/* High-Contrast Select Dropdowns & Options */
+select, option, input, textarea {
+  background-color: #06181B !important;
+  color: #FFFFFF !important;
+}
+
+option:checked, option:hover {
+  background-color: #1F6048 !important;
+  color: #FFFFFF !important;
 }
 
 /* Card Elevation & Crimson Button Styling */
@@ -147,12 +160,12 @@ html.light .glass-input {
 .card-hover-3d:hover {
   transform: translateY(-6px) scale(1.015);
   box-shadow: 0 20px 40px -15px rgba(42, 131, 95, 0.35);
-  border-color: rgba(139, 187, 146, 0.6) !important;
+  border-color: rgba(42, 131, 95, 0.7) !important;
 }
 
 .neon-btn-primary {
   position: relative;
-  background: linear-gradient(135deg, #2A835F 0%, #12544F 100%);
+  background: linear-gradient(135deg, #1F6048 0%, #0E3835 100%);
   color: #FFFFFF !important;
   transition: all 0.3s ease;
 }
@@ -196,13 +209,13 @@ html.light .glass-input {
 }
 
 .neon-glow-gold {
-  box-shadow: 0 0 25px rgba(139, 187, 146, 0.45);
+  box-shadow: 0 0 25px rgba(209, 231, 221, 0.45);
 }
 
 .screen-curve {
   height: 60px;
   width: 100%;
-  border-top: 4px solid #8BBB92;
+  border-top: 4px solid #2A835F;
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
   background: linear-gradient(180deg, rgba(42, 131, 95, 0.35) 0%, rgba(42, 131, 95, 0) 100%);
   box-shadow: 0 -15px 40px rgba(42, 131, 95, 0.5);
@@ -214,14 +227,14 @@ html.light .glass-input {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-main);
+  background: #06181B;
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(42, 131, 95, 0.5);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #8BBB92;
+  background: #D1E7DD;
 }
 
 /* Hide scrollbar utility for horizontal scroll containers */
