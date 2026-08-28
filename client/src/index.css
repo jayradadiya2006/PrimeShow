@@ -1,35 +1,33 @@
 /* PrimeShow Cinema Theme System (Harmonized Dark & Light Themes) */
 
 :root {
-  --admin-bg-primary: #0D1A16;
-  --admin-bg-secondary: #122A23;
-  --admin-accent-gold: #E5B84B;
-  --admin-accent-gold-hover: #F0C05A;
-  --admin-accent-border: #22483C;
+  --admin-bg-primary: #273338;
+  --admin-bg-secondary: #2B5748;
+  --admin-border-muted: #618764;
   --admin-text-primary: #FFFFFF;
-  --admin-text-secondary: #A3E2C7;
+  --admin-text-highlight: #9CB080;
 
-  --bg-main: #0D1A16;
+  --bg-main: #273338;
   --text-main: #FFFFFF;
-  --text-muted: #A3E2C7;
-  --card-bg: rgba(18, 42, 35, 0.95);
-  --modal-bg: rgba(18, 42, 35, 0.98);
-  --border-main: rgba(34, 72, 60, 0.6);
-  --input-bg: rgba(13, 26, 22, 0.95);
-  --accent-gold: #E5B84B;
-  --accent-red: #E5B84B;
+  --text-muted: #9CB080;
+  --card-bg: rgba(43, 87, 72, 0.95);
+  --modal-bg: rgba(43, 87, 72, 0.98);
+  --border-main: #618764;
+  --input-bg: rgba(39, 51, 56, 0.95);
+  --accent-gold: #9CB080;
+  --accent-red: #9CB080;
 }
 
 html, body, html.dark, body.dark, html.light, body.light {
-  --bg-main: #0D1A16;
+  --bg-main: #273338;
   --text-main: #FFFFFF;
-  --text-muted: #A3E2C7;
-  --card-bg: rgba(18, 42, 35, 0.95);
-  --modal-bg: rgba(18, 42, 35, 0.98);
-  --border-main: rgba(34, 72, 60, 0.6);
-  --input-bg: rgba(13, 26, 22, 0.95);
+  --text-muted: #9CB080;
+  --card-bg: rgba(43, 87, 72, 0.95);
+  --modal-bg: rgba(43, 87, 72, 0.98);
+  --border-main: #618764;
+  --input-bg: rgba(39, 51, 56, 0.95);
 
-  background-color: #0D1A16 !important;
+  background-color: #273338 !important;
   color: #FFFFFF !important;
 }
 
@@ -119,21 +117,23 @@ html.light .glass-input {
 }
 
 .glass-input:focus {
-  background: var(--card-bg);
-  border-color: #D1E7DD;
-  box-shadow: 0 0 24px rgba(42, 131, 95, 0.5);
+  background: rgba(43, 87, 72, 0.98) !important;
+  border-color: #9CB080 !important;
+  box-shadow: 0 0 24px rgba(156, 176, 128, 0.4) !important;
   outline: none;
 }
 
 /* High-Contrast Select Dropdowns & Options */
 select, option, input, textarea {
-  background-color: #06181B !important;
+  background-color: #273338 !important;
   color: #FFFFFF !important;
+  border-color: #618764 !important;
 }
 
 option:checked, option:hover {
-  background-color: #1F6048 !important;
-  color: #FFFFFF !important;
+  background-color: #618764 !important;
+  color: #9CB080 !important;
+  font-weight: 800 !important;
 }
 
 /* Card Elevation & Crimson Button Styling */
@@ -143,15 +143,23 @@ option:checked, option:hover {
 
 .card-hover-3d:hover {
   transform: translateY(-6px) scale(1.015);
-  box-shadow: 0 20px 40px -15px rgba(42, 131, 95, 0.35);
-  border-color: rgba(42, 131, 95, 0.7) !important;
+  box-shadow: 0 20px 40px -15px rgba(156, 176, 128, 0.35);
+  border-color: #618764 !important;
 }
 
-.neon-btn-primary {
+.btn-gold-primary, .neon-btn-primary {
   position: relative;
-  background: linear-gradient(135deg, #1F6048 0%, #0E3835 100%);
-  color: #FFFFFF !important;
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #9CB080 0%, #618764 100%) !important;
+  color: #273338 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 4px 18px rgba(156, 176, 128, 0.35) !important;
+  transition: all 0.25s ease-in-out !important;
+}
+
+.btn-gold-primary:hover, .neon-btn-primary:hover {
+  background: linear-gradient(135deg, #b0c296 0%, #9CB080 100%) !important;
+  box-shadow: 0 6px 24px rgba(156, 176, 128, 0.5) !important;
+  transform: translateY(-1px);
 }
 
 @keyframes marquee {
@@ -189,20 +197,20 @@ option:checked, option:hover {
 }
 
 .neon-glow-red {
-  box-shadow: 0 0 25px rgba(42, 131, 95, 0.5);
+  box-shadow: 0 0 25px rgba(156, 176, 128, 0.5);
 }
 
 .neon-glow-gold {
-  box-shadow: 0 0 25px rgba(209, 231, 221, 0.45);
+  box-shadow: 0 0 25px rgba(156, 176, 128, 0.45);
 }
 
 .screen-curve {
   height: 60px;
   width: 100%;
-  border-top: 4px solid #2A835F;
+  border-top: 4px solid #9CB080;
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  background: linear-gradient(180deg, rgba(42, 131, 95, 0.35) 0%, rgba(42, 131, 95, 0) 100%);
-  box-shadow: 0 -15px 40px rgba(42, 131, 95, 0.5);
+  background: linear-gradient(180deg, rgba(156, 176, 128, 0.35) 0%, rgba(156, 176, 128, 0) 100%);
+  box-shadow: 0 -15px 40px rgba(156, 176, 128, 0.5);
 }
 
 /* Custom Scrollbar */
@@ -211,14 +219,14 @@ option:checked, option:hover {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #06181B;
+  background: #273338;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(42, 131, 95, 0.5);
+  background: #618764;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #D1E7DD;
+  background: #9CB080;
 }
 
 /* Hide scrollbar utility for horizontal scroll containers */
