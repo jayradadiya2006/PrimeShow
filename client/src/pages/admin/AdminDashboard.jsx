@@ -1062,6 +1062,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [revenueChartData, setRevenueChartData] = useState([]);
   const [bookingChartData, setBookingChartData] = useState([]);
   const [topMoviesList, setTopMoviesList] = useState([]);
+  const [topTheatresList, setTopTheatresList] = useState([]);
   const [topMoviesModalOpen, setTopMoviesModalOpen] = useState(false);
   const [topMoviesSearchQuery, setTopMoviesSearchQuery] = useState('');
   const [chartsLoading, setChartsLoading] = useState(false);
@@ -1101,6 +1102,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
       }
     } catch (err) {
       console.warn('Error fetching top movies analytics:', err.message);
+    }
+  };
+
+  const fetchTopTheatresAnalytics = async () => {
+    try {
+      let res;
+      try {
+        res = await API.get('/admin/analytics/top-theatres');
+      } catch (e1) {
+        res = await API.get('/admin/analytics/top-theatres-overview');
+      }
+      if (res.data?.theatres || res.data?.topTheatres) {
+        setTopTheatresList(res.data.theatres || res.data.topTheatres);
+      }
+    } catch (err) {
+      console.warn('Error fetching top theatres analytics:', err.message);
     }
   };
 
@@ -1148,6 +1165,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     fetchRevenueChartData('7days');
     fetchBookingChartData('7days');
     fetchTopMoviesAnalytics();
+    fetchTopTheatresAnalytics();
   }, []);
 
   useEffect(() => {
@@ -1160,6 +1178,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
       fetchRevenueChartData(revenueRange);
       fetchBookingChartData(bookingRange);
       fetchTopMoviesAnalytics();
+      fetchTopTheatresAnalytics();
     }
   }, [activeTab, userCurrentPage, activityCurrentPage, activityCategoryTab, revenueRange, bookingRange]);
 
@@ -1178,6 +1197,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
       setActionSuccess(`⚡ New Live Booking! ${data.userName || 'Customer'} booked ${data.title || 'tickets'} for ₹${data.totalAmount || 480}`);
       fetchFinancialStats();
       fetchTopMoviesAnalytics();
+      fetchTopTheatresAnalytics();
       if (activeTab === 'bookings') {
         fetchCategorizedBookings(bookingCurrentPage, bookingCategoryTab, bookingSearchQuery);
       } else if (activeTab === 'user-activities') {
@@ -1189,6 +1209,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     socket.on('BOOKING_CREATED', (data) => {
       fetchFinancialStats();
       fetchTopMoviesAnalytics();
+      fetchTopTheatresAnalytics();
     });
 
     socket.on('NEW_USER_REGISTERED', (data) => {
@@ -2854,32 +2875,56 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              {/* Column 2: Top Theatres by Occupancy */}
+              {/* Column 2: Top Theatres by Occupancy & Rating (Live MongoDB Atlas) */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-white">Top Theatres by Occupancy</h3>
-                    <button className="text-xs font-bold text-cyan-400 hover:underline">View All</button>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Building className="w-4 h-4 text-blue-400" />
+                      <span>Top Theatres by Occupancy (Live MongoDB Atlas)</span>
+                    </h3>
+                    <span className="text-xs font-semibold text-slate-400">
+                      Total: {(topTheatresList || []).length}
+                    </span>
                   </div>
 
                   <div className="space-y-3">
-                    {[
-                      { name: 'PVR Phoenix Marketcity', pct: '98.5%', width: '98.5%' },
-                      { name: 'INOX VR Surat', pct: '96.2%', width: '96.2%' },
-                      { name: 'Cinepolis VIP Road', pct: '94.8%', width: '94.8%' },
-                      { name: 'PVR Rahul Raj Mall', pct: '92.6%', width: '92.6%' },
-                      { name: 'Carnival Dumas Road', pct: '90.3%', width: '90.3%' }
-                    ].map((th, i) => (
-                      <div key={i} className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-200 font-medium truncate max-w-[200px]">{th.name}</span>
-                          <span className="font-mono font-bold text-slate-200">{th.pct}</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-500 rounded-full" style={{ width: th.width }}></div>
-                        </div>
+                    {(topTheatresList || []).length > 0 ? (
+                      (topTheatresList || []).slice(0, 5).map((th, i) => {
+                        const pct = th?.percentage !== undefined ? th.percentage : (parseFloat(th?.occupancyRate) || 0);
+                        const displayName = th?.nameAndCity || (th?.city ? `${th.name} - ${th.city}` : th?.name) || 'PrimeShow Theatre';
+                        return (
+                          <div key={th?.theatreId || th?.name || i} className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-white font-extrabold truncate max-w-[210px]" title={displayName}>
+                                {displayName}
+                              </span>
+                              <span className="font-mono font-black text-blue-400 text-sm">
+                                {pct}%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-slate-400">
+                              <span>Seats Sold: {th?.tickets || 0}</span>
+                              <span>Rating: {th?.rating || 4.8}★</span>
+                            </div>
+                            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500"
+                                style={{ width: `${Math.max(pct, 4)}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-blue-400/20 space-y-2">
+                        <Building className="w-8 h-8 text-blue-400/50 mx-auto animate-pulse" />
+                        <div className="text-xs font-bold text-white">No Live Theatre Bookings Yet</div>
+                        <p className="text-[11px] text-blue-300/70">
+                          Real-time theatre occupancy share will calculate here automatically when tickets or halls are booked in MongoDB Atlas.
+                        </p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>

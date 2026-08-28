@@ -3034,13 +3034,14 @@ app.delete(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) =>
 
   try {
     if (mongoose.connection.readyState === 1) {
-      await Theatre.deleteOne({ id });
+      await Theatre.deleteOne(buildIdFilter(id));
     }
   } catch (err) {
     console.warn('⚠️ Error deleting theatre from MongoDB Atlas:', err.message);
   }
 
-  const index = theatres.findIndex(t => t.id === id);
+  const cleanId = String(id || '').trim().toLowerCase();
+  const index = theatres.findIndex(t => t.id === id || t._id === id || (t.name && t.name.trim().toLowerCase() === cleanId));
   let deleted = null;
   if (index !== -1) {
     deleted = theatres.splice(index, 1)[0];
@@ -3048,10 +3049,12 @@ app.delete(['/api/theatres/:id', '/api/admin/theatres/:id'], async (req, res) =>
 
   if (req.app.get('socketio')) {
     req.app.get('socketio').emit('THEATRE_DELETED', { id });
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'THEATRE_DELETED', id });
   }
   broadcastToAllClients('THEATRE_DELETED', { id });
+  broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'THEATRE_DELETED', id });
 
-  res.json({ message: 'Theatre deleted', id, theatre: deleted });
+  res.json({ message: 'Theatre deleted successfully from MongoDB Atlas', id, theatre: deleted });
 });
 
 // Admin Endpoint: Add & Persist Date-Wise Show Slot to MongoDB Atlas
@@ -5589,6 +5592,173 @@ app.get([
     });
   } catch (error) {
     console.error('Top Movies Analytics Route Error:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Admin Real-Time Top Theatres & Occupancy Overview Endpoint (MongoDB Atlas Aggregation by Seat Volume & City Sync)
+app.get([
+  '/api/admin/analytics/top-theatres',
+  '/api/admin/analytics/top-theatres-overview'
+], async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    let topTheatresList = [];
+
+    // 1. Fetch active theatres from MongoDB Atlas & in-memory store
+    let dbTheatres = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        dbTheatres = await Theatre.find().lean();
+      } catch (e) {}
+    }
+
+    const activeTheatreMap = new Map();
+    const activeTheatreIds = new Set();
+    const activeTheatreNames = new Set();
+
+    (dbTheatres || []).forEach(t => {
+      const nameKey = t.name ? t.name.toLowerCase().trim() : '';
+      const cityVal = t.city || 'Surat';
+      if (t.id) {
+        activeTheatreMap.set(String(t.id).toLowerCase().trim(), t);
+        activeTheatreIds.add(String(t.id).toLowerCase().trim());
+      }
+      if (t._id) {
+        activeTheatreMap.set(String(t._id).toLowerCase().trim(), t);
+        activeTheatreIds.add(String(t._id).toLowerCase().trim());
+      }
+      if (nameKey) {
+        activeTheatreMap.set(`${nameKey}_${cityVal.toLowerCase().trim()}`, t);
+        activeTheatreMap.set(nameKey, t);
+        activeTheatreNames.add(nameKey);
+      }
+    });
+
+    (theatres || []).forEach(t => {
+      const nameKey = t.name ? t.name.toLowerCase().trim() : '';
+      const cityVal = t.city || 'Surat';
+      if (nameKey && !activeTheatreMap.has(nameKey)) {
+        activeTheatreMap.set(`${nameKey}_${cityVal.toLowerCase().trim()}`, t);
+        activeTheatreMap.set(nameKey, t);
+        activeTheatreNames.add(nameKey);
+      }
+      if (t.id && !activeTheatreMap.has(String(t.id).toLowerCase().trim())) {
+        activeTheatreMap.set(String(t.id).toLowerCase().trim(), t);
+        activeTheatreIds.add(String(t.id).toLowerCase().trim());
+      }
+    });
+
+    // 2. Fetch all completed bookings from MongoDB Atlas
+    let dbBookings = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        dbBookings = await Booking.find({ status: { $ne: 'CANCELLED' } }).lean();
+      } catch (e) {}
+    }
+
+    const rawBookings = (dbBookings && dbBookings.length > 0) ? dbBookings : (bookings || []);
+
+    // Filter out bookings for theatres that have been DELETED from the admin catalog
+    const validBookings = rawBookings.filter(b => {
+      const thName = String(b.theatreName || b.theatre || b.venue || '').toLowerCase().trim();
+      const thId = String(b.theatreId || '').toLowerCase().trim();
+
+      if (activeTheatreNames.size > 0 || activeTheatreIds.size > 0) {
+        return activeTheatreNames.has(thName) || activeTheatreIds.has(thId) || activeTheatreIds.has(thName);
+      }
+      return true;
+    });
+
+    // 3. Aggregate total seat volume and revenue per theatre
+    const statsByTheatre = new Map();
+    let grandTotalTheatreSeatsSoldAcrossPlatform = 0;
+
+    validBookings.forEach(b => {
+      const thName = b.theatreName || b.theatre || b.venue || 'Multiplex Cinema';
+      const thCity = b.city || b.theatreCity || 'Surat';
+      const thId = b.theatreId || thName;
+      const key = `${String(thName).toLowerCase().trim()}_${String(thCity).toLowerCase().trim()}`;
+
+      let seatVolume = Number(b.seatsBookedCount || b.ticketCount || b.tickets || b.quantity);
+      if (!seatVolume || isNaN(seatVolume) || seatVolume <= 0) {
+        seatVolume = Array.isArray(b.seats) ? b.seats.length : (Array.isArray(b.seatsBooked) ? b.seatsBooked.length : 1);
+      }
+
+      const rev = Number(b.totalAmount || b.totalPrice || b.price) || 0;
+      grandTotalTheatreSeatsSoldAcrossPlatform += seatVolume;
+
+      if (!statsByTheatre.has(key)) {
+        const doc = activeTheatreMap.get(key) || activeTheatreMap.get(String(thName).toLowerCase().trim()) || activeTheatreMap.get(String(thId).toLowerCase().trim());
+
+        statsByTheatre.set(key, {
+          theatreId: doc?.id || thId,
+          name: doc?.name || thName,
+          city: doc?.city || thCity,
+          nameAndCity: `${doc?.name || thName} - ${doc?.city || thCity}`,
+          tickets: 0,
+          bookings: 0,
+          revenue: 0,
+          rating: doc?.rating ? Number(doc.rating) : 4.8
+        });
+      }
+
+      const item = statsByTheatre.get(key);
+      item.tickets += seatVolume;
+      item.bookings += 1;
+      item.revenue += rev;
+    });
+
+    if (grandTotalTheatreSeatsSoldAcrossPlatform === 0 && (dbTheatres.length > 0 || theatres.length > 0)) {
+      const activeList = dbTheatres.length > 0 ? dbTheatres : theatres;
+      activeList.slice(0, 5).forEach((t, idx) => {
+        topTheatresList.push({
+          rank: idx + 1,
+          theatreId: t.id || t._id,
+          name: t.name,
+          city: t.city || 'Surat',
+          nameAndCity: `${t.name} - ${t.city || 'Surat'}`,
+          tickets: 0,
+          bookings: 0,
+          revenue: 0,
+          percentage: 0,
+          occupancyRate: '0%',
+          rating: t.rating || 4.8
+        });
+      });
+    } else {
+      const sortedList = Array.from(statsByTheatre.values()).sort((a, b) => b.tickets - a.tickets || b.revenue - a.revenue);
+
+      sortedList.forEach((stat, idx) => {
+        const percentage = grandTotalTheatreSeatsSoldAcrossPlatform > 0
+          ? Math.round((stat.tickets / grandTotalTheatreSeatsSoldAcrossPlatform) * 100)
+          : 0;
+
+        topTheatresList.push({
+          rank: idx + 1,
+          theatreId: stat.theatreId,
+          name: stat.name,
+          city: stat.city,
+          nameAndCity: stat.nameAndCity,
+          tickets: stat.tickets,
+          bookings: stat.bookings,
+          revenue: stat.revenue,
+          percentage,
+          occupancyRate: `${percentage}%`,
+          rating: stat.rating
+        });
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      theatres: topTheatresList,
+      topTheatres: topTheatresList,
+      grandTotalTheatreSeatsSoldAcrossPlatform,
+      totalTheatresCount: topTheatresList.length
+    });
+  } catch (error) {
+    console.error('Top Theatres Analytics Route Error:', error);
     return res.status(500).json({ success: false, error: error.message });
   }
 });
