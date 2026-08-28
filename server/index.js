@@ -2224,16 +2224,16 @@ app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
 
   // 1. Delete from MongoDB Atlas
   try {
-    const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
-      await Movie.deleteOne({ id });
+      await Movie.deleteOne(buildIdFilter(id));
     }
   } catch (err) {
     console.warn('⚠️ Error deleting movie from MongoDB Atlas:', err.message);
   }
 
   // 2. Remove from in-memory fallback list
-  const index = movies.findIndex(m => m.id === id);
+  const cleanId = String(id || '').trim().toLowerCase();
+  const index = movies.findIndex(m => m.id === id || m._id === id || (m.title && m.title.trim().toLowerCase() === cleanId));
   let deletedItem = null;
   if (index !== -1) {
     deletedItem = movies.splice(index, 1)[0];
@@ -2242,10 +2242,12 @@ app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   // 3. Emit real-time deletion event
   if (req.app.get('socketio')) {
     req.app.get('socketio').emit('MOVIE_DELETED', { id });
+    req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'MOVIE_DELETED', id });
   }
   broadcastToAllClients('MOVIE_DELETED', { id });
+  broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'MOVIE_DELETED', id });
 
-  res.json({ message: 'Movie deleted', id, movie: deletedItem });
+  res.json({ message: 'Movie deleted successfully from MongoDB Atlas', id, movie: deletedItem });
 });
 
 // Admin Cast & Crew Management Endpoint (Add / Replace Cast Member)
