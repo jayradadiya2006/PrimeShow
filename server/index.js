@@ -4934,25 +4934,33 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
     const finalEmail = (userEmail || 'guest@primeshow.com').toLowerCase().trim();
     const finalName = userName || finalEmail.split('@')[0];
 
+    const seatsList = Array.isArray(seats) ? seats : (Array.isArray(seatsBooked) ? seatsBooked : (seats ? [seats] : ['C4']));
+    const numSeats = Number(req.body.seatsBookedCount || req.body.ticketCount || req.body.tickets || req.body.quantity || seatsList.length || 1);
+    const mTitle = movieTitle || req.body.title || req.body.movieName || 'PrimeShow Feature';
+
     const newBooking = {
       id: orderId,
       transactionId,
       showId: showId || 'sh_101',
       movieId: movieId || 'mov_1',
-      movieTitle: movieTitle || title || 'PrimeShow Feature',
-      title: movieTitle || title || 'PrimeShow Feature',
+      movieTitle: mTitle,
+      title: mTitle,
       theatreId: theatreId || 'th_1',
       theatreName: theatreName || 'PVR Cinema',
       screenName: screenName || 'Screen 1',
       category: category || 'Movie',
+      bookingType: 'movie',
       date: date || slotDate || new Date().toISOString().slice(0, 10),
       slotDate: slotDate || date || new Date().toISOString().slice(0, 10),
       time: time || showTime || '07:30 PM',
       showTime: showTime || time || '07:30 PM',
-      seats: Array.isArray(seats) ? seats : (seatsBooked || ['C4']),
-      seatsBooked: Array.isArray(seatsBooked) ? seatsBooked : (seats || ['C4']),
+      seats: seatsList,
+      seatsBooked: seatsList,
+      seatsBookedCount: numSeats,
+      ticketCount: numSeats,
+      tickets: numSeats,
       tier: tier || 'Recliner',
-      totalAmount: Number(totalAmount || 480),
+      totalAmount: Number(totalAmount || req.body.totalPrice || req.body.price || 480),
       paymentMethod: paymentMethod || 'UPI (Instant)',
       userEmail: finalEmail,
       userName: finalName,
@@ -5413,8 +5421,11 @@ app.get(['/api/admin/analytics/charts', '/api/admin/analytics/revenue', '/api/ad
   }
 });
 
-// Admin Real-Time Top Movies Ranking Endpoint (Strictly Movie Bookings Aggregated from MongoDB Atlas)
-app.get('/api/admin/analytics/top-movies', async (req, res) => {
+// Admin Real-Time Top Movies & Booking Overview Endpoint (MongoDB Atlas Weighted Aggregation by Seat Volume)
+app.get([
+  '/api/admin/analytics/top-booking-overview',
+  '/api/admin/analytics/top-movies'
+], async (req, res) => {
   try {
     const mongoose = require('mongoose');
     let topMoviesList = [];
@@ -5426,7 +5437,7 @@ app.get('/api/admin/analytics/top-movies', async (req, res) => {
         dbMovieBookings = await Booking.find({
           status: { $ne: 'CANCELLED' },
           category: { $nin: ['Event', 'Play', 'Activity', 'PrivateTheatre'] },
-          type: { $nin: ['PRIV-TH', 'event', 'play', 'activity'] }
+          type: { $nin: ['PRIV-TH', 'EVENT', 'PLAY', 'ACTIVITY', 'event', 'play', 'activity'] }
         }).lean();
       } catch (dbErr) {
         console.warn('⚠️ Top Movies DB Fetch Warning:', dbErr.message);
@@ -5437,7 +5448,7 @@ app.get('/api/admin/analytics/top-movies', async (req, res) => {
     const memMovieBookings = (bookings || []).filter(b => 
       b.status !== 'CANCELLED' &&
       b.category !== 'Event' && b.category !== 'Play' && b.category !== 'Activity' && b.category !== 'PrivateTheatre' &&
-      b.type !== 'PRIV-TH' && b.type !== 'event' && b.type !== 'play' && b.type !== 'activity'
+      b.type !== 'PRIV-TH' && b.type !== 'EVENT' && b.type !== 'PLAY' && b.type !== 'ACTIVITY' && b.type !== 'event' && b.type !== 'play' && b.type !== 'activity'
     );
 
     const allMovieBookings = (dbMovieBookings && dbMovieBookings.length > 0) ? dbMovieBookings : memMovieBookings;
@@ -5461,19 +5472,24 @@ app.get('/api/admin/analytics/top-movies', async (req, res) => {
       }
     });
 
-    // Group bookings by movie
+    // Group bookings by movie and sum weighted seat volume
     const statsByMovie = new Map();
-    let totalMovieTicketsSoldAcrossAllUsers = 0;
+    let grandTotalMovieSeatsSoldAcrossAllUsers = 0;
 
     allMovieBookings.forEach(b => {
       const mTitle = b.movieTitle || b.title || 'PrimeShow Feature';
       const mId = b.movieId || mTitle;
       const key = String(mTitle).toLowerCase().trim();
 
-      const ticketCount = Array.isArray(b.seats) ? b.seats.length : (Number(b.ticketCount || b.quantity || b.totalSeats) || 1);
+      // Explicit numeric seat volume: seatsBookedCount || ticketCount || tickets || seats.length
+      let seatVolume = Number(b.seatsBookedCount || b.ticketCount || b.tickets || b.quantity);
+      if (!seatVolume || isNaN(seatVolume) || seatVolume <= 0) {
+        seatVolume = Array.isArray(b.seats) ? b.seats.length : (Array.isArray(b.seatsBooked) ? b.seatsBooked.length : 1);
+      }
+
       const rev = Number(b.totalAmount || b.totalPrice || b.price) || 0;
 
-      totalMovieTicketsSoldAcrossAllUsers += ticketCount;
+      grandTotalMovieSeatsSoldAcrossAllUsers += seatVolume;
 
       if (!statsByMovie.has(key)) {
         const doc = movieCatalogMap.get(key) || movieCatalogMap.get(String(mId).toLowerCase().trim());
@@ -5491,12 +5507,12 @@ app.get('/api/admin/analytics/top-movies', async (req, res) => {
       }
 
       const item = statsByMovie.get(key);
-      item.tickets += ticketCount;
+      item.tickets += seatVolume;
       item.bookings += 1;
       item.revenue += rev;
     });
 
-    if (totalMovieTicketsSoldAcrossAllUsers === 0 && dbMovies.length > 0) {
+    if (grandTotalMovieSeatsSoldAcrossAllUsers === 0 && dbMovies.length > 0) {
       // Zero state catalog fallback when no movie ticket purchases exist yet
       dbMovies.slice(0, 5).forEach((m, idx) => {
         topMoviesList.push({
@@ -5512,11 +5528,12 @@ app.get('/api/admin/analytics/top-movies', async (req, res) => {
         });
       });
     } else {
+      // Sort movies descending by seat volume so highest-booked movie dynamically rises to top spot
       const sortedList = Array.from(statsByMovie.values()).sort((a, b) => b.tickets - a.tickets || b.revenue - a.revenue);
 
       sortedList.forEach((stat, idx) => {
-        const percentage = totalMovieTicketsSoldAcrossAllUsers > 0
-          ? Math.round((stat.tickets / totalMovieTicketsSoldAcrossAllUsers) * 100)
+        const percentage = grandTotalMovieSeatsSoldAcrossAllUsers > 0
+          ? Math.round((stat.tickets / grandTotalMovieSeatsSoldAcrossAllUsers) * 100)
           : 0;
 
         topMoviesList.push({
@@ -5536,7 +5553,8 @@ app.get('/api/admin/analytics/top-movies', async (req, res) => {
     return res.status(200).json({
       success: true,
       movies: topMoviesList,
-      totalMovieTicketsSoldAcrossAllUsers,
+      topMovies: topMoviesList,
+      grandTotalMovieSeatsSoldAcrossAllUsers,
       totalMoviesCount: topMoviesList.length
     });
   } catch (error) {

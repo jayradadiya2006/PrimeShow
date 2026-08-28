@@ -1090,9 +1090,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const fetchTopMoviesAnalytics = async () => {
     try {
-      const res = await API.get('/admin/analytics/top-movies');
-      if (res.data?.movies) {
-        setTopMoviesList(res.data.movies);
+      let res;
+      try {
+        res = await API.get('/admin/analytics/top-booking-overview');
+      } catch (e1) {
+        res = await API.get('/admin/analytics/top-movies');
+      }
+      if (res.data?.movies || res.data?.topMovies) {
+        setTopMoviesList(res.data.movies || res.data.topMovies);
       }
     } catch (err) {
       console.warn('Error fetching top movies analytics:', err.message);
