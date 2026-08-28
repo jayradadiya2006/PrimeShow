@@ -1112,9 +1112,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
     try {
       let res;
       try {
-        res = await API.get('/admin/analytics/top-theatres?limit=all');
+        res = await API.get(`/admin/analytics/top-theatres?limit=all&t=${Date.now()}`);
       } catch (e1) {
-        res = await API.get('/admin/analytics/top-theatres-overview?limit=all');
+        res = await API.get(`/admin/analytics/top-theatres-overview?limit=all&t=${Date.now()}`);
       }
       if (res.data?.allTheatres || res.data?.theatres || res.data?.topTheatres) {
         const fullList = res.data.allTheatres || res.data.theatres || res.data.topTheatres || [];
@@ -1125,6 +1125,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
       console.warn('Error fetching top theatres analytics:', err.message);
     }
   };
+
+  useEffect(() => {
+    if (topTheatresModalOpen) {
+      fetchTopTheatresAnalytics();
+    }
+  }, [topTheatresModalOpen]);
 
   const fetchFinancialStats = async () => {
     setFinancialStatsLoading(true);

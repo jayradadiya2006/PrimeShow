@@ -5623,8 +5623,15 @@ app.get([
   '/api/admin/analytics/top-theatres-overview'
 ], async (req, res) => {
   try {
+    // Explicit No-Cache Headers to ensure live data on every call
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const mongoose = require('mongoose');
     let topTheatresList = [];
+
+    const normStr = (s) => (s ? String(s).toLowerCase().replace(/[^a-z0-9]/g, '') : '');
 
     // 1. Fetch active theatres from MongoDB Atlas & in-memory store
     let dbTheatres = [];
@@ -5634,40 +5641,46 @@ app.get([
       } catch (e) {}
     }
 
-    const activeTheatreMap = new Map();
-    const activeTheatreIds = new Set();
-    const activeTheatreNames = new Set();
+    const combinedList = [...(dbTheatres || [])];
+    const existingDbIds = new Set(combinedList.map(t => String(t.id || t._id || '').toLowerCase().trim()).filter(Boolean));
+    const existingDbNames = new Set(combinedList.map(t => t.name ? normStr(t.name) : '').filter(Boolean));
 
-    (dbTheatres || []).forEach(t => {
-      const nameKey = t.name ? t.name.toLowerCase().trim() : '';
-      const cityVal = t.city || 'Surat';
-      if (t.id) {
-        activeTheatreMap.set(String(t.id).toLowerCase().trim(), t);
-        activeTheatreIds.add(String(t.id).toLowerCase().trim());
-      }
-      if (t._id) {
-        activeTheatreMap.set(String(t._id).toLowerCase().trim(), t);
-        activeTheatreIds.add(String(t._id).toLowerCase().trim());
-      }
-      if (nameKey) {
-        activeTheatreMap.set(`${nameKey}_${cityVal.toLowerCase().trim()}`, t);
-        activeTheatreMap.set(nameKey, t);
-        activeTheatreNames.add(nameKey);
+    (theatres || []).forEach(t => {
+      const idKey = t.id ? String(t.id).toLowerCase().trim() : '';
+      const nameKey = t.name ? normStr(t.name) : '';
+      if (!existingDbIds.has(idKey) && !existingDbNames.has(nameKey)) {
+        combinedList.push(t);
       }
     });
 
-    (theatres || []).forEach(t => {
-      const nameKey = t.name ? t.name.toLowerCase().trim() : '';
+    const statsByTheatre = new Map();
+    const theatreLookupList = [];
+
+    // Pre-populate statsByTheatre with ALL registered theatres
+    combinedList.forEach(t => {
+      const nameVal = t.name || 'Multiplex Cinema';
       const cityVal = t.city || 'Surat';
-      if (nameKey && !activeTheatreMap.has(nameKey)) {
-        activeTheatreMap.set(`${nameKey}_${cityVal.toLowerCase().trim()}`, t);
-        activeTheatreMap.set(nameKey, t);
-        activeTheatreNames.add(nameKey);
-      }
-      if (t.id && !activeTheatreMap.has(String(t.id).toLowerCase().trim())) {
-        activeTheatreMap.set(String(t.id).toLowerCase().trim(), t);
-        activeTheatreIds.add(String(t.id).toLowerCase().trim());
-      }
+      const thId = t.id || t._id || `th_${nameVal.replace(/\s+/g, '_').toLowerCase()}`;
+      const normKey = `${normStr(nameVal)}_${normStr(cityVal)}`;
+
+      const entry = {
+        theatreId: thId,
+        name: nameVal,
+        city: cityVal,
+        nameAndCity: `${nameVal} - ${cityVal}`,
+        tickets: 0,
+        bookings: 0,
+        revenue: 0,
+        rating: t.rating ? Number(t.rating) : 4.8
+      };
+
+      statsByTheatre.set(normKey, entry);
+      theatreLookupList.push({
+        entry,
+        idStr: String(thId).toLowerCase().trim(),
+        nameNorm: normStr(nameVal),
+        cityNorm: normStr(cityVal)
+      });
     });
 
     // 2. Fetch all completed bookings from MongoDB Atlas
@@ -5680,67 +5693,29 @@ app.get([
 
     const rawBookings = (dbBookings && dbBookings.length > 0) ? dbBookings : (bookings || []);
 
-    // Filter out bookings for theatres that have been DELETED from the admin catalog
-    const validBookings = rawBookings.filter(b => {
-      const thName = String(b.theatreName || b.theatre || b.venue || '').toLowerCase().trim();
-      const thId = String(b.theatreId || '').toLowerCase().trim();
-
-      if (activeTheatreNames.size > 0 || activeTheatreIds.size > 0) {
-        return activeTheatreNames.has(thName) || activeTheatreIds.has(thId) || activeTheatreIds.has(thName);
-      }
-      return true;
-    });
-
-    // 3. Aggregate total seat volume and revenue per theatre
-    const statsByTheatre = new Map();
     let grandTotalTheatreSeatsSoldAcrossPlatform = 0;
 
-    // Combine dbTheatres from MongoDB Atlas and in-memory theatres (deduped by ID and name+city)
-    const combinedList = [...(dbTheatres || [])];
-    const existingDbIds = new Set(combinedList.map(t => String(t.id || t._id || '').toLowerCase().trim()).filter(Boolean));
-    const existingDbNames = new Set(combinedList.map(t => t.name ? `${t.name.toLowerCase().trim()}_${(t.city || 'surat').toLowerCase().trim()}` : '').filter(Boolean));
+    rawBookings.forEach(b => {
+      const bName = b.theatreName || b.theatre || b.venue || 'Multiplex Cinema';
+      const bCity = b.city || b.theatreCity || 'Surat';
+      const bId = b.theatreId || '';
 
-    (theatres || []).forEach(t => {
-      const idKey = t.id ? String(t.id).toLowerCase().trim() : '';
-      const nameKey = t.name ? `${t.name.toLowerCase().trim()}_${(t.city || 'surat').toLowerCase().trim()}` : '';
-      if (!existingDbIds.has(idKey) && !existingDbNames.has(nameKey)) {
-        combinedList.push(t);
+      const bNameNorm = normStr(bName);
+      const bCityNorm = normStr(bCity);
+      const bIdNorm = String(bId).toLowerCase().trim();
+
+      // Flexible lookup: Exact ID -> Exact Name+City -> Normalized Name -> Substring match
+      let matchedEntry = null;
+
+      if (bIdNorm) {
+        matchedEntry = theatreLookupList.find(t => t.idStr === bIdNorm)?.entry;
       }
-    });
-
-    // Pre-populate statsByTheatre with ALL registered theatres in combinedList
-    combinedList.forEach(t => {
-      const nameVal = t.name || 'Multiplex Cinema';
-      const cityVal = t.city || 'Surat';
-      const thId = t.id || t._id || `th_${nameVal.replace(/\s+/g, '_').toLowerCase()}`;
-      const uniqueKey = `${String(nameVal).toLowerCase().trim()}_${String(cityVal).toLowerCase().trim()}`;
-
-      if (!statsByTheatre.has(uniqueKey)) {
-        statsByTheatre.set(uniqueKey, {
-          theatreId: thId,
-          name: nameVal,
-          city: cityVal,
-          nameAndCity: `${nameVal} - ${cityVal}`,
-          tickets: 0,
-          bookings: 0,
-          revenue: 0,
-          rating: t.rating ? Number(t.rating) : 4.8
-        });
+      if (!matchedEntry && bNameNorm && bCityNorm) {
+        matchedEntry = theatreLookupList.find(t => t.nameNorm === bNameNorm && t.cityNorm === bCityNorm)?.entry;
       }
-    });
-
-    validBookings.forEach(b => {
-      const thName = b.theatreName || b.theatre || b.venue || 'Multiplex Cinema';
-      const thCity = b.city || b.theatreCity || 'Surat';
-      const thId = b.theatreId || thName;
-
-      const doc = activeTheatreMap.get(`${String(thName).toLowerCase().trim()}_${String(thCity).toLowerCase().trim()}`) 
-               || activeTheatreMap.get(String(thName).toLowerCase().trim()) 
-               || activeTheatreMap.get(String(thId).toLowerCase().trim());
-
-      const normName = doc?.name || thName;
-      const normCity = doc?.city || thCity;
-      const key = `${String(normName).toLowerCase().trim()}_${String(normCity).toLowerCase().trim()}`;
+      if (!matchedEntry && bNameNorm) {
+        matchedEntry = theatreLookupList.find(t => t.nameNorm === bNameNorm || t.nameNorm.includes(bNameNorm) || bNameNorm.includes(t.nameNorm))?.entry;
+      }
 
       let seatVolume = Number(b.seatsBookedCount || b.ticketCount || b.tickets || b.quantity);
       if (!seatVolume || isNaN(seatVolume) || seatVolume <= 0) {
@@ -5750,23 +5725,38 @@ app.get([
       const rev = Number(b.totalAmount || b.totalPrice || b.price) || 0;
       grandTotalTheatreSeatsSoldAcrossPlatform += seatVolume;
 
-      if (!statsByTheatre.has(key)) {
-        statsByTheatre.set(key, {
-          theatreId: doc?.id || doc?._id || thId,
-          name: normName,
-          city: normCity,
-          nameAndCity: `${normName} - ${normCity}`,
-          tickets: 0,
-          bookings: 0,
-          revenue: 0,
-          rating: doc?.rating ? Number(doc.rating) : 4.8
-        });
+      if (matchedEntry) {
+        matchedEntry.tickets += seatVolume;
+        matchedEntry.bookings += 1;
+        matchedEntry.revenue += rev;
+      } else {
+        // Dynamic registration for newly booked venue (e.g. Ramsan Theatre)
+        const dynamicKey = `${bNameNorm}_${bCityNorm}`;
+        if (!statsByTheatre.has(dynamicKey)) {
+          const newEntry = {
+            theatreId: bId || `th_${bName.replace(/\s+/g, '_').toLowerCase()}`,
+            name: bName,
+            city: bCity,
+            nameAndCity: `${bName} - ${bCity}`,
+            tickets: seatVolume,
+            bookings: 1,
+            revenue: rev,
+            rating: 4.8
+          };
+          statsByTheatre.set(dynamicKey, newEntry);
+          theatreLookupList.push({
+            entry: newEntry,
+            idStr: String(newEntry.theatreId).toLowerCase().trim(),
+            nameNorm: bNameNorm,
+            cityNorm: bCityNorm
+          });
+        } else {
+          const item = statsByTheatre.get(dynamicKey);
+          item.tickets += seatVolume;
+          item.bookings += 1;
+          item.revenue += rev;
+        }
       }
-
-      const item = statsByTheatre.get(key);
-      item.tickets += seatVolume;
-      item.bookings += 1;
-      item.revenue += rev;
     });
 
     // 4. Sort ALL theatres in DESCENDING order (tickets -> revenue -> rating)
