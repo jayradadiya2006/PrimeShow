@@ -573,52 +573,109 @@ export const AdminDashboard = ({ onReturnHome }) => {
     || (moviesList || [])[0] 
     || { id: 'mov_1', title: 'Avatar: Fire and Ash' };
 
-  // 6. Dynamic Dates for Selected Theatre + Movie Combo
+  // Dynamic MongoDB Atlas Showtimes State for Selected Theatre + Movie Combo
+  const [dynamicShowtimesData, setDynamicShowtimesData] = useState({ dates: [], slotsByDate: {} });
+
+  const fetchDynamicShowtimesForCombo = async (thId, movId) => {
+    if (!thId || !movId) {
+      setDynamicShowtimesData({ dates: [], slotsByDate: {} });
+      return;
+    }
+    try {
+      const res = await API.get(`/theatres/${thId}/movies/${movId}/showtimes`);
+      if (res.data && Array.isArray(res.data.dates)) {
+        setDynamicShowtimesData({
+          dates: res.data.dates,
+          slotsByDate: res.data.slotsByDate || {}
+        });
+      } else {
+        setDynamicShowtimesData({ dates: [], slotsByDate: {} });
+      }
+    } catch (err) {
+      setDynamicShowtimesData({ dates: [], slotsByDate: {} });
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTheatreId && selectedSeatMovieId) {
+      fetchDynamicShowtimesForCombo(selectedTheatreId, selectedSeatMovieId);
+    } else {
+      setDynamicShowtimesData({ dates: [], slotsByDate: {} });
+    }
+  }, [selectedTheatreId, selectedSeatMovieId]);
+
+  // 6. Dynamic Dates for Selected Theatre + Movie Combo (Strict DB Filtering - NO Hardcoded Fallbacks)
   const availableDatesForSeatCombo = (() => {
     const datesSet = new Set();
-    if (activeSeatMovieObj?.showDates && Array.isArray(activeSeatMovieObj.showDates)) {
-      activeSeatMovieObj.showDates.forEach(d => datesSet.add(d));
-    }
-    if (activeTheatreObj?.hallSlotsByDate) {
-      Object.keys(activeTheatreObj.hallSlotsByDate).forEach(d => datesSet.add(d));
-    }
-    if (activeTheatreObj?.shows && Array.isArray(activeTheatreObj.shows)) {
-      activeTheatreObj.shows.forEach(s => { if (s.date) datesSet.add(s.date); });
-    }
-    const arr = Array.from(datesSet).sort();
-    if (arr.length === 0) {
-      arr.push(new Date().toISOString().slice(0, 10));
-    }
-    return arr;
-  })();
 
-  // 7. Dynamic Showtimes for Selected Theatre + Movie + Date Combo
-  const availableShowtimesForSeatCombo = (() => {
-    const timesSet = new Set();
-    const currentDate = selectedSchedDate || availableDatesForSeatCombo[0] || new Date().toISOString().slice(0, 10);
-
-    if (activeTheatreObj?.hallSlotsByDate && activeTheatreObj.hallSlotsByDate[currentDate]) {
-      const halls = activeTheatreObj.hallSlotsByDate[currentDate];
-      if (Array.isArray(halls)) {
-        halls.forEach(h => {
-          if (h.time || h.showTime) timesSet.add(h.time || h.showTime);
-        });
-      }
+    if (dynamicShowtimesData?.dates && Array.isArray(dynamicShowtimesData.dates)) {
+      dynamicShowtimesData.dates.forEach(d => datesSet.add(d));
     }
+
     if (activeTheatreObj?.shows && Array.isArray(activeTheatreObj.shows)) {
       activeTheatreObj.shows.forEach(s => {
-        if (s.time) timesSet.add(s.time);
+        const matchesMovie = (s.movieId && (s.movieId === selectedSeatMovieId || s.movieId === activeSeatMovieObj?.id)) ||
+          (s.movieTitle && activeSeatMovieObj?.title && s.movieTitle.toLowerCase().trim() === activeSeatMovieObj.title.toLowerCase().trim());
+        if (matchesMovie && s.date) {
+          datesSet.add(s.date);
+        }
       });
     }
-    const arr = Array.from(timesSet);
-    if (arr.length === 0) {
-      return ['07:30 PM (IMAX 3D)', '10:15 AM (Recliner)', '04:00 PM (Dolby Atmos)', '10:30 PM (VIP Lounge)'];
+
+    const hallMap = activeTheatreObj?.hallSlotsByDate || activeTheatreObj?.dateHalls || {};
+    if (hallMap && typeof hallMap === 'object') {
+      Object.keys(hallMap).forEach(dStr => {
+        const halls = Array.isArray(hallMap[dStr]) ? hallMap[dStr] : [];
+        halls.forEach(h => {
+          const matchesMovie = !h.movieId || (h.movieId === selectedSeatMovieId || h.movieId === activeSeatMovieObj?.id) ||
+            (h.movieTitle && activeSeatMovieObj?.title && h.movieTitle.toLowerCase().trim() === activeSeatMovieObj.title.toLowerCase().trim());
+          if (matchesMovie) {
+            datesSet.add(dStr);
+          }
+        });
+      });
     }
-    return arr;
+
+    return Array.from(datesSet).sort();
+  })();
+
+  // 7. Dynamic Showtimes for Selected Theatre + Movie + Date Combo (Strict DB Filtering - NO Hardcoded Fallbacks)
+  const availableShowtimesForSeatCombo = (() => {
+    if (!selectedSchedDate) return [];
+    const timesSet = new Set();
+
+    const backendSlots = dynamicShowtimesData?.slotsByDate?.[selectedSchedDate] || [];
+    backendSlots.forEach(s => {
+      if (s.time || s.showTime) timesSet.add(s.time || s.showTime);
+    });
+
+    if (activeTheatreObj?.shows && Array.isArray(activeTheatreObj.shows)) {
+      activeTheatreObj.shows.forEach(s => {
+        const matchesMovie = (s.movieId && (s.movieId === selectedSeatMovieId || s.movieId === activeSeatMovieObj?.id)) ||
+          (s.movieTitle && activeSeatMovieObj?.title && s.movieTitle.toLowerCase().trim() === activeSeatMovieObj.title.toLowerCase().trim());
+        if (matchesMovie && (!s.date || s.date === selectedSchedDate)) {
+          if (s.time) timesSet.add(s.time);
+        }
+      });
+    }
+
+    const hallMap = activeTheatreObj?.hallSlotsByDate || activeTheatreObj?.dateHalls || {};
+    if (hallMap && typeof hallMap === 'object' && hallMap[selectedSchedDate]) {
+      const halls = Array.isArray(hallMap[selectedSchedDate]) ? hallMap[selectedSchedDate] : [];
+      halls.forEach(h => {
+        const matchesMovie = !h.movieId || (h.movieId === selectedSeatMovieId || h.movieId === activeSeatMovieObj?.id) ||
+          (h.movieTitle && activeSeatMovieObj?.title && h.movieTitle.toLowerCase().trim() === activeSeatMovieObj.title.toLowerCase().trim());
+        if (matchesMovie) {
+          if (h.time || h.showTime) timesSet.add(h.time || h.showTime);
+        }
+      });
+    }
+
+    return Array.from(timesSet);
   })();
 
   // 8. Isolated Layout Key & Resolution
-  const isolatedLayoutKey = `${activeTheatreObj?.id || 'th_1'}_${activeSeatMovieObj?.id || 'mov_1'}_${selectedSchedDate || 'date'}_${selectedShowSlotTime || '07:30 PM'}`;
+  const isolatedLayoutKey = `${activeTheatreObj?.id || 'th_1'}_${activeSeatMovieObj?.id || 'mov_1'}_${selectedSchedDate || 'date'}_${selectedShowSlotTime || 'slot_1'}`;
   const isSeatGridUnlocked = Boolean(selectedCity && selectedTheatreId && selectedSeatMovieId && selectedSchedDate && selectedShowSlotTime);
   const currentLayout = getScreenLayout(isolatedLayoutKey);
   const seatRowsList = currentLayout?.rows || DEFAULT_SEAT_ROWS;
@@ -1555,6 +1612,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
       if (res?.data?.movie) {
         const dbM = res.data.movie;
         setMoviesList(prev => prev.map(m => (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId || (m.title && m.title.toLowerCase() === (schedMovieId || '').toLowerCase())) ? dbM : m));
+      }
+
+      if (selectedTheatreId && selectedSeatMovieId) {
+        fetchDynamicShowtimesForCombo(selectedTheatreId, selectedSeatMovieId);
       }
 
       setActionSuccess(`Show slot '${effectiveTime}' (${schedFormat}) saved to MongoDB Atlas for ${selectedSchedDate}!`);

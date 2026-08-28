@@ -2952,6 +2952,116 @@ app.get(['/api/theatres/halls', '/api/admin/theatres/halls'], async (req, res) =
   }
 });
 
+// Dynamic Showtime Fetching Endpoint for Theatre + Movie Pair from MongoDB Atlas
+app.get([
+  '/api/theatres/:theatreId/movies/:movieId/showtimes',
+  '/api/admin/theatres/:theatreId/movies/:movieId/showtimes'
+], async (req, res) => {
+  try {
+    const { theatreId, movieId } = req.params;
+
+    if (!theatreId || !movieId) {
+      return res.status(400).json({ success: false, error: 'theatreId and movieId are required', dates: [], slotsByDate: {} });
+    }
+
+    let targetTheatre = null;
+    let targetMovie = null;
+    let dbShows = [];
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        targetTheatre = await Theatre.findOne(buildIdFilter(theatreId)).lean();
+      } catch (e1) {}
+
+      try {
+        targetMovie = await Movie.findOne(buildIdFilter(movieId)).lean();
+      } catch (e2) {}
+
+      try {
+        const queryMovTitle = targetMovie?.title ? new RegExp(targetMovie.title.trim(), 'i') : null;
+        const movQuery = queryMovTitle ? [{ movieId }, { movieTitle: queryMovTitle }] : [{ movieId }];
+        dbShows = await Show.find({
+          theatreId,
+          $or: movQuery
+        }).lean();
+      } catch (e3) {}
+    }
+
+    if (!targetTheatre) {
+      targetTheatre = theatres.find(t => t.id === theatreId || t._id === theatreId);
+    }
+    if (!targetMovie) {
+      targetMovie = movies.find(m => m.id === movieId || m._id === movieId);
+    }
+
+    const datesSet = new Set();
+    const slotsByDate = {};
+
+    const addSlot = (dateStr, slotObj) => {
+      if (!dateStr || !slotObj) return;
+      datesSet.add(dateStr);
+      if (!slotsByDate[dateStr]) slotsByDate[dateStr] = [];
+
+      const timeVal = slotObj.time || slotObj.showTime;
+      if (timeVal && !slotsByDate[dateStr].some(s => s.time === timeVal || s.showTime === timeVal)) {
+        slotsByDate[dateStr].push({
+          id: slotObj.id || `sh_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+          time: timeVal,
+          showTime: timeVal,
+          format: slotObj.format || 'IMAX 3D',
+          price: Number(slotObj.price || 450),
+          screenName: slotObj.screenName || slotObj.hallName || 'Screen 1',
+          screenId: slotObj.screenId || 'sc_1'
+        });
+      }
+    };
+
+    if (dbShows && dbShows.length > 0) {
+      dbShows.forEach(s => {
+        if (s.date) addSlot(s.date, s);
+      });
+    }
+
+    if (targetTheatre?.shows && Array.isArray(targetTheatre.shows)) {
+      targetTheatre.shows.forEach(s => {
+        const matchesMovie = (s.movieId && (s.movieId === movieId || s.movieId === targetMovie?.id)) ||
+          (s.movieTitle && targetMovie?.title && s.movieTitle.toLowerCase().trim() === targetMovie.title.toLowerCase().trim());
+        if (matchesMovie && s.date) {
+          addSlot(s.date, s);
+        }
+      });
+    }
+
+    const hallMap = targetTheatre?.hallSlotsByDate || targetTheatre?.dateHalls || {};
+    if (hallMap && typeof hallMap === 'object') {
+      Object.keys(hallMap).forEach(dStr => {
+        const halls = Array.isArray(hallMap[dStr]) ? hallMap[dStr] : [];
+        halls.forEach(h => {
+          const matchesMovie = !h.movieId || (h.movieId === movieId || h.movieId === targetMovie?.id) ||
+            (h.movieTitle && targetMovie?.title && h.movieTitle.toLowerCase().trim() === targetMovie.title.toLowerCase().trim());
+          if (matchesMovie) {
+            addSlot(dStr, h);
+          }
+        });
+      });
+    }
+
+    const sortedDates = Array.from(datesSet).sort();
+
+    return res.status(200).json({
+      success: true,
+      theatreId,
+      movieId,
+      dates: sortedDates,
+      slotsByDate,
+      count: sortedDates.length
+    });
+  } catch (err) {
+    console.error('❌ Error fetching dynamic showtimes:', err.message);
+    return res.status(500).json({ success: false, error: err.message, dates: [], slotsByDate: {} });
+  }
+});
+
 // Admin Endpoint: Delete Date-Wise Hall Slot from MongoDB Atlas
 app.delete(['/api/admin/theatres/:id/halls/:hallId', '/api/theatres/:id/halls/:hallId'], async (req, res) => {
   const { id, hallId } = req.params;
