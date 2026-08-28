@@ -682,8 +682,13 @@ export const BookingProvider = ({ children }) => {
     const movieId = bookingDetails.movieId || targetMovie.id || targetMovie._id || 'mov_1';
     const movieTitle = bookingDetails.movieTitle || targetMovie.title || 'Movie';
     const poster = bookingDetails.poster || targetMovie.poster || targetMovie.banner || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80';
-    const theatreName = bookingDetails.theatreName || activeBooking.theatre?.name || 'Multiplex';
-    const numSeats = Number(bookingDetails.ticketCount || bookingDetails.seatsBookedCount || (bookingDetails.seats ? bookingDetails.seats.length : 1));
+    
+    const activeTh = activeBooking.theatre || {};
+    const theatreId = bookingDetails.theatreId || bookingDetails.targetTheaterId || bookingDetails.theaterId || activeTh.id || activeTh._id || 'th_1';
+    const theatreName = bookingDetails.theatreName || bookingDetails.name || activeTh.name || 'Multiplex Cinema';
+    const theatreCity = bookingDetails.city || bookingDetails.theatreCity || activeTh.city || 'Surat';
+
+    const numSeats = Number(bookingDetails.ticketCount || bookingDetails.seatsBookedCount || bookingDetails.totalSeats || (bookingDetails.seats ? bookingDetails.seats.length : 1));
 
     const newBooking = {
       id: bookingId,
@@ -691,7 +696,9 @@ export const BookingProvider = ({ children }) => {
       movieId,
       movieTitle,
       poster,
+      theatreId,
       theatreName,
+      city: theatreCity,
       seatsBookedCount: numSeats,
       ticketCount: numSeats,
       tickets: numSeats,
@@ -712,30 +719,36 @@ export const BookingProvider = ({ children }) => {
 
     try {
       await API.post('/bookings/create', {
-        showId: activeBooking.show?.id || 'sh_101',
+        showId: activeBooking.show?.id || bookingDetails.showId || 'sh_101',
         movieId: movieId,
         movieTitle: movieTitle,
         title: movieTitle,
         poster: poster,
         posterUrl: poster,
-        theatreId: activeBooking.theatre?.id || 'th_1',
+        theatreId: theatreId,
+        targetTheaterId: theatreId,
+        theaterId: theatreId,
         theatreName: theatreName,
-        screenName: activeBooking.show?.screenName || 'Screen 1',
+        theatre: theatreName,
+        venue: theatreName,
+        city: theatreCity,
+        theatreCity: theatreCity,
+        screenName: activeBooking.show?.screenName || bookingDetails.screenName || 'Screen 1',
         seats: bookingDetails.seats || ['C4'],
         seatsBooked: bookingDetails.seats || ['C4'],
         seatsBookedCount: numSeats,
         ticketCount: numSeats,
         tickets: numSeats,
         tier: bookingDetails.tier || 'Recliner',
-        totalAmount: bookingDetails.totalAmount || 480,
+        totalAmount: Number(bookingDetails.totalAmount || 480),
         couponCode: bookingDetails.couponCode || '',
         paymentMethod: bookingDetails.paymentMethod || 'UPI (Instant)',
         basePrice: bookingDetails.basePrice || 400,
         convenienceFee: bookingDetails.convenienceFee || 40,
         tax: bookingDetails.tax || 20,
         discount: bookingDetails.discount || 0,
-        category: 'Movie',
-        bookingType: 'movie'
+        category: bookingDetails.category || 'Movie',
+        bookingType: bookingDetails.bookingType || 'movie'
       });
     } catch (err) {
       console.warn('⚠️ Error posting booking to server:', err);

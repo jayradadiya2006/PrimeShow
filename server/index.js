@@ -4961,13 +4961,21 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
     const finalName = userName || finalEmail.split('@')[0];
 
     const seatsList = Array.isArray(seats) ? seats : (Array.isArray(seatsBooked) ? seatsBooked : (seats ? [seats] : ['C4']));
-    const numSeats = Number(req.body.seatsBookedCount || req.body.ticketCount || req.body.tickets || req.body.quantity || seatsList.length || 1);
+    const numSeats = Number(req.body.seatsBookedCount || req.body.ticketCount || req.body.totalSeats || req.body.tickets || req.body.quantity || seatsList.length || 1);
     const mTitle = movieTitle || req.body.title || req.body.movieName || 'PrimeShow Feature';
 
     let resolvedMovieId = movieId || `mov_${Date.now()}`;
     let resolvedPoster = req.body.poster || req.body.posterUrl || req.body.image || '';
 
-    // Dynamically lookup Movie in MongoDB Atlas if poster/id is missing
+    let rawTheatreId = theatreId || req.body.targetTheaterId || req.body.theaterId || req.body.venueId || req.body.theatreObj?.id || req.body.theatreObj?._id || '';
+    let rawTheatreName = theatreName || req.body.theatre || req.body.venue || req.body.location || req.body.theatreObj?.name || '';
+    let rawCity = req.body.city || req.body.theatreCity || req.body.theatreObj?.city || 'Surat';
+
+    let resolvedTheatreId = rawTheatreId;
+    let resolvedTheatreName = rawTheatreName;
+    let resolvedCity = rawCity;
+
+    // Dynamically lookup Movie & Theatre in MongoDB Atlas
     const mongoose = require('mongoose');
     if (mongoose.connection.readyState === 1) {
       try {
@@ -4981,6 +4989,24 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
           if (!movieId) resolvedMovieId = foundMovie.id || foundMovie._id;
           if (!resolvedPoster) resolvedPoster = foundMovie.poster || foundMovie.banner;
         }
+
+        const tOr = [];
+        if (rawTheatreId) {
+          tOr.push({ id: rawTheatreId });
+          if (mongoose.Types.ObjectId.isValid(rawTheatreId)) tOr.push({ _id: rawTheatreId });
+        }
+        if (rawTheatreName) {
+          tOr.push({ name: new RegExp(`^${rawTheatreName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+          tOr.push({ name: new RegExp(rawTheatreName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') });
+        }
+        if (tOr.length > 0) {
+          const foundTh = await Theatre.findOne({ $or: tOr }).lean();
+          if (foundTh) {
+            resolvedTheatreId = foundTh.id || foundTh._id || resolvedTheatreId;
+            resolvedTheatreName = foundTh.name || resolvedTheatreName;
+            resolvedCity = foundTh.city || resolvedCity;
+          }
+        }
       } catch (e) {}
     }
     if (!resolvedPoster && mTitle) {
@@ -4990,6 +5016,16 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
         resolvedPoster = memM.poster;
       }
     }
+    if (!resolvedTheatreName && rawTheatreId) {
+      const memTh = theatres.find(t => t.id === rawTheatreId || t._id === rawTheatreId);
+      if (memTh) {
+        resolvedTheatreName = memTh.name;
+        resolvedCity = memTh.city || resolvedCity;
+      }
+    }
+
+    if (!resolvedTheatreName) resolvedTheatreName = 'Multiplex Cinema';
+    if (!resolvedTheatreId) resolvedTheatreId = `th_${resolvedTheatreName.replace(/\s+/g, '_').toLowerCase()}`;
 
     const newBooking = {
       id: orderId,
@@ -5000,8 +5036,14 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
       title: mTitle,
       poster: resolvedPoster,
       posterUrl: resolvedPoster,
-      theatreId: theatreId || 'th_1',
-      theatreName: theatreName || 'PVR Cinema',
+      theatreId: resolvedTheatreId,
+      targetTheaterId: resolvedTheatreId,
+      theaterId: resolvedTheatreId,
+      theatreName: resolvedTheatreName,
+      theatre: resolvedTheatreName,
+      venue: resolvedTheatreName,
+      city: resolvedCity,
+      theatreCity: resolvedCity,
       screenName: screenName || 'Screen 1',
       category: category || 'Movie',
       bookingType: 'movie',
