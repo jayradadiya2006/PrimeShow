@@ -5695,6 +5695,28 @@ app.get([
     const statsByTheatre = new Map();
     let grandTotalTheatreSeatsSoldAcrossPlatform = 0;
 
+    // Pre-populate statsByTheatre with ALL registered theatres from MongoDB Atlas & active list
+    const activeList = (dbTheatres && dbTheatres.length > 0) ? dbTheatres : theatres;
+    (activeList || []).forEach(t => {
+      const nameVal = t.name || 'Multiplex Cinema';
+      const cityVal = t.city || 'Surat';
+      const thId = t.id || t._id || `th_${nameVal.replace(/\s+/g, '_').toLowerCase()}`;
+      const key = `${String(nameVal).toLowerCase().trim()}_${String(cityVal).toLowerCase().trim()}`;
+
+      if (!statsByTheatre.has(key)) {
+        statsByTheatre.set(key, {
+          theatreId: thId,
+          name: nameVal,
+          city: cityVal,
+          nameAndCity: `${nameVal} - ${cityVal}`,
+          tickets: 0,
+          bookings: 0,
+          revenue: 0,
+          rating: t.rating ? Number(t.rating) : 4.8
+        });
+      }
+    });
+
     validBookings.forEach(b => {
       const thName = b.theatreName || b.theatre || b.venue || 'Multiplex Cinema';
       const thCity = b.city || b.theatreCity || 'Surat';
@@ -5730,51 +5752,35 @@ app.get([
       item.revenue += rev;
     });
 
-    if (grandTotalTheatreSeatsSoldAcrossPlatform === 0 && (dbTheatres.length > 0 || theatres.length > 0)) {
-      const activeList = dbTheatres.length > 0 ? dbTheatres : theatres;
-      activeList.slice(0, 5).forEach((t, idx) => {
-        topTheatresList.push({
-          rank: idx + 1,
-          theatreId: t.id || t._id,
-          name: t.name,
-          city: t.city || 'Surat',
-          nameAndCity: `${t.name} - ${t.city || 'Surat'}`,
-          tickets: 0,
-          bookings: 0,
-          revenue: 0,
-          percentage: 0,
-          occupancyRate: '0%',
-          rating: t.rating || 4.8
-        });
+    const sortedList = Array.from(statsByTheatre.values()).sort((a, b) => b.tickets - a.tickets || b.revenue - a.revenue || b.rating - a.rating);
+
+    sortedList.forEach((stat, idx) => {
+      const percentage = grandTotalTheatreSeatsSoldAcrossPlatform > 0
+        ? Math.round((stat.tickets / grandTotalTheatreSeatsSoldAcrossPlatform) * 100)
+        : 0;
+
+      topTheatresList.push({
+        rank: idx + 1,
+        theatreId: stat.theatreId,
+        name: stat.name,
+        city: stat.city,
+        nameAndCity: stat.nameAndCity,
+        tickets: stat.tickets,
+        bookings: stat.bookings,
+        revenue: stat.revenue,
+        percentage,
+        occupancyRate: `${percentage}%`,
+        rating: stat.rating
       });
-    } else {
-      const sortedList = Array.from(statsByTheatre.values()).sort((a, b) => b.tickets - a.tickets || b.revenue - a.revenue);
+    });
 
-      sortedList.forEach((stat, idx) => {
-        const percentage = grandTotalTheatreSeatsSoldAcrossPlatform > 0
-          ? Math.round((stat.tickets / grandTotalTheatreSeatsSoldAcrossPlatform) * 100)
-          : 0;
-
-        topTheatresList.push({
-          rank: idx + 1,
-          theatreId: stat.theatreId,
-          name: stat.name,
-          city: stat.city,
-          nameAndCity: stat.nameAndCity,
-          tickets: stat.tickets,
-          bookings: stat.bookings,
-          revenue: stat.revenue,
-          percentage,
-          occupancyRate: `${percentage}%`,
-          rating: stat.rating
-        });
-      });
-    }
-
-    const limitParam = req.query.limit ? parseInt(req.query.limit) : null;
+    const limitQuery = req.query.limit;
     let finalTheatresList = topTheatresList;
-    if (limitParam && !isNaN(limitParam) && limitParam > 0) {
-      finalTheatresList = topTheatresList.slice(0, limitParam);
+    if (limitQuery && limitQuery !== 'all' && limitQuery !== 'ALL') {
+      const parsedLimit = parseInt(limitQuery);
+      if (!isNaN(parsedLimit) && parsedLimit > 0) {
+        finalTheatresList = topTheatresList.slice(0, parsedLimit);
+      }
     }
 
     return res.status(200).json({
