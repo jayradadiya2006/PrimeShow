@@ -2979,35 +2979,51 @@ app.get([
       } catch (e2) {}
 
       try {
+        const cleanThId = String(theatreId).trim();
+        const cleanMovId = String(movieId).trim();
         const queryMovTitle = targetMovie?.title ? new RegExp(targetMovie.title.trim(), 'i') : null;
-        const movQuery = queryMovTitle ? [{ movieId }, { movieTitle: queryMovTitle }] : [{ movieId }];
+        const movQuery = queryMovTitle ? [{ movieId: new RegExp('^' + cleanMovId + '$', 'i') }, { movieTitle: queryMovTitle }] : [{ movieId: new RegExp('^' + cleanMovId + '$', 'i') }];
+        
         dbShows = await Show.find({
-          theatreId,
+          $or: [
+            { theatreId: new RegExp('^' + cleanThId + '$', 'i') },
+            { theatreId: cleanThId }
+          ],
           $or: movQuery
         }).lean();
       } catch (e3) {}
     }
 
     if (!targetTheatre) {
-      targetTheatre = theatres.find(t => t.id === theatreId || t._id === theatreId);
+      const cleanTh = String(theatreId).toLowerCase().trim();
+      targetTheatre = theatres.find(t => String(t.id || t._id).toLowerCase().trim() === cleanTh);
     }
     if (!targetMovie) {
-      targetMovie = movies.find(m => m.id === movieId || m._id === movieId);
+      const cleanMov = String(movieId).toLowerCase().trim();
+      targetMovie = movies.find(m => String(m.id || m._id).toLowerCase().trim() === cleanMov || (m.title && String(m.title).toLowerCase().trim() === cleanMov));
     }
 
     const datesSet = new Set();
 
-    // 1. Process dbShows from MongoDB Atlas
+    // 1. Process targetMovie.showDates (added via Movie / Showtimes CRUD)
+    if (targetMovie?.showDates && Array.isArray(targetMovie.showDates)) {
+      targetMovie.showDates.forEach(d => {
+        if (d) datesSet.add(d);
+      });
+    }
+
+    // 2. Process dbShows from MongoDB Atlas
     if (dbShows && dbShows.length > 0) {
       dbShows.forEach(s => {
         if (s.date) datesSet.add(s.date);
       });
     }
 
-    // 2. Process Theatre.shows array for matching movie
+    // 3. Process Theatre.shows array for matching movie
     if (targetTheatre?.shows && Array.isArray(targetTheatre.shows)) {
       targetTheatre.shows.forEach(s => {
-        const matchesMovie = (s.movieId && (s.movieId === movieId || s.movieId === targetMovie?.id)) ||
+        const cleanMov = String(movieId).toLowerCase().trim();
+        const matchesMovie = (s.movieId && String(s.movieId).toLowerCase().trim() === cleanMov) ||
           (s.movieTitle && targetMovie?.title && s.movieTitle.toLowerCase().trim() === targetMovie.title.toLowerCase().trim());
         if (matchesMovie && s.date) {
           datesSet.add(s.date);
@@ -3015,13 +3031,14 @@ app.get([
       });
     }
 
-    // 3. Process Theatre.hallSlotsByDate map
+    // 4. Process Theatre.hallSlotsByDate map
     const hallMap = targetTheatre?.hallSlotsByDate || targetTheatre?.dateHalls || {};
     if (hallMap && typeof hallMap === 'object') {
       Object.keys(hallMap).forEach(dStr => {
         const halls = Array.isArray(hallMap[dStr]) ? hallMap[dStr] : [];
         halls.forEach(h => {
-          const matchesMovie = (h.movieId && (h.movieId === movieId || h.movieId === targetMovie?.id)) ||
+          const cleanMov = String(movieId).toLowerCase().trim();
+          const matchesMovie = (h.movieId && String(h.movieId).toLowerCase().trim() === cleanMov) ||
             (h.movieTitle && targetMovie?.title && h.movieTitle.toLowerCase().trim() === targetMovie.title.toLowerCase().trim());
           if (matchesMovie) {
             datesSet.add(dStr);

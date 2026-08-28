@@ -617,10 +617,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
       dynamicShowtimesData.dates.forEach(d => datesSet.add(d));
     }
 
+    if (activeSeatMovieObj?.showDates && Array.isArray(activeSeatMovieObj.showDates)) {
+      activeSeatMovieObj.showDates.forEach(d => datesSet.add(d));
+    }
+
     if (activeTheatreObj?.shows && Array.isArray(activeTheatreObj.shows)) {
       activeTheatreObj.shows.forEach(s => {
-        const matchesMovie = (s.movieId && (s.movieId === selectedSeatMovieId || s.movieId === activeSeatMovieObj?.id)) ||
-          (s.movieTitle && activeSeatMovieObj?.title && s.movieTitle.toLowerCase().trim() === activeSeatMovieObj.title.toLowerCase().trim());
+        const cleanMov = String(selectedSeatMovieId || '').toLowerCase().trim();
+        const matchesMovie = (s.movieId && (String(s.movieId).toLowerCase().trim() === cleanMov || String(s.movieId).toLowerCase().trim() === String(activeSeatMovieObj?.id).toLowerCase().trim())) ||
+          (s.movieTitle && activeSeatMovieObj?.title && String(s.movieTitle).toLowerCase().trim() === String(activeSeatMovieObj.title).toLowerCase().trim());
         if (matchesMovie && s.date) {
           datesSet.add(s.date);
         }
@@ -632,8 +637,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
       Object.keys(hallMap).forEach(dStr => {
         const halls = Array.isArray(hallMap[dStr]) ? hallMap[dStr] : [];
         halls.forEach(h => {
-          const matchesMovie = (h.movieId && (h.movieId === selectedSeatMovieId || h.movieId === activeSeatMovieObj?.id)) ||
-            (h.movieTitle && activeSeatMovieObj?.title && h.movieTitle.toLowerCase().trim() === activeSeatMovieObj.title.toLowerCase().trim());
+          const cleanMov = String(selectedSeatMovieId || '').toLowerCase().trim();
+          const matchesMovie = (h.movieId && (String(h.movieId).toLowerCase().trim() === cleanMov || String(h.movieId).toLowerCase().trim() === String(activeSeatMovieObj?.id).toLowerCase().trim())) ||
+            (h.movieTitle && activeSeatMovieObj?.title && String(h.movieTitle).toLowerCase().trim() === String(activeSeatMovieObj.title).toLowerCase().trim());
           if (matchesMovie) {
             datesSet.add(dStr);
           }
@@ -643,6 +649,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
     return Array.from(datesSet).sort();
   })();
+
+  // Auto-select first available date whenever availableDatesForSeatCombo updates
+  useEffect(() => {
+    if (availableDatesForSeatCombo && availableDatesForSeatCombo.length > 0) {
+      if (!selectedSchedDate || !availableDatesForSeatCombo.includes(selectedSchedDate)) {
+        setSelectedSchedDate(availableDatesForSeatCombo[0]);
+      }
+    } else {
+      setSelectedSchedDate('');
+    }
+  }, [availableDatesForSeatCombo, selectedSeatMovieId, selectedTheatreId]);
 
   // 7. Dynamic Showtimes for Selected Theatre + Movie + Date Combo (Strict DB Filtering - NO Hardcoded Fallbacks)
   const availableShowtimesForSeatCombo = (() => {
