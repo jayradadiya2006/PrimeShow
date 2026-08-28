@@ -1,51 +1,35 @@
 /* PrimeShow Cinema Theme System (Harmonized Dark & Light Themes) */
 
 :root {
-  --admin-bg-primary: #06181B;
-  --admin-bg-secondary: #0E3835;
-  --admin-accent-action: #1F6048;
-  --admin-border-muted: #2A835F;
+  --admin-bg-primary: #0D1A16;
+  --admin-bg-secondary: #122A23;
+  --admin-accent-gold: #E5B84B;
+  --admin-accent-gold-hover: #F0C05A;
+  --admin-accent-border: #22483C;
   --admin-text-primary: #FFFFFF;
-  --admin-text-secondary: #D1E7DD;
+  --admin-text-secondary: #A3E2C7;
 
-  --bg-main: #06181B;
+  --bg-main: #0D1A16;
   --text-main: #FFFFFF;
-  --text-muted: #D1E7DD;
-  --card-bg: rgba(14, 56, 53, 0.94);
-  --modal-bg: rgba(14, 56, 53, 0.98);
-  --border-main: rgba(42, 131, 95, 0.5);
-  --input-bg: rgba(6, 24, 27, 0.9);
-  --accent-red: #1F6048;
-  --accent-gold: #D1E7DD;
+  --text-muted: #A3E2C7;
+  --card-bg: rgba(18, 42, 35, 0.95);
+  --modal-bg: rgba(18, 42, 35, 0.98);
+  --border-main: rgba(34, 72, 60, 0.6);
+  --input-bg: rgba(13, 26, 22, 0.95);
+  --accent-gold: #E5B84B;
+  --accent-red: #E5B84B;
 }
 
-html.light, body.light, html:not(.dark), body:not(.dark) {
-  --bg-main: #06181B;
+html, body, html.dark, body.dark, html.light, body.light {
+  --bg-main: #0D1A16;
   --text-main: #FFFFFF;
-  --text-muted: #D1E7DD;
-  --card-bg: rgba(14, 56, 53, 0.94);
-  --modal-bg: rgba(14, 56, 53, 0.98);
-  --border-main: rgba(42, 131, 95, 0.5);
-  --input-bg: rgba(6, 24, 27, 0.9);
-  --accent-red: #1F6048;
-  --accent-gold: #D1E7DD;
+  --text-muted: #A3E2C7;
+  --card-bg: rgba(18, 42, 35, 0.95);
+  --modal-bg: rgba(18, 42, 35, 0.98);
+  --border-main: rgba(34, 72, 60, 0.6);
+  --input-bg: rgba(13, 26, 22, 0.95);
 
-  background-color: #06181B !important;
-  color: #FFFFFF !important;
-}
-
-html.dark, body.dark {
-  --bg-main: #06181B;
-  --text-main: #FFFFFF;
-  --text-muted: #D1E7DD;
-  --card-bg: rgba(14, 56, 53, 0.94);
-  --modal-bg: rgba(14, 56, 53, 0.98);
-  --border-main: rgba(42, 131, 95, 0.5);
-  --input-bg: rgba(6, 24, 27, 0.9);
-  --accent-red: #1F6048;
-  --accent-gold: #D1E7DD;
-
-  background-color: #06181B !important;
+  background-color: #0D1A16 !important;
   color: #FFFFFF !important;
 }
 

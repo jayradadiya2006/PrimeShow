@@ -4492,11 +4492,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
         {/* Tab 3: Cinema & Screen Specific Seat Operations */}
         {/* Tab 3: Real-Time Cinema & Seat Management (Dynamic Pricing, Admin Blocking & Live Tracking) */}
         {activeTab === 'seats' && (
-          <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
+          <div className="glass-panel p-6 rounded-3xl border border-[#2A835F]/40 space-y-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
                 <h1 className="text-3xl font-bold font-sans text-white">Real-Time Seat Management & Live Tracking</h1>
-                <p className="text-xs text-cyan-300">Synchronized with MongoDB Atlas. Select City → Theatre → Movie → Date → Time Slot to unlock grid & publish live layouts.</p>
+                <p className="text-xs text-[#A3E2C7]">Synchronized with MongoDB Atlas. Select City → Theatre → Movie → Date → Time Slot to unlock grid & publish live layouts.</p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0 flex-wrap">
@@ -4504,18 +4504,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   type="button"
                   onClick={() => handleSaveIsolatedSeatLayout(true)}
                   disabled={!isSeatGridUnlocked}
-                  className={`px-5 py-2.5 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-lg transition-all ${
+                  className={`px-5 py-2.5 rounded-2xl font-black text-xs flex items-center gap-2 shadow-lg transition-all ${
                     isSeatGridUnlocked
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black shadow-emerald-500/30 cursor-pointer'
+                      ? 'bg-gradient-to-r from-[#E5B84B] to-[#F0C05A] hover:from-[#F0C05A] hover:to-[#E5B84B] text-[#0D1A16] shadow-[#E5B84B]/30 cursor-pointer'
                       : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
                   }`}
                 >
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 text-[#0D1A16]" />
                   <span>Publish & Approve Seat Layout</span>
                 </button>
 
-                <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#122A23] border border-[#22483C] text-[#A3E2C7] text-xs font-bold shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-[#E5B84B] animate-pulse"></span>
                   <span>Live MongoDB Atlas Synced</span>
                 </div>
               </div>
@@ -4525,7 +4525,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
               {/* Filter 1: Select City */}
               <div>
-                <label className="block text-[11px] font-bold text-cyan-300 mb-1">1. City (MongoDB Atlas) *</label>
+                <label className="block text-[11px] font-bold text-[#A3E2C7] mb-1">1. City (MongoDB Atlas) *</label>
                 <select
                   value={selectedCity || ''}
                   onChange={e => {
@@ -4542,7 +4542,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedTheatreId(thsInCity[0].id);
                     }
                   }}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                  className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-[#0D1A16] font-bold"
                 >
                   <option value="">-- Select City --</option>
                   {(availableCities || []).map(city => (
@@ -4553,7 +4553,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 2: Select Cinema / Theatre */}
               <div>
-                <label className="block text-[11px] font-bold text-cyan-300 mb-1">2. Cinema / Theatre *</label>
+                <label className="block text-[11px] font-bold text-[#A3E2C7] mb-1">2. Cinema / Theatre *</label>
                 <select
                   value={selectedTheatreId || ''}
                   disabled={!selectedCity}
@@ -4567,7 +4567,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedSeatMovieId(moviesList[0].id || moviesList[0]._id);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedCity ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-white bg-black'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedCity ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-white bg-[#0D1A16]'}`}
                 >
                   <option value="">-- Select Theatre --</option>
                   {(theatresInSelectedCity || []).length > 0 ? (
@@ -4582,7 +4582,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 3: Select Movie (Database Live) */}
               <div>
-                <label className="block text-[11px] font-bold text-amber-300 mb-1">3. Movie (Database Live) *</label>
+                <label className="block text-[11px] font-bold text-[#E5B84B] mb-1">3. Movie (Database Live) *</label>
                 <select
                   value={selectedSeatMovieId || ''}
                   disabled={!selectedTheatreId}
@@ -4595,7 +4595,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedSchedDate(availableDatesForSeatCombo[0]);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedTheatreId ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-amber-300 bg-black'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedTheatreId ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-[#E5B84B] bg-[#0D1A16]'}`}
                 >
                   <option value="">-- Select Movie --</option>
                   {(moviesList || []).map(m => (
@@ -4608,7 +4608,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 4: Show Date */}
               <div>
-                <label className="block text-[11px] font-bold text-emerald-300 mb-1">4. Show Date *</label>
+                <label className="block text-[11px] font-bold text-[#A3E2C7] mb-1">4. Show Date *</label>
                 <select
                   value={selectedSchedDate || ''}
                   disabled={!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0}
@@ -4620,7 +4620,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedShowSlotTime(availableShowtimesForSeatCombo[0]);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${(!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0) ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-emerald-300 bg-black'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0 ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-[#A3E2C7] bg-[#0D1A16]'}`}
                 >
                   <option value="">-- Select Show Date --</option>
                   {(availableDatesForSeatCombo || []).length > 0 ? (
@@ -4635,12 +4635,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 5: Show Time Slot */}
               <div>
-                <label className="block text-[11px] font-bold text-purple-300 mb-1">5. Show Time Slot *</label>
+                <label className="block text-[11px] font-bold text-[#E5B84B] mb-1">5. Show Time Slot *</label>
                 <select
                   value={selectedShowSlotTime || ''}
                   disabled={!selectedSchedDate}
                   onChange={e => setSelectedShowSlotTime(e.target.value)}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedSchedDate ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-purple-300 bg-black'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedSchedDate ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-[#E5B84B] bg-[#0D1A16]'}`}
                 >
                   <option value="">-- Select Time Slot --</option>
                   {(availableShowtimesForSeatCombo || []).map(t => (
@@ -4651,9 +4651,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </div>
 
             {/* Live Filter Indicator Bar */}
-            <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs text-cyan-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="p-4 rounded-2xl bg-[#122A23] border border-[#22483C] text-xs text-[#A3E2C7] flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div>
-                📍 Live Tracking Filter: <strong className="text-white">{selectedCity || 'Select City'}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Select Theatre'}</strong> → <strong className="text-amber-400">{activeSeatMovieObj?.title || 'Select Movie'}</strong> → <strong className="text-emerald-300">{selectedSchedDate || 'Select Date'}</strong> → <strong className="text-purple-300">{selectedShowSlotTime || 'Select Time'}</strong>
+                📍 Live Tracking Filter: <strong className="text-white">{selectedCity || 'Select City'}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Select Theatre'}</strong> → <strong className="text-[#E5B84B]">{activeSeatMovieObj?.title || 'Select Movie'}</strong> → <strong className="text-[#A3E2C7]">{selectedSchedDate || 'Select Date'}</strong> → <strong className="text-[#E5B84B]">{selectedShowSlotTime || 'Select Time'}</strong>
               </div>
               <div className="flex items-center gap-3 text-xs flex-wrap">
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">
