@@ -5771,10 +5771,17 @@ app.get([
       });
     }
 
+    const limitParam = req.query.limit ? parseInt(req.query.limit) : null;
+    let finalTheatresList = topTheatresList;
+    if (limitParam && !isNaN(limitParam) && limitParam > 0) {
+      finalTheatresList = topTheatresList.slice(0, limitParam);
+    }
+
     return res.status(200).json({
       success: true,
-      theatres: topTheatresList,
-      topTheatres: topTheatresList,
+      theatres: finalTheatresList,
+      topTheatres: finalTheatresList,
+      allTheatres: topTheatresList,
       grandTotalTheatreSeatsSoldAcrossPlatform,
       totalTheatresCount: topTheatresList.length
     });

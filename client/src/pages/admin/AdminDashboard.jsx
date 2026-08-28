@@ -1063,8 +1063,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [bookingChartData, setBookingChartData] = useState([]);
   const [topMoviesList, setTopMoviesList] = useState([]);
   const [topTheatresList, setTopTheatresList] = useState([]);
+  const [allTheatresList, setAllTheatresList] = useState([]);
   const [topMoviesModalOpen, setTopMoviesModalOpen] = useState(false);
   const [topMoviesSearchQuery, setTopMoviesSearchQuery] = useState('');
+  const [topTheatresModalOpen, setTopTheatresModalOpen] = useState(false);
+  const [topTheatresSearchQuery, setTopTheatresSearchQuery] = useState('');
   const [chartsLoading, setChartsLoading] = useState(false);
 
   const fetchRevenueChartData = async (range = '7days') => {
@@ -1115,6 +1118,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
       }
       if (res.data?.theatres || res.data?.topTheatres) {
         setTopTheatresList(res.data.theatres || res.data.topTheatres);
+        setAllTheatresList(res.data.allTheatres || res.data.theatres || res.data.topTheatres);
       }
     } catch (err) {
       console.warn('Error fetching top theatres analytics:', err.message);
@@ -2888,7 +2892,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              {/* Column 2: Top Theatres by Occupancy & Rating (Live MongoDB Atlas) */}
+              {/* Column 2: Top Theatres by Occupancy & Rating (Live MongoDB Atlas - Top 2 View) */}
               <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -2896,18 +2900,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       <Building className="w-4 h-4 text-blue-400" />
                       <span>Top Theatres by Occupancy (Live MongoDB Atlas)</span>
                     </h3>
-                    <span className="text-xs font-semibold text-slate-400">
-                      Total: {(topTheatresList || []).length}
-                    </span>
+                    <button
+                      onClick={() => setTopTheatresModalOpen(true)}
+                      className="text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <span>More / View All ({(allTheatresList || topTheatresList || []).length})</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   <div className="space-y-3">
                     {(topTheatresList || []).length > 0 ? (
-                      (topTheatresList || []).slice(0, 5).map((th, i) => {
+                      (topTheatresList || []).slice(0, 2).map((th, i) => {
                         const pct = th?.percentage !== undefined ? th.percentage : (parseFloat(th?.occupancyRate) || 0);
                         const displayName = th?.nameAndCity || (th?.city ? `${th.name} - ${th.city}` : th?.name) || 'PrimeShow Theatre';
                         return (
-                          <div key={th?.theatreId || th?.name || i} className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+                          <div key={th?.theatreId || th?.name || i} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-white font-extrabold truncate max-w-[210px]" title={displayName}>
                                 {displayName}
@@ -2918,7 +2926,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-slate-400">
                               <span>Seats Sold: {th?.tickets || 0}</span>
-                              <span>Rating: {th?.rating || 4.8}★</span>
+                              <span className="text-amber-400 font-bold">Rating: {th?.rating || 4.8}★</span>
                             </div>
                             <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                               <div
@@ -6980,6 +6988,111 @@ export const AdminDashboard = ({ onReturnHome }) => {
               <button
                 onClick={() => setTopMoviesModalOpen(false)}
                 className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs cursor-pointer transition-colors shadow-lg shadow-cyan-500/20"
+              >
+                Close View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Top Theatres Expansion Modal (View All / More) */}
+      {topTheatresModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative w-full max-w-3xl glass-modal rounded-3xl p-6 border border-blue-400/30 shadow-[0_0_50px_rgba(0,0,0,0.9)] text-white max-h-[85vh] flex flex-col my-auto overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-300">
+                  <Building className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-sans text-white">All Configured Multiplex Venues (Live MongoDB Atlas)</h3>
+                  <p className="text-xs text-blue-300">Complete ranking of all active theatres by occupancy %, rating, and seat volume</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setTopTheatresModalOpen(false)}
+                className="p-2 rounded-full bg-white/10 hover:bg-rose-500 text-white transition-all cursor-pointer border border-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Search Bar */}
+            <div className="py-4 border-b border-white/10 shrink-0">
+              <input
+                type="text"
+                placeholder="Search active theatres by name or city (e.g. Surat, INOX, PVR)..."
+                value={topTheatresSearchQuery}
+                onChange={(e) => setTopTheatresSearchQuery(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-blue-400"
+              />
+            </div>
+
+            {/* Modal List Body */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-2">
+              {(() => {
+                const listToRender = (allTheatresList && allTheatresList.length > 0) ? allTheatresList : topTheatresList;
+                const filtered = listToRender.filter(t => 
+                  (t.name || '').toLowerCase().includes(topTheatresSearchQuery.toLowerCase()) ||
+                  (t.city || '').toLowerCase().includes(topTheatresSearchQuery.toLowerCase()) ||
+                  (t.nameAndCity || '').toLowerCase().includes(topTheatresSearchQuery.toLowerCase())
+                );
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="p-8 text-center text-xs text-white/50">
+                      No theatres matching "{topTheatresSearchQuery}" found.
+                    </div>
+                  );
+                }
+
+                return filtered.map((th, idx) => {
+                  const pct = th?.percentage !== undefined ? th.percentage : (parseFloat(th?.occupancyRate) || 0);
+                  const displayName = th?.nameAndCity || (th?.city ? `${th.name} - ${th.city}` : th?.name) || 'PrimeShow Theatre';
+                  
+                  return (
+                    <div key={th.theatreId || th.name || idx} className="p-4 glass-panel rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-blue-400/40 transition-all">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <span className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-xs font-bold text-blue-300 font-mono shrink-0">
+                          #{th.rank || idx + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-white text-sm truncate">{th.name || displayName}</h4>
+                          <div className="flex items-center gap-2 text-xs text-slate-300 mt-0.5">
+                            <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold text-[10px]">{th.city || 'Gujarat'}</span>
+                            <span>•</span>
+                            <span className="text-amber-400 font-bold">★ {th.rating || 4.8} / 5.0 Rating</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                        <div className="text-left sm:text-right">
+                          <div className="text-xs text-slate-400">Seats Sold: <strong className="text-white">{th.tickets || 0}</strong></div>
+                          <div className="text-[11px] text-emerald-400 font-semibold">Revenue: ₹{(th.revenue || 0).toLocaleString('en-IN')}</div>
+                        </div>
+                        <div className="text-right min-w-[70px]">
+                          <div className="font-mono font-black text-blue-400 text-base">{pct}%</div>
+                          <div className="text-[9px] text-slate-400 uppercase tracking-wider">Occupancy</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-white/10 flex justify-between items-center shrink-0">
+              <span className="text-xs text-white/60">
+                Showing {((allTheatresList && allTheatresList.length > 0) ? allTheatresList : topTheatresList).length} Total Venues
+              </span>
+              <button
+                onClick={() => setTopTheatresModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-black font-bold text-xs cursor-pointer transition-colors shadow-lg shadow-blue-500/20"
               >
                 Close View
               </button>
