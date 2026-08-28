@@ -1,45 +1,50 @@
 /* PrimeShow Cinema Theme System (Harmonized Dark & Light Themes) */
 
 :root {
-  --bg-main: #0A0C10;
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
-  --card-bg: rgba(15, 23, 42, 0.85);
-  --modal-bg: rgba(15, 23, 42, 0.96);
-  --border-main: rgba(51, 65, 85, 0.6);
-  --input-bg: rgba(30, 41, 59, 0.6);
-  --accent-red: #E50914;
-  --accent-gold: #F59E0B;
+  --admin-bg-primary: #092328;
+  --admin-bg-secondary: #12544F;
+  --admin-accent-action: #2A835F;
+  --admin-text-highlight: #8BBB92;
+
+  --bg-main: #092328;
+  --text-main: #FFFFFF;
+  --text-muted: #8BBB92;
+  --card-bg: rgba(18, 84, 79, 0.90);
+  --modal-bg: rgba(18, 84, 79, 0.97);
+  --border-main: rgba(42, 131, 95, 0.45);
+  --input-bg: rgba(9, 35, 40, 0.85);
+  --accent-red: #2A835F;
+  --accent-gold: #8BBB92;
 }
 
 html.light, body.light, html:not(.dark), body:not(.dark) {
-  --bg-main: #F8FAFC;
-  --text-main: #0F172A;
-  --text-muted: #475569;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --modal-bg: rgba(255, 255, 255, 0.98);
-  --border-main: rgba(203, 213, 225, 0.8);
-  --input-bg: rgba(241, 245, 249, 0.9);
-  --accent-red: #DC2626;
-  --accent-gold: #D97706;
+  --bg-main: #092328;
+  --text-main: #FFFFFF;
+  --text-muted: #8BBB92;
+  --card-bg: rgba(18, 84, 79, 0.90);
+  --modal-bg: rgba(18, 84, 79, 0.97);
+  --border-main: rgba(42, 131, 95, 0.45);
+  --input-bg: rgba(9, 35, 40, 0.85);
+  --accent-red: #2A835F;
+  --accent-gold: #8BBB92;
 
-  background-color: #F8FAFC;
-  color: #0F172A;
+  background-color: #092328;
+  color: #FFFFFF;
 }
 
 html.dark, body.dark {
-  --bg-main: #0A0C10;
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
-  --card-bg: rgba(15, 23, 42, 0.85);
-  --modal-bg: rgba(15, 23, 42, 0.96);
-  --border-main: rgba(51, 65, 85, 0.6);
-  --input-bg: rgba(30, 41, 59, 0.6);
-  --accent-red: #E50914;
-  --accent-gold: #F59E0B;
+  --bg-main: #092328;
+  --text-main: #FFFFFF;
+  --text-muted: #8BBB92;
+  --card-bg: rgba(18, 84, 79, 0.90);
+  --modal-bg: rgba(18, 84, 79, 0.97);
+  --border-main: rgba(42, 131, 95, 0.45);
+  --input-bg: rgba(9, 35, 40, 0.85);
+  --accent-red: #2A835F;
+  --accent-gold: #8BBB92;
 
-  background-color: #0A0C10;
-  color: #F8FAFC;
+  background-color: #092328;
+  color: #FFFFFF;
 }
 
 body {
@@ -129,8 +134,8 @@ html.light .glass-input {
 
 .glass-input:focus {
   background: var(--card-bg);
-  border-color: rgba(229, 9, 20, 0.8);
-  box-shadow: 0 0 24px rgba(229, 9, 20, 0.25);
+  border-color: #8BBB92;
+  box-shadow: 0 0 24px rgba(42, 131, 95, 0.4);
   outline: none;
 }
 
@@ -141,13 +146,13 @@ html.light .glass-input {
 
 .card-hover-3d:hover {
   transform: translateY(-6px) scale(1.015);
-  box-shadow: 0 20px 40px -15px rgba(229, 9, 20, 0.25);
-  border-color: rgba(229, 9, 20, 0.5) !important;
+  box-shadow: 0 20px 40px -15px rgba(42, 131, 95, 0.35);
+  border-color: rgba(139, 187, 146, 0.6) !important;
 }
 
 .neon-btn-primary {
   position: relative;
-  background: linear-gradient(135deg, #E50914 0%, #B91C1C 100%);
+  background: linear-gradient(135deg, #2A835F 0%, #12544F 100%);
   color: #FFFFFF !important;
   transition: all 0.3s ease;
 }
@@ -187,20 +192,20 @@ html.light .glass-input {
 }
 
 .neon-glow-red {
-  box-shadow: 0 0 25px rgba(229, 9, 20, 0.4);
+  box-shadow: 0 0 25px rgba(42, 131, 95, 0.5);
 }
 
 .neon-glow-gold {
-  box-shadow: 0 0 25px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 25px rgba(139, 187, 146, 0.45);
 }
 
 .screen-curve {
   height: 60px;
   width: 100%;
-  border-top: 4px solid #E50914;
+  border-top: 4px solid #8BBB92;
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  background: linear-gradient(180deg, rgba(229, 9, 20, 0.25) 0%, rgba(229, 9, 20, 0) 100%);
-  box-shadow: 0 -15px 40px rgba(229, 9, 20, 0.4);
+  background: linear-gradient(180deg, rgba(42, 131, 95, 0.35) 0%, rgba(42, 131, 95, 0) 100%);
+  box-shadow: 0 -15px 40px rgba(42, 131, 95, 0.5);
 }
 
 /* Custom Scrollbar */
@@ -212,11 +217,11 @@ html.light .glass-input {
   background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
+  background: rgba(42, 131, 95, 0.5);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(229, 9, 20, 0.7);
+  background: #8BBB92;
 }
 
 /* Hide scrollbar utility for horizontal scroll containers */

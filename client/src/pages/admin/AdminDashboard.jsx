@@ -2447,26 +2447,26 @@ export const AdminDashboard = ({ onReturnHome }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#030306] text-white flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#092328] text-white flex flex-col md:flex-row font-sans">
       
       {/* Sleek Admin Left Sidebar Navigation Panel (Responsive Desktop & Mobile Horizontal Scroll) */}
-      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-cyan-400/20 p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-black/80 backdrop-blur-xl">
+      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-[#2A835F]/30 p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-[#12544F] backdrop-blur-xl">
         <div>
           {/* Admin Brand Header */}
           <div className="flex items-center justify-between md:justify-start gap-3 pb-3 md:pb-6 mb-2 md:mb-6 border-b border-white/10">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-lg shadow-cyan-500/20">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-[#2A835F]/30 border border-[#8BBB92]/40 flex items-center justify-center text-[#8BBB92] shadow-lg shadow-[#2A835F]/20">
                 <Shield className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div>
                 <h2 className="text-sm md:text-lg font-bold font-sans text-white leading-tight">PrimeShow</h2>
-                <span className="text-[9px] md:text-[10px] text-cyan-300 uppercase tracking-widest font-bold block">ADMIN COMMAND PANEL</span>
+                <span className="text-[9px] md:text-[10px] text-[#8BBB92] uppercase tracking-widest font-bold block">ADMIN COMMAND PANEL</span>
               </div>
             </div>
 
             <button
               onClick={onReturnHome}
-              className="md:hidden px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[11px] font-bold flex items-center gap-1"
+              className="md:hidden px-3 py-1.5 rounded-xl bg-[#2A835F]/30 border border-[#8BBB92]/40 text-[#8BBB92] text-[11px] font-bold flex items-center gap-1"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Exit</span>
@@ -2484,15 +2484,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   onClick={() => handleTabChange(item.id)}
                   className={`flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all shrink-0 whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/25'
-                      : 'text-white/70 hover:text-white hover:bg-white/5 bg-white/5 md:bg-transparent'
+                      ? 'bg-[#2A835F] text-white shadow-lg shadow-[#2A835F]/30 border border-[#8BBB92]/40 font-black'
+                      : 'text-[#8BBB92]/80 hover:text-white hover:bg-[#2A835F]/20 bg-white/5 md:bg-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <Icon className="w-4 h-4" />
+                    <Icon className="w-4 h-4 text-[#8BBB92]" />
                     <span>{item.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 hidden md:block" />}
+                  {isActive && <ChevronRight className="w-3.5 h-3.5 hidden md:block text-[#8BBB92]" />}
                 </button>
               );
             })}
