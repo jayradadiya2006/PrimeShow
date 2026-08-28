@@ -1772,8 +1772,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleSaveHallSlot = async (e) => {
     e.preventDefault();
-    const targetThId = hallSlotForm.theatreId || theatresList[0]?.id || 'th_1';
-    const selectedMov = moviesList.find(m => m.id === hallSlotForm.movieId) || { title: 'Avatar: Fire and Ash' };
+    const targetThId = hallSlotForm.theatreId || theatresList[0]?.id || theatresList[0]?._id || 'th_1';
+    const selectedMov = moviesList.find(m => m.id === hallSlotForm.movieId || m._id === hallSlotForm.movieId) || { title: 'PrimeShow Feature' };
 
     if (!targetThId || !activeConfigDate) {
       setActionSuccess('Please select a theatre and an active date slot');
@@ -1781,48 +1781,61 @@ export const AdminDashboard = ({ onReturnHome }) => {
       return;
     }
 
+    const newHallItem = {
+      id: `hall_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      movieId: hallSlotForm.movieId || 'mov_1',
+      movieTitle: selectedMov.title || 'PrimeShow Feature',
+      hallName: hallSlotForm.hallName || 'Hall 1',
+      format: hallSlotForm.format || 'IMAX 3D',
+      price: Number(hallSlotForm.price) || 450,
+      time: hallSlotForm.time || '10:30 AM',
+      showTime: hallSlotForm.time || '10:30 AM',
+      totalSeats: Number(hallSlotForm.totalSeats) || 120,
+      date: activeConfigDate
+    };
+
     const payload = {
       theatreId: targetThId,
       targetTheaterId: targetThId,
-      movieId: hallSlotForm.movieId || 'mov_1',
-      movieTitle: selectedMov.title,
+      ...newHallItem,
       activeConfigDate,
       selectedDate: activeConfigDate,
-      dateStr: activeConfigDate,
-      hallName: hallSlotForm.hallName,
-      format: hallSlotForm.format,
-      price: Number(hallSlotForm.price) || 450,
-      time: hallSlotForm.time || '10:30 AM',
-      totalSeats: Number(hallSlotForm.totalSeats) || 120
+      dateStr: activeConfigDate
     };
 
+    // 1. Immediately update local state so UI count (0 Halls Available -> 1 Halls Available) updates synchronously
+    setTheatresList(prev => prev.map(t => {
+      const cleanTId = String(t.id || t._id).toLowerCase().trim();
+      const cleanTargetId = String(targetThId).toLowerCase().trim();
+      if (t.id === targetThId || t._id === targetThId || cleanTId === cleanTargetId) {
+        const currentHBD = { ...(t.hallSlotsByDate || t.dateHalls || {}) };
+        const hallsList = Array.isArray(currentHBD[activeConfigDate]) ? [...currentHBD[activeConfigDate]] : [];
+        hallsList.push(newHallItem);
+        currentHBD[activeConfigDate] = hallsList;
+        return { ...t, hallSlotsByDate: currentHBD, dateHalls: currentHBD };
+      }
+      return t;
+    }));
+
+    // 2. Persist to MongoDB Atlas backend & re-fetch live state
     try {
-      const res = await API.post('/admin/theatres/hall-slots', payload);
+      let res;
+      try {
+        res = await API.post('/admin/theatres/hall-slots', payload);
+      } catch (e1) {
+        res = await API.post('/api/theatres/add-hall-slot', payload);
+      }
       const updatedTheatre = res?.data?.theatre;
 
       if (updatedTheatre) {
-        setTheatresList(prev => prev.map(t => (t.id === targetThId || t._id === targetThId) ? updatedTheatre : t));
-      } else {
         setTheatresList(prev => prev.map(t => {
-          if (t.id === targetThId || t._id === targetThId) {
-            const currentHBD = { ...(t.hallSlotsByDate || {}) };
-            const hallsList = Array.isArray(currentHBD[activeConfigDate]) ? [...currentHBD[activeConfigDate]] : [];
-            hallsList.push({
-              id: `hall_${Date.now()}`,
-              hallName: hallSlotForm.hallName,
-              format: hallSlotForm.format,
-              price: Number(hallSlotForm.price),
-              time: hallSlotForm.time,
-              totalSeats: Number(hallSlotForm.totalSeats)
-            });
-            currentHBD[activeConfigDate] = hallsList;
-            return { ...t, hallSlotsByDate: currentHBD, dateHalls: currentHBD };
-          }
-          return t;
+          const cleanTId = String(t.id || t._id).toLowerCase().trim();
+          const cleanTargetId = String(targetThId).toLowerCase().trim();
+          return (t.id === targetThId || t._id === targetThId || cleanTId === cleanTargetId) ? updatedTheatre : t;
         }));
       }
-
       setActionSuccess(`Hall '${hallSlotForm.hallName}' for ${activeConfigDate} saved to MongoDB Atlas!`);
+      fetchAdminData();
     } catch (err) {
       console.warn('⚠️ Fallback saving hall slot:', err.message);
       setActionSuccess(`Hall '${hallSlotForm.hallName}' updated!`);
@@ -5258,8 +5271,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                   {/* Configured Halls List for Active Date */}
                   {(() => {
-                    const targetThId = hallSlotForm.theatreId || theatresList[0]?.id || 'th_1';
-                    const activeTh = theatresList.find(t => t.id === targetThId || t._id === targetThId);
+                    const targetThId = hallSlotForm.theatreId || theatresList[0]?.id || theatresList[0]?._id || 'th_1';
+                    const cleanTargetId = String(targetThId).toLowerCase().trim();
+                    const activeTh = theatresList.find(t => 
+                      t && (t.id === targetThId || t._id === targetThId || 
+                      (t.id && String(t.id).toLowerCase().trim() === cleanTargetId) || 
+                      (t._id && String(t._id).toLowerCase().trim() === cleanTargetId))
+                    ) || theatresList[0];
                     const hallMap = activeTh?.hallSlotsByDate || activeTh?.dateHalls || {};
                     const activeHalls = Array.isArray(hallMap[activeConfigDate]) ? hallMap[activeConfigDate] : [];
                     const activeThName = activeTh?.name || 'Selected Theatre';

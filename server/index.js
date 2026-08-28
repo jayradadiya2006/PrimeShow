@@ -2810,7 +2810,12 @@ app.post(['/api/admin/theatres/pricing-by-date', '/api/theatres/pricing-by-date'
 });
 
 // Admin Endpoint: Save Dependent Date-Wise Hall & Price Configuration to MongoDB Atlas
-app.post(['/api/admin/theatres/hall-slots', '/api/theatres/hall-slots'], async (req, res) => {
+app.post([
+  '/api/admin/theatres/hall-slots',
+  '/api/theatres/hall-slots',
+  '/api/admin/theatres/add-hall-slot',
+  '/api/theatres/add-hall-slot'
+], async (req, res) => {
   try {
     const { theatreId, targetTheaterId, selectedDate, dateStr, activeConfigDate, date, hallName, format, price, time, totalSeats } = req.body;
     const targetTheatreId = theatreId || targetTheaterId || req.body.id || 'th_1';
@@ -2820,12 +2825,19 @@ app.post(['/api/admin/theatres/hall-slots', '/api/theatres/hall-slots'], async (
       return res.status(400).json({ success: false, error: 'theatreId and date are required' });
     }
 
+    const targetMovId = req.body.movieId || req.body.selectedMovieId || '';
+    const targetMovTitle = req.body.movieTitle || req.body.movieName || req.body.title || '';
+
     const hallConfig = {
       id: req.body.hallId || `hall_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      hallName: (hallName || 'Hall 1 - IMAX Laser').trim(),
-      format: format || 'IMAX 3D',
-      price: Number(price || 450),
-      time: time || '07:30 PM',
+      movieId: targetMovId,
+      movieTitle: targetMovTitle,
+      hallName: (hallName || req.body.screenName || req.body.hall || 'Hall 1 - IMAX Laser').trim(),
+      format: format || req.body.showFormat || 'IMAX 3D',
+      price: Number(price || req.body.ticketPrice || 450),
+      time: time || req.body.showTime || '07:30 PM',
+      showTime: time || req.body.showTime || '07:30 PM',
+      date: targetDateStr,
       totalSeats: Number(totalSeats || 120),
       updatedAt: new Date().toISOString()
     };
@@ -2856,7 +2868,8 @@ app.post(['/api/admin/theatres/hall-slots', '/api/theatres/hall-slots'], async (
     }
 
     // Update in-memory list
-    const idx = theatres.findIndex(t => t.id === targetTheatreId || t._id === targetTheatreId);
+    const cleanThId = String(targetTheatreId).toLowerCase().trim();
+    const idx = theatres.findIndex(t => t.id === targetTheatreId || t._id === targetTheatreId || (t.id && String(t.id).toLowerCase().trim() === cleanThId));
     if (idx !== -1) {
       const currentHBD = { ...(theatres[idx].hallSlotsByDate || {}) };
       const dateHallsList = Array.isArray(currentHBD[targetDateStr]) ? [...currentHBD[targetDateStr]] : [];
@@ -2869,21 +2882,29 @@ app.post(['/api/admin/theatres/hall-slots', '/api/theatres/hall-slots'], async (
     }
 
     if (!updatedTheatre) {
-      updatedTheatre = { id: targetTheatreId, hallSlotsByDate: { [targetDateStr]: [hallConfig] } };
+      updatedTheatre = { id: targetTheatreId, hallSlotsByDate: { [targetDateStr]: [hallConfig] }, dateHalls: { [targetDateStr]: [hallConfig] } };
+    }
+
+    const plainTheatre = updatedTheatre.toObject ? updatedTheatre.toObject() : updatedTheatre;
+    if (plainTheatre.hallSlotsByDate instanceof Map) {
+      plainTheatre.hallSlotsByDate = Object.fromEntries(plainTheatre.hallSlotsByDate);
+    }
+    if (plainTheatre.dateHalls instanceof Map) {
+      plainTheatre.dateHalls = Object.fromEntries(plainTheatre.dateHalls);
     }
 
     if (req.app.get('socketio')) {
-      req.app.get('socketio').emit('THEATRE_UPDATED', updatedTheatre);
+      req.app.get('socketio').emit('THEATRE_UPDATED', plainTheatre);
       req.app.get('socketio').emit('HALL_SLOTS_UPDATED', { theatreId: targetTheatreId, date: targetDateStr, hall: hallConfig });
     }
-    broadcastToAllClients('THEATRE_UPDATED', updatedTheatre);
+    broadcastToAllClients('THEATRE_UPDATED', plainTheatre);
 
     return res.status(200).json({
       success: true,
       message: `Hall slot for ${targetDateStr} saved to MongoDB Atlas!`,
-      theatre: updatedTheatre,
+      theatre: plainTheatre,
       date: targetDateStr,
-      halls: updatedTheatre.hallSlotsByDate?.[targetDateStr] || [hallConfig]
+      halls: plainTheatre.hallSlotsByDate?.[targetDateStr] || [hallConfig]
     });
   } catch (err) {
     console.error('❌ Error saving hall slot:', err.message);
