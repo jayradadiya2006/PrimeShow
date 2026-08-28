@@ -634,10 +634,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
         const res = await API.get('/bookings/live-seats', {
           params: {
             city: selectedCity || 'Surat',
-            movieId: activeShowSlotObj?.movieId || 'mov_1',
+            movieId: activeSeatMovieObj?.id || 'mov_1',
             date: selectedSchedDate || new Date().toISOString().slice(0, 10),
             theatreId: selectedTheatreId || 'th_1',
-            showTime: activeShowSlotObj?.time || '07:30 PM',
+            showTime: selectedShowSlotTime || '07:30 PM',
             showId: isolatedLayoutKey
           }
         });
@@ -650,7 +650,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     fetchLiveBookedSeats();
     const interval = setInterval(fetchLiveBookedSeats, 4000);
     return () => clearInterval(interval);
-  }, [activeTab, selectedCity, selectedTheatreId, isolatedLayoutKey, activeShowSlotObj, selectedSchedDate]);
+  }, [activeTab, selectedCity, selectedTheatreId, isolatedLayoutKey, activeSeatMovieObj, selectedSchedDate, selectedShowSlotTime]);
 
   const handleAddRowForm = (e) => {
     e.preventDefault();
