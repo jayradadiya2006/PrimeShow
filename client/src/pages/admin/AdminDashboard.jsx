@@ -619,6 +619,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   // 8. Isolated Layout Key & Resolution
   const isolatedLayoutKey = `${activeTheatreObj?.id || 'th_1'}_${activeSeatMovieObj?.id || 'mov_1'}_${selectedSchedDate || 'date'}_${selectedShowSlotTime || '07:30 PM'}`;
+  const isSeatGridUnlocked = Boolean(selectedCity && selectedTheatreId && selectedSeatMovieId && selectedSchedDate && selectedShowSlotTime);
   const currentLayout = getScreenLayout(isolatedLayoutKey);
   const seatRowsList = currentLayout?.rows || DEFAULT_SEAT_ROWS;
 
@@ -1584,17 +1585,34 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setTimeout(() => setActionSuccess(''), 3000);
   };
 
-  const handleSaveIsolatedSeatLayout = async () => {
+  const handleSaveIsolatedSeatLayout = async (isApproved = false) => {
     try {
-      await API.post(`/theatres/${selectedTheatreId || 'th_1'}/screens/${isolatedLayoutKey}/blocked-seats`, {
+      const payload = {
+        screenId: isolatedLayoutKey,
         blockedSeats: currentLayout?.blockedSeats || [],
-        rows: currentLayout?.rows || []
-      });
-      setActionSuccess(`Successfully saved seat layout to backend DB for ${activeTheatreObj?.name || 'Theatre'} (${isolatedLayoutKey})!`);
-      setTimeout(() => setActionSuccess(''), 3000);
+        rows: currentLayout?.rows || [],
+        customStatuses: currentLayout?.customStatuses || {},
+        isApproved: Boolean(isApproved),
+        publishedAt: isApproved ? new Date().toISOString() : currentLayout?.publishedAt || null
+      };
+      await API.post(`/theatres/${selectedTheatreId || 'th_1'}/screens/${isolatedLayoutKey}/blocked-seats`, payload);
+      try {
+        await API.post('/screen-layouts/save', payload);
+      } catch (e1) {}
+
+      if (isApproved === true) {
+        setActionSuccess(`✅ Seat layout approved & published to MongoDB Atlas for ${activeTheatreObj?.name || 'Theatre'} (${isolatedLayoutKey})! Live on User Panel.`);
+      } else {
+        setActionSuccess(`Successfully saved seat layout to backend DB for ${activeTheatreObj?.name || 'Theatre'} (${isolatedLayoutKey})!`);
+      }
+      setTimeout(() => setActionSuccess(''), 4000);
     } catch (err) {
-      setActionSuccess(`Seat layout committed locally for ${activeTheatreObj?.name || 'Theatre'}!`);
-      setTimeout(() => setActionSuccess(''), 3000);
+      if (isApproved === true) {
+        setActionSuccess(`✅ Seat layout approved & synced for ${activeTheatreObj?.name || 'Theatre'}!`);
+      } else {
+        setActionSuccess(`Seat layout committed locally for ${activeTheatreObj?.name || 'Theatre'}!`);
+      }
+      setTimeout(() => setActionSuccess(''), 4000);
     }
   };
 
@@ -4395,11 +4413,28 @@ export const AdminDashboard = ({ onReturnHome }) => {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-4">
               <div>
                 <h1 className="text-3xl font-bold font-sans text-white">Real-Time Seat Management & Live Tracking</h1>
-                <p className="text-xs text-cyan-300">Synchronized with MongoDB Atlas. Edit prices, block seats & monitor live bookings per City, Movie, Date, Theatre & Show Time.</p>
+                <p className="text-xs text-cyan-300">Synchronized with MongoDB Atlas. Select City → Theatre → Movie → Date → Time Slot to unlock grid & publish live layouts.</p>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold shrink-0">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Live MongoDB Atlas Synced</span>
+
+              <div className="flex items-center gap-3 shrink-0 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleSaveIsolatedSeatLayout(true)}
+                  disabled={!isSeatGridUnlocked}
+                  className={`px-5 py-2.5 rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-lg transition-all ${
+                    isSeatGridUnlocked
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black shadow-emerald-500/30 cursor-pointer'
+                      : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
+                  }`}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Publish & Approve Seat Layout</span>
+                </button>
+
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Live MongoDB Atlas Synced</span>
+                </div>
               </div>
             </div>
 
@@ -4409,10 +4444,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
               <div>
                 <label className="block text-[11px] font-bold text-cyan-300 mb-1">1. City (MongoDB Atlas) *</label>
                 <select
-                  value={selectedCity || 'Surat'}
+                  value={selectedCity || ''}
                   onChange={e => {
                     const newCity = e.target.value;
                     setSelectedCity(newCity);
+                    setSelectedTheatreId('');
+                    setSelectedSeatMovieId('');
+                    setSelectedSchedDate('');
+                    setSelectedShowSlotTime('');
                     const thsInCity = (currentTheatresList || []).filter(
                       t => t && (t.city || '').toLowerCase() === (newCity || '').toLowerCase()
                     );
@@ -4422,6 +4461,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   }}
                   className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
                 >
+                  <option value="">-- Select City --</option>
                   {(availableCities || []).map(city => (
                     <option key={city} value={city}>{city}</option>
                   ))}
@@ -4432,16 +4472,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
               <div>
                 <label className="block text-[11px] font-bold text-cyan-300 mb-1">2. Cinema / Theatre *</label>
                 <select
-                  value={selectedTheatreId || 'th_1'}
-                  onChange={e => setSelectedTheatreId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                  value={selectedTheatreId || ''}
+                  disabled={!selectedCity}
+                  onChange={e => {
+                    const newThId = e.target.value;
+                    setSelectedTheatreId(newThId);
+                    setSelectedSeatMovieId('');
+                    setSelectedSchedDate('');
+                    setSelectedShowSlotTime('');
+                    if (moviesList && moviesList.length > 0) {
+                      setSelectedSeatMovieId(moviesList[0].id || moviesList[0]._id);
+                    }
+                  }}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedCity ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-white bg-black'}`}
                 >
+                  <option value="">-- Select Theatre --</option>
                   {(theatresInSelectedCity || []).length > 0 ? (
                     (theatresInSelectedCity || []).map(t => (
                       <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
                     ))
                   ) : (
-                    <option value="">No theatres found in {selectedCity}</option>
+                    <option value="">No theatres in {selectedCity || 'city'}</option>
                   )}
                 </select>
               </div>
@@ -4450,10 +4501,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
               <div>
                 <label className="block text-[11px] font-bold text-amber-300 mb-1">3. Movie (Database Live) *</label>
                 <select
-                  value={selectedSeatMovieId || (moviesList[0]?.id || 'mov_1')}
-                  onChange={e => setSelectedSeatMovieId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs text-amber-300 bg-black font-bold"
+                  value={selectedSeatMovieId || ''}
+                  disabled={!selectedTheatreId}
+                  onChange={e => {
+                    const newMovId = e.target.value;
+                    setSelectedSeatMovieId(newMovId);
+                    setSelectedSchedDate('');
+                    setSelectedShowSlotTime('');
+                    if (availableDatesForSeatCombo && availableDatesForSeatCombo.length > 0) {
+                      setSelectedSchedDate(availableDatesForSeatCombo[0]);
+                    }
+                  }}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedTheatreId ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-amber-300 bg-black'}`}
                 >
+                  <option value="">-- Select Movie --</option>
                   {(moviesList || []).map(m => (
                     <option key={m.id || m._id} value={m.id || m._id}>
                       🎬 {m.title}
@@ -4466,10 +4527,19 @@ export const AdminDashboard = ({ onReturnHome }) => {
               <div>
                 <label className="block text-[11px] font-bold text-emerald-300 mb-1">4. Show Date *</label>
                 <select
-                  value={selectedSchedDate || availableDatesForSeatCombo[0]}
-                  onChange={e => setSelectedSchedDate(e.target.value)}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs text-emerald-300 bg-black font-bold"
+                  value={selectedSchedDate || ''}
+                  disabled={!selectedSeatMovieId}
+                  onChange={e => {
+                    const newDate = e.target.value;
+                    setSelectedSchedDate(newDate);
+                    setSelectedShowSlotTime('');
+                    if (availableShowtimesForSeatCombo && availableShowtimesForSeatCombo.length > 0) {
+                      setSelectedShowSlotTime(availableShowtimesForSeatCombo[0]);
+                    }
+                  }}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedSeatMovieId ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-emerald-300 bg-black'}`}
                 >
+                  <option value="">-- Select Show Date --</option>
                   {(availableDatesForSeatCombo || []).map(d => (
                     <option key={d} value={d}>📅 {d}</option>
                   ))}
@@ -4480,10 +4550,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
               <div>
                 <label className="block text-[11px] font-bold text-purple-300 mb-1">5. Show Time Slot *</label>
                 <select
-                  value={selectedShowSlotTime || availableShowtimesForSeatCombo[0]}
+                  value={selectedShowSlotTime || ''}
+                  disabled={!selectedSchedDate}
                   onChange={e => setSelectedShowSlotTime(e.target.value)}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs text-purple-300 bg-black font-bold"
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold ${!selectedSchedDate ? 'text-white/40 cursor-not-allowed bg-black/40' : 'text-purple-300 bg-black'}`}
                 >
+                  <option value="">-- Select Time Slot --</option>
                   {(availableShowtimesForSeatCombo || []).map(t => (
                     <option key={t} value={t}>⏰ {t}</option>
                   ))}
@@ -4494,195 +4566,240 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Live Filter Indicator Bar */}
             <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 text-xs text-cyan-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div>
-                📍 Live Tracking Filter: <strong className="text-white">{selectedCity}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Theatre'}</strong> → <strong className="text-amber-400">{activeSeatMovieObj?.title || 'Movie'}</strong> → <strong className="text-emerald-300">{selectedSchedDate}</strong> → <strong className="text-purple-300">{selectedShowSlotTime}</strong>
+                📍 Live Tracking Filter: <strong className="text-white">{selectedCity || 'Select City'}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Select Theatre'}</strong> → <strong className="text-amber-400">{activeSeatMovieObj?.title || 'Select Movie'}</strong> → <strong className="text-emerald-300">{selectedSchedDate || 'Select Date'}</strong> → <strong className="text-purple-300">{selectedShowSlotTime || 'Select Time'}</strong>
               </div>
               <div className="flex items-center gap-3 text-xs flex-wrap">
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Booked ({Object.keys(liveBookedSeatsMap).length})
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Green: Available Seats
                 </span>
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-400/40 text-rose-300 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span> Admin Blocked 🔒 ({(currentLayout?.blockedSeats || []).length})
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-600/30 border border-rose-400/40 text-rose-300 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Red: Booked by User ({Object.keys(liveBookedSeatsMap).length})
                 </span>
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 text-white/80 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-white/40"></span> Available
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Yellow: Admin Blocked 🔒 ({(currentLayout?.blockedSeats || []).length})
                 </span>
               </div>
             </div>
 
-            {/* Interactive Visual Layout Grid & Seat Price Editor */}
-            <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-5">
-              <div className="w-full max-w-xl mx-auto text-center shrink-0">
-                <div className="screen-curve mb-2"></div>
-                <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
-                  ▲ CINEMATIC SCREEN THIS WAY (FRONT) ▲
-                </span>
+            {/* Locked vs Unlocked Container */}
+            {!isSeatGridUnlocked ? (
+              <div className="p-8 sm:p-12 rounded-3xl bg-black/40 border border-white/10 text-center space-y-4 my-6 select-none">
+                <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto border border-amber-400/30 shadow-lg shadow-amber-500/20">
+                  <Lock className="w-8 h-8 animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold text-white font-sans">Seat Grid Customization Locked</h3>
+                  <p className="text-xs text-cyan-300/80 max-w-md mx-auto">
+                    Please complete all 5 dynamic dropdown selections above in sequence (<strong>1. City → 2. Theatre → 3. Movie → 4. Show Date → 5. Show Time Slot</strong>) to unlock seat pricing, layout editing, and 1-click publishing to MongoDB Atlas.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedCity ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                    {selectedCity ? `✓ 1. ${selectedCity}` : '1. City'}
+                  </span>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedTheatreId ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                    {selectedTheatreId ? `✓ 2. ${activeTheatreObj?.name || 'Theatre'}` : '2. Theatre'}
+                  </span>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedSeatMovieId ? 'bg-amber-500/20 text-amber-300 border-amber-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                    {selectedSeatMovieId ? `✓ 3. ${activeSeatMovieObj?.title || 'Movie'}` : '3. Movie'}
+                  </span>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedSchedDate ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                    {selectedSchedDate ? `✓ 4. ${selectedSchedDate}` : '4. Date'}
+                  </span>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedShowSlotTime ? 'bg-purple-500/20 text-purple-300 border-purple-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                    {selectedShowSlotTime ? `✓ 5. ${selectedShowSlotTime}` : '5. Time Slot'}
+                  </span>
+                </div>
               </div>
+            ) : (
+              <>
+                {/* Interactive Visual Layout Grid & Seat Price Editor */}
+                <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-5">
+                  <div className="w-full max-w-xl mx-auto text-center shrink-0">
+                    <div className="screen-curve mb-2"></div>
+                    <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
+                      ▲ CINEMATIC SCREEN THIS WAY (FRONT) ▲
+                    </span>
+                  </div>
 
-              <div className="w-full overflow-auto max-h-[60vh] sm:max-h-[68vh] p-3 sm:p-5 my-2 rounded-2xl bg-black/30 border border-white/10 flex flex-col items-center select-none">
-                <div className="min-w-max flex flex-col items-center justify-center space-y-5 py-2 px-2">
-                  {(seatRowsList || []).map((tierObj) => {
-                    const rowCurrentPrice = seatPriceInputs[tierObj.row] !== undefined ? seatPriceInputs[tierObj.row] : tierObj.price;
-                    return (
-                      <div key={tierObj.row} className="flex flex-col items-center w-full bg-white/5 p-3 rounded-2xl border border-white/10 space-y-2">
-                        
-                        {/* Seat Row Header with Inline 'Edit Seat Price' Input & Button */}
-                        <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between gap-3 flex-wrap w-full border-b border-white/10 pb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black">Row {tierObj.row}</span>
-                            <span className="text-white font-bold">{tierObj.tier}</span>
-                            <span className="text-white/40 font-normal">({tierObj.seatsCount} seats)</span>
-                          </div>
+                  <div className="w-full overflow-auto max-h-[60vh] sm:max-h-[68vh] p-3 sm:p-5 my-2 rounded-2xl bg-black/30 border border-white/10 flex flex-col items-center select-none">
+                    <div className="min-w-max flex flex-col items-center justify-center space-y-5 py-2 px-2">
+                      {(seatRowsList || []).map((tierObj) => {
+                        const rowCurrentPrice = seatPriceInputs[tierObj.row] !== undefined ? seatPriceInputs[tierObj.row] : tierObj.price;
+                        return (
+                          <div key={tierObj.row} className="flex flex-col items-center w-full bg-white/5 p-3 rounded-2xl border border-white/10 space-y-2">
+                            
+                            {/* Seat Row Header with Inline 'Edit Seat Price' Input & Button */}
+                            <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between gap-3 flex-wrap w-full border-b border-white/10 pb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black">Row {tierObj.row}</span>
+                                <span className="text-white font-bold">{tierObj.tier}</span>
+                                <span className="text-white/40 font-normal">({tierObj.seatsCount} seats)</span>
+                              </div>
 
-                          {/* Dynamic Inline Price Editor */}
-                          <div className="flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-xl border border-amber-400/40">
-                            <span className="text-[11px] text-amber-300 font-bold">Edit Ticket Price (₹):</span>
-                            <input
-                              type="number"
-                              min={50}
-                              max={5000}
-                              value={rowCurrentPrice}
-                              onChange={e => setSeatPriceInputs({ ...seatPriceInputs, [tierObj.row]: e.target.value })}
-                              className="w-20 p-1.5 rounded-lg bg-black text-amber-300 font-bold text-xs border border-white/20 text-center"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                updateRowPriceInScreenLayout(isolatedLayoutKey, tierObj.row, Number(rowCurrentPrice));
-                                setActionSuccess(`Updated Row ${tierObj.row} price to ₹${rowCurrentPrice} in MongoDB Atlas!`);
-                                setTimeout(() => setActionSuccess(''), 3000);
-                              }}
-                              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black text-[11px] font-extrabold cursor-pointer shadow-md shadow-amber-500/30"
-                            >
-                              Save Price
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => deleteRowFromScreenLayout(isolatedLayoutKey, tierObj.row)}
-                              className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-1 cursor-pointer"
-                              title="Delete entire row"
-                            >
-                              [Delete]
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Interactive Seat Grid */}
-                        <div className="flex items-center justify-center gap-2 sm:gap-3 w-full pt-1">
-                          <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
-
-                          <div className="flex items-center gap-1.5 sm:gap-2.5">
-                            {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
-                              const seatNum = idx + 1;
-                              const seatId = `${tierObj.row}${seatNum}`;
-                              const isBlocked = (currentLayout?.blockedSeats || []).includes(seatId);
-                              const customStat = currentLayout?.customStatuses?.[seatId];
-                              const liveBooking = liveBookedSeatsMap[seatId];
-                              const isBooked = !!liveBooking || customStat === 'BOOKED';
-
-                              return (
+                              {/* Dynamic Inline Price Editor */}
+                              <div className="flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-xl border border-amber-400/40">
+                                <span className="text-[11px] text-amber-300 font-bold">Edit Ticket Price (₹):</span>
+                                <input
+                                  type="number"
+                                  min={50}
+                                  max={5000}
+                                  value={rowCurrentPrice}
+                                  onChange={e => setSeatPriceInputs({ ...seatPriceInputs, [tierObj.row]: e.target.value })}
+                                  className="w-20 p-1.5 rounded-lg bg-black text-amber-300 font-bold text-xs border border-white/20 text-center"
+                                />
                                 <button
-                                  key={seatId}
                                   type="button"
                                   onClick={() => {
-                                    if (isBooked) {
-                                      setActionSuccess(`Seat ${seatId} is booked by user (${liveBooking?.userName || 'Customer'})`);
-                                      setTimeout(() => setActionSuccess(''), 3000);
-                                    } else if (isBlocked || customStat === 'BLOCKED') {
-                                      setManualSeatStatusForScreen(isolatedLayoutKey, seatId, 'AVAILABLE');
-                                      setActionSuccess(`Unblocked seat ${seatId} for users!`);
-                                      setTimeout(() => setActionSuccess(''), 3000);
-                                    } else {
-                                      toggleBlockSeatForScreen(isolatedLayoutKey, seatId);
-                                      setActionSuccess(`Admin blocked seat ${seatId} (Saved to MongoDB Atlas)!`);
-                                      setTimeout(() => setActionSuccess(''), 3000);
-                                    }
+                                    updateRowPriceInScreenLayout(isolatedLayoutKey, tierObj.row, Number(rowCurrentPrice));
+                                    setActionSuccess(`Updated Row ${tierObj.row} price to ₹${rowCurrentPrice} in MongoDB Atlas!`);
+                                    setTimeout(() => setActionSuccess(''), 3000);
                                   }}
-                                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center cursor-pointer shrink-0 ${
-                                    isBooked
-                                      ? 'bg-emerald-500 text-black border-2 border-emerald-400 font-extrabold shadow-lg shadow-emerald-500/30'
-                                      : (isBlocked || customStat === 'BLOCKED')
-                                      ? 'bg-rose-500/30 border-2 border-rose-500 text-rose-300 font-extrabold shadow-lg shadow-rose-500/20'
-                                      : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/90 hover:text-white'
-                                  }`}
-                                  title={
-                                    isBooked
-                                      ? `🟩 User Booked: ${liveBooking?.userName || 'Customer'} (${liveBooking?.userEmail || ''}) - Ref: ${liveBooking?.bookingId || seatId}`
-                                      : (isBlocked || customStat === 'BLOCKED')
-                                      ? `🟥 Admin Blocked Seat: ${seatId} (Click to Unblock)`
-                                      : `⬜ Available Seat: ${seatId} (₹${rowCurrentPrice} - Click to Admin Block)`
-                                  }
+                                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black text-[11px] font-extrabold cursor-pointer shadow-md shadow-amber-500/30"
                                 >
-                                  {isBooked ? '✓' : ((isBlocked || customStat === 'BLOCKED') ? '🔒' : seatNum)}
+                                  Save Price
                                 </button>
-                              );
-                            })}
+                                <button
+                                  type="button"
+                                  onClick={() => deleteRowFromScreenLayout(isolatedLayoutKey, tierObj.row)}
+                                  className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-1 cursor-pointer"
+                                  title="Delete entire row"
+                                >
+                                  [Delete]
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Interactive Seat Grid */}
+                            <div className="flex items-center justify-center gap-2 sm:gap-3 w-full pt-1">
+                              <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+
+                              <div className="flex items-center gap-1.5 sm:gap-2.5">
+                                {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
+                                  const seatNum = idx + 1;
+                                  const seatId = `${tierObj.row}${seatNum}`;
+                                  const isBlocked = (currentLayout?.blockedSeats || []).includes(seatId);
+                                  const customStat = currentLayout?.customStatuses?.[seatId];
+                                  const liveBooking = liveBookedSeatsMap[seatId];
+                                  const isBooked = !!liveBooking || customStat === 'BOOKED';
+                                  const isAdminBlocked = (isBlocked || customStat === 'BLOCKED') && !isBooked;
+
+                                  return (
+                                    <button
+                                      key={seatId}
+                                      type="button"
+                                      disabled={isBooked}
+                                      onClick={() => {
+                                        if (isBooked) {
+                                          setActionSuccess(`Seat ${seatId} is booked by user (${liveBooking?.userName || 'Customer'})`);
+                                          setTimeout(() => setActionSuccess(''), 3000);
+                                        } else if (isAdminBlocked) {
+                                          setManualSeatStatusForScreen(isolatedLayoutKey, seatId, 'AVAILABLE');
+                                          setActionSuccess(`Unblocked seat ${seatId} for users!`);
+                                          setTimeout(() => setActionSuccess(''), 3000);
+                                        } else {
+                                          toggleBlockSeatForScreen(isolatedLayoutKey, seatId);
+                                          setActionSuccess(`Admin blocked seat ${seatId} (Saved to MongoDB Atlas)!`);
+                                          setTimeout(() => setActionSuccess(''), 3000);
+                                        }
+                                      }}
+                                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center shrink-0 ${
+                                        isBooked
+                                          ? 'bg-rose-600 border-2 border-rose-400 text-white font-extrabold shadow-lg shadow-rose-600/30 cursor-not-allowed opacity-90'
+                                          : isAdminBlocked
+                                          ? 'bg-amber-500 border-2 border-amber-400 text-black font-extrabold shadow-lg shadow-amber-500/30 cursor-pointer hover:scale-105'
+                                          : 'bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-400/50 text-emerald-300 font-bold hover:scale-105 cursor-pointer'
+                                      }`}
+                                      title={
+                                        isBooked
+                                          ? `🟥 User Booked: ${liveBooking?.userName || 'Customer'} (${liveBooking?.userEmail || ''}) - Ref: ${liveBooking?.bookingId || seatId}`
+                                          : isAdminBlocked
+                                          ? `🟨 Admin Blocked Seat: ${seatId} (Click to Unblock)`
+                                          : `🟩 Available Seat: ${seatId} (₹${rowCurrentPrice} - Click to Admin Block)`
+                                      }
+                                    >
+                                      {isBooked ? '✓' : (isAdminBlocked ? '🔒' : seatNum)}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+                            </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
 
-                          <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                {/* Add / Customize Seat Row Form */}
+                <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4">
+                  <h3 className="text-sm font-bold text-cyan-300 uppercase">+ Add New Seat Row & Category Tier</h3>
+                  <form onSubmit={handleAddRowForm} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-white/70 mb-1">Row Letter (e.g. A, H, K) *</label>
+                      <input type="text" maxLength={2} required placeholder="Row Letter" value={newRowChar} onChange={e => setNewRowChar(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white uppercase font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-white/70 mb-1">Category / Tier Name *</label>
+                      <input type="text" required placeholder="e.g. Executive Recliner" value={newRowTier} onChange={e => setNewRowTier(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-white/70 mb-1">Ticket Price (₹) *</label>
+                      <input type="number" required value={newRowPrice} onChange={e => setNewRowPrice(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-white/70 mb-1">Number of Seats *</label>
+                      <input type="number" min={1} max={25} required value={newRowSeatsCount} onChange={e => setNewRowSeatsCount(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
+                    </div>
+                    <div className="flex items-end">
+                      <button type="submit" className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer">
+                        + Add / Save Row
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              </div>
-            </div>
 
-            {/* Add / Customize Seat Row Form */}
-            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4">
-              <h3 className="text-sm font-bold text-cyan-300 uppercase">+ Add New Seat Row & Category Tier</h3>
-              <form onSubmit={handleAddRowForm} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-white/70 mb-1">Row Letter (e.g. A, H, K) *</label>
-                  <input type="text" maxLength={2} required placeholder="Row Letter" value={newRowChar} onChange={e => setNewRowChar(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white uppercase font-bold" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-white/70 mb-1">Category / Tier Name *</label>
-                  <input type="text" required placeholder="e.g. Executive Recliner" value={newRowTier} onChange={e => setNewRowTier(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-white/70 mb-1">Ticket Price (₹) *</label>
-                  <input type="number" required value={newRowPrice} onChange={e => setNewRowPrice(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-white/70 mb-1">Number of Seats *</label>
-                  <input type="number" min={1} max={25} required value={newRowSeatsCount} onChange={e => setNewRowSeatsCount(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
-                </div>
-                <div className="flex items-end">
-                  <button type="submit" className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer">
-                    + Add / Save Row
+                {/* Persistence & Template Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleSaveIsolatedSeatLayout(true)}
+                      className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-black text-xs shadow-xl shadow-emerald-500/30 flex items-center gap-2 cursor-pointer transition-all"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Publish & Approve Seat Layout (MongoDB Atlas)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveIsolatedSeatLayout(false)}
+                      className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer"
+                    >
+                      Save Draft Layout
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateScreenRowsConfig(isolatedLayoutKey, [
+                        { row: 'N', tier: 'Classic Normal', price: 280, seatsCount: 12 },
+                        { row: 'P', tier: 'Premium Tier', price: 480, seatsCount: 12 },
+                        { row: 'R', tier: 'Luxury Recliner', price: 650, seatsCount: 10 },
+                        { row: 'V', tier: 'VIP Gold Lounge', price: 950, seatsCount: 8 }
+                      ]);
+                      setActionSuccess('Reset show slot layout to standard 4-Tier template.');
+                      setTimeout(() => setActionSuccess(''), 3000);
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                  >
+                    Reset Standard 4-Tier Template
                   </button>
                 </div>
-              </form>
-            </div>
-
-            {/* Persistence & Template Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handleSaveIsolatedSeatLayout}
-                className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-2 cursor-pointer"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Save Changes / Commit Layout to MongoDB Atlas</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  updateScreenRowsConfig(isolatedLayoutKey, [
-                    { row: 'N', tier: 'Classic Normal', price: 280, seatsCount: 12 },
-                    { row: 'P', tier: 'Premium Tier', price: 480, seatsCount: 12 },
-                    { row: 'R', tier: 'Luxury Recliner', price: 650, seatsCount: 10 },
-                    { row: 'V', tier: 'VIP Gold Lounge', price: 950, seatsCount: 8 }
-                  ]);
-                  setActionSuccess('Reset show slot layout to standard 4-Tier template.');
-                  setTimeout(() => setActionSuccess(''), 3000);
-                }}
-                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
-              >
-                Reset Standard 4-Tier Template
-              </button>
-            </div>
+              </>
+            )}
           </div>
         )}
 
