@@ -6751,28 +6751,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
               >
                 📜 Login & Session Timeline ({userActivityData?.logs?.length || 0})
               </button>
-
-              <button
-                onClick={() => setUserActivitySubTab('offers')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  userActivitySubTab === 'offers'
-                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
-                }`}
-              >
-                💳 Offers Claimed ({userActivityData?.claimedOffers?.length || 0})
-              </button>
-
-              <button
-                onClick={() => setUserActivitySubTab('wishlist')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  userActivitySubTab === 'wishlist'
-                    ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
-                }`}
-              >
-                ❤️ Saved Wishlist ({userActivityData?.wishlist?.length || 0})
-              </button>
             </div>
 
             {/* Sub-Tab Body */}
@@ -6861,42 +6839,6 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           No recent login/logout timeline logs recorded for this user.
                         </div>
                       )}
-                    </div>
-                  )}
-
-                  {/* Sub-Tab 3: Wishlist */}
-                  {userActivitySubTab === 'wishlist' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {userActivityData?.wishlist?.map((w, idx) => (
-                        <div key={idx} className="glass-panel p-3 rounded-2xl border border-white/10 flex items-center gap-3">
-                          <img src={w.poster} alt={w.title} className="w-12 h-16 rounded-xl object-cover border border-white/20 shrink-0" />
-                          <div>
-                            <h4 className="text-xs font-bold text-white">{w.title}</h4>
-                            <p className="text-[10px] text-white/60">{w.genre}</p>
-                            <span className="text-[10px] text-amber-400 font-bold mt-1 inline-block">★ {w.rating} / 10</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Sub-Tab 4: Notification Engagement */}
-                  {userActivitySubTab === 'notifications' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-2">
-                      <div className="glass-panel p-5 rounded-2xl border border-cyan-400/20 text-center">
-                        <div className="text-2xl font-bold text-white">{userActivityData?.notificationEngagement?.totalReceived || 0}</div>
-                        <div className="text-xs text-cyan-300 mt-1">Notifications Received</div>
-                      </div>
-
-                      <div className="glass-panel p-5 rounded-2xl border border-emerald-400/20 text-center">
-                        <div className="text-2xl font-bold text-emerald-400">{userActivityData?.notificationEngagement?.readCount || 0}</div>
-                        <div className="text-xs text-emerald-300 mt-1">Read & Engaged</div>
-                      </div>
-
-                      <div className="glass-panel p-5 rounded-2xl border border-amber-400/20 text-center">
-                        <div className="text-2xl font-bold text-amber-400">{userActivityData?.notificationEngagement?.unreadCount || 0}</div>
-                        <div className="text-xs text-amber-300 mt-1">Unread Alerts</div>
-                      </div>
                     </div>
                   )}
                 </>
