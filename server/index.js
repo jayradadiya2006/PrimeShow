@@ -5695,16 +5695,28 @@ app.get([
     const statsByTheatre = new Map();
     let grandTotalTheatreSeatsSoldAcrossPlatform = 0;
 
-    // Pre-populate statsByTheatre with ALL registered theatres from MongoDB Atlas & active list
-    const activeList = (dbTheatres && dbTheatres.length > 0) ? dbTheatres : theatres;
-    (activeList || []).forEach(t => {
+    // Combine dbTheatres from MongoDB Atlas and in-memory theatres (deduped by ID and name+city)
+    const combinedList = [...(dbTheatres || [])];
+    const existingDbIds = new Set(combinedList.map(t => String(t.id || t._id || '').toLowerCase().trim()).filter(Boolean));
+    const existingDbNames = new Set(combinedList.map(t => t.name ? `${t.name.toLowerCase().trim()}_${(t.city || 'surat').toLowerCase().trim()}` : '').filter(Boolean));
+
+    (theatres || []).forEach(t => {
+      const idKey = t.id ? String(t.id).toLowerCase().trim() : '';
+      const nameKey = t.name ? `${t.name.toLowerCase().trim()}_${(t.city || 'surat').toLowerCase().trim()}` : '';
+      if (!existingDbIds.has(idKey) && !existingDbNames.has(nameKey)) {
+        combinedList.push(t);
+      }
+    });
+
+    // Pre-populate statsByTheatre with ALL registered theatres in combinedList
+    combinedList.forEach(t => {
       const nameVal = t.name || 'Multiplex Cinema';
       const cityVal = t.city || 'Surat';
       const thId = t.id || t._id || `th_${nameVal.replace(/\s+/g, '_').toLowerCase()}`;
-      const key = `${String(nameVal).toLowerCase().trim()}_${String(cityVal).toLowerCase().trim()}`;
+      const uniqueKey = `${String(nameVal).toLowerCase().trim()}_${String(cityVal).toLowerCase().trim()}`;
 
-      if (!statsByTheatre.has(key)) {
-        statsByTheatre.set(key, {
+      if (!statsByTheatre.has(uniqueKey)) {
+        statsByTheatre.set(uniqueKey, {
           theatreId: thId,
           name: nameVal,
           city: cityVal,
@@ -5721,7 +5733,14 @@ app.get([
       const thName = b.theatreName || b.theatre || b.venue || 'Multiplex Cinema';
       const thCity = b.city || b.theatreCity || 'Surat';
       const thId = b.theatreId || thName;
-      const key = `${String(thName).toLowerCase().trim()}_${String(thCity).toLowerCase().trim()}`;
+
+      const doc = activeTheatreMap.get(`${String(thName).toLowerCase().trim()}_${String(thCity).toLowerCase().trim()}`) 
+               || activeTheatreMap.get(String(thName).toLowerCase().trim()) 
+               || activeTheatreMap.get(String(thId).toLowerCase().trim());
+
+      const normName = doc?.name || thName;
+      const normCity = doc?.city || thCity;
+      const key = `${String(normName).toLowerCase().trim()}_${String(normCity).toLowerCase().trim()}`;
 
       let seatVolume = Number(b.seatsBookedCount || b.ticketCount || b.tickets || b.quantity);
       if (!seatVolume || isNaN(seatVolume) || seatVolume <= 0) {
@@ -5732,13 +5751,11 @@ app.get([
       grandTotalTheatreSeatsSoldAcrossPlatform += seatVolume;
 
       if (!statsByTheatre.has(key)) {
-        const doc = activeTheatreMap.get(key) || activeTheatreMap.get(String(thName).toLowerCase().trim()) || activeTheatreMap.get(String(thId).toLowerCase().trim());
-
         statsByTheatre.set(key, {
-          theatreId: doc?.id || thId,
-          name: doc?.name || thName,
-          city: doc?.city || thCity,
-          nameAndCity: `${doc?.name || thName} - ${doc?.city || thCity}`,
+          theatreId: doc?.id || doc?._id || thId,
+          name: normName,
+          city: normCity,
+          nameAndCity: `${normName} - ${normCity}`,
           tickets: 0,
           bookings: 0,
           revenue: 0,
@@ -5752,7 +5769,10 @@ app.get([
       item.revenue += rev;
     });
 
-    const sortedList = Array.from(statsByTheatre.values()).sort((a, b) => b.tickets - a.tickets || b.revenue - a.revenue || b.rating - a.rating);
+    // 4. Sort ALL theatres in DESCENDING order (tickets -> revenue -> rating)
+    const sortedList = Array.from(statsByTheatre.values()).sort((a, b) => 
+      b.tickets - a.tickets || b.revenue - a.revenue || b.rating - a.rating
+    );
 
     sortedList.forEach((stat, idx) => {
       const percentage = grandTotalTheatreSeatsSoldAcrossPlatform > 0
