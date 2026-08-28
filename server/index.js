@@ -5413,66 +5413,130 @@ app.get(['/api/admin/analytics/charts', '/api/admin/analytics/revenue', '/api/ad
   }
 });
 
-// Admin Real-Time Top Movies Ranking Endpoint (Authentic MongoDB Sync & Clean Zero State)
+// Admin Real-Time Top Movies Ranking Endpoint (Strictly Movie Bookings Aggregated from MongoDB Atlas)
 app.get('/api/admin/analytics/top-movies', async (req, res) => {
   try {
     const mongoose = require('mongoose');
     let topMoviesList = [];
 
+    // 1. Query MongoDB Atlas bookings collection strictly for movie bookings (exclude events, plays, activities, private theatres)
+    let dbMovieBookings = [];
     if (mongoose.connection.readyState === 1) {
       try {
-        const movieAgg = await Booking.aggregate([
-          { $match: { status: { $ne: 'CANCELLED' } } },
-          {
-            $group: {
-              _id: { $ifNull: ['$title', '$movieName'] },
-              totalBookings: { $sum: 1 },
-              totalRevenue: { $sum: '$totalAmount' },
-              totalTickets: {
-                $sum: {
-                  $cond: {
-                    if: { $isArray: '$seats' },
-                    then: { $size: '$seats' },
-                    else: { $ifNull: ['$totalSeats', 1] }
-                  }
-                }
-              },
-              poster: { $first: '$poster' },
-              category: { $first: '$category' }
-            }
-          },
-          { $sort: { totalBookings: -1, totalRevenue: -1 } }
-        ]);
-
-        for (let idx = 0; idx < movieAgg.length; idx++) {
-          const m = movieAgg[idx];
-          const mTitle = m._id || 'Untitled Movie';
-          const movieDoc = await Movie.findOne({ title: new RegExp(`^${mTitle}$`, 'i') });
-
-          const score = movieDoc?.rating ? Number(movieDoc.rating) : (m.totalBookings > 0 ? 8.5 : 0.0);
-          const ratingText = m.totalBookings > 0 ? `${score.toFixed(1)} ★` : 'Unrated';
-
-          topMoviesList.push({
-            rank: idx + 1,
-            title: mTitle,
-            bookings: m.totalBookings || 0,
-            tickets: m.totalTickets || 0,
-            revenue: m.totalRevenue || 0,
-            rating: score,
-            ratingText,
-            poster: movieDoc?.poster || m.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80',
-            category: m.category || 'Movie'
-          });
-        }
+        dbMovieBookings = await Booking.find({
+          status: { $ne: 'CANCELLED' },
+          category: { $nin: ['Event', 'Play', 'Activity', 'PrivateTheatre'] },
+          type: { $nin: ['PRIV-TH', 'event', 'play', 'activity'] }
+        }).lean();
       } catch (dbErr) {
-        console.warn('Top Movies Aggregation Warning:', dbErr.message);
+        console.warn('⚠️ Top Movies DB Fetch Warning:', dbErr.message);
       }
     }
 
-    // Return authentic list directly from MongoDB Atlas (empty array if no bookings exist)
+    // Merge in-memory movie bookings if database is connecting or for full coverage
+    const memMovieBookings = (bookings || []).filter(b => 
+      b.status !== 'CANCELLED' &&
+      b.category !== 'Event' && b.category !== 'Play' && b.category !== 'Activity' && b.category !== 'PrivateTheatre' &&
+      b.type !== 'PRIV-TH' && b.type !== 'event' && b.type !== 'play' && b.type !== 'activity'
+    );
+
+    const allMovieBookings = (dbMovieBookings && dbMovieBookings.length > 0) ? dbMovieBookings : memMovieBookings;
+
+    // Fetch All Movie Documents from MongoDB Atlas for posters and exact metadata
+    let dbMovies = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        dbMovies = await Movie.find().lean();
+      } catch (e) {}
+    }
+    const movieCatalogMap = new Map();
+    (dbMovies || []).forEach(m => {
+      if (m.id) movieCatalogMap.set(String(m.id).toLowerCase().trim(), m);
+      if (m._id) movieCatalogMap.set(String(m._id).toLowerCase().trim(), m);
+      if (m.title) movieCatalogMap.set(m.title.toLowerCase().trim(), m);
+    });
+    (movies || []).forEach(m => {
+      if (m.title && !movieCatalogMap.has(m.title.toLowerCase().trim())) {
+        movieCatalogMap.set(m.title.toLowerCase().trim(), m);
+      }
+    });
+
+    // Group bookings by movie
+    const statsByMovie = new Map();
+    let totalMovieTicketsSoldAcrossAllUsers = 0;
+
+    allMovieBookings.forEach(b => {
+      const mTitle = b.movieTitle || b.title || 'PrimeShow Feature';
+      const mId = b.movieId || mTitle;
+      const key = String(mTitle).toLowerCase().trim();
+
+      const ticketCount = Array.isArray(b.seats) ? b.seats.length : (Number(b.ticketCount || b.quantity || b.totalSeats) || 1);
+      const rev = Number(b.totalAmount || b.totalPrice || b.price) || 0;
+
+      totalMovieTicketsSoldAcrossAllUsers += ticketCount;
+
+      if (!statsByMovie.has(key)) {
+        const doc = movieCatalogMap.get(key) || movieCatalogMap.get(String(mId).toLowerCase().trim());
+        const posterUrl = doc?.poster || doc?.banner || b.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80';
+
+        statsByMovie.set(key, {
+          movieId: mId,
+          title: doc?.title || mTitle,
+          poster: posterUrl,
+          tickets: 0,
+          bookings: 0,
+          revenue: 0,
+          rating: doc?.rating ? Number(doc.rating) : 9.0
+        });
+      }
+
+      const item = statsByMovie.get(key);
+      item.tickets += ticketCount;
+      item.bookings += 1;
+      item.revenue += rev;
+    });
+
+    if (totalMovieTicketsSoldAcrossAllUsers === 0 && dbMovies.length > 0) {
+      // Zero state catalog fallback when no movie ticket purchases exist yet
+      dbMovies.slice(0, 5).forEach((m, idx) => {
+        topMoviesList.push({
+          rank: idx + 1,
+          movieId: m.id || m._id,
+          title: m.title,
+          poster: m.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80',
+          tickets: 0,
+          bookings: 0,
+          revenue: 0,
+          percentage: 0,
+          rating: m.rating || 9.0
+        });
+      });
+    } else {
+      const sortedList = Array.from(statsByMovie.values()).sort((a, b) => b.tickets - a.tickets || b.revenue - a.revenue);
+
+      sortedList.forEach((stat, idx) => {
+        const percentage = totalMovieTicketsSoldAcrossAllUsers > 0
+          ? Math.round((stat.tickets / totalMovieTicketsSoldAcrossAllUsers) * 100)
+          : 0;
+
+        topMoviesList.push({
+          rank: idx + 1,
+          movieId: stat.movieId,
+          title: stat.title,
+          poster: stat.poster,
+          tickets: stat.tickets,
+          bookings: stat.bookings,
+          revenue: stat.revenue,
+          percentage,
+          rating: stat.rating
+        });
+      });
+    }
+
     return res.status(200).json({
       success: true,
       movies: topMoviesList,
+      totalMovieTicketsSoldAcrossAllUsers,
       totalMoviesCount: topMoviesList.length
     });
   } catch (error) {
