@@ -1121,16 +1121,17 @@ app.get(['/api/admin/users/list', '/admin/users/list', '/api/users/list', '/user
 app.get(userRoutesPaths, async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   try {
-    const dbUsers = await User.find().sort({ createdAt: -1 }).lean();
-    if (dbUsers && dbUsers.length > 0) {
-      return res.status(200).json(dbUsers);
+    if (mongoose.connection.readyState === 1) {
+      const dbUsers = await User.find().sort({ createdAt: -1 }).lean();
+      if (dbUsers && dbUsers.length > 0) {
+        return res.status(200).json(dbUsers);
+      }
     }
-    const memoryUsers = Array.from(globalRegisteredUsersMap.values());
-    return res.status(200).json(memoryUsers);
   } catch (err) {
-    const memoryUsers = Array.from(globalRegisteredUsersMap.values());
-    return res.status(200).json(memoryUsers);
+    console.warn('MongoDB Users Query Warning:', err.message);
   }
+  const memoryUsers = Array.from(globalRegisteredUsersMap.values());
+  return res.status(200).json(memoryUsers);
 });
 
 // Admin Real-Time System Activity Logs & Financial Aggregations Endpoint
