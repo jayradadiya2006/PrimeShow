@@ -15,16 +15,8 @@
   ],
   "routes": [
     {
-      "src": "/api/user_sync",
-      "dest": "api/user_sync.js"
-    },
-    {
-      "src": "/api/user-sync",
-      "dest": "api/user-sync.js"
-    },
-    {
       "src": "/api/(.*)",
-      "dest": "api/index.js"
+      "dest": "/api/index.js"
     },
     {
       "handle": "filesystem"
