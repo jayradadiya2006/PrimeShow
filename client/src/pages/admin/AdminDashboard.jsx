@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Shield, Film, Ticket, Users, DollarSign, Plus, Edit, Trash2, CheckCircle2, 
-  XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X, Zap, Award, Activity as ActivityIcon,
+  XCircle, Tag, Eye, Lock, RefreshCw, AlertCircle, AlertTriangle, Sparkles, TrendingUp, MessageSquare, Send, Bot, LogOut, ChevronRight, Home, UserCheck, Image, Building, Bell, Theater, Compass, X, Zap, Award, Activity as ActivityIcon,
   Calendar, ChevronDown, Download, Filter, Layers, Percent, Server, Database, CreditCard, Mail, Phone, ArrowUpRight, Check
 } from 'lucide-react';
 import axios from 'axios';
