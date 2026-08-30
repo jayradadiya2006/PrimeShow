@@ -6223,11 +6223,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`🚀 PrimeShow REST API & Socket.io Backend running on http://localhost:${PORT}`);
-  connectDB().then(() => {
-    seedDatabaseIfEmpty().catch(e => console.warn('⚠️ Seed database note:', e.message));
-  }).catch(err => {
-    console.error('⚠️ DB Connection non-fatal warning during startup:', err.message);
+if (require.main === module && process.env.VERCEL !== '1') {
+  server.listen(PORT, () => {
+    console.log(`🚀 PrimeShow REST API & Socket.io Backend running on http://localhost:${PORT}`);
+    connectDB().then(() => {
+      seedDatabaseIfEmpty().catch(e => console.warn('⚠️ Seed database note:', e.message));
+    }).catch(err => {
+      console.error('⚠️ DB Connection non-fatal warning during startup:', err.message);
+    });
   });
-});
+} else {
+  connectDB().catch(err => console.warn('⚠️ Serverless DB connection note:', err.message));
+}
+
+module.exports = app;
+module.exports.default = app;
