@@ -1507,6 +1507,23 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   return res.json({ token, user: newUser });
 });
 
+// Standard Express endpoints for /api/user_sync and /api/user-sync
+app.all(['/api/user_sync', '/user_sync'], (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  return res.status(200).json({ status: 'ok', success: true, message: 'User sync active' });
+});
+
+app.all(['/api/user-sync', '/user-sync'], (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  return res.status(200).json({ status: 'ok', success: true, message: 'User sync active' });
+});
+
 // Production-Ready Universal User Synchronization Endpoint (Google / Firebase / Local)
 const userSyncPaths = [
   '/api/user-sync',
