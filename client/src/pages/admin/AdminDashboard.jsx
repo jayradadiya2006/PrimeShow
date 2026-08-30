@@ -5633,9 +5633,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Section C: Existing Theatres Directory */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-white">Configured Multiplex Venues ({theatresList.length})</h3>
+              <h3 className="text-lg font-bold text-white">Configured Multiplex Venues ({(Array.isArray(theatresList) ? theatresList : []).length})</h3>
 
-              {theatresList.map(t => (
+              {(Array.isArray(theatresList) ? theatresList : []).map(t => (
                 <div key={t.id} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
                     <div className="flex items-center gap-4">
@@ -6033,11 +6033,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-cyan-300 mb-1">Target Event *</label>
                   <select
-                    value={eventSlotEventId || eventsList[0]?.id || ''}
+                    value={eventSlotEventId || (Array.isArray(eventsList) ? eventsList[0]?.id : '') || ''}
                     onChange={(e) => setEventSlotEventId(e.target.value)}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
                   >
-                    {eventsList.map(ev => (
+                    {(Array.isArray(eventsList) ? eventsList : []).map(ev => (
                       <option key={ev.id} value={ev.id}>{ev.title} ({ev.city})</option>
                     ))}
                   </select>
@@ -6139,11 +6139,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Section C: Live Events Directory Cards View */}
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <span>Configured Live Events ({eventsList.length})</span>
+                <span>Configured Live Events ({(Array.isArray(eventsList) ? eventsList : []).length})</span>
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {eventsList.map(ev => {
+                {(Array.isArray(eventsList) ? eventsList : []).map(ev => {
                   const slotsMap = ev.slots || ev.schedules || {};
                   const slotsCount = Object.values(slotsMap).filter(Array.isArray).flat().length;
 
@@ -6437,10 +6437,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Section B: Existing Plays Directory */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-white">Configured Theater Plays ({playsList.length})</h3>
+              <h3 className="text-lg font-bold text-white">Configured Theater Plays ({(Array.isArray(playsList) ? playsList : []).length})</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {playsList.map(pl => (
+                {(Array.isArray(playsList) ? playsList : []).map(pl => (
                   <div key={pl.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
                     <div className="flex items-start gap-4">
                       <img src={pl.image} alt={pl.title} className="w-20 h-20 rounded-2xl object-cover border border-purple-400/40 shrink-0" />
@@ -6693,10 +6693,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Section B: Existing Activities Directory */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-white">Configured Adventure Passes ({activitiesList.length})</h3>
+              <h3 className="text-lg font-bold text-white">Configured Adventure Passes ({(Array.isArray(activitiesList) ? activitiesList : []).length})</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activitiesList.map(act => (
+                {(Array.isArray(activitiesList) ? activitiesList : []).map(act => (
                   <div key={act.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
                     <div className="flex items-start gap-4">
                       <img src={act.image} alt={act.title} className="w-20 h-20 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
@@ -6712,7 +6712,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         
                         {act.benefits && (
                           <div className="flex flex-wrap gap-1 pt-1">
-                            {act.benefits.map((b, i) => (
+                            {(Array.isArray(act.benefits) ? act.benefits : []).map((b, i) => (
                               <span key={i} className="px-1.5 py-0.5 rounded bg-white/5 text-[9px] text-white/70">
                                 ✓ {b}
                               </span>
@@ -6819,7 +6819,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       }}
                       className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black h-24 overflow-y-auto"
                     >
-                      {usersDropdownList.map(u => (
+                      {(Array.isArray(usersDropdownList) ? usersDropdownList : []).map(u => (
                         <option key={u.id || u.email} value={u.id || u.email}>
                           {u.name} ({u.email})
                         </option>
