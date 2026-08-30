@@ -12,28 +12,41 @@ import {
 import API, { apiClient, API_BASE } from '../services/api';
 import { io } from 'socket.io-client';
 
-const getSocketBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+const createSafeSocket = () => {
+  const customUrl = import.meta.env.VITE_API_BASE_URL;
+  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+
+  if (isVercel && !customUrl) {
+    const noop = () => {};
+    return {
+      on: noop,
+      off: noop,
+      emit: noop,
+      connect: noop,
+      disconnect: noop,
+      connected: false
+    };
   }
-  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-    return 'https://primeshow-api.onrender.com';
-  }
-  return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:5000'
-    : 'https://primeshow-api.onrender.com';
+
+  const baseUrl = customUrl
+    ? customUrl.replace(/\/+$/, '').replace(/\/api$/, '')
+    : (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:5000'
+        : 'https://primeshow-api.onrender.com');
+
+  const instance = io(baseUrl, {
+    transports: ['polling', 'websocket'],
+    autoConnect: false,
+    reconnection: false,
+    reconnectionAttempts: 0,
+    timeout: 3000
+  });
+
+  instance.on('connect_error', () => {});
+  return instance;
 };
 
-export const socket = io(getSocketBaseUrl(), {
-  transports: ['polling', 'websocket'],
-  autoConnect: true,
-  reconnectionAttempts: 3,
-  timeout: 5000
-});
-
-socket.on('connect_error', () => {
-  // Silent catch to prevent unhandled red console error traces
-});
+export const socket = createSafeSocket();
 
 const AuthContext = createContext();
 
