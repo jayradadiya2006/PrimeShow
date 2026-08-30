@@ -44,6 +44,77 @@ function convertGoogleDriveUrl(url) {
 }
 
 const app = express();
+
+// Global Process Crash Guards to Prevent Render 503 Crashes
+process.on('uncaughtException', (err) => {
+  console.error('💥 [CRITICAL] Uncaught Exception:', err.stack || err.message || err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 [CRITICAL] Unhandled Promise Rejection at:', promise, 'reason:', reason);
+});
+
+// STEP 1: Absolute Top-Level CORS & Preflight Middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-Id, Accept, Cache-Control, Pragma, Expires');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+
+const allowedOriginsList = [
+  'https://prime-show-tau.vercel.app',
+  'https://primeshow-tau.vercel.app',
+  'https://primeshow.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-Id', 'Accept', 'Cache-Control', 'Pragma', 'Expires'],
+  credentials: true
+}));
+
+app.options('*', (req, res) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-Id, Accept, Cache-Control, Pragma, Expires');
+  return res.status(200).end();
+});
+
+// Primary Backend Healthcheck & Auto-Wakeup Route (/api/health)
+app.get(['/api/health', '/health', '/healthcheck'], (req, res) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  return res.status(200).json({
+    status: 'live',
+    service: 'PrimeShow REST API Backend',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    dbState: mongoose.connection.readyState === 1 ? 'connected' : 'connecting_or_disconnected'
+  });
+});
+
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -489,46 +560,6 @@ const upsertUserRecord = async (userData) => {
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'primeshow_ultra_secret_key_2026';
 
-// STEP 1: Global CORS Middleware (Allows ALL origins including Vercel production & preview builds with credentials)
-const allowedOrigins = [
-  'https://prime-show-tau.vercel.app',
-  'https://primeshow-tau.vercel.app',
-  'https://primeshow.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5173'
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(null, true);
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-Id', 'Accept', 'Cache-Control', 'Pragma', 'Expires'],
-  credentials: true
-}));
-
-app.options('*', cors());
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin || 'https://prime-show-tau.vercel.app';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-Id, Accept, Cache-Control, Pragma, Expires');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  next();
-});
-
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -544,9 +575,6 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
-
-// Health check and mock fallback endpoints for Render deployment
-app.get(['/', '/health', '/api/health'], (req, res) => res.status(200).send('OK'));
 
 // SSE Real-Time Stream Endpoint (1-Admin to N-User Broadcast Pipeline)
 app.get(['/api/events/stream', '/events/stream'], (req, res) => {
@@ -6170,8 +6198,29 @@ const seedDatabaseIfEmpty = async () => {
   }
 };
 
-server.listen(PORT, async () => {
+// Global Express Error Middleware (Returns 500 JSON with CORS headers instead of crashing process)
+app.use((err, req, res, next) => {
+  console.error('❌ [API Global Error Handler]:', err.stack || err.message || err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-Id, Accept, Cache-Control, Pragma, Expires');
+  return res.status(err.status || 500).json({
+    error: true,
+    message: err.message || 'Internal Server Error',
+    path: req.originalUrl
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`🚀 PrimeShow REST API & Socket.io Backend running on http://localhost:${PORT}`);
-  await connectDB();
-  await seedDatabaseIfEmpty();
+  connectDB().then(() => {
+    seedDatabaseIfEmpty().catch(e => console.warn('⚠️ Seed database note:', e.message));
+  }).catch(err => {
+    console.error('⚠️ DB Connection non-fatal warning during startup:', err.message);
+  });
 });
