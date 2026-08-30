@@ -247,3 +247,177 @@ option:checked, option:hover {
   scrollbar-width: none !important;
 }
 
+/* ==========================================================================
+   HIGH-CONTRAST TYPOGRAPHY & ELEMENT OVERRIDES FOR LIGHT CREAM BACKGROUNDS
+   ========================================================================== */
+
+/* 1. White & Pale Text Overrides -> Dark Charcoal / Slate Black (#0F172A / #1E293B) */
+.text-white,
+.text-white\/90,
+.text-white\/80,
+.text-white\/70,
+.text-slate-100,
+.text-slate-200 {
+  color: #0F172A !important;
+}
+
+.text-white\/60,
+.text-white\/50,
+.text-white\/40,
+.text-white\/30,
+.text-slate-400,
+.text-slate-300 {
+  color: #334155 !important;
+}
+
+/* 2. Cyan / Pale Blue Overrides -> Deep Navy Blue / Dark Teal (#0F4C5C / #1E3A8A) */
+.text-cyan-100,
+.text-cyan-200,
+.text-cyan-300,
+.text-cyan-400,
+.text-cyan-500,
+.text-sky-300,
+.text-sky-400,
+.text-blue-300,
+.text-blue-400 {
+  color: #0F4C5C !important;
+  font-weight: 700 !important;
+}
+
+/* 3. Yellow / Amber Overrides -> Dark Golden Amber (#B45309) */
+.text-amber-100,
+.text-amber-200,
+.text-amber-300,
+.text-amber-400,
+.text-yellow-300,
+.text-yellow-400 {
+  color: #B45309 !important;
+  font-weight: 700 !important;
+}
+
+/* 4. Red / Pink Overrides -> Rich Dark Red (#991B1B) */
+.text-rose-300,
+.text-rose-400,
+.text-red-300,
+.text-red-400,
+.text-pink-300 {
+  color: #991B1B !important;
+  font-weight: 700 !important;
+}
+
+/* 5. Emerald / Green Overrides -> Rich Dark Emerald (#065F46) */
+.text-emerald-300,
+.text-emerald-400,
+.text-green-300,
+.text-green-400 {
+  color: #065F46 !important;
+  font-weight: 700 !important;
+}
+
+/* 6. Purple Overrides -> Dark Purple (#581C87) */
+.text-purple-300,
+.text-purple-400,
+.text-violet-300 {
+  color: #581C87 !important;
+  font-weight: 700 !important;
+}
+
+/* 7. Form Labels & Headings */
+label,
+.input-label {
+  color: #1E293B !important;
+  font-weight: 700 !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #0F172A !important;
+  font-weight: 800 !important;
+}
+
+/* 8. Table Headers & Rows Contrast */
+th {
+  background-color: #E2D9C8 !important;
+  color: #0F172A !important;
+  font-weight: 800 !important;
+}
+
+td {
+  color: #1E293B !important;
+}
+
+tr:hover {
+  background-color: rgba(176, 166, 149, 0.2) !important;
+}
+
+/* 9. Input & Select Field High Contrast */
+input, select, textarea {
+  background-color: #F3EEEA !important;
+  color: #0F172A !important;
+  border: 1px solid #B0A695 !important;
+  font-weight: 600 !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* 10. Action Badges & Light Tint Containers */
+.bg-white\/5,
+.bg-white\/10,
+.bg-slate-800,
+.bg-slate-900\/90 {
+  background-color: rgba(235, 227, 213, 0.8) !important;
+  border-color: #B0A695 !important;
+  color: #0F172A !important;
+}
+
+.bg-cyan-500\/10,
+.bg-cyan-500\/20,
+.bg-blue-500\/10 {
+  background-color: rgba(15, 76, 92, 0.12) !important;
+  border: 1px solid rgba(15, 76, 92, 0.3) !important;
+  color: #0F4C5C !important;
+}
+
+.bg-amber-500\/10,
+.bg-amber-500\/20,
+.bg-yellow-500\/10 {
+  background-color: rgba(180, 83, 9, 0.12) !important;
+  border: 1px solid rgba(180, 83, 9, 0.3) !important;
+  color: #B45309 !important;
+}
+
+.bg-rose-500\/10,
+.bg-rose-500\/20,
+.bg-red-500\/15 {
+  background-color: rgba(153, 27, 27, 0.12) !important;
+  border: 1px solid rgba(153, 27, 27, 0.3) !important;
+  color: #991B1B !important;
+}
+
+.bg-emerald-500\/10,
+.bg-emerald-500\/20 {
+  background-color: rgba(6, 95, 70, 0.12) !important;
+  border: 1px solid rgba(6, 95, 70, 0.3) !important;
+  color: #065F46 !important;
+}
+
+/* 11. Action Buttons High-Contrast Overrides */
+button.bg-gradient-to-r,
+button.neon-btn-primary,
+button.btn-gold-primary,
+button[type="submit"] {
+  background: #776B5D !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 14px rgba(119, 107, 93, 0.25) !important;
+}
+
+button.bg-gradient-to-r:hover,
+button.neon-btn-primary:hover,
+button.btn-gold-primary:hover,
+button[type="submit"]:hover {
+  background: #5E5245 !important;
+  color: #FFFFFF !important;
+}
+
