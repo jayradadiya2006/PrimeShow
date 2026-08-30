@@ -5500,11 +5500,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <div>
                       <label className="block text-[11px] font-bold text-cyan-300 mb-1">Target Theatre *</label>
                       <select
-                        value={hallSlotForm.theatreId || theatresList[0]?.id || ''}
+                        value={hallSlotForm.theatreId || (Array.isArray(theatresList) ? theatresList[0]?.id : '') || ''}
                         onChange={e => setHallSlotForm({ ...hallSlotForm, theatreId: e.target.value })}
                         className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
                       >
-                        {theatresList.map(t => (
+                        {(Array.isArray(theatresList) ? theatresList : []).map(t => (
                           <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
                         ))}
                       </select>
@@ -5513,11 +5513,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <div>
                       <label className="block text-[11px] font-bold text-cyan-300 mb-1">Target Movie *</label>
                       <select
-                        value={hallSlotForm.movieId || moviesList[0]?.id || ''}
+                        value={hallSlotForm.movieId || (Array.isArray(moviesList) ? moviesList[0]?.id : '') || ''}
                         onChange={e => setHallSlotForm({ ...hallSlotForm, movieId: e.target.value })}
                         className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
                       >
-                        {moviesList.map(m => (
+                        {(Array.isArray(moviesList) ? moviesList : []).map(m => (
                           <option key={m.id} value={m.id}>{m.title}</option>
                         ))}
                       </select>
@@ -5605,7 +5605,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {activeHalls.map((h, i) => (
+                          {(Array.isArray(activeHalls) ? activeHalls : []).map((h, i) => (
                             <div key={h.id || i} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs hover:border-cyan-400/40 transition-all">
                               <div>
                                 <div className="font-bold text-white">{h.hallName}</div>
@@ -5720,7 +5720,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           <span>Scheduled Showtimes & Date-Wise Halls ({venueHallsList.length}):</span>
                         </h5>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {venueHallsList.map((slot, idx) => (
+                          {(Array.isArray(venueHallsList) ? venueHallsList : []).map((slot, idx) => (
                             <div key={slot.id || idx} className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs hover:border-cyan-400/40 transition-all">
                               <div>
                                 <div className="font-bold text-amber-300">{slot.title}</div>
