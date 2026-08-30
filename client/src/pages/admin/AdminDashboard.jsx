@@ -2447,26 +2447,26 @@ export const AdminDashboard = ({ onReturnHome }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#273338] text-white flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#F3EEEA] text-[#776B5D] flex flex-col md:flex-row font-sans">
       
       {/* Sleek Admin Left Sidebar Navigation Panel (Responsive Desktop & Mobile Horizontal Scroll) */}
-      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-[#618764] p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-[#2B5748] backdrop-blur-xl">
+      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-[#B0A695] p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-[#EBE3D5]">
         <div>
           {/* Admin Brand Header */}
-          <div className="flex items-center justify-between md:justify-start gap-3 pb-3 md:pb-6 mb-2 md:mb-6 border-b border-white/10">
+          <div className="flex items-center justify-between md:justify-start gap-3 pb-3 md:pb-6 mb-2 md:mb-6 border-b border-[#B0A695]/50">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-[#9CB080]/20 border border-[#9CB080]/40 flex items-center justify-center text-[#9CB080] shadow-lg shadow-[#9CB080]/10">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-[#776B5D]/10 border border-[#B0A695] flex items-center justify-center text-[#776B5D] shadow-sm">
                 <Shield className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div>
-                <h2 className="text-sm md:text-lg font-bold font-sans text-white leading-tight">PrimeShow</h2>
-                <span className="text-[9px] md:text-[10px] text-[#9CB080] uppercase tracking-widest font-bold block">ADMIN COMMAND PANEL</span>
+                <h2 className="text-sm md:text-lg font-bold font-sans text-[#776B5D] leading-tight">PrimeShow</h2>
+                <span className="text-[9px] md:text-[10px] text-[#776B5D] uppercase tracking-widest font-bold block">ADMIN COMMAND PANEL</span>
               </div>
             </div>
 
             <button
               onClick={onReturnHome}
-              className="md:hidden px-3 py-1.5 rounded-xl bg-[#618764]/40 border border-[#618764] text-[#9CB080] text-[11px] font-bold flex items-center gap-1"
+              className="md:hidden px-3 py-1.5 rounded-xl bg-[#F3EEEA] border border-[#B0A695] text-[#776B5D] text-[11px] font-bold flex items-center gap-1"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Exit</span>
@@ -2484,15 +2484,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   onClick={() => handleTabChange(item.id)}
                   className={`flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all shrink-0 whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-[#9CB080] text-[#273338] shadow-md shadow-[#9CB080]/30 font-black border border-[#9CB080]'
-                      : 'text-white/80 hover:text-white hover:bg-[#618764]/40 bg-white/5 md:bg-transparent'
+                      ? 'bg-[#776B5D] text-[#F3EEEA] shadow-md shadow-[#776B5D]/20 font-black border border-[#776B5D]'
+                      : 'text-[#776B5D] hover:text-[#1A1A1A] hover:bg-[#B0A695]/30 bg-white/40 md:bg-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#273338]' : 'text-[#9CB080]'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#F3EEEA]' : 'text-[#776B5D]'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 hidden md:block text-[#273338]" />}
+                  {isActive && <ChevronRight className="w-3.5 h-3.5 hidden md:block text-[#F3EEEA]" />}
                 </button>
               );
             })}
@@ -4491,11 +4491,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 3: Cinema & Screen Specific Seat Operations */}
         {activeTab === 'seats' && (
-          <div className="glass-panel p-6 rounded-3xl border border-[#618764] space-y-6 bg-[#2B5748]">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div className="glass-panel p-6 rounded-3xl border border-[#B0A695] space-y-6 bg-[#EBE3D5]">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-[#B0A695]/50 pb-4">
               <div>
-                <h1 className="text-3xl font-bold font-sans text-white">Real-Time Seat Management & Live Tracking</h1>
-                <p className="text-xs text-[#9CB080]">Synchronized with MongoDB Atlas. Select City → Theatre → Movie → Date → Time Slot to unlock grid & publish live layouts.</p>
+                <h1 className="text-3xl font-bold font-sans text-[#776B5D]">Real-Time Seat Management & Live Tracking</h1>
+                <p className="text-xs text-[#776B5D]">Synchronized with MongoDB Atlas. Select City → Theatre → Movie → Date → Time Slot to unlock grid & publish live layouts.</p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0 flex-wrap">
@@ -4505,26 +4505,26 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   disabled={!isSeatGridUnlocked}
                   className={`px-5 py-2.5 rounded-2xl font-black text-xs flex items-center gap-2 shadow-md transition-all ${
                     isSeatGridUnlocked
-                      ? 'bg-[#9CB080] hover:bg-[#b0c296] text-[#273338] shadow-[#9CB080]/30 cursor-pointer font-black'
-                      : 'bg-white/10 text-white/40 cursor-not-allowed border border-white/10'
+                      ? 'bg-[#776B5D] hover:bg-[#63574A] text-[#F3EEEA] shadow-[#776B5D]/20 cursor-pointer font-black'
+                      : 'bg-[#F3EEEA] text-[#776B5D]/40 cursor-not-allowed border border-[#B0A695]'
                   }`}
                 >
-                  <CheckCircle2 className="w-4 h-4 text-[#273338]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#F3EEEA]" />
                   <span>Publish & Approve Seat Layout</span>
                 </button>
 
-                <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#273338] border border-[#618764] text-[#9CB080] text-xs font-bold shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-[#9CB080] animate-pulse"></span>
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#F3EEEA] border border-[#B0A695] text-[#776B5D] text-xs font-bold shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-[#776B5D] animate-pulse"></span>
                   <span>Live MongoDB Atlas Synced</span>
                 </div>
               </div>
             </div>
 
             {/* Cascading 5-Tier Controls Row: City -> Theatre -> Movie -> Show Date -> Show Time */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-[#273338]/60 p-4 rounded-2xl border border-[#618764]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-[#F3EEEA]/80 p-4 rounded-2xl border border-[#B0A695]">
               {/* Filter 1: Select City */}
               <div>
-                <label className="block text-[11px] font-bold text-[#9CB080] mb-1">1. City (MongoDB Atlas) *</label>
+                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">1. City (MongoDB Atlas) *</label>
                 <select
                   value={selectedCity || ''}
                   onChange={e => {
@@ -4541,7 +4541,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedTheatreId(thsInCity[0].id);
                     }
                   }}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-[#273338] border border-[#618764] font-bold"
+                  className="w-full p-2.5 rounded-xl glass-input text-xs text-[#776B5D] bg-[#F3EEEA] border border-[#B0A695] font-bold"
                 >
                   <option value="">-- Select City --</option>
                   {(availableCities || []).map(city => (
@@ -4552,7 +4552,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 2: Select Cinema / Theatre */}
               <div>
-                <label className="block text-[11px] font-bold text-[#9CB080] mb-1">2. Cinema / Theatre *</label>
+                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">2. Cinema / Theatre *</label>
                 <select
                   value={selectedTheatreId || ''}
                   disabled={!selectedCity}
@@ -4566,7 +4566,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedSeatMovieId(moviesList[0].id || moviesList[0]._id);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#618764] ${!selectedCity ? 'text-white/40 cursor-not-allowed bg-[#273338]/40' : 'text-white bg-[#273338]'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#B0A695] ${!selectedCity ? 'text-[#776B5D]/40 cursor-not-allowed bg-[#F3EEEA]/60' : 'text-[#776B5D] bg-[#F3EEEA]'}`}
                 >
                   <option value="">-- Select Theatre --</option>
                   {(theatresInSelectedCity || []).length > 0 ? (
@@ -4581,7 +4581,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 3: Select Movie (Database Live) */}
               <div>
-                <label className="block text-[11px] font-bold text-[#9CB080] mb-1">3. Movie (Database Live) *</label>
+                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">3. Movie (Database Live) *</label>
                 <select
                   value={selectedSeatMovieId || ''}
                   disabled={!selectedTheatreId}
@@ -4594,7 +4594,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedSchedDate(availableDatesForSeatCombo[0]);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#618764] ${!selectedTheatreId ? 'text-white/40 cursor-not-allowed bg-[#273338]/40' : 'text-[#9CB080] bg-[#273338]'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#B0A695] ${!selectedTheatreId ? 'text-[#776B5D]/40 cursor-not-allowed bg-[#F3EEEA]/60' : 'text-[#776B5D] bg-[#F3EEEA]'}`}
                 >
                   <option value="">-- Select Movie --</option>
                   {(moviesList || []).map(m => (
@@ -4607,7 +4607,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 4: Show Date */}
               <div>
-                <label className="block text-[11px] font-bold text-[#9CB080] mb-1">4. Show Date *</label>
+                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">4. Show Date *</label>
                 <select
                   value={selectedSchedDate || ''}
                   disabled={!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0}
@@ -4619,7 +4619,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedShowSlotTime(availableShowtimesForSeatCombo[0]);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#618764] ${!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0 ? 'text-white/40 cursor-not-allowed bg-[#273338]/40' : 'text-white bg-[#273338]'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#B0A695] ${!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0 ? 'text-[#776B5D]/40 cursor-not-allowed bg-[#F3EEEA]/60' : 'text-[#776B5D] bg-[#F3EEEA]'}`}
                 >
                   <option value="">-- Select Show Date --</option>
                   {(availableDatesForSeatCombo || []).length > 0 ? (
@@ -4634,12 +4634,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 5: Show Time Slot */}
               <div>
-                <label className="block text-[11px] font-bold text-[#9CB080] mb-1">5. Show Time Slot *</label>
+                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">5. Show Time Slot *</label>
                 <select
                   value={selectedShowSlotTime || ''}
                   disabled={!selectedSchedDate}
                   onChange={e => setSelectedShowSlotTime(e.target.value)}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#618764] ${!selectedSchedDate ? 'text-white/40 cursor-not-allowed bg-[#273338]/40' : 'text-[#9CB080] bg-[#273338]'}`}
+                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#B0A695] ${!selectedSchedDate ? 'text-[#776B5D]/40 cursor-not-allowed bg-[#F3EEEA]/60' : 'text-[#776B5D] bg-[#F3EEEA]'}`}
                 >
                   <option value="">-- Select Time Slot --</option>
                   {(availableShowtimesForSeatCombo || []).map(t => (
@@ -4650,9 +4650,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </div>
 
             {/* Live Filter Indicator Bar */}
-            <div className="p-4 rounded-2xl bg-[#273338] border border-[#618764] text-xs text-[#9CB080] flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="p-4 rounded-2xl bg-[#F3EEEA] border border-[#B0A695] text-xs text-[#776B5D] flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div>
-                📍 Live Tracking Filter: <strong className="text-white">{selectedCity || 'Select City'}</strong> → <strong className="text-white">{activeTheatreObj?.name || 'Select Theatre'}</strong> → <strong className="text-[#9CB080]">{activeSeatMovieObj?.title || 'Select Movie'}</strong> → <strong className="text-white">{selectedSchedDate || 'Select Date'}</strong> → <strong className="text-[#9CB080]">{selectedShowSlotTime || 'Select Time'}</strong>
+                📍 Live Tracking Filter: <strong className="text-[#1A1A1A]">{selectedCity || 'Select City'}</strong> → <strong className="text-[#1A1A1A]">{activeTheatreObj?.name || 'Select Theatre'}</strong> → <strong className="text-[#776B5D]">{activeSeatMovieObj?.title || 'Select Movie'}</strong> → <strong className="text-[#1A1A1A]">{selectedSchedDate || 'Select Date'}</strong> → <strong className="text-[#776B5D]">{selectedShowSlotTime || 'Select Time'}</strong>
               </div>
               <div className="flex items-center gap-3 text-xs flex-wrap">
                 <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">
