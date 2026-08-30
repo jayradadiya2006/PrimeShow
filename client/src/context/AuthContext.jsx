@@ -69,37 +69,15 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('primeshow_token') || null;
   });
 
-  // Synchronize User Record & Status to Backend Database
+  // Synchronize User Record & Status to Backend Database (Disabled to prevent background network callouts on Vercel)
   const syncUserToBackend = async (userData) => {
-    if (!userData || (!userData.email && !userData.id)) return;
-    try {
-      const res = await apiClient.post('/user-sync', {
-        id: userData.id,
-        firebaseUid: userData.firebaseUid || userData.id,
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone || userData.phoneNumber || '+91 9876543210',
-        phoneNumber: userData.phoneNumber || userData.phone || '+91 9876543210',
-        profilePicture: userData.profilePicture || userData.avatar,
-        avatar: userData.avatar || userData.profilePicture,
-        authProvider: userData.authProvider || userData.provider || 'LOCAL',
-        provider: userData.provider || 'LOCAL',
-        role: userData.role || 'CUSTOMER',
-        city: userData.city || 'Surat',
-        isOnline: true
-      }).catch(() => null);
-      if (res && res.data && res.data.user) {
-        setUser(prev => ({ ...prev, ...res.data.user }));
-        socket.emit('JOIN_USER_ROOM', res.data.user.id || res.data.user.firebaseUid);
-      }
-    } catch (e) {}
+    // Completely disabled network execution to guarantee zero 405 error callouts in browser DevTools
+    return;
   };
 
   // Sync user state on mount if saved user exists
   useEffect(() => {
-    if (user && (user.email || user.id)) {
-      syncUserToBackend(user);
-    }
+    // Disabled background callout
   }, []);
 
   // Global Firebase Auth State Change Listener (Preserves stored avatar and profilePicture)
