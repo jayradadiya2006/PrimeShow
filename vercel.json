@@ -4,6 +4,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/user_sync",
+      "destination": "/api/user_sync.js"
+    },
+    {
+      "source": "/api/user-sync",
+      "destination": "/api/user-sync.js"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index.js"
     },

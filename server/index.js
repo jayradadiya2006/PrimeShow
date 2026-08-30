@@ -1513,6 +1513,16 @@ const userSyncPaths = [
 
 app.options(userSyncPaths, cors());
 app.all(userSyncPaths, async (req, res) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-User-Id, Accept, Cache-Control, Pragma, Expires');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
     const { name, email, profilePicture, authProvider, phoneNumber, credential, profile, user: clientUser } = req.body || {};
     let targetEmail = email || profile?.email || clientUser?.email || req.query?.email;
