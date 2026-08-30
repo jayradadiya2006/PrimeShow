@@ -856,6 +856,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   // User Management & Activity Tracking State
   const [usersList, setUsersList] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState(null);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userCurrentPage, setUserCurrentPage] = useState(1);
   const [userTotalPages, setUserTotalPages] = useState(1);
@@ -884,7 +885,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const fetchUsersDropdownList = async () => {
     try {
-      const res = await API.get('/admin/users/list');
+      const res = await API.get('/admin/users/list', { timeout: 5000 });
       if (res && res.data && res.data.users) {
         setUsersDropdownList(res.data.users);
       } else if (Array.isArray(res.data)) {
@@ -892,7 +893,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
       }
     } catch (e) {
       try {
-        const fallbackRes = await API.get('/users/list');
+        const fallbackRes = await API.get('/users/list', { timeout: 5000 });
         if (fallbackRes && fallbackRes.data && fallbackRes.data.users) {
           setUsersDropdownList(fallbackRes.data.users);
         }
@@ -915,7 +916,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
     setAdminBookingsLoading(true);
     try {
       const res = await API.get('/admin/bookings', {
-        params: { page, limit: 10, category, search }
+        params: { page, limit: 10, category, search },
+        timeout: 5000
       });
       if (res.data && res.data.bookings) {
         setAdminBookingsList(res.data.bookings);
@@ -946,7 +948,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
         bannerAnnouncement: bannerAnnouncementInput,
         maintenanceMode: maintenanceModeToggle
       };
-      await API.post('/admin/global-update', payload);
+      await API.post('/admin/global-update', payload, { timeout: 5000 });
       setActionSuccess('Global CMS Config updated & broadcasted to all live User Panels!');
       setTimeout(() => setActionSuccess(''), 4000);
     } catch (err) {
@@ -961,12 +963,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const fetchAdminData = async () => {
     try {
       const [offRes, banRes, thRes, evRes, plRes, actRes] = await Promise.allSettled([
-        API.get('/offers'),
-        API.get('/offers/banners'),
-        API.get('/theatres'),
-        API.get('/events'),
-        API.get('/plays'),
-        API.get('/activities')
+        API.get('/offers', { timeout: 5000 }),
+        API.get('/offers/banners', { timeout: 5000 }),
+        API.get('/theatres', { timeout: 5000 }),
+        API.get('/events', { timeout: 5000 }),
+        API.get('/plays', { timeout: 5000 }),
+        API.get('/activities', { timeout: 5000 })
       ]);
       if (offRes.status === 'fulfilled' && offRes.value.data) setOffersList(offRes.value.data);
       if (banRes.status === 'fulfilled' && banRes.value.data) setOfferBannersList(banRes.value.data);
@@ -1004,7 +1006,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   // Fetch Scoped Blocked Seats when Cinema, Screen, or Show Slot changes
   const fetchScopedSeats = async () => {
     try {
-      const res = await API.get(`/theatres/${selectedTheatreId || 'th_1'}/screens/${isolatedLayoutKey}/blocked-seats`);
+      const res = await API.get(`/theatres/${selectedTheatreId || 'th_1'}/screens/${isolatedLayoutKey}/blocked-seats`, { timeout: 5000 });
       if (res.data?.blockedSeats) {
         setScreenBlockedSeats(res.data.blockedSeats);
       }
@@ -1088,20 +1090,31 @@ export const AdminDashboard = ({ onReturnHome }) => {
     }
   ];
 
-  // Fetch Admin Registered Users with Search & Pagination directly from MongoDB Atlas
+  // Fetch Admin Registered Users with Strict 5-Second Timeout & Safe Try-Catch-Finally
   const fetchAdminUsers = async (page = 1, search = '') => {
     setUsersLoading(true);
+    setUsersError(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     try {
       let res;
       try {
         res = await API.get('/admin/users', {
-          params: { page, limit: 10, search }
+          params: { page, limit: 10, search },
+          timeout: 5000,
+          signal: controller.signal
         });
       } catch (e1) {
         res = await API.get('/users', {
-          params: { page, limit: 10, search }
+          params: { page, limit: 10, search },
+          timeout: 5000,
+          signal: controller.signal
         });
       }
+
+      clearTimeout(timeoutId);
 
       if (res && res.data) {
         const fetchedList = Array.isArray(res.data) ? res.data : (res.data.users || []);
@@ -1121,7 +1134,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
         setUserTotalPages(1);
       }
     } catch (err) {
+      clearTimeout(timeoutId);
       console.warn('Failed to fetch admin users from database:', err);
+      setUsersError("Unable to connect to server. Please try refreshing.");
       setUsersList(fallbackSeedUsers);
       setUserTotalCount(fallbackSeedUsers.length);
       setUserTotalPages(1);
@@ -3306,6 +3321,24 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
+            {/* Users Error Alert with Retry Button */}
+            {usersError && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/40 text-amber-300 text-xs font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>{usersError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fetchAdminUsers(userCurrentPage, userSearchQuery)}
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Retry Connection</span>
+                </button>
+              </div>
+            )}
+
             {/* Users Table */}
             <div className="glass-panel rounded-3xl border border-cyan-400/20 overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
@@ -3325,7 +3358,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <tbody className="divide-y divide-white/5 text-white/80">
                     {usersLoading ? (
                       <tr>
-                        <td colSpan="7" className="p-8 text-center text-cyan-300 font-bold">
+                        <td colSpan="8" className="p-8 text-center text-cyan-300 font-bold">
                           <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
                           <span>Loading registered user database...</span>
                         </td>
@@ -3414,8 +3447,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="p-8 text-center text-white/50">
-                          No users found matching query "{userSearchQuery}"
+                        <td colSpan="8" className="p-8 text-center text-white/50">
+                          {usersError ? (
+                            <div className="space-y-3">
+                              <p className="text-amber-300 font-bold">{usersError}</p>
+                              <button
+                                type="button"
+                                onClick={() => fetchAdminUsers(userCurrentPage, userSearchQuery)}
+                                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md cursor-pointer"
+                              >
+                                Retry Refreshing
+                              </button>
+                            </div>
+                          ) : (
+                            `No users found matching query "${userSearchQuery}"`
+                          )}
                         </td>
                       </tr>
                     )}
