@@ -549,28 +549,28 @@ export const AdminDashboard = ({ onReturnHome }) => {
   ];
 
   // 1. Full Theatres List from live backend state
-  const currentTheatresList = (theatresList && theatresList.length > 0) ? theatresList : DEFAULT_THEATRES;
+  const currentTheatresList = (Array.isArray(theatresList) && theatresList.length > 0) ? theatresList : DEFAULT_THEATRES;
 
   // 2. Master Unified City List (Includes all 18 official User Panel Gujarat cities + any backend DB cities)
   const availableCities = Array.from(new Set([
     ...OFFICIAL_18_CITIES,
-    ...(currentTheatresList || []).map(t => t?.city).filter(Boolean)
+    ...(Array.isArray(currentTheatresList) ? currentTheatresList : []).map(t => t?.city).filter(Boolean)
   ])).sort();
 
   // 3. Theatres Filtered Dynamically by Selected City
-  const theatresInSelectedCity = (currentTheatresList || []).filter(
+  const theatresInSelectedCity = (Array.isArray(currentTheatresList) ? currentTheatresList : []).filter(
     t => t && (!selectedCity || (t.city || '').trim().toLowerCase() === (selectedCity || '').trim().toLowerCase())
   );
 
   // 4. Active Theatre Object (Auto-Syncs on Add / Delete)
-  const activeTheatreObj = (theatresInSelectedCity || []).find(t => t?.id === selectedTheatreId) 
-    || (theatresInSelectedCity || [])[0]
-    || (currentTheatresList || []).find(t => t?.id === selectedTheatreId)
-    || (currentTheatresList || [])[0];
+  const activeTheatreObj = (Array.isArray(theatresInSelectedCity) ? theatresInSelectedCity : []).find(t => t?.id === selectedTheatreId) 
+    || (Array.isArray(theatresInSelectedCity) ? theatresInSelectedCity : [])[0]
+    || (Array.isArray(currentTheatresList) ? currentTheatresList : []).find(t => t?.id === selectedTheatreId)
+    || (Array.isArray(currentTheatresList) ? currentTheatresList : [])[0];
 
   // 5. Active Seat Movie Object (Synced directly with MongoDB Atlas moviesList)
-  const activeSeatMovieObj = (moviesList || []).find(m => m && (m.id === selectedSeatMovieId || m._id === selectedSeatMovieId || m.title === selectedSeatMovieId)) 
-    || (moviesList || [])[0] 
+  const activeSeatMovieObj = (Array.isArray(moviesList) ? moviesList : []).find(m => m && (m.id === selectedSeatMovieId || m._id === selectedSeatMovieId || m.title === selectedSeatMovieId)) 
+    || (Array.isArray(moviesList) ? moviesList : [])[0] 
     || { id: 'mov_1', title: 'Avatar: Fire and Ash' };
 
   // Dynamic MongoDB Atlas Showtimes State for Selected Theatre + Movie Combo
@@ -3020,14 +3020,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       onClick={() => setTopMoviesModalOpen(true)}
                       className="text-xs font-bold text-cyan-400 hover:text-cyan-300 hover:underline cursor-pointer flex items-center gap-1"
                     >
-                      <span>More / View All ({(topMoviesList || []).length})</span>
+                      <span>More / View All ({(Array.isArray(topMoviesList) ? topMoviesList : []).length})</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   <div className="space-y-3">
-                    {(topMoviesList || []).length > 0 ? (
-                      (topMoviesList || []).slice(0, 5).map((movie, idx) => {
+                    {Array.isArray(topMoviesList) && topMoviesList.length > 0 ? (
+                      topMoviesList.slice(0, 5).map((movie, idx) => {
                         const pct = movie?.percentage !== undefined ? movie.percentage : 0;
                         return (
                           <div key={movie?.movieId || movie?.title || idx} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
@@ -3086,14 +3086,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       onClick={() => setTopTheatresModalOpen(true)}
                       className="text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline cursor-pointer flex items-center gap-1"
                     >
-                      <span>More / View All ({(allTheatresList || topTheatresList || []).length})</span>
+                      <span>More / View All ({(Array.isArray(allTheatresList) && allTheatresList.length > 0 ? allTheatresList : (Array.isArray(topTheatresList) ? topTheatresList : [])).length})</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   <div className="space-y-3">
-                    {(topTheatresList || []).length > 0 ? (
-                      (topTheatresList || []).slice(0, 2).map((th, i) => {
+                    {Array.isArray(topTheatresList) && topTheatresList.length > 0 ? (
+                      topTheatresList.slice(0, 2).map((th, i) => {
                         const pct = th?.percentage !== undefined ? th.percentage : (parseFloat(th?.occupancyRate) || 0);
                         const displayName = th?.nameAndCity || (th?.city ? `${th.name} - ${th.city}` : th?.name) || 'PrimeShow Theatre';
                         return (
