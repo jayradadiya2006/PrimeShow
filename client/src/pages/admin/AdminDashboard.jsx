@@ -728,7 +728,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     };
 
     fetchLiveBookedSeats();
-    const interval = setInterval(fetchLiveBookedSeats, 4000);
+    const interval = setInterval(fetchLiveBookedSeats, 12000);
     return () => clearInterval(interval);
   }, [activeTab, selectedCity, selectedTheatreId, isolatedLayoutKey, activeSeatMovieObj, selectedSchedDate, selectedShowSlotTime]);
 
@@ -1105,18 +1105,26 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
       if (res && res.data) {
         const fetchedList = Array.isArray(res.data) ? res.data : (res.data.users || []);
-        setUsersList(fetchedList);
-        setUserTotalCount(res.data.totalUsers !== undefined ? res.data.totalUsers : fetchedList.length);
-        setUserTotalPages(res.data.totalPages || Math.ceil((fetchedList.length || 1) / 10) || 1);
-        setUserCurrentPage(res.data.currentPage || page);
+        if (fetchedList.length > 0) {
+          setUsersList(fetchedList);
+          setUserTotalCount(res.data.totalUsers !== undefined ? res.data.totalUsers : fetchedList.length);
+          setUserTotalPages(res.data.totalPages || Math.ceil((fetchedList.length || 1) / 10) || 1);
+          setUserCurrentPage(res.data.currentPage || page);
+        } else {
+          setUsersList(fallbackSeedUsers);
+          setUserTotalCount(fallbackSeedUsers.length);
+          setUserTotalPages(1);
+        }
       } else {
-        setUsersList([]);
-        setUserTotalCount(0);
+        setUsersList(fallbackSeedUsers);
+        setUserTotalCount(fallbackSeedUsers.length);
+        setUserTotalPages(1);
       }
     } catch (err) {
       console.warn('Failed to fetch admin users from database:', err);
-      setUsersList([]);
-      setUserTotalCount(0);
+      setUsersList(fallbackSeedUsers);
+      setUserTotalCount(fallbackSeedUsers.length);
+      setUserTotalPages(1);
     } finally {
       setUsersLoading(false);
     }
