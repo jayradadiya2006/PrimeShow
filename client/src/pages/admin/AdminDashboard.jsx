@@ -2497,26 +2497,26 @@ export const AdminDashboard = ({ onReturnHome }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F3EEEA] text-[#776B5D] flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans">
       
       {/* Sleek Admin Left Sidebar Navigation Panel (Responsive Desktop & Mobile Horizontal Scroll) */}
-      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-[#B0A695] p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-[#EBE3D5]">
+      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-slate-800 p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-slate-900/95 shadow-2xl">
         <div>
           {/* Admin Brand Header */}
-          <div className="flex items-center justify-between md:justify-start gap-3 pb-3 md:pb-6 mb-2 md:mb-6 border-b border-[#B0A695]/50">
+          <div className="flex items-center justify-between md:justify-start gap-3 pb-3 md:pb-6 mb-2 md:mb-6 border-b border-slate-800">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-[#776B5D]/10 border border-[#B0A695] flex items-center justify-center text-[#776B5D] shadow-sm">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm">
                 <Shield className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div>
-                <h2 className="text-sm md:text-lg font-bold font-sans text-[#776B5D] leading-tight">PrimeShow</h2>
-                <span className="text-[9px] md:text-[10px] text-[#776B5D] uppercase tracking-widest font-bold block">ADMIN COMMAND PANEL</span>
+                <h2 className="text-sm md:text-lg font-bold font-sans text-white leading-tight">PrimeShow</h2>
+                <span className="text-[9px] md:text-[10px] text-amber-400 uppercase tracking-widest font-extrabold block">ADMIN COMMAND PANEL</span>
               </div>
             </div>
 
             <button
               onClick={onReturnHome}
-              className="md:hidden px-3 py-1.5 rounded-xl bg-[#F3EEEA] border border-[#B0A695] text-[#776B5D] text-[11px] font-bold flex items-center gap-1"
+              className="md:hidden px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-[11px] font-bold flex items-center gap-1"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Exit</span>
@@ -2534,15 +2534,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   onClick={() => handleTabChange(item.id)}
                   className={`flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all shrink-0 whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-[#776B5D] text-[#F3EEEA] shadow-md shadow-[#776B5D]/20 font-black border border-[#776B5D]'
-                      : 'text-[#776B5D] hover:text-[#1A1A1A] hover:bg-[#B0A695]/30 bg-white/40 md:bg-transparent'
+                      ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 font-black border border-amber-400'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80 bg-slate-800/40 md:bg-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#F3EEEA]' : 'text-[#776B5D]'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 hidden md:block text-[#F3EEEA]" />}
+                  {isActive && <ChevronRight className="w-3.5 h-3.5 hidden md:block text-slate-950" />}
                 </button>
               );
             })}
