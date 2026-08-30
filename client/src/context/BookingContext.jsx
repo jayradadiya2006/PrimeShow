@@ -2,8 +2,18 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import API, { API_BASE } from '../services/api';
 
-const BookingContext = createContext();
-const SOCKET_BASE = API_BASE.replace('/api', '');
+const getSocketBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    return 'https://primeshow-api.onrender.com';
+  }
+  return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : 'https://primeshow-api.onrender.com';
+};
+const SOCKET_BASE = getSocketBaseUrl();
 
 const DEFAULT_HERO_SLIDES = [
   {
@@ -1079,7 +1089,13 @@ export const BookingProvider = ({ children }) => {
   useEffect(() => {
     let cmsSocket = null;
     try {
-      cmsSocket = io(SOCKET_BASE, { transports: ['websocket', 'polling'] });
+      cmsSocket = io(SOCKET_BASE, {
+        transports: ['polling', 'websocket'],
+        autoConnect: true,
+        reconnectionAttempts: 3,
+        timeout: 5000
+      });
+      cmsSocket.on('connect_error', () => {});
 
       cmsSocket.on('MOVIE_UPDATED', (movie) => {
         console.log('⚡ [BookingContext] Real-time MOVIE_UPDATED received:', movie);
