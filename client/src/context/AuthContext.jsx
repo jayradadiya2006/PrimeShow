@@ -92,9 +92,7 @@ export const AuthProvider = ({ children }) => {
         setUser(prev => ({ ...prev, ...res.data.user }));
         socket.emit('JOIN_USER_ROOM', res.data.user.id || res.data.user.firebaseUid);
       }
-    } catch (e) {
-      console.warn('⚡ [Backend User Sync Note]:', e.message);
-    }
+    } catch (e) {}
   };
 
   // Sync user state on mount if saved user exists
