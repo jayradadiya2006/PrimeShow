@@ -3798,11 +3798,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Configured Hero Slides Cards List */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
-                Current Active Hero Banners ({heroSlidesList.length} Slides)
+                Current Active Hero Banners ({(Array.isArray(heroSlidesList) ? heroSlidesList : []).length} Slides)
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {heroSlidesList.map((slide) => (
+                {(Array.isArray(heroSlidesList) ? heroSlidesList : []).map((slide) => (
                   <div key={slide.id} className="glass-panel rounded-3xl p-4 border border-white/10 space-y-3 relative overflow-hidden group">
                     <div className="relative h-40 rounded-2xl overflow-hidden border border-white/10">
                       <img src={slide.banner} alt={slide.title} className="w-full h-full object-cover" />
@@ -3940,11 +3940,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Configured Feature Strips Cards List */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
-                Current Active Feature Chips ({featureStripsList.length} Chips)
+                Current Active Feature Chips ({(Array.isArray(featureStripsList) ? featureStripsList : []).length} Chips)
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {featureStripsList.map((feat) => (
+                {(Array.isArray(featureStripsList) ? featureStripsList : []).map((feat) => (
                   <div key={feat.id} className="glass-panel rounded-2xl p-4 border border-white/10 flex items-center justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -4089,11 +4089,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Configured Upcoming Releases Cards List */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
-                Current Active Upcoming Releases ({upcomingMoviesList.length} Titles)
+                Current Active Upcoming Releases ({(Array.isArray(upcomingMoviesList) ? upcomingMoviesList : []).length} Titles)
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {upcomingMoviesList.map((mov) => (
+                {(Array.isArray(upcomingMoviesList) ? upcomingMoviesList : []).map((mov) => (
                   <div key={mov.id} className="glass-panel rounded-2xl p-3 border border-white/10 flex flex-col justify-between space-y-2">
                     <div>
                       <div className="relative h-44 rounded-xl overflow-hidden border border-white/10 mb-2">
@@ -5132,10 +5132,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 {/* Banner Banners List */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-white">Live Carousel Banners ({offerBannersList.length})</h3>
+                  <h3 className="text-lg font-bold text-white">Live Carousel Banners ({(Array.isArray(offerBannersList) ? offerBannersList : []).length})</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {offerBannersList.map((ban) => (
+                    {(Array.isArray(offerBannersList) ? offerBannersList : []).map((ban) => (
                       <div key={ban.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
                         <div className="flex items-start gap-4">
                           <img src={ban.image} alt={ban.title} className="w-24 h-20 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
@@ -5213,7 +5213,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </form>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {offersList.map(off => (
+                  {(Array.isArray(offersList) ? offersList : []).map(off => (
                     <div key={off.id || off.code} className="glass-panel p-5 rounded-3xl border border-white/10 flex items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2">
