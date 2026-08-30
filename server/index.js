@@ -85,6 +85,18 @@ const allowedOriginsList = [
 
 app.use(cors({ origin: '*', credentials: true }));
 
+// Step 4: Serverless Cold Start Mongoose Direct Atlas Reconnection Middleware
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      await connectDB();
+    } catch (e) {
+      console.warn('⚡ [Mongoose Reconnect Note]:', e.message);
+    }
+  }
+  next();
+});
+
 app.options('*', (req, res) => {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
