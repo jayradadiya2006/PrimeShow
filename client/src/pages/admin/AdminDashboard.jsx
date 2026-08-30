@@ -1157,9 +1157,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
       } catch (e1) {
         res = await API.get(`/admin/users/${u.id || u.email}/history`);
       }
-      setUserActivityData(res.data);
+      if (res && res.status === 200 && res.data) {
+        setUserActivityData({
+          bookings: Array.isArray(res.data.bookings) ? res.data.bookings : [],
+          logs: Array.isArray(res.data.logs) ? res.data.logs : (Array.isArray(res.data.history) ? res.data.history : [])
+        });
+      } else {
+        setUserActivityData({ bookings: [], logs: [] });
+      }
     } catch (err) {
       console.warn('Failed to fetch user activity:', err);
+      setUserActivityData({ bookings: [], logs: [] });
     } finally {
       setIsUserActivityLoading(false);
     }
@@ -1204,22 +1212,28 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const fetchRevenueChartData = async (range = '7days') => {
     try {
       const res = await API.get(`/admin/analytics/charts?range=${range}`);
-      if (res.data?.dataPoints) {
+      if (res && res.status === 200 && Array.isArray(res.data?.dataPoints)) {
         setRevenueChartData(res.data.dataPoints);
+      } else {
+        setRevenueChartData([]);
       }
     } catch (err) {
       console.warn('Error fetching revenue chart data:', err.message);
+      setRevenueChartData([]);
     }
   };
 
   const fetchBookingChartData = async (range = '7days') => {
     try {
       const res = await API.get(`/admin/analytics/charts?range=${range}`);
-      if (res.data?.dataPoints) {
+      if (res && res.status === 200 && Array.isArray(res.data?.dataPoints)) {
         setBookingChartData(res.data.dataPoints);
+      } else {
+        setBookingChartData([]);
       }
     } catch (err) {
       console.warn('Error fetching booking chart data:', err.message);
+      setBookingChartData([]);
     }
   };
 
@@ -1231,11 +1245,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
       } catch (e1) {
         res = await API.get('/admin/analytics/top-movies');
       }
-      if (res.data?.movies || res.data?.topMovies) {
-        setTopMoviesList(res.data.movies || res.data.topMovies);
+      const rawMovies = res?.data?.movies || res?.data?.topMovies;
+      if (res && res.status === 200 && Array.isArray(rawMovies)) {
+        setTopMoviesList(rawMovies);
+      } else {
+        setTopMoviesList([]);
       }
     } catch (err) {
       console.warn('Error fetching top movies analytics:', err.message);
+      setTopMoviesList([]);
     }
   };
 
@@ -1247,13 +1265,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
       } catch (e1) {
         res = await API.get(`/admin/analytics/top-theatres-overview?limit=all&t=${Date.now()}`);
       }
-      if (res.data?.allTheatres || res.data?.theatres || res.data?.topTheatres) {
-        const fullList = res.data.allTheatres || res.data.theatres || res.data.topTheatres || [];
+      const fullList = res?.data?.allTheatres || res?.data?.theatres || res?.data?.topTheatres;
+      if (res && res.status === 200 && Array.isArray(fullList)) {
         setTopTheatresList(fullList);
         setAllTheatresList(fullList);
+      } else {
+        setTopTheatresList([]);
+        setAllTheatresList([]);
       }
     } catch (err) {
       console.warn('Error fetching top theatres analytics:', err.message);
+      setTopTheatresList([]);
+      setAllTheatresList([]);
     }
   };
 
@@ -7031,7 +7054,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   {/* Sub-Tab 1: Bookings History */}
                   {userActivitySubTab === 'bookings' && (
                     <div className="space-y-3">
-                      {userActivityData?.bookings?.length > 0 ? (
+                      {Array.isArray(userActivityData?.bookings) && userActivityData.bookings.length > 0 ? (
                         userActivityData.bookings.map((b, idx) => (
                           <div key={b.id || idx} className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-cyan-400/40 transition-colors">
                             <div>
@@ -7066,7 +7089,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   {/* Sub-Tab 2: Login & Session Timeline */}
                   {userActivitySubTab === 'timeline' && (
                     <div className="space-y-3">
-                      {userActivityData?.logs?.length > 0 ? (
+                      {Array.isArray(userActivityData?.logs) && userActivityData.logs.length > 0 ? (
                         userActivityData.logs.map((log, idx) => {
                           const logTime = new Date(log.timestamp || log.createdAt);
                           const formattedDate = logTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -7162,39 +7185,44 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Modal List Body */}
             <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-2">
-              {(topMoviesList.filter(m => (m.title || '').toLowerCase().includes(topMoviesSearchQuery.toLowerCase()))).length > 0 ? (
-                topMoviesList
-                  .filter(m => (m.title || '').toLowerCase().includes(topMoviesSearchQuery.toLowerCase()))
-                  .map((movie, idx) => (
-                    <div key={idx} className="p-3.5 glass-panel rounded-2xl border border-white/10 flex items-center justify-between gap-4 hover:border-cyan-400/40 transition-all">
-                      <div className="flex items-center gap-3.5 min-w-0">
-                        <span className="w-7 h-7 rounded-xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-xs font-bold text-cyan-300 font-mono shrink-0">
-                          #{movie.rank || idx + 1}
-                        </span>
-                        <img src={movie.poster} alt={movie.title} className="w-10 h-12 rounded-lg object-cover border border-slate-700 shrink-0" />
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-white text-sm truncate">{movie.title}</h4>
-                          <div className="flex items-center gap-3 text-xs text-white/60 mt-0.5">
-                            <span>🎟️ {movie.bookings || 0} Bookings</span>
-                            <span>•</span>
-                            <span>🍿 {movie.tickets || 0} Tickets Sold</span>
-                          </div>
-                        </div>
-                      </div>
+              {(() => {
+                const safeMovies = Array.isArray(topMoviesList) ? topMoviesList : [];
+                const filteredMovies = safeMovies.filter(m => m && (m.title || '').toLowerCase().includes((topMoviesSearchQuery || '').toLowerCase()));
 
-                      <div className="text-right shrink-0">
-                        <div className="font-mono font-extrabold text-cyan-300 text-sm">
-                          ₹{(movie.revenue || 0).toLocaleString('en-IN')}
+                if (filteredMovies.length === 0) {
+                  return (
+                    <div className="p-8 text-center text-xs text-white/50">No movies matching "{topMoviesSearchQuery}" found.</div>
+                  );
+                }
+
+                return filteredMovies.map((movie, idx) => (
+                  <div key={idx} className="p-3.5 glass-panel rounded-2xl border border-white/10 flex items-center justify-between gap-4 hover:border-cyan-400/40 transition-all">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <span className="w-7 h-7 rounded-xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-xs font-bold text-cyan-300 font-mono shrink-0">
+                        #{movie.rank || idx + 1}
+                      </span>
+                      <img src={movie.poster} alt={movie.title} className="w-10 h-12 rounded-lg object-cover border border-slate-700 shrink-0" />
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-white text-sm truncate">{movie.title}</h4>
+                        <div className="flex items-center gap-3 text-xs text-white/60 mt-0.5">
+                          <span>🎟️ {movie.bookings || 0} Bookings</span>
+                          <span>•</span>
+                          <span>🍿 {movie.tickets || 0} Tickets Sold</span>
                         </div>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
-                          {movie.category || 'Movie'}
-                        </span>
                       </div>
                     </div>
-                  ))
-              ) : (
-                <div className="p-8 text-center text-xs text-white/50">No movies matching "{topMoviesSearchQuery}" found.</div>
-              )}
+
+                    <div className="text-right shrink-0">
+                      <div className="font-mono font-extrabold text-cyan-300 text-sm">
+                        ₹{(movie.revenue || 0).toLocaleString('en-IN')}
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
+                        {movie.category || 'Movie'}
+                      </span>
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
 
             {/* Modal Footer */}
@@ -7249,12 +7277,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Modal List Body */}
             <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-2">
               {(() => {
-                const listToRender = (allTheatresList && allTheatresList.length > 0) ? allTheatresList : topTheatresList;
-                const filtered = listToRender.filter(t => 
-                  (t.name || '').toLowerCase().includes(topTheatresSearchQuery.toLowerCase()) ||
-                  (t.city || '').toLowerCase().includes(topTheatresSearchQuery.toLowerCase()) ||
-                  (t.nameAndCity || '').toLowerCase().includes(topTheatresSearchQuery.toLowerCase())
-                );
+                const safeAll = Array.isArray(allTheatresList) ? allTheatresList : [];
+                const safeTop = Array.isArray(topTheatresList) ? topTheatresList : [];
+                const listToRender = safeAll.length > 0 ? safeAll : safeTop;
+                const filtered = listToRender.filter(t => t && (
+                  (t.name || '').toLowerCase().includes((topTheatresSearchQuery || '').toLowerCase()) ||
+                  (t.city || '').toLowerCase().includes((topTheatresSearchQuery || '').toLowerCase()) ||
+                  (t.nameAndCity || '').toLowerCase().includes((topTheatresSearchQuery || '').toLowerCase())
+                ));
 
                 if (filtered.length === 0) {
                   return (
