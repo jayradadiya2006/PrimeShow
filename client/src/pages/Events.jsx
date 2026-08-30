@@ -5,7 +5,7 @@ import { EventBookingModal } from '../components/EventBookingModal';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://primeshow-api.onrender.com/api');
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000/api' : '/api');
 
 export const Events = ({ onSelectEvent, onBookEvent }) => {
   const { selectedCity } = useAuth();
@@ -56,24 +56,19 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
     fetchEvents();
 
     let socket = null;
-    try {
-      const getSocketBaseUrl = () => {
-        if (import.meta.env.VITE_API_BASE_URL) {
-          return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
-        }
-        if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
-          return 'https://primeshow-api.onrender.com';
-        }
-        return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-          ? 'http://localhost:5000'
-          : 'https://primeshow-api.onrender.com';
-      };
-      socket = io(getSocketBaseUrl(), {
-        transports: ['polling', 'websocket'],
-        autoConnect: true,
-        reconnectionAttempts: 3,
-        timeout: 5000
-      });
+    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (isLocal) {
+      try {
+        socket = io('http://localhost:5000', {
+          transports: ['polling', 'websocket'],
+          autoConnect: false,
+          reconnection: false
+        });
+        socket.on('connect_error', () => {});
+      } catch (e) {}
+    }
+
+    if (socket) {
       socket.on('connect_error', () => {});
       socket.on('EVENT_UPDATED', (updatedEvent) => {
         if (updatedEvent && updatedEvent.id) {
@@ -93,7 +88,7 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
           fetchEvents();
         }
       });
-    } catch (e) {}
+    }
 
     return () => {
       if (socket) socket.disconnect();

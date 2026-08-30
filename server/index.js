@@ -1499,8 +1499,12 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
 const userSyncPaths = [
   '/api/user-sync',
   '/user-sync',
+  '/api/user_sync',
+  '/user_sync',
   '/api/auth/user-sync',
   '/auth/user-sync',
+  '/api/auth/user_sync',
+  '/auth/user_sync',
   '/api/auth/google-sync',
   '/auth/google-sync',
   '/api/auth/google',

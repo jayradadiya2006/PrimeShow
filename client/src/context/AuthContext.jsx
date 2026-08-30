@@ -14,9 +14,9 @@ import { io } from 'socket.io-client';
 
 const createSafeSocket = () => {
   const customUrl = import.meta.env.VITE_API_BASE_URL;
-  const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-  if (isVercel && !customUrl) {
+  if (!customUrl && !isLocal) {
     const noop = () => {};
     return {
       on: noop,
@@ -30,9 +30,7 @@ const createSafeSocket = () => {
 
   const baseUrl = customUrl
     ? customUrl.replace(/\/+$/, '').replace(/\/api$/, '')
-    : (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'http://localhost:5000'
-        : 'https://primeshow-api.onrender.com');
+    : 'http://localhost:5000';
 
   const instance = io(baseUrl, {
     transports: ['polling', 'websocket'],
