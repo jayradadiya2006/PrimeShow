@@ -1607,7 +1607,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     const effectiveTime = (schedTime || '').trim() || '07:30 PM';
     const effectiveCity = schedCity || 'Surat';
 
-    const matchedTheatre = (theatresList || []).find(t => t && t.name && t.name.trim().toLowerCase() === effectiveTheatreName.toLowerCase());
+    const matchedTheatre = (Array.isArray(theatresList) ? theatresList : []).find(t => t && t.name && t.name.trim().toLowerCase() === effectiveTheatreName.toLowerCase());
 
     const theatreObj = {
       id: matchedTheatre?.id || `th_${effectiveTheatreName.replace(/\s+/g, '_').toLowerCase()}`,
@@ -1857,11 +1857,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [pricingStatus, setPricingStatus] = useState('APPROVED');
 
   useEffect(() => {
-    if (!pricingTheatreId && (theatresList || []).length > 0) {
-      setPricingTheatreId(theatresList[0].id);
+    const safeThs = Array.isArray(theatresList) ? theatresList : [];
+    if (!pricingTheatreId && safeThs.length > 0) {
+      setPricingTheatreId(safeThs[0].id);
     }
-    const currentThId = pricingTheatreId || theatresList[0]?.id;
-    const targetTh = (theatresList || []).find(t => t.id === currentThId || t._id === currentThId);
+    const currentThId = pricingTheatreId || safeThs[0]?.id;
+    const targetTh = safeThs.find(t => t && (t.id === currentThId || t._id === currentThId));
     if (targetTh) {
       const dateConfig = targetTh.pricingByDate?.[pricingDate] || targetTh.datePricing?.[pricingDate];
       if (dateConfig) {
@@ -1958,8 +1959,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleSaveHallSlot = async (e) => {
     e.preventDefault();
-    const targetThId = hallSlotForm.theatreId || theatresList[0]?.id || theatresList[0]?._id || 'th_1';
-    const selectedMov = moviesList.find(m => m.id === hallSlotForm.movieId || m._id === hallSlotForm.movieId) || { title: 'PrimeShow Feature' };
+    const safeThs = Array.isArray(theatresList) ? theatresList : [];
+    const safeMovs = Array.isArray(moviesList) ? moviesList : [];
+    const targetThId = hallSlotForm.theatreId || safeThs[0]?.id || safeThs[0]?._id || 'th_1';
+    const selectedMov = safeMovs.find(m => m && (m.id === hallSlotForm.movieId || m._id === hallSlotForm.movieId)) || { title: 'PrimeShow Feature' };
 
     if (!targetThId || !activeConfigDate) {
       setActionSuccess('Please select a theatre and an active date slot');
@@ -2064,7 +2067,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const handleAddShowSlot = async (e) => {
     e.preventDefault();
     try {
-      const selectedMov = moviesList.find(m => m.id === showSlotForm.movieId) || { title: 'Avatar: Fire and Ash' };
+      const safeMovs = Array.isArray(moviesList) ? moviesList : [];
+      const selectedMov = safeMovs.find(m => m && m.id === showSlotForm.movieId) || { title: 'Avatar: Fire and Ash' };
       const selectedDateStr = showSlotForm.date || new Date().toISOString().split('T')[0];
       const payload = {
         ...showSlotForm,
@@ -4295,14 +4299,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     value={schedMovieId}
                     onChange={(e) => {
                       setSchedMovieId(e.target.value);
-                      const targetM = moviesList.find(m => m.id === e.target.value);
+                      const safeMovs = Array.isArray(moviesList) ? moviesList : [];
+                      const targetM = safeMovs.find(m => m && m.id === e.target.value);
                       if (targetM && targetM.showDates && targetM.showDates.length > 0) {
                         setSelectedSchedDate(targetM.showDates[0]);
                       }
                     }}
                     className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
                   >
-                    {moviesList.map(m => (
+                    {(Array.isArray(moviesList) ? moviesList : []).map(m => (
                       <option key={m.id} value={m.id}>{m.title}</option>
                     ))}
                   </select>
@@ -4327,7 +4332,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Configured Dates Badges */}
               {(() => {
-                const targetM = moviesList.find(m => m && (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId || (m.title && m.title.toLowerCase() === (schedMovieId || '').toLowerCase())));
+                const safeMovs = Array.isArray(moviesList) ? moviesList : [];
+                const targetM = safeMovs.find(m => m && (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId || (m.title && m.title.toLowerCase() === (schedMovieId || '').toLowerCase())));
                 const showDates = targetM?.showDates || [];
                 return (
                   <div className="space-y-2">
@@ -4379,7 +4385,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       onChange={e => {
                         const newCity = e.target.value;
                         setSchedCity(newCity);
-                        const cityTheatres = (theatresList || []).filter(
+                        const safeThs = Array.isArray(theatresList) ? theatresList : [];
+                        const cityTheatres = safeThs.filter(
                           t => t && (t.city || '').trim().toLowerCase() === newCity.trim().toLowerCase()
                         );
                         if (cityTheatres.length > 0) {
@@ -4408,7 +4415,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       onChange={e => {
                         const val = e.target.value;
                         setSchedTheatreName(val);
-                        const matchedTh = (theatresList || []).find(t => t && t.name === val);
+                        const safeThs = Array.isArray(theatresList) ? theatresList : [];
+                        const matchedTh = safeThs.find(t => t && t.name === val);
                         if (matchedTh) {
                           setSchedAddress(matchedTh.address || '');
                           if (matchedTh.screens && matchedTh.screens.length > 0) {
@@ -4419,7 +4427,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       className="w-full p-2.5 rounded-xl glass-input text-xs text-amber-300 bg-black font-bold"
                     >
                       {(() => {
-                        const filtered = (theatresList || []).filter(
+                        const safeThs = Array.isArray(theatresList) ? theatresList : [];
+                        const filtered = safeThs.filter(
                           t => t && (t.city || '').trim().toLowerCase() === (schedCity || 'Surat').trim().toLowerCase()
                         );
                         if (filtered.length > 0) {
@@ -4468,7 +4477,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Configured Theatres & Showtimes List for Selected Date */}
               {(() => {
-                const targetM = moviesList.find(m => m && (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId || (m.title && m.title.toLowerCase() === (schedMovieId || '').toLowerCase())));
+                const safeMovs = Array.isArray(moviesList) ? moviesList : [];
+                const targetM = safeMovs.find(m => m && (m.id === schedMovieId || m._id === schedMovieId || m.title === schedMovieId || (m.title && m.title.toLowerCase() === (schedMovieId || '').toLowerCase())));
                 const schedsForDate = targetM?.schedules?.[selectedSchedDate] || (selectedSchedDate === '2026-07-31' ? targetM?.theatres : []);
                 
                 return (
@@ -5575,13 +5585,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                   {/* Configured Halls List for Active Date */}
                   {(() => {
-                    const targetThId = hallSlotForm.theatreId || theatresList[0]?.id || theatresList[0]?._id || 'th_1';
+                    const safeThs = Array.isArray(theatresList) ? theatresList : [];
+                    const targetThId = hallSlotForm.theatreId || safeThs[0]?.id || safeThs[0]?._id || 'th_1';
                     const cleanTargetId = String(targetThId).toLowerCase().trim();
-                    const activeTh = theatresList.find(t => 
+                    const activeTh = safeThs.find(t => 
                       t && (t.id === targetThId || t._id === targetThId || 
                       (t.id && String(t.id).toLowerCase().trim() === cleanTargetId) || 
                       (t._id && String(t._id).toLowerCase().trim() === cleanTargetId))
-                    ) || theatresList[0];
+                    ) || safeThs[0];
                     const hallMap = activeTh?.hallSlotsByDate || activeTh?.dateHalls || {};
                     const activeHalls = Array.isArray(hallMap[activeConfigDate]) ? hallMap[activeConfigDate] : [];
                     const activeThName = activeTh?.name || 'Selected Theatre';
