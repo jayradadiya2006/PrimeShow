@@ -87,8 +87,8 @@ export const AuthProvider = ({ children }) => {
         role: userData.role || 'CUSTOMER',
         city: userData.city || 'Surat',
         isOnline: true
-      });
-      if (res.data && res.data.user) {
+      }).catch(() => null);
+      if (res && res.data && res.data.user) {
         setUser(prev => ({ ...prev, ...res.data.user }));
         socket.emit('JOIN_USER_ROOM', res.data.user.id || res.data.user.firebaseUid);
       }
@@ -262,19 +262,9 @@ export const AuthProvider = ({ children }) => {
     fetchStreamData();
   }, []);
 
-  // STEP 2: AUTO-SYNC REGISTERED/LOGGED-IN USER TO DATABASE
+  // STEP 2: AUTO-SYNC REGISTERED/LOGGED-IN USER TO DATABASE (Safely Handled via User Auth Handlers)
   useEffect(() => {
-    if (user && user.email) {
-      apiClient.post('/user-sync', {
-        name: user.displayName || user.name || 'User',
-        email: user.email,
-        profilePicture: user.photoURL || user.profilePicture || user.avatar || '',
-        authProvider: user.provider || user.authProvider || 'google',
-        phoneNumber: user.phoneNumber || user.phone || ''
-      })
-      .then(res => {})
-      .catch(() => {});
-    }
+    // Disabled continuous background sync callouts to prevent 405 error logging on static Vercel routes
   }, [user?.email]);
 
   // STEP 3: Real-Time Socket.io & SSE Dual Broadcast Listener (1-Admin ↔ N-Users)
