@@ -276,8 +276,8 @@ export const AuthProvider = ({ children }) => {
         authProvider: user.provider || user.authProvider || 'google',
         phoneNumber: user.phoneNumber || user.phone || ''
       })
-      .then(res => console.log("User successfully synced to DB:", res.data))
-      .catch(err => console.error("Sync failed:", err));
+      .then(res => {})
+      .catch(() => {});
     }
   }, [user?.email]);
 
@@ -406,29 +406,35 @@ export const AuthProvider = ({ children }) => {
 
     // 3. SSE Fallback Stream Listener
     let eventSource = null;
-    try {
-      const streamUrl = `${API_BASE}/events/stream`;
-      eventSource = new EventSource(streamUrl);
-
-      eventSource.addEventListener('NOTIFICATION_BROADCAST', (e) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          if (parsed && parsed.data) {
-            setNotifications(prev => [parsed.data, ...prev]);
+    const isVercelEnv = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+    if (!isVercelEnv) {
+      try {
+        const streamUrl = `${API_BASE}/events/stream`;
+        eventSource = new EventSource(streamUrl);
+        eventSource.onerror = () => {
+          if (eventSource) {
+            eventSource.close();
           }
-        } catch (err) {}
-      });
+        };
 
-      eventSource.addEventListener('GLOBAL_CONFIG_UPDATED', (e) => {
-        try {
-          const parsed = JSON.parse(e.data);
-          if (parsed && parsed.data) {
-            setGlobalConfig(parsed.data);
-          }
-        } catch (err) {}
-      });
-    } catch (err) {
-      console.warn('Real-Time SSE Sync Note:', err.message);
+        eventSource.addEventListener('NOTIFICATION_BROADCAST', (e) => {
+          try {
+            const parsed = JSON.parse(e.data);
+            if (parsed && parsed.data) {
+              setNotifications(prev => [parsed.data, ...prev]);
+            }
+          } catch (err) {}
+        });
+
+        eventSource.addEventListener('GLOBAL_CONFIG_UPDATED', (e) => {
+          try {
+            const parsed = JSON.parse(e.data);
+            if (parsed && parsed.data) {
+              setGlobalConfig(parsed.data);
+            }
+          } catch (err) {}
+        });
+      } catch (err) {}
     }
 
     return () => {
