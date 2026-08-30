@@ -3,9 +3,7 @@ import { Sparkles, Calendar, MapPin, Ticket, Search, Filter, Clock, ArrowRight, 
 import { io } from 'socket.io-client';
 import { EventBookingModal } from '../components/EventBookingModal';
 import { useAuth } from '../context/AuthContext';
-import API from '../services/api';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:5000/api' : '/api');
+import API, { API_BASE } from '../services/api';
 
 export const Events = ({ onSelectEvent, onBookEvent }) => {
   const { selectedCity } = useAuth();

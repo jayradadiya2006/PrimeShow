@@ -1,12 +1,10 @@
 import axios from 'axios';
 
-// 1. Get Base Host (Clean URL without trailing slashes or duplicate /api)
+// 1. Get Base Host (Clean URL pointing to VITE_API_BASE_URL or live Render backend URL)
 const rawApiBase = import.meta.env.VITE_API_BASE_URL || 
   (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:5000' 
-    : (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
-        ? ''
-        : 'https://prime-show-tau.vercel.app'));
+    : 'https://primeshow-api.onrender.com');
 
 // Remove trailing slashes and remove existing /api if present to avoid /api/api duplication
 const cleanBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '');
