@@ -107,17 +107,29 @@ app.options(/.*/, (req, res) => {
   return res.status(200).end();
 });
 
-// Primary Backend Healthcheck & Auto-Wakeup Route (/api/health)
-app.get(['/api/health', '/health', '/healthcheck'], (req, res) => {
+// Primary Backend Healthcheck & Auto-Wakeup Route (/)
+app.get('/', (req, res) => {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   return res.status(200).json({
-    status: 'live',
-    service: 'PrimeShow REST API Backend',
+    status: 'ok',
+    service: 'PrimeShow Node.js REST API Backend',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    dbState: mongoose.connection.readyState === 1 ? 'connected' : 'connecting_or_disconnected'
+    database: 'MongoDB Atlas'
+  });
+});
+
+// Primary Backend Healthcheck & Auto-Wakeup Route (/api/health)
+app.get('/api/health', (req, res) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  return res.status(200).json({
+    status: 'ok',
+    service: 'PrimeShow Node.js REST API Backend',
+    timestamp: new Date().toISOString(),
+    database: 'MongoDB Atlas'
   });
 });
 
