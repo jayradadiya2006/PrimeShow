@@ -2610,32 +2610,32 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Dashboard Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold font-sans text-white">Analytics Overview</h1>
-                <p className="text-xs text-slate-400 mt-1">Real-time insights and live performance metrics from MongoDB Atlas</p>
+                <h1 className="text-2xl md:text-3xl font-bold font-sans text-amber-400">Analytics Overview</h1>
+                <p className="text-xs text-[#786C66] mt-1">Real-time insights and live performance metrics from MongoDB Atlas</p>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <button
                   onClick={() => fetchFinancialStats()}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-xs text-cyan-300 font-bold hover:bg-cyan-500 hover:text-black transition-all cursor-pointer shadow-lg shadow-cyan-500/10"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 text-xs text-amber-300 font-bold hover:bg-amber-500 hover:text-black transition-all cursor-pointer shadow-lg shadow-amber-500/10"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 text-cyan-400 ${financialStatsLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${financialStatsLoading ? 'animate-spin' : ''}`} />
                   <span>Refresh Live Financials</span>
                 </button>
 
-                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0e1626] border border-slate-700/60 text-xs text-slate-200 font-medium cursor-pointer hover:border-slate-500 transition-all">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1E1B18] border border-[#332A24] text-xs text-amber-100 font-medium cursor-pointer hover:border-amber-500/50 transition-all">
+                  <Calendar className="w-3.5 h-3.5 text-[#786C66]" />
                   <span>Rolling 7 Days Data</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-1" />
+                  <ChevronDown className="w-3.5 h-3.5 text-[#786C66] ml-1" />
                 </div>
 
-                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0e1626] border border-slate-700/60 text-xs text-slate-200 font-medium hover:bg-slate-800 transition-all cursor-pointer">
-                  <Download className="w-3.5 h-3.5 text-slate-300" />
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E1B18] border border-[#332A24] text-xs text-amber-100 font-medium hover:bg-[#2A2420] transition-all cursor-pointer">
+                  <Download className="w-3.5 h-3.5 text-[#786C66]" />
                   <span>Export</span>
                 </button>
 
-                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0e1626] border border-slate-700/60 text-xs text-slate-200 font-medium hover:bg-slate-800 transition-all cursor-pointer">
-                  <Filter className="w-3.5 h-3.5 text-slate-300" />
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E1B18] border border-[#332A24] text-xs text-amber-100 font-medium hover:bg-[#2A2420] transition-all cursor-pointer">
+                  <Filter className="w-3.5 h-3.5 text-[#786C66]" />
                   <span>Filters</span>
                 </button>
               </div>
@@ -2644,15 +2644,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* TOP 4 LIVE FINANCIAL METRIC CARDS (MongoDB Atlas Aggregation) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* KPI Card 1: Total Booking Revenue */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Total Booking Revenue</span>
+                    <span className="text-xs text-[#786C66] font-medium">Total Booking Revenue</span>
                     <div className="w-9 h-9 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
                       <DollarSign className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                  <div className="text-2xl lg:text-3xl font-extrabold text-[#FCEEAD] font-sans tracking-tight">
                     ₹{(financialStats.totalRevenue || 0).toLocaleString('en-IN')}
                   </div>
                   <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
@@ -2674,15 +2674,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* KPI Card 2: Ticket Revenue / Seats Booked */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Ticket Revenue & Seats</span>
+                    <span className="text-xs text-[#786C66] font-medium">Ticket Revenue & Seats</span>
                     <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                       <Ticket className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                  <div className="text-2xl lg:text-3xl font-extrabold text-[#FCEEAD] font-sans tracking-tight">
                     {(financialStats.totalTickets || 0).toLocaleString('en-IN')} Seats
                   </div>
                   <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
@@ -2704,15 +2704,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* KPI Card 3: Today's Activity & Revenue */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">Today's Activity & Revenue</span>
+                    <span className="text-xs text-[#786C66] font-medium">Today's Activity & Revenue</span>
                     <div className="w-9 h-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
                       <Zap className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                  <div className="text-2xl lg:text-3xl font-extrabold text-[#FCEEAD] font-sans tracking-tight">
                     {financialStats.todayBookings || 0} Bookings
                   </div>
                   <div className="text-[11px] font-bold text-purple-300 flex items-center gap-1 mt-1">
@@ -2734,15 +2734,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* KPI Card 4: 7-Day Performance Overview */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-400 font-medium">7-Day Rolling Performance</span>
+                    <span className="text-xs text-[#786C66] font-medium">7-Day Rolling Performance</span>
                     <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
                       <TrendingUp className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-white font-sans tracking-tight">
+                  <div className="text-2xl lg:text-3xl font-extrabold text-[#FCEEAD] font-sans tracking-tight">
                     ₹{(
                       (financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.revenue || 0), 0)
                     ).toLocaleString('en-IN')}
@@ -2771,10 +2771,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* MAIN CHART SECTION (2 CARDS) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Left Chart: Real-Time Revenue Overview (Trading/Stock Area Chart) */}
-              <div className="bg-[#0e1626] p-6 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl">
+              <div className="bg-[#1E1B18] p-6 rounded-2xl border border-[#332A24] space-y-4 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-cyan-400" />
                       <span>Stock & Revenue Overview Chart</span>
                     </h3>
@@ -2794,14 +2794,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                   {/* Time-Range Filter Dropdown: EXACT Options (1 Day, 7 Days, 15 Days, 30 Days) */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-slate-400 font-medium">Time Range:</span>
+                    <span className="text-[11px] text-[#786C66] font-medium">Time Range:</span>
                     <select
                       value={revenueRange}
                       onChange={(e) => {
                         setRevenueRange(e.target.value);
                         fetchRevenueChartData(e.target.value);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#0F172A] border border-[#332A24] text-xs text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 cursor-pointer"
                     >
                       <option value="1day">1 Day</option>
                       <option value="7days">7 Days</option>
@@ -2847,15 +2847,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           </defs>
 
                           {/* Grid Lines */}
-                          <line x1="35" y1="30" x2="480" y2="30" stroke="#1e293b" strokeDasharray="3 3" />
-                          <line x1="35" y1="80" x2="480" y2="80" stroke="#1e293b" strokeDasharray="3 3" />
-                          <line x1="35" y1="130" x2="480" y2="130" stroke="#1e293b" strokeDasharray="3 3" />
-                          <line x1="35" y1="180" x2="480" y2="180" stroke="#1e293b" />
+                          <line x1="35" y1="30" x2="480" y2="30" stroke="#332A24" strokeDasharray="3 3" />
+                          <line x1="35" y1="80" x2="480" y2="80" stroke="#332A24" strokeDasharray="3 3" />
+                          <line x1="35" y1="130" x2="480" y2="130" stroke="#332A24" strokeDasharray="3 3" />
+                          <line x1="35" y1="180" x2="480" y2="180" stroke="#332A24" />
 
                           {/* Y-Axis Labels */}
-                          <text x="0" y="34" fill="#64748b" fontSize="10">₹{(maxRev).toLocaleString('en-IN')}</text>
-                          <text x="0" y="105" fill="#64748b" fontSize="10">₹{Math.round(maxRev * 0.5).toLocaleString('en-IN')}</text>
-                          <text x="15" y="184" fill="#64748b" fontSize="10">₹0</text>
+                          <text x="0" y="34" fill="#786C66" fontSize="10">₹{(maxRev).toLocaleString('en-IN')}</text>
+                          <text x="0" y="105" fill="#786C66" fontSize="10">₹{Math.round(maxRev * 0.5).toLocaleString('en-IN')}</text>
+                          <text x="15" y="184" fill="#786C66" fontSize="10">₹0</text>
 
                           {/* Area Fill */}
                           <path d={areaD} fill="url(#stockAreaGrad)" />
@@ -2866,7 +2866,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           {/* Interactive Data Points */}
                           {points.map((p, idx) => (
                             <g key={idx} className="group cursor-pointer">
-                              <circle cx={p.x} cy={p.y} r="5" fill="#00f2fe" stroke="#0e1626" strokeWidth="2" />
+                              <circle cx={p.x} cy={p.y} r="5" fill="#00f2fe" stroke="#1E1B18" strokeWidth="2" />
                               <circle cx={p.x} cy={p.y} r="8" fill="#00f2fe" opacity="0.2" className="group-hover:animate-ping" />
                             </g>
                           ))}
@@ -2875,7 +2875,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     })()}
 
                     {/* X Axis Labels */}
-                    <div className="flex justify-between pl-8 pr-2 mt-2 text-[10px] text-slate-400 font-medium">
+                    <div className="flex justify-between pl-8 pr-2 mt-2 text-[10px] text-[#786C66] font-medium">
                       {(revenueChartData.length > 0 ? revenueChartData : [
                         { timeLabel: 'Day 1' }, { timeLabel: 'Day 2' }, { timeLabel: 'Day 3' }, { timeLabel: 'Day 4' }, { timeLabel: 'Day 5' }, { timeLabel: 'Day 6' }, { timeLabel: 'Day 7' }
                       ]).map((pt, i) => (
@@ -2887,10 +2887,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Right Chart: Real-Time Candlestick / Bar Booking Overview Chart */}
-              <div className="bg-[#0e1626] p-6 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl">
+              <div className="bg-[#1E1B18] p-6 rounded-2xl border border-[#332A24] space-y-4 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
                       <Layers className="w-4 h-4 text-emerald-400" />
                       <span>Candlestick & Booking Overview</span>
                     </h3>
@@ -2907,14 +2907,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                   {/* Time-Range Filter Dropdown: EXACT Options (1 Day, 7 Days, 15 Days, 30 Days) */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-slate-400 font-medium">Time Range:</span>
+                    <span className="text-[11px] text-[#786C66] font-medium">Time Range:</span>
                     <select
                       value={bookingRange}
                       onChange={(e) => {
                         setBookingRange(e.target.value);
                         fetchBookingChartData(e.target.value);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-emerald-300 font-bold focus:outline-none focus:border-emerald-400 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#0F172A] border border-[#332A24] text-xs text-emerald-300 font-bold focus:outline-none focus:border-emerald-400 cursor-pointer"
                     >
                       <option value="1day">1 Day</option>
                       <option value="7days">7 Days</option>
@@ -2942,15 +2942,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       return (
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
                           {/* Grid Lines */}
-                          <line x1="30" y1="20" x2="480" y2="20" stroke="#1e293b" strokeDasharray="3 3" />
-                          <line x1="30" y1="70" x2="480" y2="70" stroke="#1e293b" strokeDasharray="3 3" />
-                          <line x1="30" y1="120" x2="480" y2="120" stroke="#1e293b" strokeDasharray="3 3" />
-                          <line x1="30" y1="180" x2="480" y2="180" stroke="#1e293b" />
+                          <line x1="30" y1="20" x2="480" y2="20" stroke="#332A24" strokeDasharray="3 3" />
+                          <line x1="30" y1="70" x2="480" y2="70" stroke="#332A24" strokeDasharray="3 3" />
+                          <line x1="30" y1="120" x2="480" y2="120" stroke="#332A24" strokeDasharray="3 3" />
+                          <line x1="30" y1="180" x2="480" y2="180" stroke="#332A24" />
 
                           {/* Y Axis Labels */}
-                          <text x="0" y="24" fill="#64748b" fontSize="10">{maxBookings}</text>
-                          <text x="0" y="104" fill="#64748b" fontSize="10">{Math.round(maxBookings * 0.5)}</text>
-                          <text x="10" y="184" fill="#64748b" fontSize="10">0</text>
+                          <text x="0" y="24" fill="#786C66" fontSize="10">{maxBookings}</text>
+                          <text x="0" y="104" fill="#786C66" fontSize="10">{Math.round(maxBookings * 0.5)}</text>
+                          <text x="10" y="184" fill="#786C66" fontSize="10">0</text>
 
                           {/* Candlesticks / Bars */}
                           {bData.map((bar, i) => {
@@ -2998,7 +2998,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     })()}
 
                     {/* X Axis Labels */}
-                    <div className="flex justify-between pl-10 pr-4 mt-2 text-[10px] text-slate-400 font-medium">
+                    <div className="flex justify-between pl-10 pr-4 mt-2 text-[10px] text-[#786C66] font-medium">
                       {(bookingChartData.length > 0 ? bookingChartData : [
                         { timeLabel: 'Day 1' }, { timeLabel: 'Day 2' }, { timeLabel: 'Day 3' }, { timeLabel: 'Day 4' }, { timeLabel: 'Day 5' }, { timeLabel: 'Day 6' }, { timeLabel: 'Day 7' }
                       ]).map((pt, i) => (
@@ -3013,10 +3013,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* MIDDLE SECTION (2 COLUMNS - 'BOOKING SOURCES' REMOVED) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Column 1: Top Movies by Bookings (Strictly Movie Metrics Aggregated from MongoDB Atlas) */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
                       <Film className="w-4 h-4 text-cyan-400" />
                       <span>Top Movie Bookings (Live MongoDB Atlas)</span>
                     </h3>
@@ -3034,28 +3034,28 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       topMoviesList.slice(0, 5).map((movie, idx) => {
                         const pct = movie?.percentage !== undefined ? movie.percentage : 0;
                         return (
-                          <div key={movie?.movieId || movie?.title || idx} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                          <div key={movie?.movieId || movie?.title || idx} className="p-3 rounded-xl bg-[#0F172A]/80 border border-[#332A24] space-y-2">
                             <div className="flex items-center gap-3">
                               {/* Element 1: Movie Poster Image */}
                               <img 
                                 src={movie?.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80'} 
                                 alt={movie?.title || 'Movie'} 
-                                className="w-12 h-16 rounded-lg object-cover border border-slate-700 shadow-md shrink-0" 
+                                className="w-12 h-16 rounded-lg object-cover border border-[#332A24] shadow-md shrink-0" 
                               />
                               
                               <div className="flex-1 min-w-0">
                                 {/* Element 2: Movie Title Name */}
-                                <h4 className="font-extrabold text-white text-sm truncate">{movie?.title || 'Untitled Movie'}</h4>
+                                <h4 className="font-extrabold text-[#FCEEAD] text-sm truncate">{movie?.title || 'Untitled Movie'}</h4>
                                 
                                 {/* Element 3: Booking Percentage Bar / Percentage Value */}
                                 <div className="flex items-center justify-between text-xs mt-1 mb-1">
-                                  <span className="text-slate-400 font-medium">Ticket Share ({movie?.tickets || 0} tickets)</span>
-                                  <span className="font-mono font-black text-cyan-400 text-sm">{pct}%</span>
+                                  <span className="text-[#786C66] font-medium">Ticket Share ({movie?.tickets || 0} tickets)</span>
+                                  <span className="font-mono font-black text-amber-400 text-sm">{pct}%</span>
                                 </div>
 
-                                <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div className="w-full h-2 bg-[#1E1B18] rounded-full overflow-hidden">
                                   <div 
-                                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500" 
+                                    className="h-full bg-gradient-to-r from-amber-500 to-cyan-400 rounded-full transition-all duration-500" 
                                     style={{ width: `${Math.max(pct, 4)}%` }} 
                                   />
                                 </div>
@@ -3066,10 +3066,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       })
                     ) : (
                       /* Fallback Logic when topMoviesList is empty */
-                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-cyan-400/20 space-y-2">
-                        <Film className="w-8 h-8 text-cyan-400/50 mx-auto animate-pulse" />
-                        <div className="text-xs font-bold text-white">No Live Movie Bookings Yet</div>
-                        <p className="text-[11px] text-cyan-300/70">
+                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-amber-400/20 space-y-2 bg-[#0F172A]/50">
+                        <Film className="w-8 h-8 text-amber-400/50 mx-auto animate-pulse" />
+                        <div className="text-xs font-bold text-[#FCEEAD]">No Live Movie Bookings Yet</div>
+                        <p className="text-[11px] text-[#786C66]">
                           Real-time movie ticket share will appear here automatically when users complete movie bookings in MongoDB Atlas.
                         </p>
                       </div>
@@ -3079,10 +3079,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Column 2: Top Theatres by Occupancy & Rating (Live MongoDB Atlas - Top 2 View) */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
                       <Building className="w-4 h-4 text-blue-400" />
                       <span>Top Theatres by Occupancy (Live MongoDB Atlas)</span>
                     </h3>
@@ -3101,20 +3101,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         const pct = th?.percentage !== undefined ? th.percentage : (parseFloat(th?.occupancyRate) || 0);
                         const displayName = th?.nameAndCity || (th?.city ? `${th.name} - ${th.city}` : th?.name) || 'PrimeShow Theatre';
                         return (
-                          <div key={th?.theatreId || th?.name || i} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                          <div key={th?.theatreId || th?.name || i} className="p-3 rounded-xl bg-[#0F172A]/80 border border-[#332A24] space-y-2">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-white font-extrabold truncate max-w-[210px]" title={displayName}>
+                              <span className="text-[#FCEEAD] font-extrabold truncate max-w-[210px]" title={displayName}>
                                 {displayName}
                               </span>
-                              <span className="font-mono font-black text-blue-400 text-sm">
+                              <span className="font-mono font-black text-amber-400 text-sm">
                                 {pct}%
                               </span>
                             </div>
-                            <div className="flex items-center justify-between text-[11px] text-slate-400">
+                            <div className="flex items-center justify-between text-[11px] text-[#786C66]">
                               <span>Seats Sold: {th?.tickets || 0}</span>
                               <span className="text-amber-400 font-bold">Rating: {th?.rating || 4.8}★</span>
                             </div>
-                            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-[#1E1B18] rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500"
                                 style={{ width: `${Math.max(pct, 4)}%` }}
@@ -3124,10 +3124,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         );
                       })
                     ) : (
-                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-blue-400/20 space-y-2">
+                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-blue-400/20 space-y-2 bg-[#0F172A]/50">
                         <Building className="w-8 h-8 text-blue-400/50 mx-auto animate-pulse" />
-                        <div className="text-xs font-bold text-white">No Live Theatre Bookings Yet</div>
-                        <p className="text-[11px] text-blue-300/70">
+                        <div className="text-xs font-bold text-[#FCEEAD]">No Live Theatre Bookings Yet</div>
+                        <p className="text-[11px] text-[#786C66]">
                           Real-time theatre occupancy share will calculate here automatically when tickets or halls are booked in MongoDB Atlas.
                         </p>
                       </div>
@@ -3144,15 +3144,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* LOWER SECTION (3 COLUMNS) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Column 1: Revenue by Payment Method */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-white mb-4">Revenue by Payment Method</h3>
+                  <h3 className="text-sm font-bold text-[#FCEEAD] mb-4">Revenue by Payment Method</h3>
 
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
                     {/* SVG Donut Chart */}
                     <div className="relative w-36 h-36 shrink-0">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <path className="text-slate-800" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="text-[#332A24]" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         {/* UPI - 48.6% */}
                         <path className="text-blue-500" strokeDasharray="48.6, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         {/* Card - 32.1% */}
@@ -3168,23 +3168,23 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <div className="space-y-2 text-[11px]">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-                        <span className="text-slate-300 font-medium">UPI</span>
-                        <span className="text-slate-400 font-mono ml-auto">48.6% (₹1,208,000)</span>
+                        <span className="text-amber-100 font-medium">UPI</span>
+                        <span className="text-[#786C66] font-mono ml-auto">48.6% (₹1,208,000)</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
-                        <span className="text-slate-300 font-medium">Card</span>
-                        <span className="text-slate-400 font-mono ml-auto">32.1% (₹798,000)</span>
+                        <span className="text-amber-100 font-medium">Card</span>
+                        <span className="text-[#786C66] font-mono ml-auto">32.1% (₹798,000)</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-                        <span className="text-slate-300 font-medium">Net Banking</span>
-                        <span className="text-slate-400 font-mono ml-auto">12.3% (₹306,000)</span>
+                        <span className="text-amber-100 font-medium">Net Banking</span>
+                        <span className="text-[#786C66] font-mono ml-auto">12.3% (₹306,000)</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
-                        <span className="text-slate-300 font-medium">Wallets</span>
-                        <span className="text-slate-400 font-mono ml-auto">7.0% (₹173,900)</span>
+                        <span className="text-amber-100 font-medium">Wallets</span>
+                        <span className="text-[#786C66] font-mono ml-auto">7.0% (₹173,900)</span>
                       </div>
                     </div>
                   </div>
@@ -3192,11 +3192,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Column 2: Recent Bookings */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-white">Recent Bookings</h3>
-                    <button className="text-xs font-bold text-cyan-400 hover:underline">View All</button>
+                    <h3 className="text-sm font-bold text-[#FCEEAD]">Recent Bookings</h3>
+                    <button className="text-xs font-bold text-amber-400 hover:underline">View All</button>
                   </div>
 
                   <div className="space-y-3">
@@ -3207,13 +3207,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       { id: '#PS84212', time: 'May 17, 2025 • 10:15 AM', price: '₹950', status: 'Confirmed' },
                       { id: '#PS84211', time: 'May 17, 2025 • 10:05 AM', price: '₹740', status: 'Confirmed' }
                     ].map((b, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-slate-800/60 last:border-none">
+                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[#332A24] last:border-none">
                         <div>
-                          <div className="font-mono font-bold text-slate-200">{b.id}</div>
-                          <div className="text-[10px] text-slate-400">{b.time}</div>
+                          <div className="font-mono font-bold text-amber-100">{b.id}</div>
+                          <div className="text-[10px] text-[#786C66]">{b.time}</div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-slate-200">{b.price}</span>
+                          <span className="font-mono font-bold text-amber-100">{b.price}</span>
                           <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
                             {b.status}
                           </span>
@@ -3225,9 +3225,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Column 3: System Status */}
-              <div className="bg-[#0e1626] p-5 rounded-2xl border border-[#1b273e] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-white mb-3">System Status</h3>
+                  <h3 className="text-sm font-bold text-[#FCEEAD] mb-3">System Status</h3>
 
                   <div className="space-y-3">
                     {[
@@ -3238,8 +3238,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       { name: 'SMS Service', status: 'Healthy' },
                       { name: 'WhatsApp Service', status: 'Healthy' }
                     ].map((sys, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-slate-800/60 last:border-none">
-                        <span className="text-slate-300 font-medium">{sys.name}</span>
+                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[#332A24] last:border-none">
+                        <span className="text-amber-100 font-medium">{sys.name}</span>
                         <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
                           {sys.status}
                         </span>
@@ -3252,46 +3252,46 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* BOTTOM SECONDARY METRICS (4 CARDS) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#0e1626] p-4 rounded-2xl border border-[#1b273e] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-cyan-400 shrink-0">
+              <div className="bg-[#1E1B18] p-4 rounded-2xl border border-[#332A24] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-[#0F172A] border border-[#332A24] flex items-center justify-center text-cyan-400 shrink-0">
                   <Film className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400 font-medium">Active Movies</div>
-                  <div className="text-xl font-extrabold text-white font-sans">{(moviesList || []).length > 0 ? (moviesList || []).length : 34}</div>
+                  <div className="text-xs text-[#786C66] font-medium">Active Movies</div>
+                  <div className="text-xl font-extrabold text-[#FCEEAD] font-sans">{(moviesList || []).length > 0 ? (moviesList || []).length : 34}</div>
                   <div className="text-[10px] font-bold text-emerald-400">+5 this week</div>
                 </div>
               </div>
 
-              <div className="bg-[#0e1626] p-4 rounded-2xl border border-[#1b273e] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-cyan-400 shrink-0">
+              <div className="bg-[#1E1B18] p-4 rounded-2xl border border-[#332A24] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-[#0F172A] border border-[#332A24] flex items-center justify-center text-cyan-400 shrink-0">
                   <Building className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400 font-medium">Active Theatres</div>
-                  <div className="text-xl font-extrabold text-white font-sans">{(theatresList || []).length > 0 ? (theatresList || []).length : 28}</div>
+                  <div className="text-xs text-[#786C66] font-medium">Active Theatres</div>
+                  <div className="text-xl font-extrabold text-[#FCEEAD] font-sans">{(theatresList || []).length > 0 ? (theatresList || []).length : 28}</div>
                   <div className="text-[10px] font-bold text-emerald-400">+2 this week</div>
                 </div>
               </div>
 
-              <div className="bg-[#0e1626] p-4 rounded-2xl border border-[#1b273e] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-purple-400 shrink-0">
+              <div className="bg-[#1E1B18] p-4 rounded-2xl border border-[#332A24] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-[#0F172A] border border-[#332A24] flex items-center justify-center text-purple-400 shrink-0">
                   <Compass className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400 font-medium">Total Screens</div>
-                  <div className="text-xl font-extrabold text-white font-sans">156</div>
+                  <div className="text-xs text-[#786C66] font-medium">Total Screens</div>
+                  <div className="text-xl font-extrabold text-[#FCEEAD] font-sans">156</div>
                   <div className="text-[10px] font-bold text-emerald-400">+6 this week</div>
                 </div>
               </div>
 
-              <div className="bg-[#0e1626] p-4 rounded-2xl border border-[#1b273e] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-emerald-400 shrink-0">
+              <div className="bg-[#1E1B18] p-4 rounded-2xl border border-[#332A24] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-[#0F172A] border border-[#332A24] flex items-center justify-center text-emerald-400 shrink-0">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-400 font-medium">Total Users</div>
-                  <div className="text-xl font-extrabold text-white font-sans">{(usersList || []).length > 0 ? (userTotalCount || usersList.length) : 12485}</div>
+                  <div className="text-xs text-[#786C66] font-medium">Total Users</div>
+                  <div className="text-xl font-extrabold text-[#FCEEAD] font-sans">{(usersList || []).length > 0 ? (userTotalCount || usersList.length) : 12485}</div>
                   <div className="text-[10px] font-bold text-emerald-400">+325 this week</div>
                 </div>
               </div>
