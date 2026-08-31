@@ -464,48 +464,20 @@ export const AuthProvider = ({ children }) => {
     } catch (e) {}
   };
 
-  // Theme Sync & System Listener Effect
+  // Theme Sync & System Listener Effect (Permanently Locked to Signature Dark/Purple Theme Layout)
   useEffect(() => {
-    const applyTheme = () => {
-      let activeTheme = 'dark';
-      if (themePreference === 'system') {
-        const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        activeTheme = isSystemDark ? 'dark' : 'light';
-      } else {
-        activeTheme = themePreference;
-      }
-
-      setEffectiveTheme(activeTheme);
-
-      const rootHtml = document.documentElement;
-      const body = document.body;
-      if (activeTheme === 'light') {
-        rootHtml.classList.remove('dark');
-        rootHtml.classList.add('light');
-        body.classList.remove('dark');
-        body.classList.add('light');
-      } else {
-        rootHtml.classList.remove('light');
-        rootHtml.classList.add('dark');
-        body.classList.remove('light');
-        body.classList.add('dark');
-      }
-    };
-
-    applyTheme();
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemChange = () => {
-      if (themePreference === 'system') applyTheme();
-    };
-
-    mediaQuery.addEventListener('change', handleSystemChange);
-    return () => mediaQuery.removeEventListener('change', handleSystemChange);
-  }, [themePreference]);
+    setEffectiveTheme('dark');
+    const rootHtml = document.documentElement;
+    const body = document.body;
+    rootHtml.classList.remove('light');
+    rootHtml.classList.add('dark');
+    body.classList.remove('light');
+    body.classList.add('dark');
+  }, []);
 
   const setThemePreference = (mode) => {
-    setThemePreferenceState(mode);
-    localStorage.setItem('primeshow_theme_mode', mode);
+    setThemePreferenceState('dark');
+    localStorage.setItem('primeshow_theme_mode', 'dark');
   };
 
   const login = async (emailOrPhone, password) => {

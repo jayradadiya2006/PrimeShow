@@ -101,60 +101,7 @@ export const Settings = ({ onReturnHome }) => {
           </div>
         </div>
 
-        {/* 1. Theme & Appearance Settings */}
-        <div className="glass-panel rounded-3xl p-6 border border-slate-300 dark:border-white/10 space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-white/10">
-            <Sun className="w-5 h-5 text-amber-500" />
-            <h2 className="text-base font-bold">Theme & Appearance Mode</h2>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-            <button
-              onClick={() => setThemePreference('dark')}
-              className={`p-4 rounded-2xl border flex items-center gap-3 text-xs font-bold transition-all cursor-pointer ${
-                themePreference === 'dark'
-                  ? 'bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-300 shadow-md'
-                  : 'bg-slate-200/50 dark:bg-white/5 border-slate-300 dark:border-white/10 hover:border-amber-400/40'
-              }`}
-            >
-              <Moon className="w-5 h-5 text-amber-400" />
-              <div className="text-left">
-                <div>Dark Mode</div>
-                <div className="text-[10px] font-normal text-slate-500 dark:text-white/50">Ultra Dark Luxury View</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setThemePreference('light')}
-              className={`p-4 rounded-2xl border flex items-center gap-3 text-xs font-bold transition-all cursor-pointer ${
-                themePreference === 'light'
-                  ? 'bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-300 shadow-md'
-                  : 'bg-slate-200/50 dark:bg-white/5 border-slate-300 dark:border-white/10 hover:border-amber-400/40'
-              }`}
-            >
-              <Sun className="w-5 h-5 text-amber-500" />
-              <div className="text-left">
-                <div>Light Mode</div>
-                <div className="text-[10px] font-normal text-slate-500 dark:text-white/50">Clean High Contrast</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setThemePreference('system')}
-              className={`p-4 rounded-2xl border flex items-center gap-3 text-xs font-bold transition-all cursor-pointer ${
-                themePreference === 'system'
-                  ? 'bg-amber-500/20 border-amber-500 text-amber-600 dark:text-amber-300 shadow-md'
-                  : 'bg-slate-200/50 dark:bg-white/5 border-slate-300 dark:border-white/10 hover:border-amber-400/40'
-              }`}
-            >
-              <Laptop className="w-5 h-5 text-cyan-400" />
-              <div className="text-left">
-                <div>System Mode</div>
-                <div className="text-[10px] font-normal text-slate-500 dark:text-white/50">Sync with System</div>
-              </div>
-            </button>
-          </div>
-        </div>
 
         {/* 2. Regional & City Settings */}
         <div className="glass-panel rounded-3xl p-6 border border-slate-300 dark:border-white/10 space-y-4">

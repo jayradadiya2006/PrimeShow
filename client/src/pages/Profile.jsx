@@ -369,59 +369,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
               </button>
             </div>
 
-            {/* Quick Theme Mode Switcher in Personal Details */}
-            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-400">
-                  {effectiveTheme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-white">Appearance & Theme Preference</h4>
-                  <p className="text-xs text-slate-400">Current Theme: <span className="font-bold uppercase text-amber-400">{effectiveTheme} MODE</span> (Saved in browser)</p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-800 border border-slate-700">
-                <button
-                  type="button"
-                  onClick={() => setThemePreference('dark')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    themePreference === 'dark'
-                      ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Moon className="w-3.5 h-3.5" />
-                  <span>Dark</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setThemePreference('light')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    themePreference === 'light'
-                      ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Sun className="w-3.5 h-3.5" />
-                  <span>Light</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setThemePreference('system')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    themePreference === 'system'
-                      ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Laptop className="w-3.5 h-3.5" />
-                  <span>System</span>
-                </button>
-              </div>
-            </div>
 
             {validationError && (
               <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-semibold">
@@ -1050,48 +998,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
         {activeTab === 'settings' && (
           <div className="space-y-8">
             
-            {/* Dedicated Theme Selection Section */}
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-4 max-w-3xl">
-              <h3 className="text-xl font-bold font-sans text-white">Application Theme Preference</h3>
-              <p className="text-xs text-white/60">
-                Choose your visual atmosphere. Theme is saved in your browser and persists across logins and page refreshes.
-              </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                {[
-                  { id: 'dark', label: 'Dark Theme', desc: '#050508 Luxury Pitch Dark', icon: Moon },
-                  { id: 'light', label: 'Light Theme', desc: '#f8fafc Clean Slate Theme', icon: Sun },
-                  { id: 'system', label: 'System Default', desc: 'Auto-sync with OS theme', icon: Laptop }
-                ].map(item => {
-                  const Icon = item.icon;
-                  const isSelected = themePreference === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setThemePreference(item.id)}
-                      className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-xl shadow-amber-500/20'
-                          : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <Icon className={`w-5 h-5 ${isSelected ? 'text-amber-400' : 'text-white/60'}`} />
-                        {isSelected && <Check className="w-4 h-4 text-amber-400" />}
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-white">{item.label}</div>
-                        <div className="text-[10px] text-white/50 mt-0.5">{item.desc}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="text-xs text-amber-300 pt-2 font-semibold">
-                Active Rendered Atmosphere: <strong className="uppercase">{effectiveTheme} MODE</strong>
-              </div>
-            </div>
 
             {/* Password Reset Form */}
             <form onSubmit={handlePasswordReset} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-xl">
