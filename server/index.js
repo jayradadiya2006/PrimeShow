@@ -98,7 +98,7 @@ app.use(async (req, res, next) => {
   next();
 });
 
-app.options('(.*)', (req, res) => {
+app.options(/.*/, (req, res) => {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
