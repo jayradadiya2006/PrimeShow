@@ -1,21 +1,22 @@
-require('dotenv').config();
-const dns = require('dns');
+import dotenv from 'dotenv';
+dotenv.config();
+import dns from 'dns';
 try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
 } catch (e) {}
-const express = require('express');
-const cors = require('cors');
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
+import express from 'express';
+import cors from 'cors';
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 try {
   mongoose.set('returnDocument', 'after');
 } catch (e) {}
-const http = require('http');
-const { Server } = require('socket.io');
-const { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } = require('./db');
-const { User, UserNotification, UserActivityLog, Movie, Theatre, Show, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } = require('./models');
-const { generateGeminiSupportReply } = require('./geminiAssistant');
+import http from 'http';
+import { Server } from 'socket.io';
+import { connectDB, movies, theatres, events, eventBookings, plays, playBookings, activities, activityBookings, offers, offerBanners, supportMessages, notifications, bookings, privateTheatreBookings, cinemaScreenBlockedSeatsMap } from './db.js';
+import { User, UserNotification, UserActivityLog, Movie, Theatre, Show, Booking, PrivateTheatreBooking, Event, Play, Activity, Offer, OfferBanner, SupportMessage, Notification, BlockedSeat, GlobalConfig, EditorLayout, FeatureChip, HeroSlide, UpcomingMovie } from './models.js';
+import { generateGeminiSupportReply } from './geminiAssistant.js';
 
 // Safe MongoDB ID filter helper supporting custom id, _id, and title matching
 function buildIdFilter(idVal) {
@@ -6278,7 +6279,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-if (require.main === module && process.env.VERCEL !== '1') {
+const isMainModule = process.argv[1] && (process.argv[1].endsWith('index.js') || process.argv[1].endsWith('server.js'));
+
+if ((isMainModule || process.env.VERCEL !== '1') && process.env.NODE_ENV !== 'test') {
   server.listen(PORT, () => {
     console.log(`🚀 PrimeShow REST API & Socket.io Backend running on http://localhost:${PORT}`);
     connectDB().then(() => {
@@ -6291,5 +6294,5 @@ if (require.main === module && process.env.VERCEL !== '1') {
   connectDB().catch(err => console.warn('⚠️ Serverless DB connection note:', err.message));
 }
 
-module.exports = app;
-module.exports.default = app;
+export default app;
+export { app };

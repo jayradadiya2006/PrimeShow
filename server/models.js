@@ -1,5 +1,5 @@
 // PrimeShow Mongoose Schemas for MongoDB Atlas
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const UserActivitySubSchema = new mongoose.Schema({
   action: { type: String, required: true },
@@ -408,7 +408,31 @@ const FeatureChip = mongoose.model('FeatureChip', FeatureChipSchema);
 const HeroSlide = mongoose.model('HeroSlide', HeroSlideSchema);
 const UpcomingMovie = mongoose.model('UpcomingMovie', UpcomingMovieSchema);
 
-module.exports = {
+export {
+  User,
+  UserNotification,
+  UserActivityLog,
+  Movie,
+  Theatre,
+  Show,
+  Booking,
+  PrivateTheatreBooking,
+  Event,
+  Play,
+  Activity,
+  Offer,
+  OfferBanner,
+  SupportMessage,
+  Notification,
+  BlockedSeat,
+  GlobalConfig,
+  EditorLayout,
+  FeatureChip,
+  HeroSlide,
+  UpcomingMovie
+};
+
+export default {
   User,
   UserNotification,
   UserActivityLog,

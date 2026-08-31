@@ -1,4 +1,4 @@
-const { GoogleGenAI } = require('@google/genai');
+import { GoogleGenAI } from '@google/genai';
 
 /**
  * PrimeShow Gemini AI Support Assistant Module
@@ -184,7 +184,12 @@ function getFallbackSupportReply(userPrompt = '', context = {}) {
   return generalVariations[Math.floor(Math.random() * generalVariations.length)];
 }
 
-module.exports = {
+export {
+  generateGeminiSupportReply,
+  getFallbackSupportReply
+};
+
+export default {
   generateGeminiSupportReply,
   getFallbackSupportReply
 };

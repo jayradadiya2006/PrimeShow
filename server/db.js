@@ -1,6 +1,7 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const dns = require('dns');
+import dotenv from 'dotenv';
+dotenv.config();
+import mongoose from 'mongoose';
+import dns from 'dns';
 
 try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
@@ -11,7 +12,7 @@ try {
 } catch (e) {}
 mongoose.set('bufferCommands', false);
 
-const {
+import {
   User,
   Movie,
   Theatre,
@@ -25,7 +26,7 @@ const {
   SupportMessage,
   Notification,
   BlockedSeat
-} = require('./models');
+} from './models.js';
 
 // Initial Seed Data
 const initialMovies = [
@@ -374,7 +375,26 @@ const cinemaScreenBlockedSeatsMap = {
   'th_1_sc_2': ['R1']
 };
 
-module.exports = {
+export {
+  connectDB,
+  movies,
+  theatres,
+  events,
+  eventBookings,
+  plays,
+  playBookings,
+  activities,
+  activityBookings,
+  offers,
+  offerBanners,
+  supportMessages,
+  notifications,
+  bookings,
+  privateTheatreBookings,
+  cinemaScreenBlockedSeatsMap
+};
+
+export default {
   connectDB,
   movies,
   theatres,
