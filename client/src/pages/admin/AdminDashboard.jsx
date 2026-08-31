@@ -2410,12 +2410,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   if (!isUserAdmin) {
     return (
-      <div className="min-h-screen bg-[#030306] text-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
+      <div className="min-h-screen bg-[#ECEBDE] text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
         {/* Ambient background glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 w-full max-w-md bg-slate-900/90 border border-cyan-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+        <div className="relative z-10 w-full max-w-md bg-[#D7D3BF] border border-[#C1BAA1] rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
           {/* Header */}
           <div className="text-center space-y-3 mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-xl shadow-cyan-500/20 mb-2">
