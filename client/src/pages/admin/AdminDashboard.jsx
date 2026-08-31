@@ -2497,10 +2497,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#ECEBDE] text-slate-100 flex flex-col md:flex-row font-sans">
       
       {/* Sleek Admin Left Sidebar Navigation Panel (Responsive Desktop & Mobile Horizontal Scroll) */}
-      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-slate-800 p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-slate-900/95 shadow-2xl">
+      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-[#C1BAA1] p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-[#D7D3BF] shadow-2xl">
         <div>
           {/* Admin Brand Header */}
           <div className="flex items-center justify-between md:justify-start gap-3 pb-3 md:pb-6 mb-2 md:mb-6 border-b border-slate-800">
@@ -2617,24 +2617,24 @@ export const AdminDashboard = ({ onReturnHome }) => {
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <button
                   onClick={() => fetchFinancialStats()}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-400/40 text-xs text-amber-300 font-bold hover:bg-amber-500 hover:text-black transition-all cursor-pointer shadow-lg shadow-amber-500/10"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D7D3BF] border border-[#C1BAA1] text-xs text-amber-900 font-bold hover:bg-[#C1BAA1] transition-all cursor-pointer shadow-md"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${financialStatsLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 text-amber-700 ${financialStatsLoading ? 'animate-spin' : ''}`} />
                   <span>Refresh Live Financials</span>
                 </button>
 
-                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#1E1B18] border border-[#332A24] text-xs text-amber-100 font-medium cursor-pointer hover:border-amber-500/50 transition-all">
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#D7D3BF] border border-[#C1BAA1] text-xs text-amber-950 font-medium cursor-pointer hover:border-[#A59D84] transition-all">
                   <Calendar className="w-3.5 h-3.5 text-[#786C66]" />
                   <span>Rolling 7 Days Data</span>
                   <ChevronDown className="w-3.5 h-3.5 text-[#786C66] ml-1" />
                 </div>
 
-                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E1B18] border border-[#332A24] text-xs text-amber-100 font-medium hover:bg-[#2A2420] transition-all cursor-pointer">
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D7D3BF] border border-[#C1BAA1] text-xs text-amber-950 font-medium hover:bg-[#C1BAA1] transition-all cursor-pointer">
                   <Download className="w-3.5 h-3.5 text-[#786C66]" />
                   <span>Export</span>
                 </button>
 
-                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1E1B18] border border-[#332A24] text-xs text-amber-100 font-medium hover:bg-[#2A2420] transition-all cursor-pointer">
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D7D3BF] border border-[#C1BAA1] text-xs text-amber-950 font-medium hover:bg-[#C1BAA1] transition-all cursor-pointer">
                   <Filter className="w-3.5 h-3.5 text-[#786C66]" />
                   <span>Filters</span>
                 </button>
@@ -2644,7 +2644,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* TOP 4 LIVE FINANCIAL METRIC CARDS (MongoDB Atlas Aggregation) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* KPI Card 1: Total Booking Revenue */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-[#786C66] font-medium">Total Booking Revenue</span>
@@ -2674,7 +2674,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* KPI Card 2: Ticket Revenue / Seats Booked */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-[#786C66] font-medium">Ticket Revenue & Seats</span>
@@ -2704,7 +2704,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* KPI Card 3: Today's Activity & Revenue */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-[#786C66] font-medium">Today's Activity & Revenue</span>
@@ -2734,7 +2734,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* KPI Card 4: 7-Day Performance Overview */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] relative overflow-hidden flex flex-col justify-between shadow-xl">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-[#786C66] font-medium">7-Day Rolling Performance</span>
@@ -2771,7 +2771,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* MAIN CHART SECTION (2 CARDS) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Left Chart: Real-Time Revenue Overview (Trading/Stock Area Chart) */}
-              <div className="bg-[#1E1B18] p-6 rounded-2xl border border-[#332A24] space-y-4 shadow-xl">
+              <div className="bg-[#D7D3BF] p-6 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
@@ -2801,7 +2801,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         setRevenueRange(e.target.value);
                         fetchRevenueChartData(e.target.value);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-[#0F172A] border border-[#332A24] text-xs text-cyan-300 font-bold focus:outline-none focus:border-cyan-400 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] text-xs text-cyan-900 font-bold focus:outline-none focus:border-cyan-600 cursor-pointer"
                     >
                       <option value="1day">1 Day</option>
                       <option value="7days">7 Days</option>
@@ -2847,10 +2847,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           </defs>
 
                           {/* Grid Lines */}
-                          <line x1="35" y1="30" x2="480" y2="30" stroke="#332A24" strokeDasharray="3 3" />
-                          <line x1="35" y1="80" x2="480" y2="80" stroke="#332A24" strokeDasharray="3 3" />
-                          <line x1="35" y1="130" x2="480" y2="130" stroke="#332A24" strokeDasharray="3 3" />
-                          <line x1="35" y1="180" x2="480" y2="180" stroke="#332A24" />
+                          <line x1="35" y1="30" x2="480" y2="30" stroke="#C1BAA1" strokeDasharray="3 3" />
+                          <line x1="35" y1="80" x2="480" y2="80" stroke="#C1BAA1" strokeDasharray="3 3" />
+                          <line x1="35" y1="130" x2="480" y2="130" stroke="#C1BAA1" strokeDasharray="3 3" />
+                          <line x1="35" y1="180" x2="480" y2="180" stroke="#C1BAA1" />
 
                           {/* Y-Axis Labels */}
                           <text x="0" y="34" fill="#786C66" fontSize="10">₹{(maxRev).toLocaleString('en-IN')}</text>
@@ -2866,7 +2866,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           {/* Interactive Data Points */}
                           {points.map((p, idx) => (
                             <g key={idx} className="group cursor-pointer">
-                              <circle cx={p.x} cy={p.y} r="5" fill="#00f2fe" stroke="#1E1B18" strokeWidth="2" />
+                              <circle cx={p.x} cy={p.y} r="5" fill="#00f2fe" stroke="#D7D3BF" strokeWidth="2" />
                               <circle cx={p.x} cy={p.y} r="8" fill="#00f2fe" opacity="0.2" className="group-hover:animate-ping" />
                             </g>
                           ))}
@@ -2887,7 +2887,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Right Chart: Real-Time Candlestick / Bar Booking Overview Chart */}
-              <div className="bg-[#1E1B18] p-6 rounded-2xl border border-[#332A24] space-y-4 shadow-xl">
+              <div className="bg-[#D7D3BF] p-6 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
@@ -2914,7 +2914,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         setBookingRange(e.target.value);
                         fetchBookingChartData(e.target.value);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-[#0F172A] border border-[#332A24] text-xs text-emerald-300 font-bold focus:outline-none focus:border-emerald-400 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] text-xs text-emerald-900 font-bold focus:outline-none focus:border-emerald-600 cursor-pointer"
                     >
                       <option value="1day">1 Day</option>
                       <option value="7days">7 Days</option>
@@ -2942,10 +2942,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       return (
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
                           {/* Grid Lines */}
-                          <line x1="30" y1="20" x2="480" y2="20" stroke="#332A24" strokeDasharray="3 3" />
-                          <line x1="30" y1="70" x2="480" y2="70" stroke="#332A24" strokeDasharray="3 3" />
-                          <line x1="30" y1="120" x2="480" y2="120" stroke="#332A24" strokeDasharray="3 3" />
-                          <line x1="30" y1="180" x2="480" y2="180" stroke="#332A24" />
+                          <line x1="30" y1="20" x2="480" y2="20" stroke="#C1BAA1" strokeDasharray="3 3" />
+                          <line x1="30" y1="70" x2="480" y2="70" stroke="#C1BAA1" strokeDasharray="3 3" />
+                          <line x1="30" y1="120" x2="480" y2="120" stroke="#C1BAA1" strokeDasharray="3 3" />
+                          <line x1="30" y1="180" x2="480" y2="180" stroke="#C1BAA1" />
 
                           {/* Y Axis Labels */}
                           <text x="0" y="24" fill="#786C66" fontSize="10">{maxBookings}</text>
@@ -3013,7 +3013,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* MIDDLE SECTION (2 COLUMNS - 'BOOKING SOURCES' REMOVED) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Column 1: Top Movies by Bookings (Strictly Movie Metrics Aggregated from MongoDB Atlas) */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
@@ -3022,7 +3022,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </h3>
                     <button
                       onClick={() => setTopMoviesModalOpen(true)}
-                      className="text-xs font-bold text-cyan-400 hover:text-cyan-300 hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs font-bold text-cyan-700 hover:text-cyan-900 hover:underline cursor-pointer flex items-center gap-1"
                     >
                       <span>More / View All ({(Array.isArray(topMoviesList) ? topMoviesList : []).length})</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
@@ -3034,13 +3034,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       topMoviesList.slice(0, 5).map((movie, idx) => {
                         const pct = movie?.percentage !== undefined ? movie.percentage : 0;
                         return (
-                          <div key={movie?.movieId || movie?.title || idx} className="p-3 rounded-xl bg-[#0F172A]/80 border border-[#332A24] space-y-2">
+                          <div key={movie?.movieId || movie?.title || idx} className="p-3 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] space-y-2">
                             <div className="flex items-center gap-3">
                               {/* Element 1: Movie Poster Image */}
                               <img 
                                 src={movie?.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80'} 
                                 alt={movie?.title || 'Movie'} 
-                                className="w-12 h-16 rounded-lg object-cover border border-[#332A24] shadow-md shrink-0" 
+                                className="w-12 h-16 rounded-lg object-cover border border-[#C1BAA1] shadow-md shrink-0" 
                               />
                               
                               <div className="flex-1 min-w-0">
@@ -3053,7 +3053,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                   <span className="font-mono font-black text-amber-400 text-sm">{pct}%</span>
                                 </div>
 
-                                <div className="w-full h-2 bg-[#1E1B18] rounded-full overflow-hidden">
+                                <div className="w-full h-2 bg-[#C1BAA1] rounded-full overflow-hidden">
                                   <div 
                                     className="h-full bg-gradient-to-r from-amber-500 to-cyan-400 rounded-full transition-all duration-500" 
                                     style={{ width: `${Math.max(pct, 4)}%` }} 
@@ -3066,8 +3066,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       })
                     ) : (
                       /* Fallback Logic when topMoviesList is empty */
-                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-amber-400/20 space-y-2 bg-[#0F172A]/50">
-                        <Film className="w-8 h-8 text-amber-400/50 mx-auto animate-pulse" />
+                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-[#A59D84] space-y-2 bg-[#ECEBDE]">
+                        <Film className="w-8 h-8 text-amber-600/50 mx-auto animate-pulse" />
                         <div className="text-xs font-bold text-[#FCEEAD]">No Live Movie Bookings Yet</div>
                         <p className="text-[11px] text-[#786C66]">
                           Real-time movie ticket share will appear here automatically when users complete movie bookings in MongoDB Atlas.
@@ -3079,7 +3079,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Column 2: Top Theatres by Occupancy & Rating (Live MongoDB Atlas - Top 2 View) */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
@@ -3088,7 +3088,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </h3>
                     <button
                       onClick={() => setTopTheatresModalOpen(true)}
-                      className="text-xs font-bold text-blue-400 hover:text-blue-300 hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer flex items-center gap-1"
                     >
                       <span>More / View All ({(Array.isArray(allTheatresList) && allTheatresList.length > 0 ? allTheatresList : (Array.isArray(topTheatresList) ? topTheatresList : [])).length})</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
@@ -3101,7 +3101,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         const pct = th?.percentage !== undefined ? th.percentage : (parseFloat(th?.occupancyRate) || 0);
                         const displayName = th?.nameAndCity || (th?.city ? `${th.name} - ${th.city}` : th?.name) || 'PrimeShow Theatre';
                         return (
-                          <div key={th?.theatreId || th?.name || i} className="p-3 rounded-xl bg-[#0F172A]/80 border border-[#332A24] space-y-2">
+                          <div key={th?.theatreId || th?.name || i} className="p-3 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] space-y-2">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-[#FCEEAD] font-extrabold truncate max-w-[210px]" title={displayName}>
                                 {displayName}
@@ -3114,7 +3114,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                               <span>Seats Sold: {th?.tickets || 0}</span>
                               <span className="text-amber-400 font-bold">Rating: {th?.rating || 4.8}★</span>
                             </div>
-                            <div className="w-full h-2 bg-[#1E1B18] rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-[#C1BAA1] rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500"
                                 style={{ width: `${Math.max(pct, 4)}%` }}
@@ -3124,8 +3124,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         );
                       })
                     ) : (
-                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-blue-400/20 space-y-2 bg-[#0F172A]/50">
-                        <Building className="w-8 h-8 text-blue-400/50 mx-auto animate-pulse" />
+                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-[#A59D84] space-y-2 bg-[#ECEBDE]">
+                        <Building className="w-8 h-8 text-blue-600/50 mx-auto animate-pulse" />
                         <div className="text-xs font-bold text-[#FCEEAD]">No Live Theatre Bookings Yet</div>
                         <p className="text-[11px] text-[#786C66]">
                           Real-time theatre occupancy share will calculate here automatically when tickets or halls are booked in MongoDB Atlas.
@@ -3144,7 +3144,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* LOWER SECTION (3 COLUMNS) */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Column 1: Revenue by Payment Method */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-[#FCEEAD] mb-4">Revenue by Payment Method</h3>
 
@@ -3152,7 +3152,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     {/* SVG Donut Chart */}
                     <div className="relative w-36 h-36 shrink-0">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <path className="text-[#332A24]" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path className="text-[#C1BAA1]" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         {/* UPI - 48.6% */}
                         <path className="text-blue-500" strokeDasharray="48.6, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                         {/* Card - 32.1% */}
@@ -3192,11 +3192,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Column 2: Recent Bookings */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-[#FCEEAD]">Recent Bookings</h3>
-                    <button className="text-xs font-bold text-amber-400 hover:underline">View All</button>
+                    <button className="text-xs font-bold text-amber-700 hover:underline">View All</button>
                   </div>
 
                   <div className="space-y-3">
@@ -3207,7 +3207,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       { id: '#PS84212', time: 'May 17, 2025 • 10:15 AM', price: '₹950', status: 'Confirmed' },
                       { id: '#PS84211', time: 'May 17, 2025 • 10:05 AM', price: '₹740', status: 'Confirmed' }
                     ].map((b, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[#332A24] last:border-none">
+                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[#C1BAA1] last:border-none">
                         <div>
                           <div className="font-mono font-bold text-amber-100">{b.id}</div>
                           <div className="text-[10px] text-[#786C66]">{b.time}</div>
@@ -3225,7 +3225,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Column 3: System Status */}
-              <div className="bg-[#1E1B18] p-5 rounded-2xl border border-[#332A24] space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
                 <div>
                   <h3 className="text-sm font-bold text-[#FCEEAD] mb-3">System Status</h3>
 
@@ -3238,7 +3238,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       { name: 'SMS Service', status: 'Healthy' },
                       { name: 'WhatsApp Service', status: 'Healthy' }
                     ].map((sys, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[#332A24] last:border-none">
+                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[#C1BAA1] last:border-none">
                         <span className="text-amber-100 font-medium">{sys.name}</span>
                         <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
                           {sys.status}
@@ -3252,8 +3252,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* BOTTOM SECONDARY METRICS (4 CARDS) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#1E1B18] p-4 rounded-2xl border border-[#332A24] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-[#0F172A] border border-[#332A24] flex items-center justify-center text-cyan-400 shrink-0">
+              <div className="bg-[#D7D3BF] p-4 rounded-2xl border border-[#C1BAA1] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] flex items-center justify-center text-cyan-600 shrink-0">
                   <Film className="w-6 h-6" />
                 </div>
                 <div>
@@ -3263,8 +3263,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              <div className="bg-[#1E1B18] p-4 rounded-2xl border border-[#332A24] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-[#0F172A] border border-[#332A24] flex items-center justify-center text-cyan-400 shrink-0">
+              <div className="bg-[#D7D3BF] p-4 rounded-2xl border border-[#C1BAA1] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] flex items-center justify-center text-cyan-600 shrink-0">
                   <Building className="w-6 h-6" />
                 </div>
                 <div>
@@ -3274,8 +3274,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              <div className="bg-[#1E1B18] p-4 rounded-2xl border border-[#332A24] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-[#0F172A] border border-[#332A24] flex items-center justify-center text-purple-400 shrink-0">
+              <div className="bg-[#D7D3BF] p-4 rounded-2xl border border-[#C1BAA1] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] flex items-center justify-center text-purple-600 shrink-0">
                   <Compass className="w-6 h-6" />
                 </div>
                 <div>
@@ -3285,8 +3285,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              <div className="bg-[#1E1B18] p-4 rounded-2xl border border-[#332A24] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-[#0F172A] border border-[#332A24] flex items-center justify-center text-emerald-400 shrink-0">
+              <div className="bg-[#D7D3BF] p-4 rounded-2xl border border-[#C1BAA1] flex items-center gap-4 shadow-xl">
+                <div className="w-12 h-12 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] flex items-center justify-center text-emerald-600 shrink-0">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
