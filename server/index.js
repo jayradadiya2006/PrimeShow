@@ -84,7 +84,18 @@ const allowedOriginsList = [
   'http://127.0.0.1:5173'
 ];
 
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOriginsList.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-Id', 'Accept', 'Cache-Control', 'Pragma', 'Expires']
+}));
 
 // Step 4: Serverless Cold Start Mongoose Direct Atlas Reconnection Middleware
 app.use(async (req, res, next) => {
