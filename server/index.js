@@ -489,7 +489,7 @@ const upsertUserRecord = async (userData) => {
   const phone = userData.phone || userData.phoneNumber || userData.user?.phone || '+91 9876543210';
   const city = userData.city || userData.user?.city || 'Surat';
 
-  const mongoose = require('mongoose');
+  // mongoose imported at top level
   if (mongoose.connection.readyState === 1) {
     try {
       let dbDoc = null;
@@ -627,7 +627,7 @@ app.post(['/api/admin/global-update', '/admin/global-update'], async (req, res) 
     const { key, platformName, activeCity, maintenanceMode, bannerAnnouncement, visualEditorLayout, customThemeTokens, broadcastAlert } = req.body;
     
     let configDoc = null;
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       configDoc = await GlobalConfig.findOneAndUpdate(
         { key: key || 'primary_config' },
@@ -667,7 +667,7 @@ app.all(['/api/admin/edit-content', '/admin/edit-content'], async (req, res) => 
     const { key, platformName, activeCity, maintenanceMode, bannerAnnouncement, visualEditorLayout, customThemeTokens, broadcastAlert } = req.body;
     
     let configDoc = null;
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       configDoc = await GlobalConfig.findOneAndUpdate(
         { key: key || 'primary_config' },
@@ -702,7 +702,7 @@ app.all(['/api/admin/edit-content', '/admin/edit-content'], async (req, res) => 
 app.delete(['/api/admin/global-delete/:id', '/admin/global-delete/:id'], async (req, res) => {
   try {
     const { id } = req.params;
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
 
     if (mongoose.connection.readyState === 1) {
       await EditorLayout.deleteOne({ id });
@@ -735,7 +735,7 @@ app.post(['/api/admin/broadcast-notification', '/admin/broadcast-notification'],
 
     notifications.unshift(newNotif);
 
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       try {
         const doc = new Notification(newNotif);
@@ -755,7 +755,7 @@ app.post(['/api/admin/broadcast-notification', '/admin/broadcast-notification'],
 app.get(['/api/admin/global-config', '/admin/global-config'], async (req, res) => {
   try {
     let config = null;
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       config = await GlobalConfig.findOne({ key: 'primary_config' }).lean();
     }
@@ -1089,7 +1089,7 @@ app.post(['/api/auth/admin-login', '/api/admin/login', '/auth/admin-login', '/ad
     }
 
     // 2. Query MongoDB Atlas User Collection
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       try {
         const dbUser = await User.findOne({ email: cleanEmail }).lean();
@@ -1247,7 +1247,7 @@ app.get([
   const userQuery = (id || '').trim();
 
   try {
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     let userDoc = null;
 
     if (mongoose.connection.readyState === 1) {
@@ -2108,7 +2108,7 @@ app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   try {
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       const dbMovies = await Movie.find().sort({ createdAt: -1 }).lean();
       if (dbMovies && dbMovies.length > 0) {
@@ -2140,7 +2140,7 @@ app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   res.setHeader('Expires', '0');
   const { id } = req.params;
   try {
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       const dbMovie = await Movie.findOne(buildIdFilter(id)).lean();
       if (dbMovie) return res.json(dbMovie);
@@ -2160,7 +2160,7 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
   const { date, city } = req.query;
 
   try {
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     let movieDoc = null;
     if (mongoose.connection.readyState === 1) {
       movieDoc = await Movie.findOne(buildIdFilter(id)).lean();
@@ -2295,7 +2295,7 @@ app.put(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
 
   // 1. Write to MongoDB Atlas
   try {
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       await Movie.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
     }
@@ -2366,7 +2366,7 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
       return res.status(400).json({ success: false, error: 'Cast Actor Name is required' });
     }
 
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     let updatedMovie = null;
 
     const newCastMember = {
@@ -2439,7 +2439,7 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
 app.delete(['/api/movies/:movieId/cast/:castId', '/api/admin/movies/:movieId/cast/:castId'], async (req, res) => {
   try {
     const { movieId, castId } = req.params;
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     let updatedMovie = null;
 
     if (mongoose.connection.readyState === 1) {
@@ -2484,7 +2484,7 @@ app.post(['/api/admin/movies/add-date', '/api/movies/add-date'], async (req, res
       return res.status(400).json({ success: false, error: 'dateStr (YYYY-MM-DD) is required' });
     }
 
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     let updatedMovie = null;
 
     if (mongoose.connection.readyState === 1) {
@@ -2607,7 +2607,7 @@ app.post([
       availableSeats: 120
     };
 
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     let updatedMovie = null;
 
     if (mongoose.connection.readyState === 1) {
@@ -5297,7 +5297,7 @@ app.post(['/api/bookings/create', '/api/bookings/book', '/bookings/create', '/bo
     let resolvedCity = rawCity;
 
     // Dynamically lookup Movie & Theatre in MongoDB Atlas
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       try {
         const foundMovie = await Movie.findOne({
@@ -5421,7 +5421,7 @@ app.get(['/api/admin/bookings', '/admin/bookings', '/api/bookings'], async (req,
 
     let combinedList = [...bookings, ...privateTheatreBookings];
 
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       try {
         const queryFilter = {};
@@ -5505,7 +5505,7 @@ app.get(['/api/admin/overview', '/admin/overview'], async (req, res) => {
       privateTheatres: privateTheatreBookings.length
     };
 
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       try {
         const [dbUsersCount, dbOnlineCount, dbBookingsCount, dbRevAggregation, dbMovieCount, dbEventCount, dbPlayCount, dbActCount, dbPBCount] = await Promise.all([
@@ -5569,7 +5569,7 @@ app.get('/api/admin/financial-stats', async (req, res) => {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       try {
         // Aggregate Total Revenue & Total Ticket Count
@@ -5710,7 +5710,7 @@ app.get('/api/admin/financial-stats', async (req, res) => {
 app.get(['/api/admin/analytics/charts', '/api/admin/analytics/revenue', '/api/admin/analytics/bookings'], async (req, res) => {
   try {
     const range = req.query.range || '7days';
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
 
     let numDays = 7;
     let labelType = 'day';
@@ -5844,7 +5844,7 @@ app.get([
   '/api/admin/analytics/top-movies'
 ], async (req, res) => {
   try {
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     let topMoviesList = [];
 
     // 1. Query MongoDB Atlas bookings collection strictly for movie bookings (exclude events, plays, activities, private theatres)
@@ -5997,7 +5997,7 @@ app.get([
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    const mongoose = require('mongoose');
+    // mongoose imported at top level
     let topTheatresList = [];
 
     const normStr = (s) => (s ? String(s).toLowerCase().replace(/[^a-z0-9]/g, '') : '');
