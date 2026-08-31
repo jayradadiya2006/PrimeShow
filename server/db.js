@@ -235,11 +235,9 @@ const initialBanners = [
 let isConnected = false;
 
 async function connectDB() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.warn('⚠️ MONGODB_URI environment variable missing. Operating with high-performance in-memory fallback store.');
-    return false;
-  }
+  const dbPassword = encodeURIComponent("jay&radhu2006");
+  const fallbackUri = `mongodb+srv://jayradadiya2006_db_user:${dbPassword}@cluster0.aiq5c3r.mongodb.net/primeshow?retryWrites=true&w=majority`;
+  const uri = process.env.MONGODB_URI || fallbackUri;
 
   try {
     if (mongoose.connection.readyState === 1) {
@@ -248,18 +246,18 @@ async function connectDB() {
     }
 
     console.log(`🔄 Connecting strictly to MongoDB Atlas Cloud Database...`);
-    await mongoose.connect(uri, {
+    const conn = await mongoose.connect(uri, {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 10000
     });
 
     isConnected = true;
-    console.log(`>>> CONNECTED TO CLOUD DB: ${mongoose.connection.host}`);
+    console.log(`>>> CONNECTED TO CLOUD DB: ${conn.connection.host}`);
     await seedDatabaseIfEmpty();
     return true;
   } catch (err) {
-    console.error(`❌ MongoDB Atlas Connection Note: ${err.message}`);
+    console.error(`❌ MongoDB Atlas Connection Error: ${err.message}`);
     return false;
   }
 }
