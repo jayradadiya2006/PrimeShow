@@ -1151,16 +1151,30 @@ app.get(userRoutesPaths, async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   try {
     if (mongoose.connection.readyState === 1) {
-      const dbUsers = await User.find().sort({ createdAt: -1 }).lean();
+      const dbUsers = await User.find().sort({ updatedAt: -1, createdAt: -1 }).lean();
       if (dbUsers && dbUsers.length > 0) {
-        return res.status(200).json(dbUsers);
+        const usersWithStats = await Promise.all(dbUsers.map(async (user) => {
+          const totalBookings = await Booking.countDocuments({ 
+            $or: [{ userId: user.id }, { userId: String(user._id) }, { userEmail: user.email }] 
+          }).catch(() => 0);
+          return {
+            ...user,
+            totalBookings,
+            status: user.isOnline ? 'Online' : (user.status || 'Offline')
+          };
+        }));
+        return res.status(200).json({ success: true, users: usersWithStats });
       }
     }
   } catch (err) {
     console.warn('MongoDB Users Query Warning:', err.message);
   }
-  const memoryUsers = Array.from(globalRegisteredUsersMap.values());
-  return res.status(200).json(memoryUsers);
+  const memoryUsers = Array.from(globalRegisteredUsersMap.values()).map(u => ({
+    ...u,
+    totalBookings: 0,
+    status: u.isOnline ? 'Online' : 'Offline'
+  }));
+  return res.status(200).json({ success: true, users: memoryUsers });
 });
 
 // Admin Real-Time System Activity Logs & Financial Aggregations Endpoint
