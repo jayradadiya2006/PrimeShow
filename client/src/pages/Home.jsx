@@ -92,16 +92,16 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
         <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 rounded-3xl bg-[#ECEBDE] border border-[#C1BAA1]">
           <div className="flex flex-row items-center justify-between gap-2 mb-3 sm:mb-6">
             <div>
-              <div className="flex items-center gap-1.5 text-[#2C5745] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#EB7D00]" />
+              <div className="flex items-center gap-1.5 text-[#FA8112] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FA8112]" />
                 <span>Premier Blockbusters</span>
               </div>
-              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold font-sans text-[#2E2910]">Now Showing in {selectedCity}</h2>
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold font-sans text-[#222222]">Now Showing in {selectedCity}</h2>
             </div>
 
             <button
               onClick={() => setActiveTab('movies')}
-              className="text-[11px] sm:text-xs font-bold text-[#EB7D00] hover:text-[#2E2910] flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+              className="text-[11px] sm:text-xs font-bold text-[#FA8112] hover:text-[#222222] flex items-center gap-1 transition-colors cursor-pointer shrink-0"
             >
               <span>Explore All ({moviesList.length})</span>
               <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
