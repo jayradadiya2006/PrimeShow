@@ -42,7 +42,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
   return (
     <header className="sticky top-0 z-[100] w-full max-h-[20vh] transition-all duration-300">
       {/* Top Primary Glass Navbar */}
-      <nav className="bg-[#A59D84] border-b border-[#8C846B] px-3 sm:px-4 md:px-8 py-2.5 sm:py-3.5 flex items-center justify-between relative z-[100]">
+      <nav className="bg-[#DBCEA5] border-b border-[#c5ba92] px-3 sm:px-4 md:px-8 py-2.5 sm:py-3.5 flex items-center justify-between relative z-[100]">
         
         {/* Left: Brand Logo & Mobile-Compact Brand Name */}
         <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
@@ -430,7 +430,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
 
       {/* Secondary Category Navigation Bar (Hidden on Movie Details page as requested) */}
       {activeTab !== 'movie-detail' && (
-        <div className="bg-[#6E6454] backdrop-blur-md border-b border-[#544B3E] px-2.5 sm:px-4 md:px-8 py-1 sm:py-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 sm:gap-2 md:gap-3 z-40">
+        <div className="bg-[#3E322A] backdrop-blur-md border-b border-[#2C231C] px-2.5 sm:px-4 md:px-8 py-1 sm:py-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 sm:gap-2 md:gap-3 z-40 text-white">
           {navCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeTab === cat.id;

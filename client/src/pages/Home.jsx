@@ -29,7 +29,7 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
   };
 
   return (
-    <div className="min-h-screen bg-[#ECEBDE] text-slate-900 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#FFFFFF] text-slate-900 font-sans overflow-x-hidden">
       
       {/* 100vh Hero Crossfader Section */}
       <HeroCrossfader
@@ -56,22 +56,22 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
               return (
                 <div
                   key={feat.id}
-                  className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl border text-xs font-bold shrink-0 flex items-center gap-2.5 sm:gap-3 bg-[#3E342B] border-[#544B3E] hover:bg-[#4A3E34] transition-all cursor-pointer select-none"
+                  className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl border text-xs font-bold shrink-0 flex items-center gap-2.5 sm:gap-3 bg-[#DBCEA5] border-[#c5ba92] hover:bg-[#caba8e] transition-all cursor-pointer select-none text-slate-900 shadow-sm"
                 >
-                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-[#544B3E]/40 border border-[#6E5D4F] flex items-center justify-center text-amber-400 shrink-0">
-                    <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-[#D90000] text-white flex items-center justify-center shrink-0">
+                    <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs sm:text-sm font-bold text-amber-100 whitespace-nowrap">{feat.title}</span>
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 whitespace-nowrap">{feat.title}</span>
                       {feat.badge && (
-                        <span className="px-1.5 py-0.2 rounded bg-[#544B3E] text-amber-300 text-[9px] font-black uppercase">
+                        <span className="px-1.5 py-0.2 rounded bg-[#D90000] text-white text-[9px] font-black uppercase">
                           {feat.badge}
                         </span>
                       )}
                     </div>
                     {feat.subtitle && (
-                      <p className="text-[10px] sm:text-xs text-amber-200/70 whitespace-nowrap font-normal">{feat.subtitle}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-700 whitespace-nowrap font-normal">{feat.subtitle}</p>
                     )}
                   </div>
                 </div>
@@ -80,35 +80,35 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
           </div>
         </div>
 
-        {/* Section 1: Automated Movie Slide Show (Carousel) */}
-        <div className="p-3 sm:p-5 rounded-3xl bg-[#D7D3BF] border border-[#C1BAA1]">
+        {/* Section 1: Automated Movie Slide Show (Carousel) - Pure White #FFFFFF Background */}
+        <div className="p-3 sm:p-5 rounded-3xl bg-[#FFFFFF] border border-slate-200 shadow-sm">
           <MovieCarousel
             onBookNow={onBookNow}
             onSelectMovie={onSelectMovie}
           />
         </div>
 
-        {/* Section 2: Now Showing Mobile 2-Column Responsive Grid */}
-        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 rounded-3xl bg-[#ECEBDE] border border-[#C1BAA1]">
+        {/* Section 2: Now Showing Mobile 2-Column Responsive Grid - Pure White #FFFFFF Background */}
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 rounded-3xl bg-[#FFFFFF] border border-slate-200 shadow-sm">
           <div className="flex flex-row items-center justify-between gap-2 mb-3 sm:mb-6">
             <div>
-              <div className="flex items-center gap-1.5 text-[#FA8112] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FA8112]" />
+              <div className="flex items-center gap-1.5 text-[#D90000] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D90000]" />
                 <span>Premier Blockbusters</span>
               </div>
-              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold font-sans text-[#222222]">Now Showing in {selectedCity}</h2>
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold font-sans text-slate-900">Now Showing in {selectedCity}</h2>
             </div>
 
             <button
               onClick={() => setActiveTab('movies')}
-              className="text-[11px] sm:text-xs font-bold text-[#FA8112] hover:text-[#222222] flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+              className="text-[11px] sm:text-xs font-bold text-[#D90000] hover:text-slate-900 flex items-center gap-1 transition-colors cursor-pointer shrink-0"
             >
               <span>Explore All ({moviesList.length})</span>
               <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 
-          {/* Dynamic 2-Column Mobile Grid Layout (2 cards per row on mobile, 3 on tablet, 4 on desktop) */}
+          {/* Dynamic 2-Column Mobile Grid Layout */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {moviesList.map((movie) => (
               <MovieCard
@@ -121,19 +121,19 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
           </div>
         </div>
 
-        {/* Section 3: Upcoming Releases Showcase (Single-Row Mobile Scrollable Line / Carousel) */}
-        <div className="space-y-4 p-4 sm:p-6 rounded-3xl bg-[#ECEBDE] border border-[#C1BAA1]">
+        {/* Section 3: Upcoming Releases Showcase - Pure White #FFFFFF Background & Light Brown #DBCEA5 Card Backing */}
+        <div className="space-y-4 p-4 sm:p-6 rounded-3xl bg-[#FFFFFF] border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-1.5 text-[#2C5745] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5">
-                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#EB7D00]" />
+              <div className="flex items-center gap-1.5 text-[#D90000] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5">
+                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D90000]" />
                 <span>Coming Soon</span>
               </div>
-              <h2 className="text-xl sm:text-3xl font-bold font-sans text-[#2E2910]">Upcoming Big Releases</h2>
+              <h2 className="text-xl sm:text-3xl font-bold font-sans text-slate-900">Upcoming Big Releases</h2>
             </div>
           </div>
 
-          {/* Single-Row Mobile Layout Carousel with Compact Cards */}
+          {/* Single-Row Mobile Layout Carousel with Light Brown #DBCEA5 Card Backing & Red #D90000 Buttons */}
           <div className="flex flex-row flex-nowrap items-stretch gap-3 sm:gap-5 overflow-x-auto scrollbar-none no-scrollbar py-2 w-full max-w-full">
             {(upcomingMoviesList && upcomingMoviesList.length > 0 ? upcomingMoviesList : [
               { id: 'up_1', title: 'Avengers: Secret Wars', release: 'Dec 2026', poster: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80', genres: ['Action', 'Superhero'] },
@@ -143,35 +143,35 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
             ]).map((mov) => (
               <div 
                 key={mov.id} 
-                className="w-[140px] xs:w-[155px] sm:w-[190px] shrink-0 bg-[#3E3025] p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl border border-[#2C5745] flex flex-col justify-between hover:border-[#EB7D00] transition-all group"
+                className="w-[140px] xs:w-[155px] sm:w-[190px] shrink-0 bg-[#DBCEA5] p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl border border-[#c5ba92] flex flex-col justify-between hover:border-[#D90000] transition-all group shadow-sm"
               >
                 <div>
-                  <div className="relative w-full h-[170px] sm:h-[220px] rounded-xl sm:rounded-2xl overflow-hidden border border-[#2C5745] mb-2">
+                  <div className="relative w-full h-[170px] sm:h-[220px] rounded-xl sm:rounded-2xl overflow-hidden border border-[#c5ba92] mb-2">
                     <img 
                       src={mov.poster} 
                       alt={mov.title} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                     />
-                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#EB7D00] text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-md">
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#D90000] text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-md">
                       {mov.release}
                     </span>
                   </div>
 
-                  <h3 className="text-xs sm:text-sm font-bold text-[#EBE3A7] truncate max-w-full">{mov.title}</h3>
-                  <p className="text-[10px] sm:text-xs text-[#EBE3A7]/70 truncate max-w-full mt-0.5">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-full">{mov.title}</h3>
+                  <p className="text-[10px] sm:text-xs text-slate-700 truncate max-w-full mt-0.5">
                     {Array.isArray(mov.genres) ? mov.genres.join(' • ') : mov.genres}
                   </p>
                 </div>
 
                 <button
                   onClick={() => toggleReminder(mov.id)}
-                  className={`w-full mt-2.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                  className={`w-full mt-2.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 shadow-md ${
                     remindersSet[mov.id]
-                      ? 'bg-[#EB7D00] text-white shadow-md'
-                      : 'bg-[#2E2910] hover:bg-[#2C5745] text-[#EBE3A7] border border-[#2C5745]'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-[#D90000] hover:bg-[#b00000] text-white'
                   }`}
                 >
-                  <Bell className="w-3 h-3 text-[#EB7D00]" />
+                  <Bell className="w-3 h-3 text-white" />
                   <span>{remindersSet[mov.id] ? 'Reminder Set ✓' : 'Set Reminder'}</span>
                 </button>
               </div>
