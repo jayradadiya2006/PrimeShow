@@ -29,7 +29,7 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
   };
 
   return (
-    <div className="min-h-screen bg-[#050508] text-white font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#ECEBDE] text-slate-900 font-sans overflow-x-hidden">
       
       {/* 100vh Hero Crossfader Section */}
       <HeroCrossfader
@@ -56,22 +56,22 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
               return (
                 <div
                   key={feat.id}
-                  className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl border text-xs font-bold shrink-0 flex items-center gap-2.5 sm:gap-3 glass-panel border-white/10 hover:border-amber-400/40 hover:bg-white/10 transition-all cursor-pointer select-none"
+                  className="px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-2xl border text-xs font-bold shrink-0 flex items-center gap-2.5 sm:gap-3 bg-[#D7D3BF] border-[#C1BAA1] hover:bg-[#ECEBDE] transition-all cursor-pointer select-none"
                 >
-                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-[#A59D84]/20 border border-[#C1BAA1] flex items-center justify-center text-amber-700 shrink-0">
                     <IconComp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs sm:text-sm font-bold text-white whitespace-nowrap">{feat.title}</span>
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 whitespace-nowrap">{feat.title}</span>
                       {feat.badge && (
-                        <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black uppercase">
+                        <span className="px-1.5 py-0.2 rounded bg-[#A59D84]/20 text-amber-900 text-[9px] font-black uppercase">
                           {feat.badge}
                         </span>
                       )}
                     </div>
                     {feat.subtitle && (
-                      <p className="text-[10px] sm:text-xs text-white/50 whitespace-nowrap font-normal">{feat.subtitle}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-600 whitespace-nowrap font-normal">{feat.subtitle}</p>
                     )}
                   </div>
                 </div>
@@ -90,16 +90,16 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
         <div className="space-y-4 sm:space-y-6">
           <div className="flex flex-row items-center justify-between gap-2 mb-3 sm:mb-6">
             <div>
-              <div className="flex items-center gap-1.5 text-amber-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
+              <div className="flex items-center gap-1.5 text-amber-700 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Premier Blockbusters</span>
               </div>
-              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold font-sans text-white">Now Showing in {selectedCity}</h2>
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold font-sans text-slate-900">Now Showing in {selectedCity}</h2>
             </div>
 
             <button
               onClick={() => setActiveTab('movies')}
-              className="text-[11px] sm:text-xs font-bold text-amber-300 hover:text-white flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+              className="text-[11px] sm:text-xs font-bold text-amber-800 hover:text-slate-900 flex items-center gap-1 transition-colors cursor-pointer shrink-0"
             >
               <span>Explore All ({moviesList.length})</span>
               <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -123,11 +123,11 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-1.5 text-purple-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5">
+              <div className="flex items-center gap-1.5 text-purple-700 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5">
                 <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Coming Soon</span>
               </div>
-              <h2 className="text-xl sm:text-3xl font-bold font-sans text-white">Upcoming Big Releases</h2>
+              <h2 className="text-xl sm:text-3xl font-bold font-sans text-slate-900">Upcoming Big Releases</h2>
             </div>
           </div>
 
@@ -141,22 +141,22 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
             ]).map((mov) => (
               <div 
                 key={mov.id} 
-                className="w-[140px] xs:w-[155px] sm:w-[190px] shrink-0 glass-panel p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl border border-white/10 flex flex-col justify-between hover:border-purple-400/50 transition-all group"
+                className="w-[140px] xs:w-[155px] sm:w-[190px] shrink-0 bg-[#D7D3BF] p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl border border-[#C1BAA1] flex flex-col justify-between hover:border-[#A59D84] transition-all group"
               >
                 <div>
-                  <div className="relative w-full h-[170px] sm:h-[220px] rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 mb-2">
+                  <div className="relative w-full h-[170px] sm:h-[220px] rounded-xl sm:rounded-2xl overflow-hidden border border-[#C1BAA1] mb-2">
                     <img 
                       src={mov.poster} 
                       alt={mov.title} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                     />
-                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-purple-500/90 text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-md">
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#A59D84] text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-md">
                       {mov.release}
                     </span>
                   </div>
 
-                  <h3 className="text-xs sm:text-sm font-bold text-white truncate max-w-full">{mov.title}</h3>
-                  <p className="text-[10px] sm:text-xs text-white/50 truncate max-w-full mt-0.5">
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-full">{mov.title}</h3>
+                  <p className="text-[10px] sm:text-xs text-slate-600 truncate max-w-full mt-0.5">
                     {Array.isArray(mov.genres) ? mov.genres.join(' • ') : mov.genres}
                   </p>
                 </div>
@@ -165,8 +165,8 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
                   onClick={() => toggleReminder(mov.id)}
                   className={`w-full mt-2.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                     remindersSet[mov.id]
-                      ? 'bg-purple-500 text-white shadow-md shadow-purple-500/30'
-                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
+                      ? 'bg-[#A59D84] text-white shadow-md'
+                      : 'bg-[#ECEBDE] hover:bg-[#C1BAA1] text-slate-900 border border-[#C1BAA1]'
                   }`}
                 >
                   <Bell className="w-3 h-3" />

@@ -309,7 +309,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
         <div className="fixed inset-0 z-[150] md:hidden flex justify-end bg-black/70 backdrop-blur-md animate-fade-in">
           
           {/* Slide-out Drawer Panel */}
-          <div className="w-4/5 max-w-xs h-full bg-[#0D0F14] border-l border-white/15 p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left">
+          <div className="w-4/5 max-w-xs h-full bg-[#D7D3BF] border-l border-[#C1BAA1] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left">
             
             {/* Top Bar with Visible Cross (✕) Icon - No separate logo inside drawer */}
             <div>
@@ -430,7 +430,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
 
       {/* Secondary Category Navigation Bar (Hidden on Movie Details page as requested) */}
       {activeTab !== 'movie-detail' && (
-        <div className="bg-slate-200/90 dark:bg-[#07090e]/90 backdrop-blur-md border-b border-slate-300/80 dark:border-white/5 px-2.5 sm:px-4 md:px-8 py-1 sm:py-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 sm:gap-2 md:gap-3 z-40">
+        <div className="bg-[#D7D3BF] backdrop-blur-md border-b border-[#C1BAA1] px-2.5 sm:px-4 md:px-8 py-1 sm:py-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 sm:gap-2 md:gap-3 z-40">
           {navCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeTab === cat.id;

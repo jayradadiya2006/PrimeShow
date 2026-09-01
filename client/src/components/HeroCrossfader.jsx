@@ -270,15 +270,15 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
         />
       ))}
 
-      {/* Sleek Dark Gradient & Vignette Overlay Mask for High Contrast Readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0A0C10] via-[#0A0C10]/75 to-black/85 z-10 pointer-events-none"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#0A0C10]/60 to-[#07080B]/95 z-10 pointer-events-none"></div>
+      {/* Sleek Light Gradient & Vignette Overlay Mask */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#ECEBDE] via-[#ECEBDE]/70 to-[#ECEBDE]/40 z-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#ECEBDE]/40 to-[#ECEBDE]/90 z-10 pointer-events-none"></div>
 
       {/* Hero Content Container */}
       <div className="relative z-20 max-w-5xl mx-auto px-4 md:px-8 text-center flex flex-col items-center justify-center pt-16">
         
         {/* Glass Badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/80 border border-slate-700/60 backdrop-blur-xl mb-6 shadow-xl">
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#D7D3BF] border border-[#C1BAA1] backdrop-blur-xl mb-6 shadow-xl">
           <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
           <span className="text-xs md:text-sm font-bold tracking-wide text-slate-200 uppercase">
             India's Premier Ticket & Experience Booking
@@ -300,13 +300,13 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
 
         {/* Interactive Search Engine Widget with Floating Auto-Suggest Dropdown */}
         <div ref={searchContainerRef} className="relative w-full max-w-3xl mb-8">
-          <div className="w-full glass-panel rounded-3xl p-3 md:p-4 shadow-2xl border border-slate-700/70">
+          <div className="w-full glass-panel rounded-3xl p-3 md:p-4 shadow-2xl border border-[#C1BAA1]">
             <div className="flex flex-col sm:flex-row items-center gap-3">
               
               {/* City Trigger */}
               <button
                 onClick={onOpenCityModal}
-                className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-semibold text-amber-400 flex items-center justify-between sm:justify-start gap-2 transition-all cursor-pointer"
+                className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#D7D3BF] hover:bg-[#ECEBDE] border border-[#C1BAA1] text-xs font-semibold text-amber-400 flex items-center justify-between sm:justify-start gap-2 transition-all cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-amber-400" />
@@ -434,8 +434,8 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
                 onClick={() => handleSelectCategory(cat)}
                 className={`px-4 py-2 rounded-full text-xs font-bold backdrop-blur-xl border transition-all duration-300 flex items-center gap-2 cursor-pointer ${
                   isActive
-                    ? 'bg-red-600 text-white border-red-500 font-extrabold shadow-lg shadow-red-600/30 scale-105'
-                    : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:border-red-500/40 hover:text-white hover:bg-slate-800'
+                    ? 'bg-[#A59D84] text-white border-[#A59D84] font-extrabold shadow-lg scale-105'
+                    : 'bg-[#D7D3BF] border-[#C1BAA1] hover:border-[#A59D84] hover:bg-[#ECEBDE]'
                 }`}
               >
                 <span>{cat.label}</span>
