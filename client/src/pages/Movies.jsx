@@ -111,19 +111,19 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
   const hasActiveFilters = activeFilterCount > 0 || searchQuery.trim() !== '';
 
   return (
-    <div className="min-h-screen bg-[#050508]/90 text-slate-900 dark:text-white pt-6 sm:pt-8 pb-20 font-sans">
+    <div className="min-h-screen bg-[#FFFFFF] text-slate-900 pt-6 sm:pt-8 pb-20 font-sans">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8">
         
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-4xl font-bold font-sans text-slate-900 dark:text-white mb-1">Explore Cinema Collection</h1>
-            <p className="text-xs text-amber-600 dark:text-amber-300 font-semibold">Filter movies dynamically by genre, format, language, and title search</p>
+            <h1 className="text-2xl sm:text-4xl font-bold font-sans text-slate-900 mb-1">Explore Cinema Collection</h1>
+            <p className="text-xs text-[#D90000] font-semibold">Filter movies dynamically by genre, format, language, and title search</p>
           </div>
           {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
-              className="self-start md:self-auto px-3.5 py-1.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              className="self-start md:self-auto px-3.5 py-1.5 rounded-full bg-[#D90000]/10 hover:bg-[#D90000]/20 border border-[#D90000]/30 text-[#D90000] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Reset All Filters</span>
@@ -131,13 +131,13 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
           )}
         </div>
 
-        {/* Search & Filter Bar */}
-        <div className="glass-panel p-4 md:p-6 rounded-2xl sm:rounded-3xl border border-slate-300 dark:border-white/10 mb-6 sm:mb-8 space-y-4 shadow-2xl">
+        {/* Search & Filter Bar - Light Brown #DBCEA5 Background */}
+        <div className="p-4 md:p-6 rounded-2xl sm:rounded-3xl bg-[#DBCEA5] border border-[#c5ba92] mb-6 sm:mb-8 space-y-4 shadow-md text-slate-900">
           
           {/* Reactive Search Input + Dynamic Dropdown */}
           <div className="flex items-center gap-2">
             <div className="relative flex-grow" ref={searchContainerRef}>
-              <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400 dark:text-white/40" />
+              <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="text"
                 placeholder="Search movie title, cast, language, or genre..."
@@ -147,7 +147,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                   setIsSearchFocused(true);
                 }}
                 onFocus={() => setIsSearchFocused(true)}
-                className="w-full pl-11 pr-10 py-3 rounded-xl sm:rounded-2xl glass-input text-xs text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
+                className="w-full pl-11 pr-10 py-3 rounded-xl sm:rounded-2xl bg-white text-slate-900 placeholder-slate-500 border border-slate-300 focus:outline-none text-xs font-semibold shadow-inner"
               />
               {searchQuery && (
                 <button
@@ -155,7 +155,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                     setSearchQuery('');
                     setIsSearchFocused(false);
                   }}
-                  className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                  className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-700"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -163,8 +163,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
               {/* Dynamic Auto-Complete Search Dropdown */}
               {isSearchFocused && searchQuery.trim() !== '' && (
-                <div className="absolute top-full left-0 right-0 z-[200] mt-2 rounded-2xl bg-[#0D0F14]/95 backdrop-blur-xl border border-amber-400/30 p-2 shadow-2xl space-y-1 max-h-72 overflow-y-auto animate-fade-in">
-                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 border-b border-white/10 flex items-center justify-between">
+                <div className="absolute top-full left-0 right-0 z-[200] mt-2 rounded-2xl bg-white border border-[#c5ba92] p-2 shadow-2xl space-y-1 max-h-72 overflow-y-auto animate-fade-in text-slate-900">
+                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D90000] border-b border-slate-200 flex items-center justify-between">
                     <span>Matching Movies</span>
                     <span>{searchSuggestions.length} found</span>
                   </div>
@@ -174,7 +174,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                       <button
                         key={movie.id}
                         onClick={() => handleSelectSuggestion(movie)}
-                        className="w-full text-left p-2.5 rounded-xl hover:bg-amber-500/10 hover:border-amber-400/30 border border-transparent flex items-center justify-between gap-3 group transition-all cursor-pointer"
+                        className="w-full text-left p-2.5 rounded-xl hover:bg-[#DBCEA5]/40 border border-transparent flex items-center justify-between gap-3 group transition-all cursor-pointer"
                       >
                         <div className="flex items-center gap-3">
                           <img
@@ -183,15 +183,15 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                             className="w-10 h-12 rounded-lg object-cover shrink-0 shadow-md"
                           />
                           <div>
-                            <h4 className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors line-clamp-1">{movie.title}</h4>
-                            <p className="text-[10px] text-white/50 line-clamp-1">{movie.language} • {movie.genre || (Array.isArray(movie.genres) && movie.genres.join(', '))}</p>
+                            <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#D90000] transition-colors line-clamp-1">{movie.title}</h4>
+                            <p className="text-[10px] text-slate-600 line-clamp-1">{movie.language} • {movie.genre || (Array.isArray(movie.genres) && movie.genres.join(', '))}</p>
                           </div>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                        <ArrowRight className="w-4 h-4 text-[#D90000] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </button>
                     ))
                   ) : (
-                    <div className="p-4 text-center text-xs text-white/50">
+                    <div className="p-4 text-center text-xs text-slate-500">
                       No movies found matching "{searchQuery}"
                     </div>
                   )}
@@ -202,25 +202,25 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
             {/* Mobile Three-Dot (⋮) / Filter Drawer Toggle Button */}
             <button
               onClick={() => setIsMobileFilterOpen(true)}
-              className="md:hidden p-3 rounded-xl bg-amber-500/20 text-amber-500 border border-amber-500/30 flex items-center justify-center gap-1 font-bold text-xs cursor-pointer transition-all hover:bg-amber-500/30 active:scale-95 shrink-0"
+              className="md:hidden p-3 rounded-xl bg-[#D90000] text-white flex items-center justify-center gap-1 font-bold text-xs cursor-pointer transition-all hover:bg-[#b00000] active:scale-95 shrink-0 shadow-md"
               title="Open Filter Menu"
             >
-              <MoreVertical className="w-5 h-5 text-amber-400" />
+              <MoreVertical className="w-5 h-5 text-white" />
               {activeFilterCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-amber-500 text-black text-[10px] font-black flex items-center justify-center">
+                <span className="w-5 h-5 rounded-full bg-white text-[#D90000] text-[10px] font-black flex items-center justify-center">
                   {activeFilterCount}
                 </span>
               )}
             </button>
           </div>
 
-          {/* Desktop Filter Pills (Hidden on mobile < 768px as requested) */}
-          <div className="hidden md:block space-y-4 pt-3 border-t border-slate-200 dark:border-white/10">
+          {/* Desktop Filter Pills */}
+          <div className="hidden md:block space-y-4 pt-3 border-t border-[#c5ba92]">
             
             {/* Genre Row */}
             <div>
-              <div className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Filter className="w-3 h-3" />
+              <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Filter className="w-3 h-3 text-[#D90000]" />
                 <span>Genre</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -230,8 +230,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                     onClick={() => setSelectedGenre(g)}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       selectedGenre === g
-                        ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
-                        : 'bg-slate-200/60 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10'
+                        ? 'bg-[#D90000] text-white shadow-md'
+                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
                     }`}
                   >
                     {g}
@@ -242,8 +242,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
             {/* Language Row */}
             <div>
-              <div className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Filter className="w-3 h-3" />
+              <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Filter className="w-3 h-3 text-[#D90000]" />
                 <span>Language</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -253,8 +253,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                     onClick={() => setSelectedLanguage(l)}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       selectedLanguage === l
-                        ? 'bg-cyan-500 text-black shadow-md shadow-cyan-500/20'
-                        : 'bg-slate-200/60 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10'
+                        ? 'bg-[#D90000] text-white shadow-md'
+                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
                     }`}
                   >
                     {l}
@@ -265,8 +265,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
             {/* Format Row */}
             <div>
-              <div className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Filter className="w-3 h-3" />
+              <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Filter className="w-3 h-3 text-[#D90000]" />
                 <span>Format</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -276,8 +276,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                     onClick={() => setSelectedFormat(f)}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       selectedFormat === f
-                        ? 'bg-purple-500 text-black shadow-md shadow-purple-500/20'
-                        : 'bg-slate-200/60 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-white/10'
+                        ? 'bg-[#D90000] text-white shadow-md'
+                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
                     }`}
                   >
                     {f}
@@ -289,23 +289,23 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
           </div>
         </div>
 
-        {/* Mobile Slide-Out Filter Drawer Modal (Strictly Positioned BELOW Fixed Navbars: top-[90px]) */}
+        {/* Mobile Slide-Out Filter Drawer Modal */}
         {isMobileFilterOpen && (
-          <div className="fixed top-[90px] bottom-0 left-0 right-0 z-[150] md:hidden flex justify-end bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="fixed top-[90px] bottom-0 left-0 right-0 z-[150] md:hidden flex justify-end bg-black/70 backdrop-blur-md animate-fade-in">
             {/* Backdrop click dismiss */}
             <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)}></div>
 
-            <div className="relative w-5/6 max-w-xs h-full bg-[#0D0F14] border-l border-white/15 p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left">
+            <div className="relative w-5/6 max-w-xs h-full bg-[#DBCEA5] border-l border-[#c5ba92] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left text-slate-900">
               <div>
                 {/* Accessible Close (✕) Button & Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+                <div className="flex items-center justify-between pb-4 border-b border-[#c5ba92] mb-6">
                   <div className="flex items-center gap-2">
-                    <SlidersHorizontal className="w-5 h-5 text-amber-400" />
-                    <span className="text-sm font-bold uppercase tracking-wider text-amber-400">Movie Filters</span>
+                    <SlidersHorizontal className="w-5 h-5 text-[#D90000]" />
+                    <span className="text-sm font-bold uppercase tracking-wider text-slate-900">Movie Filters</span>
                   </div>
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
-                    className="p-2.5 rounded-full bg-white/15 text-white hover:bg-rose-500/30 hover:text-rose-400 transition-all cursor-pointer shadow-lg flex items-center justify-center shrink-0"
+                    className="p-2.5 rounded-full bg-[#D90000] text-white hover:bg-[#b00000] transition-all cursor-pointer shadow-lg flex items-center justify-center shrink-0"
                     title="Close Filters"
                     aria-label="Close Filters"
                   >
@@ -318,7 +318,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                   
                   {/* Genre Filter */}
                   <div>
-                    <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2.5">Select Genre</h4>
+                    <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select Genre</h4>
                     <div className="flex flex-wrap gap-2">
                       {genresList.map(g => (
                         <button
@@ -326,8 +326,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                           onClick={() => setSelectedGenre(g)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             selectedGenre === g
-                              ? 'bg-amber-500 text-black shadow-md'
-                              : 'bg-white/5 border border-white/10 text-white/70'
+                              ? 'bg-[#D90000] text-white shadow-md'
+                              : 'bg-white border border-slate-300 text-slate-800'
                           }`}
                         >
                           {g}
@@ -338,7 +338,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
                   {/* Language Filter */}
                   <div>
-                    <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-2.5">Select Language</h4>
+                    <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select Language</h4>
                     <div className="flex flex-wrap gap-2">
                       {languagesList.map(l => (
                         <button
@@ -346,8 +346,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                           onClick={() => setSelectedLanguage(l)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             selectedLanguage === l
-                              ? 'bg-cyan-500 text-black shadow-md'
-                              : 'bg-white/5 border border-white/10 text-white/70'
+                              ? 'bg-[#D90000] text-white shadow-md'
+                              : 'bg-white border border-slate-300 text-slate-800'
                           }`}
                         >
                           {l}
@@ -358,7 +358,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
                   {/* Format Filter */}
                   <div>
-                    <h4 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2.5">Select Format</h4>
+                    <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select Format</h4>
                     <div className="flex flex-wrap gap-2">
                       {formatsList.map(f => (
                         <button
@@ -366,8 +366,8 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                           onClick={() => setSelectedFormat(f)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             selectedFormat === f
-                              ? 'bg-purple-500 text-black shadow-md'
-                              : 'bg-white/5 border border-white/10 text-white/70'
+                              ? 'bg-[#D90000] text-white shadow-md'
+                              : 'bg-white border border-slate-300 text-slate-800'
                           }`}
                         >
                           {f}
@@ -380,10 +380,10 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
               </div>
 
               {/* Drawer Bottom Actions */}
-              <div className="pt-6 border-t border-white/10 space-y-2 pb-6">
+              <div className="pt-6 border-t border-[#c5ba92] space-y-2 pb-6">
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-2xl bg-[#D90000] text-white font-extrabold text-xs shadow-lg hover:bg-[#b00000] cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Check className="w-4 h-4" />
                   <span>Apply Filters ({filteredMovies.length} Movies)</span>
@@ -391,7 +391,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                 {activeFilterCount > 0 && (
                   <button
                     onClick={handleResetFilters}
-                    className="w-full py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 text-xs font-bold cursor-pointer"
+                    className="w-full py-2.5 rounded-2xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 text-xs font-bold cursor-pointer"
                   >
                     Reset Filters
                   </button>
@@ -415,13 +415,13 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
         </div>
 
         {filteredMovies.length === 0 && (
-          <div className="text-center py-16 sm:py-20 glass-panel rounded-3xl border border-slate-300 dark:border-white/10 p-6">
-            <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-1">No active shows in {selectedCity || 'this city'} currently</h3>
-            <p className="text-xs text-slate-500 dark:text-white/60 mb-4">No active shows in {selectedCity || 'this city'} currently. Switch city to explore more.</p>
+          <div className="text-center py-16 sm:py-20 bg-[#DBCEA5] rounded-3xl border border-[#c5ba92] p-6 text-slate-900 shadow-md">
+            <Sparkles className="w-10 h-10 text-[#D90000] mx-auto mb-3" />
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1">No active shows in {selectedCity || 'this city'} currently</h3>
+            <p className="text-xs text-slate-700 mb-4">No active shows in {selectedCity || 'this city'} currently. Switch city to explore more.</p>
             <button
               onClick={handleResetFilters}
-              className="px-5 py-2 rounded-full bg-amber-500 text-black font-extrabold text-xs shadow-md hover:bg-amber-400 transition-all cursor-pointer"
+              className="px-5 py-2 rounded-full bg-[#D90000] text-white font-extrabold text-xs shadow-md hover:bg-[#b00000] transition-all cursor-pointer"
             >
               Reset Filters
             </button>

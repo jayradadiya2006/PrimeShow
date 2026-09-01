@@ -440,11 +440,11 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                 onClick={() => setActiveTab(cat.id)}
                 className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 shrink-0 cursor-pointer ${
                   isActive
-                    ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
-                    : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-white/10'
+                    ? 'bg-[#D90000] text-white shadow-md shadow-red-500/20'
+                    : 'text-slate-200 hover:text-white hover:bg-[#DBCEA5]/20'
                 }`}
               >
-                <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? 'text-black' : 'text-amber-600 dark:text-amber-400'}`} />
+                <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? 'text-white' : 'text-[#DBCEA5]'}`} />
                 <span>{cat.label}</span>
               </button>
             );

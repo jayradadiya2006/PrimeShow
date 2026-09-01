@@ -69,31 +69,31 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
   };
 
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-2xl animate-fade-in font-sans">
-      <div className="relative w-full max-w-4xl max-h-[96vh] glass-modal rounded-3xl p-4 sm:p-6 border border-white/15 shadow-2xl flex flex-col justify-between text-white overflow-hidden">
+    <div className="fixed inset-0 z-[250] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in font-sans">
+      <div className="relative w-full max-w-4xl max-h-[96vh] bg-[#DBCEA5] rounded-3xl p-4 sm:p-6 border border-[#c5ba92] shadow-2xl flex flex-col justify-between text-slate-900 overflow-hidden">
         
         {/* Header Bar with Movie Info Toggle */}
-        <div className="border-b border-white/10 pb-3 mb-2 shrink-0">
+        <div className="border-b border-[#c5ba92] pb-3 mb-2 shrink-0">
           <div className="flex items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase border border-amber-400/30">
+                <span className="px-2 py-0.5 rounded bg-[#D90000] text-white font-bold text-[10px] uppercase shadow-xs">
                   {show.format || 'IMAX 3D'}
                 </span>
-                <h2 className="text-base sm:text-xl font-bold font-sans text-white truncate max-w-[200px] sm:max-w-md">
+                <h2 className="text-base sm:text-xl font-bold font-sans text-slate-900 truncate max-w-[200px] sm:max-w-md">
                   {movie.title}
                 </h2>
               </div>
               
-              <div className="text-[11px] text-white/60 mt-1 flex items-center gap-1.5 flex-wrap">
+              <div className="text-[11px] text-slate-700 mt-1 flex items-center gap-1.5 flex-wrap">
                 <span>{theatre.name}</span>
                 <span>•</span>
-                <span className="text-amber-400 font-bold">{show.time}</span>
+                <span className="text-[#D90000] font-bold">{show.time}</span>
                 <span>({show.screenName || 'Screen 1'})</span>
                 {movie.synopsis && (
                   <button
                     onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-                    className="text-amber-300 underline font-semibold text-[10px] cursor-pointer ml-1 inline-flex items-center gap-0.5"
+                    className="text-[#D90000] underline font-semibold text-[10px] cursor-pointer ml-1 inline-flex items-center gap-0.5"
                   >
                     <span>{isInfoExpanded ? 'Less' : 'Info'}</span>
                     {isInfoExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -102,7 +102,7 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
               </div>
 
               {isInfoExpanded && movie.synopsis && (
-                <p className="text-[11px] text-white/70 mt-1.5 max-w-xl animate-fade-in bg-white/5 p-2 rounded-xl border border-white/10">
+                <p className="text-[11px] text-slate-800 mt-1.5 max-w-xl animate-fade-in bg-white p-2.5 rounded-xl border border-slate-300">
                   {movie.synopsis}
                 </p>
               )}
@@ -110,7 +110,7 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
 
             <button
               onClick={onClose}
-              className="p-2 rounded-full bg-white/10 hover:bg-rose-500/30 text-white transition-colors cursor-pointer shrink-0"
+              className="p-2 rounded-full bg-[#D90000] hover:bg-[#b00000] text-white transition-colors cursor-pointer shrink-0 shadow-md"
               title="Close Seat Selector"
             >
               <X className="w-5 h-5 text-white" />
@@ -119,45 +119,45 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
         </div>
 
         {/* Compact Seat Legends Grid */}
-        <div className="grid grid-cols-4 gap-1 sm:gap-4 my-1.5 text-[10px] sm:text-xs bg-white/5 p-2 rounded-2xl border border-white/10 shrink-0">
+        <div className="grid grid-cols-4 gap-1 sm:gap-4 my-1.5 text-[10px] sm:text-xs bg-white p-2 rounded-2xl border border-slate-300 shrink-0 text-slate-900">
           <div className="flex items-center justify-center gap-1.5">
-            <div className="w-4 h-4 rounded-md bg-white/10 border border-white/20"></div>
-            <span className="text-white/70">Available</span>
+            <div className="w-4 h-4 rounded-md bg-white border border-slate-400"></div>
+            <span className="text-slate-700">Available</span>
           </div>
           <div className="flex items-center justify-center gap-1.5">
-            <div className="w-4 h-4 rounded-md bg-amber-500 border border-amber-400 shadow-sm"></div>
-            <span className="text-amber-300 font-bold">Selected</span>
+            <div className="w-4 h-4 rounded-md bg-[#D90000] border border-[#D90000] shadow-sm"></div>
+            <span className="text-[#D90000] font-bold">Selected</span>
           </div>
           <div className="flex items-center justify-center gap-1.5">
-            <div className="w-4 h-4 rounded-md bg-white/5 border border-white/5 text-white/30 flex items-center justify-center text-[9px]">✕</div>
-            <span className="text-white/40">Sold</span>
+            <div className="w-4 h-4 rounded-md bg-slate-200 border border-slate-300 text-slate-400 flex items-center justify-center text-[9px]">✕</div>
+            <span className="text-slate-500">Sold</span>
           </div>
           <div className="flex items-center justify-center gap-1.5">
-            <div className="w-4 h-4 rounded-md bg-rose-500/20 border border-rose-500/40 text-rose-300 flex items-center justify-center text-[9px]">🔒</div>
-            <span className="text-rose-300">Blocked</span>
+            <div className="w-4 h-4 rounded-md bg-red-100 border border-red-300 text-red-600 flex items-center justify-center text-[9px]">🔒</div>
+            <span className="text-red-600">Blocked</span>
           </div>
         </div>
 
         {/* Screen Indicator */}
         <div className="w-full max-w-md mx-auto my-1 text-center shrink-0">
-          <div className="screen-curve mb-1"></div>
-          <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
+          <div className="screen-curve mb-1 border-t-4 border-[#D90000]"></div>
+          <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#D90000] uppercase">
             ▲ CINEMATIC SCREEN THIS WAY (FRONT) ▲
           </span>
         </div>
 
         {/* Controlled Scrollable Container */}
-        <div className="w-full flex-1 overflow-auto max-h-[55vh] sm:max-h-[62vh] p-2 sm:p-4 my-2 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center select-none">
+        <div className="w-full flex-1 overflow-auto max-h-[55vh] sm:max-h-[62vh] p-2 sm:p-4 my-2 rounded-2xl bg-white border border-slate-300 flex flex-col items-center select-none shadow-inner">
           <div className="min-w-max flex flex-col items-center justify-center space-y-3 sm:space-y-4 py-2 px-2">
             {SEAT_ROWS.map((tierObj) => (
               <div key={tierObj.row} className="flex flex-col items-center">
-                <div className="text-xs font-bold text-amber-400 mb-1.5 uppercase tracking-wider flex items-center gap-2">
+                <div className="text-xs font-bold text-[#D90000] mb-1.5 uppercase tracking-wider flex items-center gap-2">
                   <span>{tierObj.tier}</span>
-                  <span className="px-2 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">₹{tierObj.price}</span>
+                  <span className="px-2 py-0.5 rounded bg-[#DBCEA5] text-slate-900 border border-[#c5ba92] font-mono text-[10px]">₹{tierObj.price}</span>
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+                  <span className="w-6 text-xs font-bold text-slate-500 text-center shrink-0">{tierObj.row}</span>
 
                   <div className="flex items-center gap-1.5 sm:gap-2.5">
                     {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
@@ -172,12 +172,12 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
                           onClick={() => toggleSeatSelection(seatId, tierObj.price, tierObj.tier)}
                           className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center cursor-pointer shrink-0 ${
                             status === 'selected'
-                              ? 'bg-amber-500 text-black border-2 border-amber-300 shadow-lg shadow-amber-500/50 scale-110'
+                              ? 'bg-[#D90000] text-white border-2 border-red-700 shadow-md scale-110'
                               : status === 'booked'
-                              ? 'bg-white/5 border border-white/5 text-white/20 cursor-not-allowed'
+                              ? 'bg-slate-200 border border-slate-300 text-slate-400 cursor-not-allowed'
                               : status === 'blocked'
-                              ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300 cursor-not-allowed'
-                              : 'bg-white/10 hover:bg-white/25 border border-white/20 text-white/90 hover:text-white hover:scale-105'
+                              ? 'bg-red-100 border border-red-300 text-red-600 cursor-not-allowed'
+                              : 'bg-white hover:bg-[#DBCEA5] border border-slate-300 text-slate-900 hover:scale-105'
                           }`}
                           title={status === 'blocked' ? `${seatId} - Blocked by Admin` : `${seatId} - ₹${tierObj.price}`}
                         >
@@ -187,7 +187,7 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
                     })}
                   </div>
 
-                  <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+                  <span className="w-6 text-xs font-bold text-slate-500 text-center shrink-0">{tierObj.row}</span>
                 </div>
               </div>
             ))}
@@ -195,13 +195,13 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
         </div>
 
         {/* Footer Summary & Enabled Proceed to Payment Button */}
-        <div className="border-t border-white/10 pt-3 mt-1 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+        <div className="border-t border-[#c5ba92] pt-3 mt-1 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0 text-slate-900">
           <div className="space-y-0.5 text-center sm:text-left">
-            <div className="text-[11px] text-white/60">
-              Selected Seats: <strong className="text-amber-300">{selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}</strong>
+            <div className="text-[11px] text-slate-700">
+              Selected Seats: <strong className="text-[#D90000]">{selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None'}</strong>
             </div>
-            <div className="text-base sm:text-lg font-black text-white">
-              Total Amount: <span className="text-amber-400 font-mono">₹{subtotal}</span>
+            <div className="text-base sm:text-lg font-black text-slate-900">
+              Total Amount: <span className="text-[#D90000] font-mono">₹{subtotal}</span>
             </div>
           </div>
 
@@ -210,13 +210,13 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
             onClick={handleProceedToPayment}
             className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
               selectedSeats.length > 0
-                ? 'bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-yellow-400 text-black shadow-xl shadow-amber-500/40 scale-105 active:scale-95 cursor-pointer opacity-100'
-                : 'bg-white/10 text-white/40 border border-white/10 cursor-not-allowed opacity-50'
+                ? 'bg-[#D90000] hover:bg-[#b00000] text-white shadow-lg cursor-pointer opacity-100'
+                : 'bg-slate-300 text-slate-500 border border-slate-300 cursor-not-allowed opacity-50'
             }`}
           >
             {isLocking ? (
               <>
-                <div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
+                <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
                 <span>Locking Seats...</span>
               </>
             ) : (
