@@ -1473,6 +1473,77 @@ app.post(userRoutesPaths, async (req, res) => {
   }
 });
 
+// Admin Edit User Endpoint (MongoDB Atlas)
+app.put(['/api/admin/users/:id', '/admin/users/:id', '/api/users/:id', '/users/:id'], async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body };
+    if (updateData.status === 'Online') {
+      updateData.isOnline = true;
+    } else if (updateData.status === 'Offline') {
+      updateData.isOnline = false;
+    }
+
+    if (mongoose.connection.readyState === 1) {
+      const orConditions = [{ id }, { email: id }];
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        orConditions.push({ _id: id });
+      }
+      const updatedUser = await User.findOneAndUpdate(
+        { $or: orConditions },
+        { $set: updateData },
+        { new: true }
+      );
+      if (updatedUser) {
+        const uObj = updatedUser.toObject();
+        if (uObj.email) globalRegisteredUsersMap.set(uObj.email.toLowerCase(), uObj);
+        return res.json({ success: true, user: uObj });
+      }
+    }
+
+    for (const [emailKey, memUser] of globalRegisteredUsersMap.entries()) {
+      if (memUser.id === id || memUser.email === id || emailKey === id.toLowerCase()) {
+        const updated = { ...memUser, ...updateData };
+        globalRegisteredUsersMap.set(emailKey, updated);
+        return res.json({ success: true, user: updated });
+      }
+    }
+    return res.status(404).json({ success: false, error: 'User not found' });
+  } catch (err) {
+    console.error('Error updating user:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Delete User Endpoint (MongoDB Atlas)
+app.delete(['/api/admin/users/:id', '/admin/users/:id', '/api/users/:id', '/users/:id'], async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState === 1) {
+      const orConditions = [{ id }, { email: id }];
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        orConditions.push({ _id: id });
+      }
+      const deletedUser = await User.findOneAndDelete({ $or: orConditions });
+      if (deletedUser) {
+        if (deletedUser.email) globalRegisteredUsersMap.delete(deletedUser.email.toLowerCase());
+        return res.json({ success: true, message: 'User removed from MongoDB Atlas successfully' });
+      }
+    }
+
+    for (const [emailKey, memUser] of globalRegisteredUsersMap.entries()) {
+      if (memUser.id === id || memUser.email === id || emailKey === id.toLowerCase()) {
+        globalRegisteredUsersMap.delete(emailKey);
+        return res.json({ success: true, message: 'User removed successfully' });
+      }
+    }
+    return res.status(404).json({ success: false, error: 'User not found' });
+  } catch (err) {
+    console.error('Error deleting user:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Regular Customer Login (Supports Email or Phone)
 app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   const { emailOrPhone, password } = req.body;

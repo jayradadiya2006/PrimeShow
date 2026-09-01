@@ -867,6 +867,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [isUserActivityModalOpen, setIsUserActivityModalOpen] = useState(false);
   const [userActivitySubTab, setUserActivitySubTab] = useState('bookings');
 
+  // Edit User Modal State
+  const [editingUser, setEditingUser] = useState(null);
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [editUserLoading, setEditUserLoading] = useState(false);
+  const [editUserForm, setEditUserForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    city: '',
+    status: 'Online',
+    authProvider: 'LOCAL',
+    role: 'CUSTOMER'
+  });
+
   // Categorized Bookings State (Step 2)
   const [adminBookingsList, setAdminBookingsList] = useState([]);
   const [adminBookingsLoading, setAdminBookingsLoading] = useState(false);
@@ -1118,30 +1132,82 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
       if (res && res.data) {
         const fetchedList = Array.isArray(res.data) ? res.data : (res.data.users || []);
-        if (fetchedList.length > 0) {
-          setUsersList(fetchedList);
-          setUserTotalCount(res.data.totalUsers !== undefined ? res.data.totalUsers : fetchedList.length);
-          setUserTotalPages(res.data.totalPages || Math.ceil((fetchedList.length || 1) / 10) || 1);
-          setUserCurrentPage(res.data.currentPage || page);
-        } else {
-          setUsersList(fallbackSeedUsers);
-          setUserTotalCount(fallbackSeedUsers.length);
-          setUserTotalPages(1);
-        }
+        setUsersList(fetchedList);
+        setUserTotalCount(res.data.totalUsers !== undefined ? res.data.totalUsers : fetchedList.length);
+        setUserTotalPages(res.data.totalPages || Math.ceil((fetchedList.length || 1) / 10) || 1);
+        setUserCurrentPage(res.data.currentPage || page);
+        setUsersError(null);
       } else {
-        setUsersList(fallbackSeedUsers);
-        setUserTotalCount(fallbackSeedUsers.length);
+        setUsersList([]);
+        setUserTotalCount(0);
         setUserTotalPages(1);
       }
     } catch (err) {
       clearTimeout(timeoutId);
       console.warn('Failed to fetch admin users from database:', err);
       setUsersError("Unable to connect to server. Please try refreshing.");
-      setUsersList(fallbackSeedUsers);
-      setUserTotalCount(fallbackSeedUsers.length);
-      setUserTotalPages(1);
     } finally {
       setUsersLoading(false);
+    }
+  };
+
+  const handleOpenEditUserModal = (user) => {
+    setEditingUser(user);
+    setEditUserForm({
+      name: user.name || '',
+      email: user.email || '',
+      phone: user.phoneNumber || user.phone || '',
+      city: user.city || 'Surat',
+      status: (user.isOnline !== false && user.status !== 'Offline') ? 'Online' : 'Offline',
+      authProvider: (user.authProvider || user.provider || 'LOCAL').toUpperCase(),
+      role: user.role || 'CUSTOMER'
+    });
+    setIsEditUserModalOpen(true);
+  };
+
+  const handleSaveUserEdit = async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setEditUserLoading(true);
+    try {
+      const targetId = editingUser.id || editingUser._id || editingUser.email;
+      const res = await API.put(`/admin/users/${targetId}`, {
+        ...editUserForm,
+        isOnline: editUserForm.status === 'Online',
+        phoneNumber: editUserForm.phone
+      });
+      if (res && (res.status === 200 || res.data.success)) {
+        setActionSuccess(`User '${editUserForm.name}' updated successfully in MongoDB Atlas!`);
+        setIsEditUserModalOpen(false);
+        fetchAdminUsers(userCurrentPage, userSearchQuery);
+      } else {
+        alert("Failed to update user. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error editing user:", err);
+      alert("Error updating user: " + (err.response?.data?.error || err.message));
+    } finally {
+      setEditUserLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (user) => {
+    const targetId = user.id || user._id || user.email;
+    if (!window.confirm(`Are you sure you want to permanently delete user "${user.name}" (${user.email}) from MongoDB Atlas?`)) {
+      return;
+    }
+    try {
+      const res = await API.delete(`/admin/users/${targetId}`);
+      if (res && (res.status === 200 || res.data.success)) {
+        setActionSuccess(`User '${user.name}' deleted successfully from MongoDB Atlas!`);
+        setUsersList(prev => prev.filter(u => (u.id || u._id || u.email) !== targetId));
+        setUserTotalCount(prev => Math.max(0, prev - 1));
+      } else {
+        alert("Failed to delete user. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      alert("Error deleting user: " + (err.response?.data?.error || err.message));
     }
   };
 
@@ -3462,13 +3528,32 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           </td>
 
                           <td className="p-4 text-right">
-                            <button
-                              onClick={() => handleViewUserActivity(u)}
-                              className="px-3.5 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1.5 ml-auto cursor-pointer"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>View Activity</span>
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleViewUserActivity(u)}
+                                title="View Activity Logs & History"
+                                className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1 cursor-pointer"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Activity</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleOpenEditUserModal(u)}
+                                title="Edit User Details"
+                                className="p-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 transition-all cursor-pointer"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteUser(u)}
+                                title="Delete User from Database"
+                                className="p-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 transition-all cursor-pointer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -7155,6 +7240,120 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Details Modal */}
+      {isEditUserModalOpen && editingUser && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
+          <div className="relative w-full max-w-lg glass-modal rounded-3xl p-6 border border-cyan-400/30 shadow-[0_0_50px_rgba(0,0,0,0.9)] text-white flex flex-col my-auto overflow-hidden">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Edit User Profile</h3>
+                  <p className="text-xs text-cyan-300 font-mono">{editingUser.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsEditUserModalOpen(false)}
+                className="p-2 rounded-full bg-white/10 hover:bg-rose-500 text-white/80 transition-all cursor-pointer border border-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveUserEdit} className="space-y-4 pt-4">
+              <div>
+                <label className="block text-xs font-bold text-white/70 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editUserForm.name}
+                  onChange={(e) => setEditUserForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-white/70 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={editUserForm.email}
+                  onChange={(e) => setEditUserForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-white/70 mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    value={editUserForm.phone}
+                    onChange={(e) => setEditUserForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-white/70 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={editUserForm.city}
+                    onChange={(e) => setEditUserForm(prev => ({ ...prev, city: e.target.value }))}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-white/70 mb-1">Status</label>
+                  <select
+                    value={editUserForm.status}
+                    onChange={(e) => setEditUserForm(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-slate-900"
+                  >
+                    <option value="Online">🟢 Online</option>
+                    <option value="Offline">🔴 Offline</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-white/70 mb-1">Auth Provider</label>
+                  <select
+                    value={editUserForm.authProvider}
+                    onChange={(e) => setEditUserForm(prev => ({ ...prev, authProvider: e.target.value }))}
+                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-slate-900"
+                  >
+                    <option value="LOCAL">LOCAL / Email</option>
+                    <option value="GOOGLE">GOOGLE</option>
+                    <option value="MOBILE">MOBILE / OTP</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsEditUserModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl glass-panel text-xs font-bold text-white/80 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editUserLoading}
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {editUserLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Save Changes</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
