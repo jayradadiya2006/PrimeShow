@@ -1,35 +1,34 @@
-/* PrimeShow Cinema Theme System (Harmonized Dark & Light Themes) */
+/* PrimeShow Cinema Theme System (Color Hunt Neutral Palette: #A59D84, #C1BAA1, #D7D3BF, #ECEBDE) */
 
 :root {
-  --admin-bg-primary: #F3EEEA;
-  --admin-bg-secondary: #EBE3D5;
-  --admin-border-muted: #B0A695;
-  --admin-accent-primary: #776B5D;
-  --admin-text-primary: #776B5D;
+  --admin-bg-primary: #ECEBDE;
+  --admin-bg-secondary: #D7D3BF;
+  --admin-border-muted: #C1BAA1;
+  --admin-accent-primary: #A59D84;
+  --admin-text-primary: #1E1B18;
   --admin-text-dark: #1A1A1A;
 
-  --bg-main: #F3EEEA;
-  --text-main: #776B5D;
-  --text-muted: #776B5D;
-  --card-bg: #EBE3D5;
-  --modal-bg: #EBE3D5;
-  --border-main: #B0A695;
-  --input-bg: #F3EEEA;
-  --accent-gold: #776B5D;
-  --accent-red: #776B5D;
+  --bg-main: #ECEBDE;
+  --text-main: #1E1B18;
+  --text-muted: #5C5449;
+  --card-bg: #D7D3BF;
+  --modal-bg: #D7D3BF;
+  --border-main: #C1BAA1;
+  --input-bg: #ECEBDE;
+  --accent-primary: #A59D84;
 }
 
 html, body, html.dark, body.dark, html.light, body.light {
-  --bg-main: #F3EEEA;
-  --text-main: #776B5D;
-  --text-muted: #776B5D;
-  --card-bg: #EBE3D5;
-  --modal-bg: #EBE3D5;
-  --border-main: #B0A695;
-  --input-bg: #F3EEEA;
+  --bg-main: #ECEBDE;
+  --text-main: #1E1B18;
+  --text-muted: #5C5449;
+  --card-bg: #D7D3BF;
+  --modal-bg: #D7D3BF;
+  --border-main: #C1BAA1;
+  --input-bg: #ECEBDE;
 
-  background-color: #F3EEEA !important;
-  color: #776B5D !important;
+  background-color: #ECEBDE !important;
+  color: #1E1B18 !important;
 }
 
 body {
@@ -37,88 +36,90 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background-color: #F3EEEA !important;
-  color: #776B5D !important;
+  background-color: #ECEBDE !important;
+  color: #1E1B18 !important;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, h4, h5, h6, .font-serif, .font-sans {
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-  color: #776B5D !important;
+  color: #1E1B18 !important;
 }
 
-/* Base Glassmorphism System - Cinema Dark & Light Adaptability */
+/* Base Glassmorphism System - Cinema Theme */
 .glass-panel {
-  background: #EBE3D5 !important;
+  background: #D7D3BF !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid #B0A695 !important;
-  box-shadow: 0 10px 30px 0 rgba(119, 107, 93, 0.08) !important;
-  color: #776B5D !important;
+  border: 1px solid #C1BAA1 !important;
+  box-shadow: 0 10px 30px 0 rgba(165, 157, 132, 0.12) !important;
+  color: #1E1B18 !important;
 }
 
 html.light .glass-panel {
-  background: #EBE3D5 !important;
-  border-color: #B0A695 !important;
-  color: #776B5D !important;
+  background: #D7D3BF !important;
+  border-color: #C1BAA1 !important;
+  color: #1E1B18 !important;
 }
 
 .glass-panel-gold {
-  background: rgba(235, 227, 213, 0.95);
+  background: rgba(215, 211, 191, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid #B0A695;
-  box-shadow: 0 15px 45px 0 rgba(119, 107, 93, 0.1);
+  border: 1px solid #C1BAA1;
+  box-shadow: 0 15px 45px 0 rgba(165, 157, 132, 0.15);
+  color: #1E1B18;
 }
 
 html.light .glass-panel-gold {
-  background: rgba(254, 243, 199, 0.95);
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  color: #78350F;
+  background: rgba(215, 211, 191, 0.95);
+  border: 1px solid #C1BAA1;
+  color: #1E1B18;
 }
 
 .glass-panel-red {
-  background: rgba(35, 12, 16, 0.85);
+  background: rgba(215, 211, 191, 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(229, 9, 20, 0.35);
-  box-shadow: 0 15px 45px 0 rgba(229, 9, 20, 0.18);
+  border: 1px solid #C1BAA1;
+  box-shadow: 0 15px 45px 0 rgba(165, 157, 132, 0.15);
+  color: #1E1B18;
 }
 
 html.light .glass-panel-red {
-  background: rgba(254, 226, 226, 0.95);
-  border: 1px solid rgba(239, 68, 68, 0.5);
-  color: #7F1D1D;
+  background: rgba(215, 211, 191, 0.95);
+  border: 1px solid #C1BAA1;
+  color: #1E1B18;
 }
 
 .glass-modal {
-  background: #EBE3D5 !important;
+  background: #D7D3BF !important;
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border: 1px solid #B0A695 !important;
-  box-shadow: 0 25px 70px -15px rgba(119, 107, 93, 0.2) !important;
-  color: #776B5D !important;
+  border: 1px solid #C1BAA1 !important;
+  box-shadow: 0 25px 70px -15px rgba(165, 157, 132, 0.25) !important;
+  color: #1E1B18 !important;
 }
 
 html.light .glass-modal {
-  background: #EBE3D5 !important;
-  border-color: #B0A695 !important;
-  color: #776B5D !important;
+  background: #D7D3BF !important;
+  border-color: #C1BAA1 !important;
+  color: #1E1B18 !important;
 }
 
 .glass-input {
-  background: #F3EEEA !important;
-  border: 1px solid #B0A695 !important;
+  background: #ECEBDE !important;
+  border: 1px solid #C1BAA1 !important;
   backdrop-filter: blur(12px);
-  color: #776B5D !important;
+  color: #1E1B18 !important;
   font-weight: 700;
   transition: all 0.3s ease;
 }
 
 html.light .glass-input {
-  background: #F3EEEA !important;
-  border-color: #B0A695 !important;
-  color: #776B5D !important;
+  background: #ECEBDE !important;
+  border-color: #C1BAA1 !important;
+  color: #1E1B18 !important;
 }
 
 .glass-input:focus {
