@@ -60,79 +60,79 @@ export const Footer = ({ setActiveTab }) => {
   };
 
   return (
-    <footer className="relative z-10 w-full bg-[#A59D84] text-slate-900 border-t border-[#C1BAA1] transition-colors duration-300 font-sans">
+    <footer className="relative z-10 w-full bg-[#382C24] text-amber-100 border-t border-[#4D3E33] transition-colors duration-300 font-sans">
       
       {/* 1. Live Running Marquee / Ticker Bar */}
-      <div className="w-full bg-[#8A826D] text-white py-1.5 sm:py-2 overflow-hidden whitespace-nowrap shadow-inner border-y border-white/10">
+      <div className="w-full bg-[#2A2019] text-amber-100 py-1.5 sm:py-2 overflow-hidden whitespace-nowrap shadow-inner border-y border-white/10">
         <div className="inline-block animate-marquee tracking-wide font-semibold text-[10px] xs:text-xs sm:text-sm">
-          <span className="mx-4 sm:mx-8 text-white font-bold">🔥 FLASH OFFER: Get 20% Instant Discount on Movie Tickets with UPI Payment!</span>
-          <span className="mx-4 sm:mx-8 text-white font-bold">🎬 IMXN 4K & IMAX 3D Releases This Friday - Book Passes Now!</span>
-          <span className="mx-4 sm:mx-8 text-white font-bold">🎟️ Instant QR Verification & Seamless Entry Pass Generation!</span>
-          <span className="mx-4 sm:mx-8 text-white font-bold">🎭 Live Plays & Standup Comedy Shows Open in Your City!</span>
-          <span className="mx-4 sm:mx-8 text-white font-bold">⭐ 4.9/5 User Rating • 100% Guaranteed Real-Time Seat Lock</span>
+          <span className="mx-4 sm:mx-8 text-amber-200 font-bold">🔥 FLASH OFFER: Get 20% Instant Discount on Movie Tickets with UPI Payment!</span>
+          <span className="mx-4 sm:mx-8 text-amber-200 font-bold">🎬 IMXN 4K & IMAX 3D Releases This Friday - Book Passes Now!</span>
+          <span className="mx-4 sm:mx-8 text-amber-200 font-bold">🎟️ Instant QR Verification & Seamless Entry Pass Generation!</span>
+          <span className="mx-4 sm:mx-8 text-amber-200 font-bold">🎭 Live Plays & Standup Comedy Shows Open in Your City!</span>
+          <span className="mx-4 sm:mx-8 text-amber-200 font-bold">⭐ 4.9/5 User Rating • 100% Guaranteed Real-Time Seat Lock</span>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12 space-y-6 md:space-y-10">
         
-        {/* 2. Top Feature & Trust Badges Section */}
-        <div className="flex flex-row overflow-x-auto scrollbar-none no-scrollbar gap-2.5 sm:gap-4 lg:grid lg:grid-cols-4 pb-6 md:pb-8 border-b border-[#C1BAA1] w-full max-w-full py-1">
+        {/* 2. Top Feature & Trust Badges Section (Deepest Dark Shade #2E231C) */}
+        <div className="flex flex-row overflow-x-auto scrollbar-none no-scrollbar gap-2.5 sm:gap-4 lg:grid lg:grid-cols-4 pb-6 md:pb-8 border-b border-[#4D3E33] w-full max-w-full py-1">
           
-          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#D7D3BF] border border-[#C1BAA1] flex items-center gap-2.5 sm:gap-3.5 shadow-sm transition-all">
-            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#A59D84]/20 text-[#1E1B18] border border-[#C1BAA1] shrink-0">
-              <Film className="w-4 h-4 sm:w-5 sm:h-5 text-[#1E1B18]" />
+          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#2E231C] border border-[#44352B] flex items-center gap-2.5 sm:gap-3.5 shadow-sm transition-all">
+            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#4D3E33] text-amber-300 border border-[#59483C] shrink-0">
+              <Film className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">IMXN 4K & 3D Native</h4>
-              <p className="text-[10px] sm:text-xs text-slate-700 leading-tight line-clamp-2">70mm laser & 360 sound</p>
+              <h4 className="text-xs sm:text-sm font-bold text-amber-100 truncate">IMXN 4K & 3D Native</h4>
+              <p className="text-[10px] sm:text-xs text-amber-200/70 leading-tight line-clamp-2">70mm laser & 360 sound</p>
             </div>
           </div>
 
-          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#D7D3BF] border border-[#C1BAA1] flex items-center gap-2.5 sm:gap-3.5 shadow-sm transition-all">
-            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#A59D84]/20 text-[#1E1B18] border border-[#C1BAA1] shrink-0">
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-[#1E1B18]" />
+          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#2E231C] border border-[#44352B] flex items-center gap-2.5 sm:gap-3.5 shadow-sm transition-all">
+            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#4D3E33] text-amber-300 border border-[#59483C] shrink-0">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">100% Seat Guarantee</h4>
-              <p className="text-[10px] sm:text-xs text-slate-700 leading-tight line-clamp-2">Real-time seat locking API</p>
+              <h4 className="text-xs sm:text-sm font-bold text-amber-100 truncate">100% Seat Guarantee</h4>
+              <p className="text-[10px] sm:text-xs text-amber-200/70 leading-tight line-clamp-2">Real-time seat locking API</p>
             </div>
           </div>
 
-          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#D7D3BF] border border-[#C1BAA1] flex items-center gap-2.5 sm:gap-3.5 shadow-sm transition-all">
-            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#A59D84]/20 text-[#1E1B18] border border-[#C1BAA1] shrink-0">
-              <Award className="w-4 h-4 sm:w-5 sm:h-5 text-[#1E1B18]" />
+          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#2E231C] border border-[#44352B] flex items-center gap-2.5 sm:gap-3.5 shadow-sm transition-all">
+            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#4D3E33] text-amber-300 border border-[#59483C] shrink-0">
+              <Award className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">⭐ 4.9/5 User Rating</h4>
-              <p className="text-[10px] sm:text-xs text-slate-700 leading-tight line-clamp-2">Over 100k+ verified reviews</p>
+              <h4 className="text-xs sm:text-sm font-bold text-amber-100 truncate">⭐ 4.9/5 User Rating</h4>
+              <p className="text-[10px] sm:text-xs text-amber-200/70 leading-tight line-clamp-2">Over 100k+ verified reviews</p>
             </div>
           </div>
 
-          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#D7D3BF] border border-[#C1BAA1] flex items-center gap-2.5 sm:gap-3.5 shadow-sm transition-all">
-            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#A59D84]/20 text-[#1E1B18] border border-[#C1BAA1] shrink-0">
-              <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#1E1B18]" />
+          <div className="w-[155px] xs:w-[175px] sm:w-auto shrink-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#2E231C] border border-[#44352B] flex items-center gap-2.5 sm:gap-3.5 shadow-sm transition-all">
+            <div className="p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl bg-[#4D3E33] text-amber-300 border border-[#59483C] shrink-0">
+              <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">24/7 VIP Support</h4>
-              <p className="text-[10px] sm:text-xs text-slate-700 leading-tight line-clamp-2">Dedicated booking hotline</p>
+              <h4 className="text-xs sm:text-sm font-bold text-amber-100 truncate">24/7 VIP Support</h4>
+              <p className="text-[10px] sm:text-xs text-amber-200/70 leading-tight line-clamp-2">Dedicated booking hotline</p>
             </div>
           </div>
         </div>
 
         {/* 3. Compact Newsletter & Search Box Strip */}
-        <div className="p-4 sm:p-6 rounded-2xl bg-[#D7D3BF] border border-[#C1BAA1] flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="p-4 sm:p-6 rounded-2xl bg-[#45362C] border border-[#59483C] flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left space-y-1">
-            <h4 className="text-sm sm:text-base font-bold text-slate-900 flex items-center justify-center md:justify-start gap-2">
-              <Mail className="w-4 h-4 text-[#1E1B18]" />
+            <h4 className="text-sm sm:text-base font-bold text-amber-50 flex items-center justify-center md:justify-start gap-2">
+              <Mail className="w-4 h-4 text-amber-300" />
               <span>Subscribe for VIP Offers & Secret Show Alerts</span>
             </h4>
-            <p className="text-xs text-slate-700">Get instant promo vouchers & early access to IMAX 3D recliners.</p>
+            <p className="text-xs text-amber-200/80">Get instant promo vouchers & early access to IMAX 3D recliners.</p>
           </div>
 
           <form onSubmit={handleSubscribeSubmit} className="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2 shrink-0">
             {isSubscribed ? (
-              <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 text-emerald-800 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 w-full sm:w-auto justify-center">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+              <div className="px-4 py-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 w-full sm:w-auto justify-center">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>Subscribed Successfully!</span>
               </div>
             ) : (
@@ -144,12 +144,12 @@ export const Footer = ({ setActiveTab }) => {
                     placeholder="Enter your email address..."
                     value={subscribedEmail}
                     onChange={(e) => setSubscribedEmail(e.target.value)}
-                    className="w-full pl-3.5 pr-4 py-2.5 rounded-xl text-xs bg-[#ECEBDE] text-slate-900 border border-[#C1BAA1] focus:outline-none"
+                    className="w-full pl-3.5 pr-4 py-2.5 rounded-xl text-xs bg-[#2B211A] text-amber-100 border border-[#59483C] focus:outline-none placeholder-amber-200/40"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#8A826D] hover:bg-[#776B5D] text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer shrink-0"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#6E5D4F] hover:bg-[#8C846B] text-white text-xs font-extrabold flex items-center justify-center gap-1.5 shadow-lg transition-all cursor-pointer shrink-0"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Subscribe</span>
