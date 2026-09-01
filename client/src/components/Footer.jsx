@@ -60,7 +60,7 @@ export const Footer = ({ setActiveTab }) => {
   };
 
   return (
-    <footer className="relative z-10 w-full bg-[#A59D84] text-slate-900 border-t border-[#8C846B] transition-colors duration-300 font-sans">
+    <footer className="relative z-10 w-full bg-[#4A3E3D] text-slate-900 border-t border-[#352B2A] transition-colors duration-300 font-sans">
       
       {/* 1. Live Running Marquee / Ticker Bar (Dark Brown Accent Kept) */}
       <div className="w-full bg-[#2A2019] text-amber-100 py-1.5 sm:py-2 overflow-hidden whitespace-nowrap shadow-inner border-y border-white/10">
