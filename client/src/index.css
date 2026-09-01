@@ -1,34 +1,36 @@
-/* PrimeShow Cinema Theme System (Color Hunt Neutral Palette: #A59D84, #C1BAA1, #D7D3BF, #ECEBDE) */
+/* PrimeShow Cinema Theme System (Color Hunt Palette: #2E2910, #2C5745, #EBE3A7, #EB7D00) */
 
 :root {
   --admin-bg-primary: #ECEBDE;
   --admin-bg-secondary: #D7D3BF;
   --admin-border-muted: #C1BAA1;
-  --admin-accent-primary: #A59D84;
-  --admin-text-primary: #1E1B18;
-  --admin-text-dark: #1A1A1A;
+  --admin-accent-primary: #2C5745;
+  --admin-text-primary: #2E2910;
+  --admin-text-dark: #2E2910;
 
   --bg-main: #ECEBDE;
-  --text-main: #1E1B18;
-  --text-muted: #5C5449;
+  --text-main: #2E2910;
+  --text-muted: #2C5745;
   --card-bg: #D7D3BF;
   --modal-bg: #D7D3BF;
   --border-main: #C1BAA1;
   --input-bg: #ECEBDE;
-  --accent-primary: #A59D84;
+  --accent-primary: #2C5745;
+  --accent-orange: #EB7D00;
+  --tag-light: #EBE3A7;
 }
 
 html, body, html.dark, body.dark, html.light, body.light {
   --bg-main: #ECEBDE;
-  --text-main: #1E1B18;
-  --text-muted: #5C5449;
+  --text-main: #2E2910;
+  --text-muted: #2C5745;
   --card-bg: #D7D3BF;
   --modal-bg: #D7D3BF;
   --border-main: #C1BAA1;
   --input-bg: #ECEBDE;
 
   background-color: #ECEBDE !important;
-  color: #1E1B18 !important;
+  color: #2E2910 !important;
 }
 
 body {
@@ -37,13 +39,13 @@ body {
   padding: 0;
   overflow-x: hidden;
   background-color: #ECEBDE !important;
-  color: #1E1B18 !important;
+  color: #2E2910 !important;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1, h2, h3, h4, h5, h6, .font-serif, .font-sans {
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-  color: #1E1B18 !important;
+  color: #2E2910 !important;
 }
 
 /* Base Glassmorphism System - Cinema Theme */

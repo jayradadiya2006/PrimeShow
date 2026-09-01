@@ -92,16 +92,16 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
         <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 rounded-3xl bg-[#ECEBDE] border border-[#C1BAA1]">
           <div className="flex flex-row items-center justify-between gap-2 mb-3 sm:mb-6">
             <div>
-              <div className="flex items-center gap-1.5 text-amber-800 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="flex items-center gap-1.5 text-[#2C5745] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#EB7D00]" />
                 <span>Premier Blockbusters</span>
               </div>
-              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold font-sans text-slate-900">Now Showing in {selectedCity}</h2>
+              <h2 className="text-xl sm:text-3xl md:text-4xl font-bold font-sans text-[#2E2910]">Now Showing in {selectedCity}</h2>
             </div>
 
             <button
               onClick={() => setActiveTab('movies')}
-              className="text-[11px] sm:text-xs font-bold text-amber-800 hover:text-slate-900 flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+              className="text-[11px] sm:text-xs font-bold text-[#EB7D00] hover:text-[#2E2910] flex items-center gap-1 transition-colors cursor-pointer shrink-0"
             >
               <span>Explore All ({moviesList.length})</span>
               <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -125,11 +125,11 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
         <div className="space-y-4 p-4 sm:p-6 rounded-3xl bg-[#ECEBDE] border border-[#C1BAA1]">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-1.5 text-amber-800 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5">
-                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="flex items-center gap-1.5 text-[#2C5745] text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5">
+                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#EB7D00]" />
                 <span>Coming Soon</span>
               </div>
-              <h2 className="text-xl sm:text-3xl font-bold font-sans text-slate-900">Upcoming Big Releases</h2>
+              <h2 className="text-xl sm:text-3xl font-bold font-sans text-[#2E2910]">Upcoming Big Releases</h2>
             </div>
           </div>
 
@@ -143,22 +143,22 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
             ]).map((mov) => (
               <div 
                 key={mov.id} 
-                className="w-[140px] xs:w-[155px] sm:w-[190px] shrink-0 bg-[#D7D3BF] p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl border border-[#C1BAA1] flex flex-col justify-between hover:border-[#A59D84] transition-all group"
+                className="w-[140px] xs:w-[155px] sm:w-[190px] shrink-0 bg-[#3E3025] p-2.5 sm:p-3.5 rounded-2xl sm:rounded-3xl border border-[#2C5745] flex flex-col justify-between hover:border-[#EB7D00] transition-all group"
               >
                 <div>
-                  <div className="relative w-full h-[170px] sm:h-[220px] rounded-xl sm:rounded-2xl overflow-hidden border border-[#C1BAA1] mb-2">
+                  <div className="relative w-full h-[170px] sm:h-[220px] rounded-xl sm:rounded-2xl overflow-hidden border border-[#2C5745] mb-2">
                     <img 
                       src={mov.poster} 
                       alt={mov.title} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                     />
-                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#A59D84] text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-md">
+                    <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#EB7D00] text-white font-black text-[8px] sm:text-[9px] uppercase tracking-wider shadow-md">
                       {mov.release}
                     </span>
                   </div>
 
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-full">{mov.title}</h3>
-                  <p className="text-[10px] sm:text-xs text-slate-600 truncate max-w-full mt-0.5">
+                  <h3 className="text-xs sm:text-sm font-bold text-[#EBE3A7] truncate max-w-full">{mov.title}</h3>
+                  <p className="text-[10px] sm:text-xs text-[#EBE3A7]/70 truncate max-w-full mt-0.5">
                     {Array.isArray(mov.genres) ? mov.genres.join(' • ') : mov.genres}
                   </p>
                 </div>
@@ -167,11 +167,11 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
                   onClick={() => toggleReminder(mov.id)}
                   className={`w-full mt-2.5 py-1.5 rounded-xl text-[10px] sm:text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
                     remindersSet[mov.id]
-                      ? 'bg-[#A59D84] text-white shadow-md'
-                      : 'bg-[#ECEBDE] hover:bg-[#C1BAA1] text-slate-900 border border-[#C1BAA1]'
+                      ? 'bg-[#EB7D00] text-white shadow-md'
+                      : 'bg-[#2E2910] hover:bg-[#2C5745] text-[#EBE3A7] border border-[#2C5745]'
                   }`}
                 >
-                  <Bell className="w-3 h-3" />
+                  <Bell className="w-3 h-3 text-[#EB7D00]" />
                   <span>{remindersSet[mov.id] ? 'Reminder Set ✓' : 'Set Reminder'}</span>
                 </button>
               </div>
