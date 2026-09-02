@@ -51,15 +51,15 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             className="flex items-center gap-1.5 sm:gap-2.5 text-left group focus:outline-none cursor-pointer"
           >
             {/* Logo Icon: Compact on mobile (w-7 h-7 / text-base), Desktop intact (w-10 h-10 / text-2xl) */}
-            <div className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-200 flex items-center justify-center shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform duration-300">
-              <span className="text-black font-black text-base sm:text-xl md:text-2xl font-sans">P</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-xl bg-[#D90000] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-300">
+              <span className="text-white font-black text-base sm:text-xl md:text-2xl font-sans">P</span>
             </div>
             <div>
-              {/* Brand Text: Compact on mobile (text-base sm:text-xl), Desktop intact (text-2xl md:text-3xl) */}
-              <span className="text-base sm:text-xl md:text-3xl font-bold font-sans tracking-wide bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900 dark:from-amber-200 dark:via-amber-400 dark:to-amber-100 bg-clip-text text-transparent">
+              {/* Brand Text: High-contrast Dark Brown text */}
+              <span className="text-base sm:text-xl md:text-3xl font-black font-sans tracking-wide text-[#3B1E08] drop-shadow-xs">
                 PrimeShow
               </span>
-              <span className="hidden sm:inline-block block text-[9px] sm:text-[10px] tracking-widest text-amber-700 dark:text-amber-400/80 uppercase font-sans font-semibold">
+              <span className="hidden sm:inline-block block text-[9px] sm:text-[10px] tracking-widest text-[#3B1E08] uppercase font-sans font-bold">
                 Ultra Luxury Cinema
               </span>
             </div>
@@ -94,8 +94,8 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
 
           {/* Desktop Search Suggestions Dropdown */}
           {isSearchFocused && searchQuery.length > 0 && (
-            <div className="absolute left-0 right-0 top-12 glass-modal rounded-2xl p-3 border border-amber-500/30 shadow-2xl z-[100]">
-              <div className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 px-3 py-1 uppercase tracking-wider">
+            <div className="absolute left-0 right-0 top-12 bg-white rounded-2xl p-3 border border-slate-300 shadow-2xl z-[100]">
+              <div className="text-[11px] font-bold text-slate-800 px-3 py-1 uppercase tracking-wider">
                 Live Search Suggestions
               </div>
               {searchSuggestions.length > 0 ? (
@@ -106,14 +106,14 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                       setActiveTab('movies');
                       setSearchQuery('');
                     }}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-between group transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 flex items-center justify-between group transition-colors cursor-pointer"
                   >
-                    <span className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300">{item.title}</span>
-                    <span className="text-xs text-slate-500 dark:text-white/40">{item.category}</span>
+                    <span className="text-sm font-bold text-slate-900 group-hover:text-[#D90000]">{item.title}</span>
+                    <span className="text-xs text-slate-500 font-semibold">{item.category}</span>
                   </button>
                 ))
               ) : (
-                <div className="px-3 py-2 text-xs text-slate-500 dark:text-white/50">No matches found</div>
+                <div className="px-3 py-2 text-xs text-slate-500">No matches found</div>
               )}
             </div>
           )}
@@ -125,56 +125,56 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
           {/* Mobile Search Toggle Icon */}
           <button
             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-            className="md:hidden p-2 rounded-full bg-slate-200/60 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white/80 transition-all cursor-pointer"
+            className="md:hidden p-2 rounded-full bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 transition-all cursor-pointer"
             title="Search"
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-4 h-4 text-slate-900" />
           </button>
 
           {/* Desktop Settings Dropdown (hidden on mobile, moved into Mobile Drawer) */}
           <div className="relative hidden md:block z-[100]">
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className="p-2.5 rounded-full bg-slate-200/60 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/15 border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white/80 transition-all cursor-pointer"
+              className="p-2.5 rounded-full bg-white border border-slate-300 text-slate-900 hover:bg-slate-100 transition-all cursor-pointer shadow-xs"
               title="Settings & Menu"
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-4 h-4 text-slate-900" />
             </button>
 
             {isSettingsOpen && (
               <div 
-                className="absolute right-0 top-12 w-64 glass-modal rounded-2xl p-2 border border-slate-300 dark:border-white/15 shadow-2xl z-[100] text-xs animate-fade-in"
+                className="absolute right-0 top-12 w-64 bg-white rounded-2xl p-2 border border-slate-300 shadow-2xl z-[100] text-xs animate-fade-in text-slate-900"
                 onMouseLeave={() => setIsSettingsOpen(false)}
               >
-                <div className="px-3 py-2 border-b border-slate-200 dark:border-white/10 font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider text-[10px]">
+                <div className="px-3 py-2 border-b border-slate-200 font-extrabold text-slate-800 uppercase tracking-wider text-[10px]">
                   Account & Settings Menu
                 </div>
 
                 {user ? (
-                  <div className="p-2 mb-1 rounded-xl bg-amber-500/10 border border-amber-400/20">
+                  <div className="p-2 mb-1.5 rounded-xl bg-slate-100 border border-slate-200">
                     <div className="flex items-center gap-2.5 px-1 py-1">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-amber-300 text-black font-extrabold flex items-center justify-center text-xs shrink-0 shadow-md">
+                      <div className="w-8 h-8 rounded-full bg-[#D90000] text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-md">
                         {user.email ? user.email.charAt(0).toUpperCase() : (user.name ? user.name.charAt(0).toUpperCase() : 'U')}
                       </div>
                       <div className="truncate flex-1 min-w-0">
-                        <div className="font-bold text-slate-900 dark:text-white truncate text-xs">{user.name || 'Member'}</div>
-                        <div className="text-[11px] text-amber-600 dark:text-amber-300 font-mono truncate">{user.email || user.phone || 'Firebase User'}</div>
+                        <div className="font-extrabold text-slate-900 truncate text-xs">{user.name || 'Member'}</div>
+                        <div className="text-[11px] text-slate-700 font-semibold truncate">{user.email || user.phone || 'Firebase User'}</div>
                       </div>
                     </div>
                     <button
                       onClick={() => { logout(); setIsSettingsOpen(false); setActiveTab('home'); }}
-                      className="mt-2 w-full text-left px-3 py-1.5 rounded-lg text-rose-600 dark:text-rose-300 hover:bg-rose-500/20 font-bold flex items-center gap-2 transition-colors cursor-pointer text-xs"
+                      className="mt-2 w-full text-left px-3 py-1.5 rounded-lg text-[#D90000] hover:bg-red-50 font-bold flex items-center gap-2 transition-colors cursor-pointer text-xs"
                     >
-                      <LogOut className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
+                      <LogOut className="w-3.5 h-3.5 text-[#D90000]" />
                       <span>Logout ({user.email ? (user.email.length > 16 ? user.email.slice(0, 14) + '...' : user.email) : 'Account'})</span>
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={() => { onOpenAuth(); setIsSettingsOpen(false); }}
-                    className="w-full text-left px-3 py-2.5 mb-1 rounded-xl text-slate-800 dark:text-white hover:bg-amber-500/20 hover:text-amber-600 dark:hover:text-amber-300 font-bold flex items-center gap-2.5 transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 mb-1 rounded-xl text-slate-900 hover:bg-red-50 hover:text-[#D90000] font-bold flex items-center gap-2.5 transition-colors cursor-pointer"
                   >
-                    <User className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                    <User className="w-4 h-4 text-[#D90000]" />
                     <span>Login / Register (Email & OTP)</span>
                   </button>
                 )}
@@ -182,34 +182,34 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
                 {user && (
                   <button
                     onClick={() => { setActiveTab('profile-info'); setIsSettingsOpen(false); }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2.5 cursor-pointer"
+                    className="w-full text-left px-3 py-2 rounded-xl text-slate-900 font-bold hover:text-[#D90000] hover:bg-slate-100 flex items-center gap-2.5 cursor-pointer transition-colors"
                   >
-                    <User className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                    <User className="w-4 h-4 text-[#D90000]" />
                     <span>My Personal Details</span>
                   </button>
                 )}
 
                 <button
                   onClick={() => { setActiveTab('profile-wishlist'); setIsSettingsOpen(false); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2.5 cursor-pointer"
+                  className="w-full text-left px-3 py-2 rounded-xl text-slate-900 font-bold hover:text-rose-600 hover:bg-slate-100 flex items-center gap-2.5 cursor-pointer transition-colors"
                 >
-                  <Heart className="w-4 h-4 text-rose-500 dark:text-rose-400" />
+                  <Heart className="w-4 h-4 text-rose-600" />
                   <span>Wishlist</span>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab('profile-rewards'); setIsSettingsOpen(false); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2.5 cursor-pointer"
+                  className="w-full text-left px-3 py-2 rounded-xl text-slate-900 font-bold hover:text-amber-600 hover:bg-slate-100 flex items-center gap-2.5 cursor-pointer transition-colors"
                 >
-                  <Award className="w-4 h-4 text-amber-500 dark:text-amber-300" />
+                  <Award className="w-4 h-4 text-amber-600" />
                   <span>Rewards & Wallet</span>
                 </button>
 
                 <button
                   onClick={() => { setActiveTab('profile-support'); setIsSettingsOpen(false); }}
-                  className="w-full text-left px-3 py-2 rounded-xl text-slate-700 dark:text-white/80 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 flex items-center gap-2.5 cursor-pointer"
+                  className="w-full text-left px-3 py-2 rounded-xl text-slate-900 font-bold hover:text-cyan-600 hover:bg-slate-100 flex items-center gap-2.5 cursor-pointer transition-colors"
                 >
-                  <HelpCircle className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
+                  <HelpCircle className="w-4 h-4 text-cyan-600" />
                   <span>Customer Support 24/7</span>
                 </button>
               </div>
