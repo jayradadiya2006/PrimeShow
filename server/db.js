@@ -239,17 +239,16 @@ async function connectDB() {
   const fallbackUri = `mongodb+srv://jayradadiya2006_db_user:${dbPassword}@cluster0.aiq5c3r.mongodb.net/primeshow?retryWrites=true&w=majority`;
   const uri = process.env.MONGODB_URI || fallbackUri;
 
-  try {
-    if (mongoose.connection.readyState === 1) {
-      console.log(`>>> CONNECTED TO CLOUD DB: ${mongoose.connection.host}`);
-      return true;
-    }
+  if (mongoose.connection.readyState === 1) {
+    return true;
+  }
 
+  try {
     console.log(`🔄 Connecting strictly to MongoDB Atlas Cloud Database...`);
     const conn = await mongoose.connect(uri, {
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 10000
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 15000
     });
 
     isConnected = true;
@@ -258,7 +257,7 @@ async function connectDB() {
     return true;
   } catch (err) {
     console.error(`❌ MongoDB Atlas Connection Error: ${err.message}`);
-    return false;
+    throw err;
   }
 }
 

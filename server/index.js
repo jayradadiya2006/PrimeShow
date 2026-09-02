@@ -97,14 +97,23 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-User-Id', 'Accept', 'Cache-Control', 'Pragma', 'Expires']
 }));
 
-// Step 4: Serverless Cold Start Mongoose Direct Atlas Reconnection Middleware
+// Step 4: Serverless Cold Start Mongoose Direct Atlas Reconnection & Readiness Guard
 app.use(async (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
     try {
+      console.log(`⚡ [DB Readiness Guard]: Awaiting MongoDB connection for ${req.method} ${req.originalUrl}...`);
       await connectDB();
     } catch (e) {
-      console.warn('⚡ [Mongoose Reconnect Note]:', e.message);
+      console.error('❌ [DB Readiness Guard Error]:', e.message);
     }
+  }
+
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      error: 'Database connection is currently initializing. Please retry in a few seconds.',
+      path: req.originalUrl
+    });
   }
   next();
 });
@@ -6474,15 +6483,23 @@ app.use((err, req, res, next) => {
 
 const isMainModule = process.argv[1] && (process.argv[1].endsWith('index.js') || process.argv[1].endsWith('server.js'));
 
-if ((isMainModule || process.env.VERCEL !== '1') && process.env.NODE_ENV !== 'test') {
-  server.listen(PORT, () => {
-    console.log(`🚀 PrimeShow REST API & Socket.io Backend running on http://localhost:${PORT}`);
-    connectDB().then(() => {
-      seedDatabaseIfEmpty().catch(e => console.warn('⚠️ Seed database note:', e.message));
-    }).catch(err => {
-      console.error('⚠️ DB Connection non-fatal warning during startup:', err.message);
+async function startServer() {
+  try {
+    console.log('🔄 Awaiting MongoDB Atlas cloud database connection before starting HTTP server...');
+    await connectDB();
+    console.log('✅ MongoDB Atlas initial connection complete.');
+
+    server.listen(PORT, () => {
+      console.log(`🚀 PrimeShow REST API & Socket.io Backend running on http://localhost:${PORT}`);
     });
-  });
+  } catch (err) {
+    console.error('❌ Fatal error connecting to MongoDB Atlas on startup:', err.message);
+    process.exit(1);
+  }
+}
+
+if ((isMainModule || process.env.VERCEL !== '1') && process.env.NODE_ENV !== 'test') {
+  startServer();
 } else {
   connectDB().catch(err => console.warn('⚠️ Serverless DB connection note:', err.message));
 }
