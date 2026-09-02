@@ -1480,6 +1480,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
       name: castName.trim(),
       roleName: (castRole || 'Lead Role').trim(),
       role: (castRole || 'Lead Role').trim(),
+      character: (castRole || 'Lead Role').trim(),
       photoUrl: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
       photo: castPhoto || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'
     };
@@ -1489,14 +1490,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
       const updatedMovie = res?.data?.movie;
 
       if (updatedMovie) {
-        setMoviesList(prev => prev.map(m => (m.id === castMovieId || m._id === castMovieId) ? updatedMovie : m));
+        setMoviesList(prev => prev.map(m =>
+          (m.id === castMovieId || m._id === castMovieId || m.title === castMovieId || (m.title && m.title.toLowerCase() === String(castMovieId).toLowerCase()))
+            ? updatedMovie
+            : m
+        ));
       } else {
         // Fallback local update
         setMoviesList(prev => prev.map(m => {
-          if (m.id === castMovieId || m._id === castMovieId) {
+          if (m.id === castMovieId || m._id === castMovieId || m.title === castMovieId || (m.title && m.title.toLowerCase() === String(castMovieId).toLowerCase())) {
             const castArr = [...(m.cast || [])];
-            const exIdx = castArr.findIndex(c => c.name?.toLowerCase() === castName.trim().toLowerCase());
-            const newMember = { id: `c_${Date.now()}`, name: castName.trim(), role: castRole || 'Lead Role', photo: payload.photoUrl };
+            const exIdx = castArr.findIndex(c => (c.name || c.actorName)?.toLowerCase() === castName.trim().toLowerCase());
+            const newMember = {
+              id: `c_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+              name: castName.trim(),
+              actorName: castName.trim(),
+              role: (castRole || 'Lead Role').trim(),
+              roleName: (castRole || 'Lead Role').trim(),
+              character: (castRole || 'Lead Role').trim(),
+              photo: payload.photoUrl,
+              photoUrl: payload.photoUrl
+            };
             if (exIdx !== -1) castArr[exIdx] = newMember;
             else castArr.push(newMember);
             return { ...m, cast: castArr };
@@ -1519,21 +1533,35 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   const handleDeleteCastMember = async (movieId, castId) => {
     try {
-      const res = await API.delete(`/movies/${movieId}/cast/${castId}`);
+      const res = await API.delete(`/movies/${encodeURIComponent(movieId)}/cast/${encodeURIComponent(castId)}`);
       if (res?.data?.movie) {
-        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? res.data.movie : m));
+        setMoviesList(prev => prev.map(m =>
+          (m.id === movieId || m._id === movieId || m.title === movieId || (m.title && m.title.toLowerCase() === String(movieId).toLowerCase()))
+            ? res.data.movie
+            : m
+        ));
       } else {
         setMoviesList(prev => prev.map(m => {
-          if (m.id === movieId || m._id === movieId) {
-            return { ...m, cast: (m.cast || []).filter(c => c.id !== castId && c._id !== castId) };
+          if (m.id === movieId || m._id === movieId || m.title === movieId || (m.title && m.title.toLowerCase() === String(movieId).toLowerCase())) {
+            return {
+              ...m,
+              cast: (m.cast || []).filter(c =>
+                c.id !== castId && c._id !== castId && c.name !== castId && c.actorName !== castId
+              )
+            };
           }
           return m;
         }));
       }
     } catch (err) {
       setMoviesList(prev => prev.map(m => {
-        if (m.id === movieId || m._id === movieId) {
-          return { ...m, cast: (m.cast || []).filter(c => c.id !== castId && c._id !== castId) };
+        if (m.id === movieId || m._id === movieId || m.title === movieId || (m.title && m.title.toLowerCase() === String(movieId).toLowerCase())) {
+          return {
+            ...m,
+            cast: (m.cast || []).filter(c =>
+              c.id !== castId && c._id !== castId && c.name !== castId && c.actorName !== castId
+            )
+          };
         }
         return m;
       }));
@@ -4182,7 +4210,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
               <h3 className="text-base font-black font-sans text-[#1A1A1A]">Cast & Crew Management Module</h3>
               <form onSubmit={handleAddCastMember} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <select value={castMovieId} onChange={e => setCastMovieId(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]">
-                  {moviesList.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+                  {(Array.isArray(moviesList) ? moviesList : []).map(m => (
+                    <option key={m.id || m._id || m.title} value={m.id || m._id || m.title}>
+                      {m.title}
+                    </option>
+                  ))}
                 </select>
                 <input type="text" required placeholder="Cast Actor Name" value={castName} onChange={e => setCastName(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" />
                 <input type="text" placeholder="Character Role Name" value={castRole} onChange={e => setCastRole(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" />
@@ -4473,12 +4505,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   {/* Cast Members List */}
                   {m.cast && m.cast.length > 0 && (
                     <div className="pt-2 border-t border-[#c5ba92]">
-                      <span className="text-[10px] font-black text-[#1A1A1A] uppercase block mb-1">Cast Members</span>
+                      <span className="text-[10px] font-black text-[#1A1A1A] uppercase block mb-1">
+                        Cast Members ({m.cast.length})
+                      </span>
                       <div className="flex flex-wrap gap-1.5">
-                        {m.cast.map(c => (
-                          <span key={c.id || c.name} className="px-2 py-0.5 rounded bg-[#FFFFFF] text-[10px] text-[#1A1A1A] font-bold border border-slate-300 flex items-center gap-1">
-                            <span>{c.name} ({c.role})</span>
-                            <button onClick={() => handleDeleteCastMember(m.id, c.id)} className="text-[#D90000] font-black hover:text-red-800 ml-1">×</button>
+                        {m.cast.map((c, cIdx) => (
+                          <span
+                            key={c.id || c._id || c.name || c.actorName || cIdx}
+                            className="px-2 py-1 rounded-xl bg-[#FFFFFF] text-[10px] text-[#1A1A1A] font-extrabold border border-slate-300 flex items-center gap-1.5 shadow-xs"
+                          >
+                            {(c.photo || c.photoUrl) && (
+                              <img
+                                src={c.photo || c.photoUrl}
+                                alt={c.name || c.actorName || 'Actor'}
+                                className="w-4 h-4 rounded-full object-cover shrink-0"
+                              />
+                            )}
+                            <span>
+                              {c.name || c.actorName || 'Artist'}{' '}
+                              <span className="text-slate-600 font-semibold">
+                                ({c.role || c.roleName || c.character || 'Cast'})
+                              </span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCastMember(m.id || m._id || m.title, c.id || c._id || c.name || c.actorName)}
+                              className="w-4 h-4 rounded-full bg-rose-500/10 text-[#D90000] hover:bg-[#D90000] hover:text-white font-black flex items-center justify-center text-[10px] transition-colors ml-1 cursor-pointer"
+                              title="Delete cast member from MongoDB"
+                            >
+                              ×
+                            </button>
                           </span>
                         ))}
                       </div>

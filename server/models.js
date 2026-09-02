@@ -87,8 +87,12 @@ const MovieSchema = new mongoose.Schema({
   cast: [{
     id: String,
     name: String,
+    actorName: String,
     role: String,
-    photo: String
+    roleName: String,
+    character: String,
+    photo: String,
+    photoUrl: String
   }],
   status: { type: String, default: 'Now Showing' },
   featured: { type: Boolean, default: true },

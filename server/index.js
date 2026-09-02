@@ -2483,7 +2483,7 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
   try {
     const movieId = req.params.id || req.body.selectedMovieId || req.body.movieId || req.body.id;
     const actorName = req.body.actorName || req.body.name;
-    const roleName = req.body.roleName || req.body.role || 'Cast Member';
+    const roleName = req.body.roleName || req.body.role || req.body.character || 'Cast Member';
     const photoUrl = req.body.photoUrl || req.body.photo || req.body.image || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80';
 
     if (!movieId) {
@@ -2493,14 +2493,17 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
       return res.status(400).json({ success: false, error: 'Cast Actor Name is required' });
     }
 
-    // mongoose imported at top level
     let updatedMovie = null;
 
     const newCastMember = {
       id: `c_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       name: actorName,
+      actorName: actorName,
       role: roleName,
-      photo: photoUrl
+      roleName: roleName,
+      character: roleName,
+      photo: photoUrl,
+      photoUrl: photoUrl
     };
 
     if (mongoose.connection.readyState === 1) {
@@ -2509,15 +2512,19 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
       if (movieDoc) {
         if (!movieDoc.cast) movieDoc.cast = [];
         const existingIdx = movieDoc.cast.findIndex(
-          c => c.name && c.name.toLowerCase() === actorName.toLowerCase()
+          c => (c.name || c.actorName) && (c.name || c.actorName).toLowerCase() === actorName.toLowerCase()
         );
 
         if (existingIdx !== -1) {
           movieDoc.cast[existingIdx] = {
             ...movieDoc.cast[existingIdx],
             name: actorName,
+            actorName: actorName,
             role: roleName,
-            photo: photoUrl
+            roleName: roleName,
+            character: roleName,
+            photo: photoUrl,
+            photoUrl: photoUrl
           };
         } else {
           movieDoc.cast.push(newCastMember);
@@ -2528,12 +2535,12 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
     }
 
     // Update in-memory fallback list
-    const index = movies.findIndex(m => m.id === movieId || m._id === movieId);
+    const index = movies.findIndex(m => m.id === movieId || m._id === movieId || (m.title && m.title.toLowerCase() === String(movieId).toLowerCase()));
     if (index !== -1) {
       if (!movies[index].cast) movies[index].cast = [];
-      const exIdx = movies[index].cast.findIndex(c => c.name && c.name.toLowerCase() === actorName.toLowerCase());
+      const exIdx = movies[index].cast.findIndex(c => (c.name || c.actorName) && (c.name || c.actorName).toLowerCase() === actorName.toLowerCase());
       if (exIdx !== -1) {
-        movies[index].cast[exIdx] = { ...movies[index].cast[exIdx], name: actorName, role: roleName, photo: photoUrl };
+        movies[index].cast[exIdx] = { ...movies[index].cast[exIdx], ...newCastMember };
       } else {
         movies[index].cast.push(newCastMember);
       }
@@ -2544,17 +2551,19 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
       updatedMovie = { id: movieId, cast: [newCastMember] };
     }
 
+    const plainMovie = updatedMovie.toObject ? updatedMovie.toObject() : updatedMovie;
+
     // Broadcast real-time update
     if (req.app.get('socketio')) {
-      req.app.get('socketio').emit('MOVIE_UPDATED', updatedMovie);
+      req.app.get('socketio').emit('MOVIE_UPDATED', plainMovie);
     }
-    broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
+    broadcastToAllClients('MOVIE_UPDATED', plainMovie);
 
     return res.status(200).json({
       success: true,
       message: 'Cast & Crew member saved to MongoDB Atlas!',
-      movie: updatedMovie,
-      cast: updatedMovie.cast || []
+      movie: plainMovie,
+      cast: plainMovie.cast || []
     });
   } catch (err) {
     console.error('❌ Error saving cast member:', err.message);
@@ -2566,32 +2575,42 @@ app.post(['/api/movies/:id/cast', '/api/admin/movies/cast', '/api/admin/movies/:
 app.delete(['/api/movies/:movieId/cast/:castId', '/api/admin/movies/:movieId/cast/:castId'], async (req, res) => {
   try {
     const { movieId, castId } = req.params;
-    // mongoose imported at top level
+    const cleanCastId = decodeURIComponent(castId || '').trim().toLowerCase();
     let updatedMovie = null;
 
     if (mongoose.connection.readyState === 1) {
       let movieDoc = await Movie.findOne(buildIdFilter(movieId));
 
       if (movieDoc && movieDoc.cast) {
-        movieDoc.cast = movieDoc.cast.filter(c => c.id !== castId && c._id?.toString() !== castId);
+        movieDoc.cast = movieDoc.cast.filter(c => {
+          const cId = String(c.id || c._id || '').toLowerCase();
+          const cName = String(c.name || c.actorName || '').toLowerCase();
+          return cId !== cleanCastId && cName !== cleanCastId;
+        });
         updatedMovie = await movieDoc.save();
       }
     }
 
-    const index = movies.findIndex(m => m.id === movieId || m._id === movieId);
+    const index = movies.findIndex(m => m.id === movieId || m._id === movieId || (m.title && m.title.toLowerCase() === String(movieId).toLowerCase()));
     if (index !== -1 && movies[index].cast) {
-      movies[index].cast = movies[index].cast.filter(c => c.id !== castId);
+      movies[index].cast = movies[index].cast.filter(c => {
+        const cId = String(c.id || c._id || '').toLowerCase();
+        const cName = String(c.name || c.actorName || '').toLowerCase();
+        return cId !== cleanCastId && cName !== cleanCastId;
+      });
       if (!updatedMovie) updatedMovie = movies[index];
     }
 
-    if (updatedMovie) {
+    const plainMovie = updatedMovie ? (updatedMovie.toObject ? updatedMovie.toObject() : updatedMovie) : null;
+
+    if (plainMovie) {
       if (req.app.get('socketio')) {
-        req.app.get('socketio').emit('MOVIE_UPDATED', updatedMovie);
+        req.app.get('socketio').emit('MOVIE_UPDATED', plainMovie);
       }
-      broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
+      broadcastToAllClients('MOVIE_UPDATED', plainMovie);
     }
 
-    return res.status(200).json({ success: true, message: 'Cast member deleted from MongoDB Atlas', movie: updatedMovie });
+    return res.status(200).json({ success: true, message: 'Cast member deleted from MongoDB Atlas', movie: plainMovie });
   } catch (err) {
     console.error('❌ Error deleting cast member:', err.message);
     return res.status(500).json({ success: false, error: err.message });

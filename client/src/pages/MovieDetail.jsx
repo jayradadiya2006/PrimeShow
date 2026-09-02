@@ -230,7 +230,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   const isLongSynopsis = synopsisText.length > 140;
 
   // Filter out any empty/dummy cast members
-  const validCast = Array.isArray(movie.cast) ? movie.cast.filter(c => c && (c.name || typeof c === 'string')) : [];
+  const validCast = Array.isArray(movie.cast) ? movie.cast.filter(c => c && (c.name || c.actorName || typeof c === 'string')) : [];
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-slate-900 pb-20 font-sans">
