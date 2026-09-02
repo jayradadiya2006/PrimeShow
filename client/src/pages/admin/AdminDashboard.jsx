@@ -2490,33 +2490,33 @@ export const AdminDashboard = ({ onReturnHome }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#ECEBDE] text-slate-100 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#1A1A1A] flex flex-col md:flex-row font-sans">
       
-      {/* Sleek Admin Left Sidebar Navigation Panel (Responsive Desktop & Mobile Horizontal Scroll) */}
-      <aside className="w-full md:w-64 glass-panel border-b md:border-b-0 md:border-r border-[#C1BAA1] p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-[#D7D3BF] shadow-2xl">
+      {/* Sleek Admin Left Sidebar Navigation Panel (Dark Brown #2B1B17 theme for ultra-high contrast) */}
+      <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[#3E2D27] p-3 md:p-6 flex flex-col md:justify-between shrink-0 bg-[#2B1B17] shadow-2xl">
         <div>
           {/* Admin Brand Header */}
-          <div className="flex items-center justify-between md:justify-start gap-3 pb-3 md:pb-6 mb-2 md:mb-6 border-b border-slate-800">
+          <div className="flex items-center justify-between md:justify-start gap-3 pb-3 md:pb-6 mb-2 md:mb-6 border-b border-[#3E2D27]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-sm">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-2xl bg-[#D90000]/20 border border-[#D90000]/40 flex items-center justify-center text-[#F5B400] shadow-sm">
                 <Shield className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div>
-                <h2 className="text-sm md:text-lg font-bold font-sans text-white leading-tight">PrimeShow</h2>
-                <span className="text-[9px] md:text-[10px] text-amber-400 uppercase tracking-widest font-extrabold block">ADMIN COMMAND PANEL</span>
+                <h2 className="text-sm md:text-lg font-black font-sans text-white leading-tight">PrimeShow</h2>
+                <span className="text-[9px] md:text-[10px] text-[#F5B400] uppercase tracking-widest font-black block">ADMIN COMMAND PANEL</span>
               </div>
             </div>
 
             <button
               onClick={onReturnHome}
-              className="md:hidden px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 text-[11px] font-bold flex items-center gap-1"
+              className="md:hidden px-3 py-1.5 rounded-xl bg-[#D90000] text-white text-[11px] font-bold flex items-center gap-1 shadow-md"
             >
               <Home className="w-3.5 h-3.5" />
               <span>Exit</span>
             </button>
           </div>
 
-          {/* Sidebar Menu Items (Horizontal scroll on mobile, vertical stack on desktop) */}
+          {/* Sidebar Menu Items */}
           <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-visible scrollbar-none no-scrollbar gap-1.5 w-full py-1">
             {adminNavItems.map(item => {
               const Icon = item.icon || Sparkles;
@@ -2527,15 +2527,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   onClick={() => handleTabChange(item.id)}
                   className={`flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold transition-all shrink-0 whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20 font-black border border-amber-400'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80 bg-slate-800/40 md:bg-transparent'
+                      ? 'bg-[#D90000] text-white shadow-lg shadow-red-900/40 font-black border border-red-500 scale-105'
+                      : 'text-slate-200 hover:text-white hover:bg-white/10 bg-[#3E2D27]/50 md:bg-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#F5B400]'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 hidden md:block text-slate-950" />}
+                  {isActive && <ChevronRight className="w-3.5 h-3.5 hidden md:block text-white" />}
                 </button>
               );
             })}
@@ -2543,10 +2543,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
         </div>
 
         {/* Navigation & Logout Controls */}
-        <div className="hidden md:block pt-6 border-t border-white/10 mt-6 space-y-2">
+        <div className="hidden md:block pt-6 border-t border-[#3E2D27] mt-6 space-y-2">
           <button
             onClick={onReturnHome}
-            className="w-full py-3 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 hover:bg-amber-500 hover:text-black text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="w-full py-3 rounded-2xl bg-[#F5B400] text-black font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-amber-400 transition-all cursor-pointer shadow-md"
           >
             <Home className="w-4 h-4" />
             <span>Return to Main Site</span>
@@ -2554,7 +2554,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
           <button
             onClick={logout}
-            className="w-full py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/60 hover:text-rose-300 text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="w-full py-2.5 rounded-2xl bg-white/10 border border-white/15 text-white hover:bg-rose-600 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out Session</span>
@@ -2562,18 +2562,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
         </div>
       </aside>
 
-      {/* Main Admin Content Area (Protected by Local Sub-Tab Error Boundary) */}
-      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
+      {/* Main Admin Content Area */}
+      <main className="flex-1 p-6 md:p-10 overflow-y-auto bg-[#FFFFFF] text-[#1A1A1A]">
         <AdminTabErrorBoundary activeTab={activeTab} onSwitchToAnalytics={() => handleTabChange('analytics')}>
         
         {/* Emergency Debug & Connection Fallback Banner */}
         {apiConnectionStatus === 'offline' && (
-          <div className="mb-6 p-5 rounded-3xl bg-amber-500/15 border border-amber-500/40 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+          <div className="mb-6 p-5 rounded-3xl bg-[#DBCEA5] border border-[#c5ba92] text-[#1A1A1A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
             <div className="flex items-center gap-3">
-              <RefreshCw className="w-6 h-6 text-amber-400 animate-spin shrink-0" />
+              <RefreshCw className="w-6 h-6 text-[#D90000] animate-spin shrink-0" />
               <div>
-                <h4 className="font-bold text-sm text-white">Admin Dashboard (Offline Mode / Connecting to Server...)</h4>
-                <p className="text-xs text-amber-300/80">Backend database is connecting or waking up. Local cached features remain accessible.</p>
+                <h4 className="font-extrabold text-sm text-[#1A1A1A]">Admin Dashboard (Connecting to Server...)</h4>
+                <p className="text-xs text-slate-800 font-medium">Backend database is connecting or warming up. Local cached features remain accessible.</p>
               </div>
             </div>
             <button
@@ -2582,7 +2582,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 setActionSuccess('⚡ Admin UI Force Loaded successfully!');
                 setTimeout(() => setActionSuccess(''), 4000);
               }}
-              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 shrink-0 shadow-lg shadow-amber-500/20"
+              className="px-4 py-2 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2 shrink-0 shadow-md"
             >
               <Sparkles className="w-4 h-4" />
               <span>Force Load UI</span>
@@ -2591,8 +2591,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
         )}
 
         {actionSuccess && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-5 h-5" />
+          <div className="mb-6 p-4 rounded-2xl bg-[#66DD6A]/30 border border-[#66DD6A] text-[#1A1A1A] text-xs font-black text-center flex items-center justify-center gap-2 shadow-sm">
+            <CheckCircle2 className="w-5 h-5 text-[#2C5745]" />
             <span>{actionSuccess}</span>
           </div>
         )}
@@ -2603,32 +2603,32 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Dashboard Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold font-sans text-amber-400">Analytics Overview</h1>
-                <p className="text-xs text-[#786C66] mt-1">Real-time insights and live performance metrics from MongoDB Atlas</p>
+                <h1 className="text-2xl md:text-3xl font-black font-sans text-[#1A1A1A]">Analytics Overview</h1>
+                <p className="text-xs text-slate-700 font-semibold mt-1">Real-time insights and live performance metrics from MongoDB Atlas</p>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <button
                   onClick={() => fetchFinancialStats()}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D7D3BF] border border-[#C1BAA1] text-xs text-amber-900 font-bold hover:bg-[#C1BAA1] transition-all cursor-pointer shadow-md"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all cursor-pointer shadow-md"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 text-amber-700 ${financialStatsLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 text-white ${financialStatsLoading ? 'animate-spin' : ''}`} />
                   <span>Refresh Live Financials</span>
                 </button>
 
-                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#D7D3BF] border border-[#C1BAA1] text-xs text-amber-950 font-medium cursor-pointer hover:border-[#A59D84] transition-all">
-                  <Calendar className="w-3.5 h-3.5 text-[#786C66]" />
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#2B2B2B] text-white text-xs font-bold cursor-pointer hover:bg-[#4A4A4A] transition-all shadow-md">
+                  <Calendar className="w-3.5 h-3.5 text-[#F5B400]" />
                   <span>Rolling 7 Days Data</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-[#786C66] ml-1" />
+                  <ChevronDown className="w-3.5 h-3.5 text-white ml-1" />
                 </div>
 
-                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D7D3BF] border border-[#C1BAA1] text-xs text-amber-950 font-medium hover:bg-[#C1BAA1] transition-all cursor-pointer">
-                  <Download className="w-3.5 h-3.5 text-[#786C66]" />
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all cursor-pointer shadow-md">
+                  <Download className="w-3.5 h-3.5 text-white" />
                   <span>Export</span>
                 </button>
 
-                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#D7D3BF] border border-[#C1BAA1] text-xs text-amber-950 font-medium hover:bg-[#C1BAA1] transition-all cursor-pointer">
-                  <Filter className="w-3.5 h-3.5 text-[#786C66]" />
+                <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all cursor-pointer shadow-md">
+                  <Filter className="w-3.5 h-3.5 text-white" />
                   <span>Filters</span>
                 </button>
               </div>
@@ -2637,18 +2637,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* TOP 4 LIVE FINANCIAL METRIC CARDS (MongoDB Atlas Aggregation) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* KPI Card 1: Total Booking Revenue */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] relative overflow-hidden flex flex-col justify-between shadow-md text-[#1A1A1A]">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#786C66] font-medium">Total Booking Revenue</span>
-                    <div className="w-9 h-9 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                    <span className="text-xs text-[#1A1A1A] font-black uppercase tracking-wider">Total Booking Revenue</span>
+                    <div className="w-9 h-9 rounded-full bg-[#D90000]/20 border border-[#D90000]/40 flex items-center justify-center text-[#D90000]">
                       <DollarSign className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-[#FCEEAD] font-sans tracking-tight">
+                  <div className="text-2xl lg:text-3xl font-black text-[#1A1A1A] font-sans tracking-tight">
                     ₹{(financialStats.totalRevenue || 0).toLocaleString('en-IN')}
                   </div>
-                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                  <div className="text-[11px] font-black text-[#2C5745] flex items-center gap-1 mt-1">
                     <span>Live MongoDB Atlas Sync</span>
                   </div>
                 </div>
@@ -2656,29 +2656,29 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <svg className="w-full h-full" viewBox="0 0 280 40" preserveAspectRatio="none">
                     <defs>
                       <linearGradient id="blueSpark" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.4" />
-                        <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.0" />
+                        <stop offset="0%" stopColor="#D90000" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#D90000" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
                     <path d="M0,28 Q35,32 70,22 T140,24 T210,12 T280,6 L280,40 L0,40 Z" fill="url(#blueSpark)" />
-                    <path d="M0,28 Q35,32 70,22 T140,24 T210,12 T280,6" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M0,28 Q35,32 70,22 T140,24 T210,12 T280,6" fill="none" stroke="#D90000" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 </div>
               </div>
 
               {/* KPI Card 2: Ticket Revenue / Seats Booked */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] relative overflow-hidden flex flex-col justify-between shadow-md text-[#1A1A1A]">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#786C66] font-medium">Ticket Revenue & Seats</span>
-                    <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <span className="text-xs text-[#1A1A1A] font-black uppercase tracking-wider">Ticket Revenue & Seats</span>
+                    <div className="w-9 h-9 rounded-full bg-[#2C5745]/20 border border-[#2C5745]/40 flex items-center justify-center text-[#2C5745]">
                       <Ticket className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-[#FCEEAD] font-sans tracking-tight">
+                  <div className="text-2xl lg:text-3xl font-black text-[#1A1A1A] font-sans tracking-tight">
                     {(financialStats.totalTickets || 0).toLocaleString('en-IN')} Seats
                   </div>
-                  <div className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 mt-1">
+                  <div className="text-[11px] font-black text-[#2C5745] flex items-center gap-1 mt-1">
                     <span>Across {financialStats.totalConfirmedBookings || 0} Confirmed Transactions</span>
                   </div>
                 </div>
@@ -2686,29 +2686,29 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <svg className="w-full h-full" viewBox="0 0 280 40" preserveAspectRatio="none">
                     <defs>
                       <linearGradient id="greenSpark" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
-                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0.0" />
+                        <stop offset="0%" stopColor="#2C5745" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#2C5745" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
                     <path d="M0,30 Q35,26 70,28 T140,18 T210,14 T280,4 L280,40 L0,40 Z" fill="url(#greenSpark)" />
-                    <path d="M0,30 Q35,26 70,28 T140,18 T210,14 T280,4" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M0,30 Q35,26 70,28 T140,18 T210,14 T280,4" fill="none" stroke="#2C5745" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 </div>
               </div>
 
               {/* KPI Card 3: Today's Activity & Revenue */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] relative overflow-hidden flex flex-col justify-between shadow-md text-[#1A1A1A]">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#786C66] font-medium">Today's Activity & Revenue</span>
-                    <div className="w-9 h-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                    <span className="text-xs text-[#1A1A1A] font-black uppercase tracking-wider">Today's Activity & Revenue</span>
+                    <div className="w-9 h-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-700">
                       <Zap className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-[#FCEEAD] font-sans tracking-tight">
+                  <div className="text-2xl lg:text-3xl font-black text-[#1A1A1A] font-sans tracking-tight">
                     {financialStats.todayBookings || 0} Bookings
                   </div>
-                  <div className="text-[11px] font-bold text-purple-300 flex items-center gap-1 mt-1">
+                  <div className="text-[11px] font-black text-purple-900 flex items-center gap-1 mt-1">
                     <span>Revenue Today: ₹{(financialStats.todayRevenue || 0).toLocaleString('en-IN')}</span>
                   </div>
                 </div>
@@ -2727,20 +2727,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* KPI Card 4: 7-Day Performance Overview */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] relative overflow-hidden flex flex-col justify-between shadow-xl">
+              <div className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] relative overflow-hidden flex flex-col justify-between shadow-md text-[#1A1A1A]">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-[#786C66] font-medium">7-Day Rolling Performance</span>
-                    <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                    <span className="text-xs text-[#1A1A1A] font-black uppercase tracking-wider">7-Day Rolling Performance</span>
+                    <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-700">
                       <TrendingUp className="w-4 h-4" />
                     </div>
                   </div>
-                  <div className="text-2xl lg:text-3xl font-extrabold text-[#FCEEAD] font-sans tracking-tight">
+                  <div className="text-2xl lg:text-3xl font-black text-[#1A1A1A] font-sans tracking-tight">
                     ₹{(
                       (financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.revenue || 0), 0)
                     ).toLocaleString('en-IN')}
                   </div>
-                  <div className="text-[11px] font-bold text-amber-300 flex items-center gap-1 mt-1">
+                  <div className="text-[11px] font-black text-amber-900 flex items-center gap-1 mt-1">
                     <span>
                       {(financialStats.rolling7Days || []).reduce((acc, curr) => acc + (curr.bookings || 0), 0)} Confirmed Bookings (7 Days)
                     </span>
@@ -2763,38 +2763,38 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* MAIN CHART SECTION (2 CARDS) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Left Chart: Real-Time Revenue Overview (Trading/Stock Area Chart) */}
-              <div className="bg-[#D7D3BF] p-6 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl">
+              {/* Left Chart: Real-Time Revenue Overview */}
+              <div className="bg-[#DBCEA5] p-6 rounded-2xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-sm font-black text-[#1A1A1A] flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-[#D90000]" />
                       <span>Stock & Revenue Overview Chart</span>
                     </h3>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-xl font-extrabold text-white font-sans">
+                      <span className="text-xl font-black text-[#1A1A1A] font-sans">
                         ₹{(
                           (revenueChartData.length > 0 ? revenueChartData : financialStats.rolling7Days || [])
                             .reduce((acc, curr) => acc + (curr.revenue || 0), 0)
                         ).toLocaleString('en-IN')}
                       </span>
-                      <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                      <span className="text-xs font-bold text-[#2C5745] flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-[#2C5745] animate-pulse"></span>
                         <span>Live Sync</span>
                       </span>
                     </div>
                   </div>
 
-                  {/* Time-Range Filter Dropdown: EXACT Options (1 Day, 7 Days, 15 Days, 30 Days) */}
+                  {/* Time-Range Filter Dropdown */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-[#786C66] font-medium">Time Range:</span>
+                    <span className="text-[11px] text-[#1A1A1A] font-extrabold uppercase">Time Range:</span>
                     <select
                       value={revenueRange}
                       onChange={(e) => {
                         setRevenueRange(e.target.value);
                         fetchRevenueChartData(e.target.value);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] text-xs text-cyan-900 font-bold focus:outline-none focus:border-cyan-600 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000] cursor-pointer"
                     >
                       <option value="1day">1 Day</option>
                       <option value="7days">7 Days</option>
@@ -2834,33 +2834,33 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
                           <defs>
                             <linearGradient id="stockAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#00f2fe" stopOpacity="0.45" />
-                              <stop offset="100%" stopColor="#00f2fe" stopOpacity="0.0" />
+                              <stop offset="0%" stopColor="#D90000" stopOpacity="0.35" />
+                              <stop offset="100%" stopColor="#D90000" stopOpacity="0.0" />
                             </linearGradient>
                           </defs>
 
                           {/* Grid Lines */}
-                          <line x1="35" y1="30" x2="480" y2="30" stroke="#C1BAA1" strokeDasharray="3 3" />
-                          <line x1="35" y1="80" x2="480" y2="80" stroke="#C1BAA1" strokeDasharray="3 3" />
-                          <line x1="35" y1="130" x2="480" y2="130" stroke="#C1BAA1" strokeDasharray="3 3" />
-                          <line x1="35" y1="180" x2="480" y2="180" stroke="#C1BAA1" />
+                          <line x1="35" y1="30" x2="480" y2="30" stroke="#c5ba92" strokeDasharray="3 3" />
+                          <line x1="35" y1="80" x2="480" y2="80" stroke="#c5ba92" strokeDasharray="3 3" />
+                          <line x1="35" y1="130" x2="480" y2="130" stroke="#c5ba92" strokeDasharray="3 3" />
+                          <line x1="35" y1="180" x2="480" y2="180" stroke="#c5ba92" />
 
                           {/* Y-Axis Labels */}
-                          <text x="0" y="34" fill="#786C66" fontSize="10">₹{(maxRev).toLocaleString('en-IN')}</text>
-                          <text x="0" y="105" fill="#786C66" fontSize="10">₹{Math.round(maxRev * 0.5).toLocaleString('en-IN')}</text>
-                          <text x="15" y="184" fill="#786C66" fontSize="10">₹0</text>
+                          <text x="0" y="34" fill="#1A1A1A" fontSize="10" fontWeight="bold">₹{(maxRev).toLocaleString('en-IN')}</text>
+                          <text x="0" y="105" fill="#1A1A1A" fontSize="10" fontWeight="bold">₹{Math.round(maxRev * 0.5).toLocaleString('en-IN')}</text>
+                          <text x="15" y="184" fill="#1A1A1A" fontSize="10" fontWeight="bold">₹0</text>
 
                           {/* Area Fill */}
                           <path d={areaD} fill="url(#stockAreaGrad)" />
 
                           {/* Stock Line */}
-                          <path d={pathD} fill="none" stroke="#00f2fe" strokeWidth="3" strokeLinecap="round" />
+                          <path d={pathD} fill="none" stroke="#D90000" strokeWidth="3" strokeLinecap="round" />
 
                           {/* Interactive Data Points */}
                           {points.map((p, idx) => (
                             <g key={idx} className="group cursor-pointer">
-                              <circle cx={p.x} cy={p.y} r="5" fill="#00f2fe" stroke="#D7D3BF" strokeWidth="2" />
-                              <circle cx={p.x} cy={p.y} r="8" fill="#00f2fe" opacity="0.2" className="group-hover:animate-ping" />
+                              <circle cx={p.x} cy={p.y} r="5" fill="#D90000" stroke="#FFFFFF" strokeWidth="2" />
+                              <circle cx={p.x} cy={p.y} r="8" fill="#D90000" opacity="0.2" className="group-hover:animate-ping" />
                             </g>
                           ))}
                         </svg>
@@ -2868,7 +2868,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     })()}
 
                     {/* X Axis Labels */}
-                    <div className="flex justify-between pl-8 pr-2 mt-2 text-[10px] text-[#786C66] font-medium">
+                    <div className="flex justify-between pl-8 pr-2 mt-2 text-[10px] text-[#1A1A1A] font-bold">
                       {(revenueChartData.length > 0 ? revenueChartData : [
                         { timeLabel: 'Day 1' }, { timeLabel: 'Day 2' }, { timeLabel: 'Day 3' }, { timeLabel: 'Day 4' }, { timeLabel: 'Day 5' }, { timeLabel: 'Day 6' }, { timeLabel: 'Day 7' }
                       ]).map((pt, i) => (
@@ -2880,34 +2880,34 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               {/* Right Chart: Real-Time Candlestick / Bar Booking Overview Chart */}
-              <div className="bg-[#D7D3BF] p-6 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl">
+              <div className="bg-[#DBCEA5] p-6 rounded-2xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-sm font-black text-[#1A1A1A] flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-[#2C5745]" />
                       <span>Candlestick & Booking Overview</span>
                     </h3>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-xl font-extrabold text-white font-sans">
+                      <span className="text-xl font-black text-[#1A1A1A] font-sans">
                         {(
                           (bookingChartData.length > 0 ? bookingChartData : financialStats.rolling7Days || [])
                             .reduce((acc, curr) => acc + (curr.bookings || 0), 0)
                         ).toLocaleString('en-IN')} Bookings
                       </span>
-                      <span className="text-xs font-bold text-emerald-400">Live Volume</span>
+                      <span className="text-xs font-bold text-[#2C5745]">Live Volume</span>
                     </div>
                   </div>
 
-                  {/* Time-Range Filter Dropdown: EXACT Options (1 Day, 7 Days, 15 Days, 30 Days) */}
+                  {/* Time-Range Filter Dropdown */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-[#786C66] font-medium">Time Range:</span>
+                    <span className="text-[11px] text-[#1A1A1A] font-extrabold uppercase">Time Range:</span>
                     <select
                       value={bookingRange}
                       onChange={(e) => {
                         setBookingRange(e.target.value);
                         fetchBookingChartData(e.target.value);
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] text-xs text-emerald-900 font-bold focus:outline-none focus:border-emerald-600 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000] cursor-pointer"
                     >
                       <option value="1day">1 Day</option>
                       <option value="7days">7 Days</option>
@@ -2935,15 +2935,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       return (
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 500 200" preserveAspectRatio="none">
                           {/* Grid Lines */}
-                          <line x1="30" y1="20" x2="480" y2="20" stroke="#C1BAA1" strokeDasharray="3 3" />
-                          <line x1="30" y1="70" x2="480" y2="70" stroke="#C1BAA1" strokeDasharray="3 3" />
-                          <line x1="30" y1="120" x2="480" y2="120" stroke="#C1BAA1" strokeDasharray="3 3" />
-                          <line x1="30" y1="180" x2="480" y2="180" stroke="#C1BAA1" />
+                          <line x1="30" y1="20" x2="480" y2="20" stroke="#c5ba92" strokeDasharray="3 3" />
+                          <line x1="30" y1="70" x2="480" y2="70" stroke="#c5ba92" strokeDasharray="3 3" />
+                          <line x1="30" y1="120" x2="480" y2="120" stroke="#c5ba92" strokeDasharray="3 3" />
+                          <line x1="30" y1="180" x2="480" y2="180" stroke="#c5ba92" />
 
                           {/* Y Axis Labels */}
-                          <text x="0" y="24" fill="#786C66" fontSize="10">{maxBookings}</text>
-                          <text x="0" y="104" fill="#786C66" fontSize="10">{Math.round(maxBookings * 0.5)}</text>
-                          <text x="10" y="184" fill="#786C66" fontSize="10">0</text>
+                          <text x="0" y="24" fill="#1A1A1A" fontSize="10" fontWeight="bold">{maxBookings}</text>
+                          <text x="0" y="104" fill="#1A1A1A" fontSize="10" fontWeight="bold">{Math.round(maxBookings * 0.5)}</text>
+                          <text x="10" y="184" fill="#1A1A1A" fontSize="10" fontWeight="bold">0</text>
 
                           {/* Candlesticks / Bars */}
                           {bData.map((bar, i) => {
@@ -2968,7 +2968,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                   y1={Math.max(10, highY)}
                                   x2={cx + 10}
                                   y2={Math.min(180, lowY)}
-                                  stroke={isGreen ? '#10b981' : '#06b6d4'}
+                                  stroke={isGreen ? '#2C5745' : '#D90000'}
                                   strokeWidth="2"
                                 />
 
@@ -2979,9 +2979,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                   width="20"
                                   height={barH}
                                   rx="4"
-                                  fill={isGreen ? '#10b981' : '#06b6d4'}
-                                  opacity="0.85"
-                                  className="group-hover:opacity-100 group-hover:stroke text-white transition-all"
+                                  fill={isGreen ? '#2C5745' : '#D90000'}
+                                  opacity="0.9"
+                                  className="group-hover:opacity-100 transition-all"
                                 />
                               </g>
                             );
@@ -2991,7 +2991,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     })()}
 
                     {/* X Axis Labels */}
-                    <div className="flex justify-between pl-10 pr-4 mt-2 text-[10px] text-[#786C66] font-medium">
+                    <div className="flex justify-between pl-10 pr-4 mt-2 text-[10px] text-[#1A1A1A] font-bold">
                       {(bookingChartData.length > 0 ? bookingChartData : [
                         { timeLabel: 'Day 1' }, { timeLabel: 'Day 2' }, { timeLabel: 'Day 3' }, { timeLabel: 'Day 4' }, { timeLabel: 'Day 5' }, { timeLabel: 'Day 6' }, { timeLabel: 'Day 7' }
                       ]).map((pt, i) => (
@@ -3003,19 +3003,19 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
-            {/* MIDDLE SECTION (2 COLUMNS - 'BOOKING SOURCES' REMOVED) */}
+            {/* MIDDLE SECTION (2 COLUMNS) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Column 1: Top Movies by Bookings (Strictly Movie Metrics Aggregated from MongoDB Atlas) */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
+              {/* Column 1: Top Movies by Bookings */}
+              <div className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A] flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
-                      <Film className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-sm font-black text-[#1A1A1A] flex items-center gap-2">
+                      <Film className="w-4 h-4 text-[#D90000]" />
                       <span>Top Movie Bookings (Live MongoDB Atlas)</span>
                     </h3>
                     <button
                       onClick={() => setTopMoviesModalOpen(true)}
-                      className="text-xs font-bold text-cyan-700 hover:text-cyan-900 hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs font-black text-[#D90000] hover:underline cursor-pointer flex items-center gap-1"
                     >
                       <span>More / View All ({(Array.isArray(topMoviesList) ? topMoviesList : []).length})</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
@@ -3027,28 +3027,28 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       topMoviesList.slice(0, 5).map((movie, idx) => {
                         const pct = movie?.percentage !== undefined ? movie.percentage : 0;
                         return (
-                          <div key={movie?.movieId || movie?.title || idx} className="p-3 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] space-y-2">
+                          <div key={movie?.movieId || movie?.title || idx} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-300 space-y-2">
                             <div className="flex items-center gap-3">
                               {/* Element 1: Movie Poster Image */}
                               <img 
                                 src={movie?.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80'} 
                                 alt={movie?.title || 'Movie'} 
-                                className="w-12 h-16 rounded-lg object-cover border border-[#C1BAA1] shadow-md shrink-0" 
+                                className="w-12 h-16 rounded-lg object-cover border border-slate-300 shadow-sm shrink-0" 
                               />
                               
                               <div className="flex-1 min-w-0">
                                 {/* Element 2: Movie Title Name */}
-                                <h4 className="font-extrabold text-[#FCEEAD] text-sm truncate">{movie?.title || 'Untitled Movie'}</h4>
+                                <h4 className="font-black text-[#1A1A1A] text-sm truncate">{movie?.title || 'Untitled Movie'}</h4>
                                 
                                 {/* Element 3: Booking Percentage Bar / Percentage Value */}
                                 <div className="flex items-center justify-between text-xs mt-1 mb-1">
-                                  <span className="text-[#786C66] font-medium">Ticket Share ({movie?.tickets || 0} tickets)</span>
-                                  <span className="font-mono font-black text-amber-400 text-sm">{pct}%</span>
+                                  <span className="text-slate-700 font-bold">Ticket Share ({movie?.tickets || 0} tickets)</span>
+                                  <span className="font-mono font-black text-[#D90000] text-sm">{pct}%</span>
                                 </div>
 
-                                <div className="w-full h-2 bg-[#C1BAA1] rounded-full overflow-hidden">
+                                <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                                   <div 
-                                    className="h-full bg-gradient-to-r from-amber-500 to-cyan-400 rounded-full transition-all duration-500" 
+                                    className="h-full bg-[#D90000] rounded-full transition-all duration-500" 
                                     style={{ width: `${Math.max(pct, 4)}%` }} 
                                   />
                                 </div>
@@ -3059,10 +3059,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       })
                     ) : (
                       /* Fallback Logic when topMoviesList is empty */
-                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-[#A59D84] space-y-2 bg-[#ECEBDE]">
-                        <Film className="w-8 h-8 text-amber-600/50 mx-auto animate-pulse" />
-                        <div className="text-xs font-bold text-[#FCEEAD]">No Live Movie Bookings Yet</div>
-                        <p className="text-[11px] text-[#786C66]">
+                      <div className="p-6 text-center rounded-2xl border border-dashed border-slate-400 space-y-2 bg-[#FFFFFF]">
+                        <Film className="w-8 h-8 text-[#D90000] mx-auto animate-pulse" />
+                        <div className="text-xs font-black text-[#1A1A1A]">No Live Movie Bookings Yet</div>
+                        <p className="text-[11px] text-slate-700 font-medium">
                           Real-time movie ticket share will appear here automatically when users complete movie bookings in MongoDB Atlas.
                         </p>
                       </div>
@@ -3071,17 +3071,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              {/* Column 2: Top Theatres by Occupancy & Rating (Live MongoDB Atlas - Top 2 View) */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
+              {/* Column 2: Top Theatres by Occupancy */}
+              <div className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A] flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-[#FCEEAD] flex items-center gap-2">
-                      <Building className="w-4 h-4 text-blue-400" />
+                    <h3 className="text-sm font-black text-[#1A1A1A] flex items-center gap-2">
+                      <Building className="w-4 h-4 text-[#D90000]" />
                       <span>Top Theatres by Occupancy (Live MongoDB Atlas)</span>
                     </h3>
                     <button
                       onClick={() => setTopTheatresModalOpen(true)}
-                      className="text-xs font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs font-black text-[#D90000] hover:underline cursor-pointer flex items-center gap-1"
                     >
                       <span>More / View All ({(Array.isArray(allTheatresList) && allTheatresList.length > 0 ? allTheatresList : (Array.isArray(topTheatresList) ? topTheatresList : [])).length})</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
@@ -3094,22 +3094,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         const pct = th?.percentage !== undefined ? th.percentage : (parseFloat(th?.occupancyRate) || 0);
                         const displayName = th?.nameAndCity || (th?.city ? `${th.name} - ${th.city}` : th?.name) || 'PrimeShow Theatre';
                         return (
-                          <div key={th?.theatreId || th?.name || i} className="p-3 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] space-y-2">
+                          <div key={th?.theatreId || th?.name || i} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-300 space-y-2">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#FCEEAD] font-extrabold truncate max-w-[210px]" title={displayName}>
+                              <span className="text-[#1A1A1A] font-black truncate max-w-[210px]" title={displayName}>
                                 {displayName}
                               </span>
-                              <span className="font-mono font-black text-amber-400 text-sm">
+                              <span className="font-mono font-black text-[#D90000] text-sm">
                                 {pct}%
                               </span>
                             </div>
-                            <div className="flex items-center justify-between text-[11px] text-[#786C66]">
+                            <div className="flex items-center justify-between text-[11px] text-slate-700 font-bold">
                               <span>Seats Sold: {th?.tickets || 0}</span>
-                              <span className="text-amber-400 font-bold">Rating: {th?.rating || 4.8}★</span>
+                              <span className="text-[#D90000] font-black">Rating: {th?.rating || 4.8}★</span>
                             </div>
-                            <div className="w-full h-2 bg-[#C1BAA1] rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500"
+                                className="h-full bg-[#D90000] rounded-full transition-all duration-500"
                                 style={{ width: `${Math.max(pct, 4)}%` }}
                               />
                             </div>
@@ -3117,10 +3117,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         );
                       })
                     ) : (
-                      <div className="p-6 text-center glass-panel rounded-2xl border border-dashed border-[#A59D84] space-y-2 bg-[#ECEBDE]">
-                        <Building className="w-8 h-8 text-blue-600/50 mx-auto animate-pulse" />
-                        <div className="text-xs font-bold text-[#FCEEAD]">No Live Theatre Bookings Yet</div>
-                        <p className="text-[11px] text-[#786C66]">
+                      <div className="p-6 text-center rounded-2xl border border-dashed border-slate-400 space-y-2 bg-[#FFFFFF]">
+                        <Building className="w-8 h-8 text-[#D90000] mx-auto animate-pulse" />
+                        <div className="text-xs font-black text-[#1A1A1A]">No Live Theatre Bookings Yet</div>
+                        <p className="text-[11px] text-slate-700 font-medium">
                           Real-time theatre occupancy share will calculate here automatically when tickets or halls are booked in MongoDB Atlas.
                         </p>
                       </div>
@@ -3130,162 +3130,49 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
             </div>
 
-
-
-
-
-            {/* LOWER SECTION (3 COLUMNS) */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Column 1: Revenue by Payment Method */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-[#FCEEAD] mb-4">Revenue by Payment Method</h3>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
-                    {/* SVG Donut Chart */}
-                    <div className="relative w-36 h-36 shrink-0">
-                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <path className="text-[#C1BAA1]" strokeWidth="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        {/* UPI - 48.6% */}
-                        <path className="text-blue-500" strokeDasharray="48.6, 100" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        {/* Card - 32.1% */}
-                        <path className="text-emerald-400" strokeDasharray="32.1, 100" strokeDashoffset="-48.6" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        {/* Net Banking - 12.3% */}
-                        <path className="text-amber-500" strokeDasharray="12.3, 100" strokeDashoffset="-80.7" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        {/* Wallets - 7.0% */}
-                        <path className="text-purple-500" strokeDasharray="7.0, 100" strokeDashoffset="-93.0" strokeWidth="4.5" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                      </svg>
-                    </div>
-
-                    {/* Donut Legend */}
-                    <div className="space-y-2 text-[11px]">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-                        <span className="text-amber-100 font-medium">UPI</span>
-                        <span className="text-[#786C66] font-mono ml-auto">48.6% (₹1,208,000)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
-                        <span className="text-amber-100 font-medium">Card</span>
-                        <span className="text-[#786C66] font-mono ml-auto">32.1% (₹798,000)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-                        <span className="text-amber-100 font-medium">Net Banking</span>
-                        <span className="text-[#786C66] font-mono ml-auto">12.3% (₹306,000)</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
-                        <span className="text-amber-100 font-medium">Wallets</span>
-                        <span className="text-[#786C66] font-mono ml-auto">7.0% (₹173,900)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Column 2: Recent Bookings */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-[#FCEEAD]">Recent Bookings</h3>
-                    <button className="text-xs font-bold text-amber-700 hover:underline">View All</button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {[
-                      { id: '#PS84215', time: 'May 17, 2025 • 10:45 AM', price: '₹850', status: 'Confirmed' },
-                      { id: '#PS84214', time: 'May 17, 2025 • 10:30 AM', price: '₹1,250', status: 'Confirmed' },
-                      { id: '#PS84213', time: 'May 17, 2025 • 10:20 AM', price: '₹640', status: 'Confirmed' },
-                      { id: '#PS84212', time: 'May 17, 2025 • 10:15 AM', price: '₹950', status: 'Confirmed' },
-                      { id: '#PS84211', time: 'May 17, 2025 • 10:05 AM', price: '₹740', status: 'Confirmed' }
-                    ].map((b, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[#C1BAA1] last:border-none">
-                        <div>
-                          <div className="font-mono font-bold text-amber-100">{b.id}</div>
-                          <div className="text-[10px] text-[#786C66]">{b.time}</div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono font-bold text-amber-100">{b.price}</span>
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
-                            {b.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Column 3: System Status */}
-              <div className="bg-[#D7D3BF] p-5 rounded-2xl border border-[#C1BAA1] space-y-4 shadow-xl flex flex-col justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-[#FCEEAD] mb-3">System Status</h3>
-
-                  <div className="space-y-3">
-                    {[
-                      { name: 'Server Status', status: 'Healthy' },
-                      { name: 'Database', status: 'Healthy' },
-                      { name: 'Payment Gateway', status: 'Healthy' },
-                      { name: 'Email Service', status: 'Healthy' },
-                      { name: 'SMS Service', status: 'Healthy' },
-                      { name: 'WhatsApp Service', status: 'Healthy' }
-                    ].map((sys, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[#C1BAA1] last:border-none">
-                        <span className="text-amber-100 font-medium">{sys.name}</span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
-                          {sys.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* BOTTOM SECONDARY METRICS (4 CARDS) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#D7D3BF] p-4 rounded-2xl border border-[#C1BAA1] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] flex items-center justify-center text-cyan-600 shrink-0">
+              <div className="bg-[#DBCEA5] p-4 rounded-2xl border border-[#c5ba92] flex items-center gap-4 shadow-md text-[#1A1A1A]">
+                <div className="w-12 h-12 rounded-xl bg-[#FFFFFF] border border-slate-300 flex items-center justify-center text-[#D90000] shrink-0">
                   <Film className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#786C66] font-medium">Active Movies</div>
-                  <div className="text-xl font-extrabold text-[#FCEEAD] font-sans">{(moviesList || []).length > 0 ? (moviesList || []).length : 34}</div>
-                  <div className="text-[10px] font-bold text-emerald-400">+5 this week</div>
+                  <div className="text-xs text-slate-800 font-bold">Active Movies</div>
+                  <div className="text-xl font-black text-[#1A1A1A] font-sans">{(moviesList || []).length > 0 ? (moviesList || []).length : 34}</div>
+                  <div className="text-[10px] font-black text-[#2C5745]">+5 this week</div>
                 </div>
               </div>
 
-              <div className="bg-[#D7D3BF] p-4 rounded-2xl border border-[#C1BAA1] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] flex items-center justify-center text-cyan-600 shrink-0">
+              <div className="bg-[#DBCEA5] p-4 rounded-2xl border border-[#c5ba92] flex items-center gap-4 shadow-md text-[#1A1A1A]">
+                <div className="w-12 h-12 rounded-xl bg-[#FFFFFF] border border-slate-300 flex items-center justify-center text-[#D90000] shrink-0">
                   <Building className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#786C66] font-medium">Active Theatres</div>
-                  <div className="text-xl font-extrabold text-[#FCEEAD] font-sans">{(theatresList || []).length > 0 ? (theatresList || []).length : 28}</div>
-                  <div className="text-[10px] font-bold text-emerald-400">+2 this week</div>
+                  <div className="text-xs text-slate-800 font-bold">Total Multiplexes</div>
+                  <div className="text-xl font-black text-[#1A1A1A] font-sans">{(theatresList || []).length > 0 ? (theatresList || []).length : 12}</div>
+                  <div className="text-[10px] font-black text-[#2C5745]">Across 18 Gujarat Cities</div>
                 </div>
               </div>
 
-              <div className="bg-[#D7D3BF] p-4 rounded-2xl border border-[#C1BAA1] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] flex items-center justify-center text-purple-600 shrink-0">
+              <div className="bg-[#DBCEA5] p-4 rounded-2xl border border-[#c5ba92] flex items-center gap-4 shadow-md text-[#1A1A1A]">
+                <div className="w-12 h-12 rounded-xl bg-[#FFFFFF] border border-slate-300 flex items-center justify-center text-[#D90000] shrink-0">
                   <Compass className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#786C66] font-medium">Total Screens</div>
-                  <div className="text-xl font-extrabold text-[#FCEEAD] font-sans">156</div>
-                  <div className="text-[10px] font-bold text-emerald-400">+6 this week</div>
+                  <div className="text-xs text-slate-800 font-bold">Total Screens</div>
+                  <div className="text-xl font-black text-[#1A1A1A] font-sans">156</div>
+                  <div className="text-[10px] font-black text-[#2C5745]">+6 this week</div>
                 </div>
               </div>
 
-              <div className="bg-[#D7D3BF] p-4 rounded-2xl border border-[#C1BAA1] flex items-center gap-4 shadow-xl">
-                <div className="w-12 h-12 rounded-xl bg-[#ECEBDE] border border-[#C1BAA1] flex items-center justify-center text-emerald-600 shrink-0">
+              <div className="bg-[#DBCEA5] p-4 rounded-2xl border border-[#c5ba92] flex items-center gap-4 shadow-md text-[#1A1A1A]">
+                <div className="w-12 h-12 rounded-xl bg-[#FFFFFF] border border-slate-300 flex items-center justify-center text-[#D90000] shrink-0">
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#786C66] font-medium">Total Users</div>
-                  <div className="text-xl font-extrabold text-[#FCEEAD] font-sans">{(usersList || []).length > 0 ? (userTotalCount || usersList.length) : 12485}</div>
-                  <div className="text-[10px] font-bold text-emerald-400">+325 this week</div>
+                  <div className="text-xs text-slate-800 font-bold">Total Users</div>
+                  <div className="text-xl font-black text-[#1A1A1A] font-sans">{(usersList || []).length > 0 ? (userTotalCount || usersList.length) : 12485}</div>
+                  <div className="text-[10px] font-black text-[#2C5745]">+325 this week</div>
                 </div>
               </div>
             </div>
@@ -3294,21 +3181,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 1.5: Users & Activity Tracking Management */}
         {activeTab === 'users' && (
-          <div className="space-y-8 animate-fade-in">
+          <div className="space-y-8 animate-fade-in text-[#1A1A1A]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold font-sans text-white flex items-center gap-3">
-                  <Users className="w-8 h-8 text-cyan-400" />
+                <h1 className="text-3xl font-black font-sans text-[#1A1A1A] flex items-center gap-3">
+                  <Users className="w-8 h-8 text-[#D90000]" />
                   <span>User Management & Activity Tracking</span>
                 </h1>
-                <p className="text-xs text-cyan-300 mt-1">
+                <p className="text-xs text-slate-800 font-semibold mt-1">
                   Monitor registered users, authentication deduplication, booking history, claimed offers, and activity metrics.
                 </p>
               </div>
 
               <button
                 onClick={() => fetchAdminUsers(userCurrentPage, userSearchQuery)}
-                className="px-4 py-2.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500 hover:text-black border border-cyan-400/40 text-cyan-300 font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shrink-0"
+                className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white font-bold text-xs transition-all flex items-center gap-2 cursor-pointer shrink-0 shadow-md"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${usersLoading ? 'animate-spin' : ''}`} />
                 <span>Refresh Users</span>
@@ -3316,7 +3203,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </div>
 
             {/* Top Search & Filter Bar */}
-            <div className="glass-panel p-4 rounded-3xl border border-cyan-400/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-[#DBCEA5] p-4 rounded-3xl border border-[#c5ba92] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
               <div className="relative w-full sm:w-96">
                 <input
                   type="text"
@@ -3326,16 +3213,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     setUserSearchQuery(e.target.value);
                     fetchAdminUsers(1, e.target.value);
                   }}
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl glass-input text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                 />
-                <Eye className="w-4 h-4 text-cyan-400 absolute left-3.5 top-3.5" />
+                <Eye className="w-4 h-4 text-[#D90000] absolute left-3.5 top-3.5" />
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-white/70 w-full sm:w-auto justify-between sm:justify-end">
-                <span className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 font-mono">
-                  Total Users: <strong className="text-cyan-300">{userTotalCount}</strong>
+              <div className="flex items-center gap-3 text-xs text-[#1A1A1A] w-full sm:w-auto justify-between sm:justify-end font-bold">
+                <span className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] border border-slate-300 font-mono">
+                  Total Users: <strong className="text-[#D90000]">{userTotalCount}</strong>
                 </span>
-                <span className="px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 font-semibold">
+                <span className="px-3 py-1.5 rounded-xl bg-[#2C5745]/20 border border-[#2C5745]/40 text-[#2C5745] font-extrabold">
                   Page {userCurrentPage} of {userTotalPages}
                 </span>
               </div>
@@ -3343,15 +3230,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Users Error Alert with Retry Button */}
             {usersError && (
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/40 text-amber-300 text-xs font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/40 text-rose-900 text-xs font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-[#D90000] shrink-0" />
                   <span>{usersError}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => fetchAdminUsers(userCurrentPage, userSearchQuery)}
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Retry Connection</span>
@@ -3360,11 +3247,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
             )}
 
             {/* Users Table */}
-            <div className="glass-panel rounded-3xl border border-cyan-400/20 overflow-hidden shadow-2xl">
+            <div className="bg-[#DBCEA5] rounded-3xl border border-[#c5ba92] overflow-hidden shadow-md">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-white/5 border-b border-white/10 text-cyan-300 font-bold uppercase tracking-wider">
+                    <tr className="bg-[#2B1B17] text-white font-bold uppercase tracking-wider">
                       <th className="p-4">User</th>
                       <th className="p-4">Email & Contact</th>
                       <th className="p-4">Status</th>
@@ -3375,81 +3262,81 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-white/80">
+                  <tbody className="divide-y divide-[#c5ba92] text-[#1A1A1A]">
                     {usersLoading ? (
                       <tr>
-                        <td colSpan="8" className="p-8 text-center text-cyan-300 font-bold">
+                        <td colSpan="8" className="p-8 text-center text-[#D90000] font-black">
                           <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
                           <span>Loading registered user database...</span>
                         </td>
                       </tr>
                     ) : usersList.length > 0 ? (
                       usersList.map((u) => (
-                        <tr key={u.id || u.email} className="hover:bg-white/5 transition-colors group">
+                        <tr key={u.id || u.email} className="hover:bg-[#FFFFFF]/60 transition-colors group">
                           <td className="p-4">
                             <div className="flex items-center gap-3">
                               <img
                                 src={u.profilePicture || u.avatar || 'https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + u.name}
                                 alt={u.name}
-                                className="w-10 h-10 rounded-2xl object-cover border border-cyan-400/40 shadow-md shrink-0"
+                                className="w-10 h-10 rounded-2xl object-cover border border-slate-300 shadow-sm shrink-0"
                               />
                               <div>
-                                <div className="font-bold text-white group-hover:text-cyan-300 transition-colors flex items-center gap-1.5">
+                                <div className="font-black text-[#1A1A1A] group-hover:text-[#D90000] transition-colors flex items-center gap-1.5">
                                   <span>{u.name}</span>
                                   {u.role === 'ADMIN' && (
-                                    <span className="px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[9px] font-extrabold">ADMIN</span>
+                                    <span className="px-1.5 py-0.2 rounded bg-[#D90000] text-white text-[9px] font-black">ADMIN</span>
                                   )}
                                 </div>
-                                <div className="text-[10px] text-white/50">ID: {u.id || u.username || 'usr'}</div>
+                                <div className="text-[10px] text-slate-700 font-bold">ID: {u.id || u.username || 'usr'}</div>
                               </div>
                             </div>
                           </td>
 
                           <td className="p-4">
-                            <div className="font-mono text-cyan-300">{u.email}</div>
-                            <div className="text-[10px] text-white/50">{u.phoneNumber || u.phone || 'N/A'}</div>
+                            <div className="font-mono font-black text-[#1A1A1A]">{u.email}</div>
+                            <div className="text-[10px] text-slate-700 font-bold">{u.phoneNumber || u.phone || 'N/A'}</div>
                           </td>
 
                           <td className="p-4">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border flex items-center gap-1.5 w-max ${
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1.5 w-max ${
                               u.isOnline !== false
-                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
-                                : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                ? 'bg-[#2C5745]/20 text-[#2C5745] border-[#2C5745]/40'
+                                : 'bg-rose-500/20 text-rose-800 border-rose-400/40'
                             }`}>
-                              <span className={`w-2 h-2 rounded-full ${u.isOnline !== false ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`}></span>
+                              <span className={`w-2 h-2 rounded-full ${u.isOnline !== false ? 'bg-[#2C5745] animate-pulse' : 'bg-rose-600'}`}></span>
                               <span>{u.isOnline !== false ? '🟢 Online' : '🔴 Offline'}</span>
                             </span>
                           </td>
 
                           <td className="p-4">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase ${
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase ${
                               (u.authProvider === 'google' || u.provider === 'GOOGLE') 
-                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' 
+                                ? 'bg-rose-500/20 text-rose-800 border-rose-400/40' 
                                 : (u.authProvider === 'mobile' || u.provider === 'OTP') 
-                                  ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
-                                  : 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40'
+                                  ? 'bg-amber-500/20 text-amber-900 border-amber-400/40'
+                                  : 'bg-[#2C5745]/20 text-[#2C5745] border-[#2C5745]/40'
                             }`}>
                               {(u.authProvider || u.provider || 'email').toUpperCase()}
                             </span>
                           </td>
 
-                          <td className="p-4 font-semibold text-white/90">
+                          <td className="p-4 font-black text-[#1A1A1A]">
                             {u.city || 'Surat'}
                           </td>
 
                           <td className="p-4 text-[11px]">
-                            <div className="text-emerald-300 font-semibold">
+                            <div className="text-[#2C5745] font-black">
                               Login: {u.lastLoginTime ? new Date(u.lastLoginTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(u.lastLoginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
                             </div>
                             {u.lastLogoutTime && (
-                              <div className="text-rose-300 text-[10px] mt-0.5">
+                              <div className="text-rose-800 text-[10px] font-bold mt-0.5">
                                 Logout: {new Date(u.lastLogoutTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date(u.lastLogoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                               </div>
                             )}
                           </td>
 
                           <td className="p-4 text-center">
-                            <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-400/40 text-xs">
+                            <span className="px-3 py-1 rounded-full bg-[#FFFFFF] text-[#1A1A1A] font-black border border-slate-300 text-xs shadow-sm">
                               🎟️ {u.totalBookings || 0}
                             </span>
                           </td>
@@ -3459,16 +3346,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
                               <button
                                 onClick={() => handleViewUserActivity(u)}
                                 title="View Activity Logs & History"
-                                className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 transition-all flex items-center gap-1 cursor-pointer"
+                                className="px-3 py-1.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white font-black text-xs shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                               >
-                                <Eye className="w-3.5 h-3.5" />
+                                <Eye className="w-3.5 h-3.5 text-white" />
                                 <span>Activity</span>
                               </button>
 
                               <button
                                 onClick={() => handleOpenEditUserModal(u)}
                                 title="Edit User Details"
-                                className="p-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 transition-all cursor-pointer"
+                                className="p-1.5 rounded-xl bg-[#FFFFFF] hover:bg-amber-500 hover:text-black border border-slate-300 text-[#1A1A1A] transition-all cursor-pointer shadow-sm"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
@@ -3476,7 +3363,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                               <button
                                 onClick={() => handleDeleteUser(u)}
                                 title="Delete User from Database"
-                                className="p-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 transition-all cursor-pointer"
+                                className="p-1.5 rounded-xl bg-[#D90000] hover:bg-red-700 text-white transition-all cursor-pointer shadow-sm"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -3486,14 +3373,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="8" className="p-8 text-center text-white/50">
+                        <td colSpan="8" className="p-8 text-center text-slate-800 font-bold">
                           {usersError ? (
                             <div className="space-y-3">
-                              <p className="text-amber-300 font-bold">{usersError}</p>
+                              <p className="text-[#D90000] font-black">{usersError}</p>
                               <button
                                 type="button"
                                 onClick={() => fetchAdminUsers(userCurrentPage, userSearchQuery)}
-                                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md cursor-pointer"
+                                className="px-4 py-2 rounded-xl bg-[#D90000] text-white font-black text-xs shadow-md cursor-pointer"
                               >
                                 Retry Refreshing
                               </button>
@@ -3510,7 +3397,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Pagination Controls */}
               {userTotalPages > 1 && (
-                <div className="p-4 bg-white/5 border-t border-white/10 flex items-center justify-between">
+                <div className="p-4 bg-[#ECEBDE] border-t border-[#c5ba92] flex items-center justify-between font-bold text-xs text-[#1A1A1A]">
                   <button
                     disabled={userCurrentPage <= 1}
                     onClick={() => fetchAdminUsers(userCurrentPage - 1, userSearchQuery)}
