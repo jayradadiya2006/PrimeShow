@@ -278,25 +278,27 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
       <div className="relative z-20 max-w-5xl mx-auto px-4 md:px-8 text-center flex flex-col items-center justify-center pt-16">
         
         {/* Glass Badge */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#D7D3BF] border border-[#C1BAA1] backdrop-blur-xl mb-6 shadow-xl">
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/85 border border-amber-400/50 backdrop-blur-xl mb-6 shadow-xl">
           <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-          <span className="text-xs md:text-sm font-bold tracking-wide text-slate-200 uppercase">
+          <span className="text-xs md:text-sm font-extrabold tracking-wide text-amber-300 uppercase">
             India's Premier Ticket & Experience Booking
           </span>
         </div>
 
         {/* Main Headline */}
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold font-serif tracking-tight text-slate-100 mb-4 leading-[1.1] drop-shadow-2xl">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold font-serif tracking-tight text-white mb-4 leading-[1.1] drop-shadow-2xl">
           Experience Cinema <br className="hidden sm:inline" />
           <span className="bg-gradient-to-r from-red-500 via-amber-400 to-rose-400 bg-clip-text text-transparent italic">
             Like Never Before
           </span>
         </h1>
 
-        {/* Sub-heading */}
-        <p className="max-w-2xl text-base md:text-lg text-slate-300 font-sans font-normal mb-8 leading-relaxed">
-          Book movies, concerts, theater plays, adventure passes, and private screens with instant liquid glass booking.
-        </p>
+        {/* Sub-heading with Semi-transparent Dark Backdrop Overlay & Crisp White Text */}
+        <div className="px-6 py-3 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/20 mb-8 max-w-2xl shadow-2xl">
+          <p className="text-base md:text-lg text-white font-bold leading-relaxed drop-shadow-md">
+            Book movies, concerts, theater plays, adventure passes, and private screens with instant liquid glass booking.
+          </p>
+        </div>
 
         {/* Interactive Search Engine Widget with Floating Auto-Suggest Dropdown */}
         <div ref={searchContainerRef} className="relative w-full max-w-3xl mb-8">
@@ -306,18 +308,18 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
               {/* City Trigger */}
               <button
                 onClick={onOpenCityModal}
-                className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#D7D3BF] hover:bg-[#ECEBDE] border border-[#C1BAA1] text-xs font-semibold text-amber-400 flex items-center justify-between sm:justify-start gap-2 transition-all cursor-pointer"
+                className="w-full sm:w-auto px-4.5 py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-300 text-xs font-black text-slate-900 flex items-center justify-between sm:justify-start gap-2 transition-all cursor-pointer shadow-xs"
               >
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-amber-400" />
-                  <span>{selectedCity}</span>
+                  <MapPin className="w-4 h-4 text-[#D90000]" />
+                  <span className="text-slate-900 font-extrabold">{selectedCity}</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
+                <ChevronRight className="w-4 h-4 text-slate-600" />
               </button>
 
               {/* Live Search Input with Keyboard Controls */}
               <div className="relative flex-1 w-full">
-                <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-700" />
                 <input
                   type="text"
                   placeholder="Search movies, IMAX 3D, concerts, plays, or activities..."
@@ -325,7 +327,7 @@ export const HeroCrossfader = ({ onSelectMovie, onBookNow, selectedCity, onOpenC
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.trim() && setIsDropdownOpen(true)}
                   onKeyDown={handleKeyDown}
-                  className="w-full pl-11 pr-10 py-3 rounded-2xl glass-input text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none"
+                  className="w-full pl-11 pr-10 py-3 rounded-2xl bg-white text-sm text-slate-900 font-semibold placeholder-slate-600 border border-slate-300 focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000] focus:outline-none shadow-xs"
                 />
                 
                 {/* Clear Query or Spinner Icon */}

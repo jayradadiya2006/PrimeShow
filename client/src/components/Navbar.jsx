@@ -68,19 +68,19 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
           {/* Desktop Location Pin City Selector Button */}
           <button
             onClick={onOpenCityModal}
-            className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 hover:border-amber-500 dark:hover:border-amber-400/60 hover:bg-amber-500/10 transition-all text-xs font-bold text-amber-800 dark:text-amber-300 cursor-pointer shadow-sm group"
+            className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-400 hover:border-[#D90000] hover:bg-slate-50 transition-all text-xs font-black text-slate-900 cursor-pointer shadow-xs group"
             title="Click to switch city"
           >
-            <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform fill-amber-500/20" />
-            <span>{selectedCity || 'Surat'}</span>
-            <ChevronDown className="w-3 h-3 text-slate-500 dark:text-white/50 group-hover:text-amber-400 transition-colors" />
+            <MapPin className="w-4 h-4 text-[#D90000] group-hover:scale-110 transition-transform fill-[#D90000]/20" />
+            <span className="text-slate-900 font-extrabold">{selectedCity || 'Surat'}</span>
+            <ChevronDown className="w-3 h-3 text-slate-700 group-hover:text-[#D90000] transition-colors" />
           </button>
         </div>
 
         {/* Center: Global Live Predictive Search Bar (Desktop View Intact) */}
         <div className="relative hidden md:block w-full max-w-md mx-6">
           <div className="relative flex items-center">
-            <Search className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-white/40" />
+            <Search className="absolute left-3.5 w-4 h-4 text-slate-700" />
             <input
               type="text"
               placeholder="Search movies, multiplexes, events, actors..."
@@ -88,7 +88,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
               onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-full glass-input text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
+              className="w-full pl-10 pr-4 py-2 text-sm rounded-full bg-white border border-slate-400 text-slate-900 font-medium placeholder-slate-600 focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000] focus:outline-none shadow-xs"
             />
           </div>
 
@@ -430,7 +430,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
 
       {/* Secondary Category Navigation Bar (Hidden on Movie Details page as requested) */}
       {activeTab !== 'movie-detail' && (
-        <div className="bg-[#3E322A] backdrop-blur-md border-b border-[#2C231C] px-2.5 sm:px-4 md:px-8 py-1 sm:py-2 overflow-x-auto scrollbar-none flex items-center gap-1.5 sm:gap-2 md:gap-3 z-40 text-white">
+        <div className="bg-[#3E322A] backdrop-blur-md border-b border-[#2C231C] px-2.5 sm:px-4 md:px-8 py-1.5 sm:py-2.5 overflow-x-auto scrollbar-none flex items-center gap-1.5 sm:gap-2 md:gap-3 z-40 text-white">
           {navCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeTab === cat.id;
@@ -438,13 +438,13 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
               <button
                 key={cat.id}
                 onClick={() => setActiveTab(cat.id)}
-                className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 shrink-0 cursor-pointer ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer tracking-wide ${
                   isActive
-                    ? 'bg-[#D90000] text-white shadow-md shadow-red-500/20'
-                    : 'text-slate-200 hover:text-white hover:bg-[#DBCEA5]/20'
+                    ? 'bg-[#D90000] text-white font-black shadow-lg shadow-red-500/30'
+                    : 'text-white font-extrabold hover:text-amber-300 hover:bg-white/10'
                 }`}
               >
-                <Icon className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? 'text-white' : 'text-[#DBCEA5]'}`} />
+                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? 'text-white' : 'text-amber-400'}`} />
                 <span>{cat.label}</span>
               </button>
             );
