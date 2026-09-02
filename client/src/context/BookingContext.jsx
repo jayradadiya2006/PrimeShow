@@ -771,6 +771,7 @@ export const BookingProvider = ({ children }) => {
     const moviePayload = {
       id: newMovieData.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       ...newMovieData,
+      title: (newMovieData.title || newMovieData.movieName || '').trim() || 'Untitled Movie',
       duration: newMovieData.duration || '2h 30m',
       rating: newMovieData.rating || 9.0,
       votesCount: newMovieData.votesCount || 100,
@@ -780,9 +781,9 @@ export const BookingProvider = ({ children }) => {
       genres: Array.isArray(newMovieData.genres) ? newMovieData.genres : (newMovieData.genres ? String(newMovieData.genres).split(',').map(s=>s.trim()) : ['Action']),
       languages: Array.isArray(newMovieData.languages) ? newMovieData.languages : (newMovieData.languages ? String(newMovieData.languages).split(',').map(s=>s.trim()) : ['English', 'Hindi']),
       formats: Array.isArray(newMovieData.formats) ? newMovieData.formats : (newMovieData.formats ? String(newMovieData.formats).split(',').map(s=>s.trim()) : ['IMAX 3D', 'Dolby Atmos']),
-      poster: newMovieData.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-      banner: newMovieData.banner || newMovieData.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
-      trailerUrl: newMovieData.trailerUrl || 'https://www.youtube.com/watch?v=d9MyW72ELq0',
+      poster: newMovieData.poster || newMovieData.posterUrl || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      banner: newMovieData.banner || newMovieData.bannerUrl || newMovieData.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      trailerUrl: newMovieData.trailerUrl || newMovieData.youtubeUrl || 'https://www.youtube.com/watch?v=d9MyW72ELq0',
       director: newMovieData.director || 'Famous Director',
       producer: newMovieData.producer || 'PrimeShow Studios',
       cast: newMovieData.cast || [],
@@ -795,32 +796,58 @@ export const BookingProvider = ({ children }) => {
 
     try {
       const res = await API.post('/movies', moviePayload);
-      const returnedMovie = res.data || moviePayload;
-      setMoviesList(prev => {
-        const filtered = prev.filter(m => m.id !== returnedMovie.id);
-        return [returnedMovie, ...filtered];
-      });
+      const data = res.data;
+      const savedMovie = data.movie || data;
+
+      if (data && (data.success || data.id || data._id || savedMovie.id || savedMovie._id)) {
+        setMoviesList(prev => {
+          const filtered = prev.filter(m => m.id !== savedMovie.id && m._id !== savedMovie._id);
+          return [savedMovie, ...filtered];
+        });
+        await fetchMovies();
+        return { success: true, movie: savedMovie };
+      } else {
+        throw new Error(data?.error || 'MongoDB failed to save movie');
+      }
     } catch (err) {
-      console.warn('⚠️ API movie create error, applying local fallback:', err.message);
-      setMoviesList(prev => {
-        const filtered = prev.filter(m => m.id !== moviePayload.id);
-        return [moviePayload, ...filtered];
-      });
+      console.error('❌ MongoDB Movie Save Failed:', err.response?.data?.error || err.message);
+      throw err;
     }
   };
 
   const updateMovieInGlobalStore = async (movieId, updatedFields) => {
-    setMoviesList(prev => prev.map(m => m.id === movieId ? { ...m, ...updatedFields } : m));
     try {
-      await API.put(`/movies/${movieId}`, updatedFields);
-    } catch (err) {}
+      const res = await API.put(`/movies/${encodeURIComponent(movieId)}`, updatedFields);
+      const data = res.data;
+      const savedMovie = data.movie || data;
+
+      if (data && (data.success || data.id || data._id || savedMovie.id)) {
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? savedMovie : m));
+        await fetchMovies();
+        return { success: true, movie: savedMovie };
+      } else {
+        throw new Error(data?.error || 'MongoDB failed to update movie');
+      }
+    } catch (err) {
+      console.error('❌ MongoDB Movie Update Failed:', err.response?.data?.error || err.message);
+      throw err;
+    }
   };
 
   const deleteMovieFromGlobalStore = async (movieId) => {
     try {
-      await API.delete(`/movies/${movieId}`);
-    } catch (err) {}
-    setMoviesList(prev => prev.filter(m => m.id !== movieId));
+      const res = await API.delete(`/movies/${encodeURIComponent(movieId)}`);
+      if (res.data && (res.data.success || res.data.message)) {
+        setMoviesList(prev => prev.filter(m => m.id !== movieId && m._id !== movieId && m.title !== movieId));
+        await fetchMovies();
+        return { success: true };
+      } else {
+        throw new Error(res.data?.error || 'MongoDB failed to delete movie');
+      }
+    } catch (err) {
+      console.error('❌ MongoDB Movie Delete Failed:', err.response?.data?.error || err.message);
+      throw err;
+    }
   };
 
   // Show Management Helpers with Async Backend Persistence to MongoDB Atlas

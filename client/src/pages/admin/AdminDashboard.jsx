@@ -1404,45 +1404,66 @@ export const AdminDashboard = ({ onReturnHome }) => {
     };
   }, [socket, activeTab, userCurrentPage, userSearchQuery]);
 
-  // Handle Full Movie Save (Create / Edit)
+  // Handle Full Movie Save (Create / Edit) - Requires MongoDB Atlas Save Confirmation
   const handleSaveMovie = async (e) => {
     e.preventDefault();
-    if (!movieForm.title) return;
+    if (!movieForm.title || !movieForm.title.trim()) {
+      setActionSuccess('⚠️ Please enter a valid movie title');
+      setTimeout(() => setActionSuccess(''), 3000);
+      return;
+    }
 
     const payload = {
       ...movieForm,
+      title: movieForm.title.trim(),
+      movieName: movieForm.title.trim(),
+      synopsis: movieForm.synopsis || '',
+      description: movieForm.synopsis || '',
+      poster: movieForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      posterUrl: movieForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      banner: movieForm.banner || movieForm.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      bannerUrl: movieForm.banner || movieForm.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      trailerUrl: movieForm.trailerUrl || '',
+      youtubeUrl: movieForm.trailerUrl || '',
       genres: typeof movieForm.genres === 'string' ? movieForm.genres.split(',').map(s => s.trim()) : (movieForm.genres || ['Action']),
       languages: typeof movieForm.languages === 'string' ? movieForm.languages.split(',').map(s => s.trim()) : (movieForm.languages || ['English', 'Hindi']),
       formats: typeof movieForm.formats === 'string' ? movieForm.formats.split(',').map(s => s.trim()) : (movieForm.formats || ['IMAX 3D', 'Dolby Atmos']),
-      poster: movieForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-      banner: movieForm.banner || movieForm.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
       status: movieForm.status || 'Now Showing',
       city: movieForm.city || 'All',
       cities: movieForm.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
     };
 
-    if (editingMovieId) {
-      await updateMovieInGlobalStore(editingMovieId, payload);
-      setActionSuccess('Movie updated & synced live with User site!');
-    } else {
-      await addMovieToGlobalStore(payload);
-      setActionSuccess('New movie added to catalog & synced live with User site!');
-    }
+    try {
+      if (editingMovieId) {
+        const res = await updateMovieInGlobalStore(editingMovieId, payload);
+        if (res && res.success) {
+          setActionSuccess(`✅ Movie '${payload.title}' updated & saved in MongoDB Atlas!`);
+        }
+      } else {
+        const res = await addMovieToGlobalStore(payload);
+        if (res && res.success && (res.movie?.id || res.movie?._id)) {
+          setActionSuccess(`✅ Movie '${res.movie.title}' uploaded & saved in MongoDB Atlas!`);
+        }
+      }
 
-    setMovieForm({
-      title: '', synopsis: '', duration: '2h 30m', rating: 9.0, parentalRating: 'UA',
-      releaseDate: '2026-12-18', genres: 'Sci-Fi, Action', languages: 'English, Hindi',
-      formats: 'IMAX 3D, Dolby Atmos', poster: '', banner: '', trailerUrl: '', director: '', status: 'Now Showing'
-    });
-    setEditingMovieId(null);
-    setTimeout(() => setActionSuccess(''), 4000);
+      setMovieForm({
+        title: '', synopsis: '', duration: '2h 30m', rating: 9.0, parentalRating: 'UA',
+        releaseDate: '2026-12-18', genres: 'Sci-Fi, Action', languages: 'English, Hindi',
+        formats: 'IMAX 3D, Dolby Atmos', poster: '', banner: '', trailerUrl: '', director: '', status: 'Now Showing'
+      });
+      setEditingMovieId(null);
+    } catch (err) {
+      console.error('❌ Error saving movie to MongoDB Atlas:', err);
+      setActionSuccess(`❌ Save Failed: ${err.response?.data?.error || err.message}`);
+    }
+    setTimeout(() => setActionSuccess(''), 5000);
   };
 
   const handleEditMovieClick = (movie) => {
-    setEditingMovieId(movie.id);
+    setEditingMovieId(movie.id || movie._id);
     setMovieForm({
       title: movie.title || '',
-      synopsis: movie.synopsis || '',
+      synopsis: movie.synopsis || movie.description || '',
       duration: movie.duration || '2h 30m',
       rating: movie.rating || 9.0,
       parentalRating: movie.parentalRating || 'UA',
@@ -1450,18 +1471,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
       genres: Array.isArray(movie.genres) ? movie.genres.join(', ') : movie.genres || 'Action',
       languages: Array.isArray(movie.languages) ? movie.languages.join(', ') : movie.languages || 'English',
       formats: Array.isArray(movie.formats) ? movie.formats.join(', ') : movie.formats || 'IMAX 3D',
-      poster: movie.poster || '',
-      banner: movie.banner || '',
-      trailerUrl: movie.trailerUrl || '',
+      poster: movie.poster || movie.posterUrl || '',
+      banner: movie.banner || movie.bannerUrl || '',
+      trailerUrl: movie.trailerUrl || movie.youtubeUrl || '',
       director: movie.director || '',
       status: movie.status || 'Now Showing'
     });
   };
 
   const handleDeleteMovie = async (id) => {
-    await deleteMovieFromGlobalStore(id);
-    setActionSuccess('Movie removed from catalog & user home page.');
-    setTimeout(() => setActionSuccess(''), 3000);
+    try {
+      await deleteMovieFromGlobalStore(id);
+      setActionSuccess('✅ Movie deleted from MongoDB Atlas & removed from catalog.');
+    } catch (err) {
+      setActionSuccess(`❌ Delete Failed: ${err.message}`);
+    }
+    setTimeout(() => setActionSuccess(''), 4000);
   };
 
   // Cast Management CRUD (Real-Time Backend Persistence to MongoDB Atlas)

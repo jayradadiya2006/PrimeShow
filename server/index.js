@@ -2345,11 +2345,22 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
 });
 
 app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
+  const mId = req.body.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  const movieTitle = (req.body.title || req.body.movieName || req.body.name || '').trim();
+
+  if (!movieTitle) {
+    return res.status(400).json({ success: false, error: 'Movie title is required' });
+  }
+
+  const posterImg = req.body.poster || req.body.posterUrl || req.body.image || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80';
+  const bannerImg = req.body.banner || req.body.bannerUrl || posterImg;
+  const trailerLink = req.body.trailerUrl || req.body.youtubeUrl || req.body.videoUrl || '';
+
   const newMovie = {
-    id: req.body.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-    title: req.body.title || 'Untitled Movie',
+    id: mId,
+    title: movieTitle,
     tagline: req.body.tagline || 'Experience Cinema',
-    synopsis: req.body.synopsis || 'Comprehensive movie description.',
+    synopsis: req.body.synopsis || req.body.description || 'Comprehensive movie description.',
     duration: req.body.duration || '2h 30m',
     rating: req.body.rating ? Number(req.body.rating) : 9.0,
     votesCount: req.body.votesCount ? Number(req.body.votesCount) : 100,
@@ -2358,77 +2369,106 @@ app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
     genres: Array.isArray(req.body.genres) ? req.body.genres : (req.body.genres ? String(req.body.genres).split(',').map(s => s.trim()) : ['Action']),
     languages: Array.isArray(req.body.languages) ? req.body.languages : (req.body.languages ? String(req.body.languages).split(',').map(s => s.trim()) : ['English', 'Hindi']),
     formats: Array.isArray(req.body.formats) ? req.body.formats : (req.body.formats ? String(req.body.formats).split(',').map(s => s.trim()) : ['IMAX 3D', 'Dolby Atmos']),
-    poster: req.body.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-    banner: req.body.banner || req.body.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
-    trailerUrl: req.body.trailerUrl || 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260702_081127_0992a171-d3c6-4978-8213-0ec5df8b6d63.mp4',
+    poster: posterImg,
+    banner: bannerImg,
+    trailerUrl: trailerLink,
     director: req.body.director || 'Famous Director',
-    cast: req.body.cast || [
-      { id: 'c_default', name: 'Lead Actor', role: 'Hero', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' }
-    ],
+    cast: Array.isArray(req.body.cast) ? req.body.cast : [],
     status: req.body.status || 'Now Showing',
     featured: req.body.featured !== undefined ? req.body.featured : true,
     city: req.body.city || 'All',
-    cities: req.body.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
+    cities: req.body.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru'],
+    showDates: req.body.showDates || ['2026-07-31', '2026-08-01'],
+    schedules: req.body.schedules || {},
+    theatres: req.body.theatres || []
   };
 
   try {
-    const savedDoc = await Movie.findOneAndUpdate(
-      { id: newMovie.id },
-      newMovie,
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-    console.log('Saved to DB:', savedDoc);
+    let savedDoc = null;
+    if (mongoose.connection.readyState === 1) {
+      savedDoc = await Movie.findOneAndUpdate(
+        buildIdFilter(mId),
+        newMovie,
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
 
-    const existingIdx = movies.findIndex(m => m.id === savedDoc.id);
+    if (!savedDoc && mongoose.connection.readyState === 1) {
+      return res.status(500).json({ success: false, error: 'Failed to save movie to MongoDB Atlas' });
+    }
+
+    const plainDoc = savedDoc ? (savedDoc.toObject ? savedDoc.toObject() : savedDoc) : newMovie;
+    console.log('✅ [MongoDB Atlas]: Movie saved successfully! ID:', plainDoc.id, '_id:', plainDoc._id, 'Title:', plainDoc.title);
+
+    const existingIdx = movies.findIndex(m => m.id === plainDoc.id || m._id === plainDoc.id);
     if (existingIdx !== -1) {
-      movies[existingIdx] = savedDoc.toObject ? savedDoc.toObject() : savedDoc;
+      movies[existingIdx] = plainDoc;
     } else {
-      movies.unshift(savedDoc.toObject ? savedDoc.toObject() : savedDoc);
+      movies.unshift(plainDoc);
     }
 
     if (req.app.get('socketio')) {
-      req.app.get('socketio').emit('MOVIE_UPDATED', savedDoc);
-      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: savedDoc });
+      req.app.get('socketio').emit('MOVIE_UPDATED', plainDoc);
+      req.app.get('socketio').emit('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: plainDoc });
     }
-    broadcastToAllClients('MOVIE_UPDATED', savedDoc);
-    broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: savedDoc });
+    broadcastToAllClients('MOVIE_UPDATED', plainDoc);
+    broadcastToAllClients('LAYOUT_DATA_UPDATED', { type: 'MOVIE', movie: plainDoc });
 
-    return res.status(201).json(savedDoc);
+    return res.status(201).json({
+      success: true,
+      message: 'Movie saved successfully to MongoDB Atlas!',
+      movie: plainDoc,
+      id: plainDoc.id,
+      _id: plainDoc._id
+    });
   } catch (err) {
-    console.error('❌ MongoDB Write Error in POST /api/movies:', err.message);
-    return res.status(500).json({ success: false, error: err.message });
+    console.error('❌ MongoDB Write Error in POST /api/movies:', err.stack || err.message);
+    return res.status(500).json({ success: false, error: `MongoDB Save Failed: ${err.message}` });
   }
 });
 
 app.put(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   const { id } = req.params;
   const updateData = { ...req.body };
+  if (updateData.title) updateData.title = String(updateData.title).trim();
+  if (updateData.movieName) updateData.title = String(updateData.movieName).trim();
+  if (updateData.posterUrl) updateData.poster = updateData.posterUrl;
+  if (updateData.bannerUrl) updateData.banner = updateData.bannerUrl;
+  if (updateData.youtubeUrl) updateData.trailerUrl = updateData.youtubeUrl;
 
-  // 1. Write to MongoDB Atlas
   try {
-    // mongoose imported at top level
+    let updatedDoc = null;
     if (mongoose.connection.readyState === 1) {
-      await Movie.findOneAndUpdate({ id }, { $set: updateData }, { new: true });
+      updatedDoc = await Movie.findOneAndUpdate(
+        buildIdFilter(id),
+        { $set: updateData },
+        { new: true }
+      );
     }
+
+    const plainMovie = updatedDoc ? (updatedDoc.toObject ? updatedDoc.toObject() : updatedDoc) : { id, ...updateData };
+
+    const index = movies.findIndex(m => m.id === id || m._id === id);
+    if (index !== -1) {
+      movies[index] = { ...movies[index], ...plainMovie };
+    }
+
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('MOVIE_UPDATED', plainMovie);
+    }
+    broadcastToAllClients('MOVIE_UPDATED', plainMovie);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Movie updated successfully in MongoDB Atlas',
+      movie: plainMovie,
+      id: plainMovie.id,
+      _id: plainMovie._id
+    });
   } catch (err) {
-    console.warn('⚠️ Error updating movie in MongoDB Atlas:', err.message);
+    console.error('❌ Error updating movie in MongoDB Atlas:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
   }
-
-  // 2. Update in-memory fallback list
-  const index = movies.findIndex(m => m.id === id);
-  if (index !== -1) {
-    movies[index] = { ...movies[index], ...updateData };
-  }
-
-  const updatedMovie = index !== -1 ? movies[index] : { id, ...updateData };
-
-  // 3. Emit real-time broadcasts
-  if (req.app.get('socketio')) {
-    req.app.get('socketio').emit('MOVIE_UPDATED', updatedMovie);
-  }
-  broadcastToAllClients('MOVIE_UPDATED', updatedMovie);
-
-  res.json(updatedMovie);
 });
 
 app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
