@@ -61,25 +61,25 @@ export const Settings = ({ onReturnHome }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#07090e] text-slate-900 dark:text-white transition-colors duration-300 pb-16">
+    <div className="min-h-screen bg-[#FFFFFF] text-slate-900 pb-16 font-sans">
       
       {/* Dedicated Minimal Header Bar for Settings Page */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-slate-300 dark:border-white/10 px-4 sm:px-8 py-4 flex items-center justify-between shadow-lg">
+      <header className="sticky top-0 z-50 bg-[#DBCEA5] border-b border-[#c5ba92] px-4 sm:px-8 py-4 flex items-center justify-between shadow-md text-slate-900">
         <button
           onClick={onReturnHome}
-          className="flex items-center gap-2 text-xs sm:text-sm font-extrabold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors group cursor-pointer"
+          className="flex items-center gap-2 text-xs sm:text-sm font-extrabold text-[#D90000] hover:text-[#b00000] transition-colors group cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
-            <ArrowLeft className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-full bg-[#D90000]/10 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
+            <ArrowLeft className="w-4 h-4 text-[#D90000]" />
           </div>
           <span>Back to Home</span>
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400">
-            <SettingsIcon className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-xl bg-[#D90000] flex items-center justify-center text-white">
+            <SettingsIcon className="w-4 h-4 text-white" />
           </div>
-          <span className="text-base sm:text-lg font-bold tracking-wide">Platform Settings</span>
+          <span className="text-base sm:text-lg font-bold tracking-wide text-slate-900">Platform Settings</span>
         </div>
 
         <div className="w-20"></div> {/* Spacer for symmetry */}
@@ -89,36 +89,35 @@ export const Settings = ({ onReturnHome }) => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 space-y-8">
         
         {/* Banner Section */}
-        <div className="relative rounded-3xl overflow-hidden glass-panel p-6 sm:p-8 border border-slate-300 dark:border-white/10 bg-gradient-to-r from-cyan-900/30 via-slate-900/40 to-amber-900/20">
+        <div className="relative rounded-3xl overflow-hidden bg-[#DBCEA5] p-6 sm:p-8 border border-[#c5ba92] text-slate-900 shadow-md">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-amber-500 flex items-center justify-center text-black font-black text-2xl shadow-xl">
-              <Sliders className="w-7 h-7" />
+            <div className="w-14 h-14 rounded-2xl bg-[#D90000] flex items-center justify-center text-white font-black text-2xl shadow-md">
+              <Sliders className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black font-sans tracking-wide">System & Account Settings</h1>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-white/60">Customize preferences, security settings, and notifications</p>
+              <h1 className="text-xl sm:text-2xl font-bold font-sans tracking-wide text-slate-900">System & Account Settings</h1>
+              <p className="text-xs sm:text-sm text-slate-700 font-medium">Customize preferences, security settings, and notifications</p>
             </div>
           </div>
         </div>
 
-
-
         {/* 2. Regional & City Settings */}
-        <div className="glass-panel rounded-3xl p-6 border border-slate-300 dark:border-white/10 space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-white/10">
-            <MapPin className="w-5 h-5 text-amber-500" />
-            <h2 className="text-base font-bold">Default City & Regional Preferences</h2>
+        <div className="bg-[#DBCEA5] rounded-3xl p-6 border border-[#c5ba92] space-y-4 text-slate-900 shadow-md">
+          <div className="flex items-center gap-3 pb-3 border-b border-[#c5ba92]">
+            <MapPin className="w-5 h-5 text-[#D90000]" />
+            <h2 className="text-base font-bold text-slate-900">Default City & Regional Preferences</h2>
           </div>
 
           <form onSubmit={handleCitySave} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
             <div className="relative flex-grow">
-              <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-amber-500" />
+              <MapPin className="absolute left-3.5 top-3 w-4 h-4 text-[#D90000]" />
               <select
                 value={cityInput}
                 onChange={(e) => setCityInput(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-xs font-bold text-slate-900 dark:text-white border border-slate-300 dark:border-white/15 cursor-pointer"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white text-xs font-bold text-slate-900 border border-slate-300 cursor-pointer focus:outline-none"
               >
                 <option value="Mumbai">Mumbai</option>
+                <option value="Surat">Surat</option>
                 <option value="Delhi NCR">Delhi NCR</option>
                 <option value="Bengaluru">Bengaluru</option>
                 <option value="Hyderabad">Hyderabad</option>
@@ -130,112 +129,112 @@ export const Settings = ({ onReturnHome }) => {
             </div>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="px-6 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-4 h-4 text-white" />
               <span>Update City</span>
             </button>
           </form>
           {savedCityMsg && (
-            <div className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 animate-fade-in">
-              <CheckCircle2 className="w-4 h-4" />
+            <div className="text-xs font-bold text-[#66DD6A] flex items-center gap-1.5 animate-fade-in">
+              <CheckCircle2 className="w-4 h-4 text-[#66DD6A]" />
               <span>City preference saved successfully!</span>
             </div>
           )}
         </div>
 
         {/* 3. Notification Preferences */}
-        <div className="glass-panel rounded-3xl p-6 border border-slate-300 dark:border-white/10 space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-white/10">
-            <Bell className="w-5 h-5 text-amber-500" />
-            <h2 className="text-base font-bold">Alerts & Notification Preferences</h2>
+        <div className="bg-[#DBCEA5] rounded-3xl p-6 border border-[#c5ba92] space-y-4 text-slate-900 shadow-md">
+          <div className="flex items-center gap-3 pb-3 border-b border-[#c5ba92]">
+            <Bell className="w-5 h-5 text-[#D90000]" />
+            <h2 className="text-base font-bold text-slate-900">Alerts & Notification Preferences</h2>
           </div>
 
           <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-300 shadow-xs">
               <div>
-                <h4 className="text-xs font-bold">Booking Confirmations & Tickets</h4>
-                <p className="text-[11px] text-slate-500 dark:text-white/50">Instant SMS and email notifications for movie bookings</p>
+                <h4 className="text-xs font-bold text-slate-900">Booking Confirmations & Tickets</h4>
+                <p className="text-[11px] text-slate-600 font-medium">Instant SMS and email notifications for movie bookings</p>
               </div>
               <input
                 type="checkbox"
                 checked={bookingAlerts}
                 onChange={(e) => setBookingAlerts(e.target.checked)}
-                className="w-5 h-5 accent-amber-500 cursor-pointer"
+                className="w-5 h-5 accent-[#D90000] cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-300 shadow-xs">
               <div>
-                <h4 className="text-xs font-bold">Promotions & Exclusive Discounts</h4>
-                <p className="text-[11px] text-slate-500 dark:text-white/50">Receive discount codes, bank offers, and festive deals</p>
+                <h4 className="text-xs font-bold text-slate-900">Promotions & Exclusive Discounts</h4>
+                <p className="text-[11px] text-slate-600 font-medium">Receive discount codes, bank offers, and festive deals</p>
               </div>
               <input
                 type="checkbox"
                 checked={promoAlerts}
                 onChange={(e) => setPromoAlerts(e.target.checked)}
-                className="w-5 h-5 accent-amber-500 cursor-pointer"
+                className="w-5 h-5 accent-[#D90000] cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-200/50 dark:bg-white/5 border border-slate-300 dark:border-white/10">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-300 shadow-xs">
               <div>
-                <h4 className="text-xs font-bold">WhatsApp Ticket Delivery</h4>
-                <p className="text-[11px] text-slate-500 dark:text-white/50">Send QR tickets and movie updates straight to WhatsApp</p>
+                <h4 className="text-xs font-bold text-slate-900">WhatsApp Ticket Delivery</h4>
+                <p className="text-[11px] text-slate-600 font-medium">Send QR tickets and movie updates straight to WhatsApp</p>
               </div>
               <input
                 type="checkbox"
                 checked={whatsappNotifications}
                 onChange={(e) => setWhatsappNotifications(e.target.checked)}
-                className="w-5 h-5 accent-amber-500 cursor-pointer"
+                className="w-5 h-5 accent-[#D90000] cursor-pointer"
               />
             </div>
           </div>
         </div>
 
         {/* 4. Password & Security Management */}
-        <div className="glass-panel rounded-3xl p-6 border border-slate-300 dark:border-white/10 space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-white/10">
-            <Lock className="w-5 h-5 text-amber-500" />
-            <h2 className="text-base font-bold">Password & Security Management</h2>
+        <div className="bg-[#DBCEA5] rounded-3xl p-6 border border-[#c5ba92] space-y-4 text-slate-900 shadow-md">
+          <div className="flex items-center gap-3 pb-3 border-b border-[#c5ba92]">
+            <Lock className="w-5 h-5 text-[#D90000]" />
+            <h2 className="text-base font-bold text-slate-900">Password & Security Management</h2>
           </div>
 
           <form onSubmit={handlePasswordChange} className="space-y-3 pt-2 max-w-md">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Current Password</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Current Password</label>
               <input
                 type="password"
                 placeholder="••••••••"
                 value={currentPass}
                 onChange={(e) => setCurrentPass(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-900 dark:text-white"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 shadow-inner"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">New Password</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">New Password</label>
               <input
                 type="password"
                 placeholder="At least 6 characters"
                 value={newPass}
                 onChange={(e) => setNewPass(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-900 dark:text-white"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 shadow-inner"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Confirm New Password</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Confirm New Password</label>
               <input
                 type="password"
                 placeholder="Repeat new password"
                 value={confirmPass}
                 onChange={(e) => setConfirmPass(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-slate-900 dark:text-white"
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 shadow-inner"
               />
             </div>
 
             {passMsg.text && (
-              <div className={`text-xs font-bold p-3 rounded-xl border ${passMsg.isError ? 'bg-rose-500/20 border-rose-500/40 text-rose-300' : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'}`}>
+              <div className={`text-xs font-bold p-3 rounded-xl border ${passMsg.isError ? 'bg-red-100 border-red-300 text-red-700' : 'bg-[#66DD6A]/20 border-[#66DD6A] text-slate-900'}`}>
                 {passMsg.text}
               </div>
             )}
@@ -243,7 +242,7 @@ export const Settings = ({ onReturnHome }) => {
             <button
               type="submit"
               disabled={savingPass}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 text-black font-extrabold text-xs shadow-lg hover:brightness-110 transition-all cursor-pointer"
+              className="w-full py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md transition-all cursor-pointer"
             >
               {savingPass ? 'Updating Password...' : 'Change Password'}
             </button>
@@ -251,13 +250,13 @@ export const Settings = ({ onReturnHome }) => {
         </div>
 
         {/* 5. Account Session & Mobile Logout Section */}
-        <div className="glass-panel rounded-3xl p-6 border border-rose-500/30 bg-rose-500/5 space-y-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-rose-500/20">
-            <LogOut className="w-5 h-5 text-rose-500" />
-            <h2 className="text-base font-bold text-rose-400">Account Session & Mobile Logout</h2>
+        <div className="bg-[#DBCEA5] rounded-3xl p-6 border border-[#c5ba92] space-y-4 text-slate-900 shadow-md">
+          <div className="flex items-center gap-3 pb-3 border-b border-[#c5ba92]">
+            <LogOut className="w-5 h-5 text-[#D90000]" />
+            <h2 className="text-base font-bold text-[#D90000]">Account Session & Mobile Logout</h2>
           </div>
           
-          <p className="text-xs text-slate-600 dark:text-white/60">
+          <p className="text-xs text-slate-700 font-medium">
             Signing out will end your active session on this device and clear secure local storage tokens.
           </p>
 
@@ -266,7 +265,7 @@ export const Settings = ({ onReturnHome }) => {
               logout();
               if (onReturnHome) onReturnHome();
             }}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 via-rose-500 to-rose-600 hover:from-rose-500 hover:to-rose-400 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+            className="w-full py-3.5 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
           >
             <LogOut className="w-4 h-4 text-white" />
             <span>Sign Out of PrimeShow Account</span>

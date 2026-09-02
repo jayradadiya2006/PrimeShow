@@ -283,9 +283,9 @@ export const Plays = () => {
             
             {/* Language Selection */}
             <div>
-              <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Globe className="w-3 h-3 text-[#D90000]" />
-                <span>Play Language</span>
+              <div className="text-[11px] font-black text-[#1A1A1A] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-[#D90000]" />
+                <span>PLAY LANGUAGE</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {languages.map(lang => (
@@ -294,8 +294,8 @@ export const Plays = () => {
                     onClick={() => setActiveLanguage(lang)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       activeLanguage === lang
-                        ? 'bg-[#D90000] text-white shadow-md'
-                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
+                        ? 'bg-[#D90000] text-white shadow-md font-black scale-105'
+                        : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
                     }`}
                   >
                     {lang}
@@ -306,9 +306,9 @@ export const Plays = () => {
 
             {/* Genre Selection */}
             <div>
-              <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Theater className="w-3 h-3 text-[#D90000]" />
-                <span>Drama Genre</span>
+              <div className="text-[11px] font-black text-[#1A1A1A] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Theater className="w-3.5 h-3.5 text-[#D90000]" />
+                <span>DRAMA GENRE</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {categories.map(cat => (
@@ -317,8 +317,8 @@ export const Plays = () => {
                     onClick={() => setActiveCategory(cat)}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       activeCategory === cat
-                        ? 'bg-[#D90000] text-white shadow-md'
-                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
+                        ? 'bg-[#D90000] text-white shadow-md font-black scale-105'
+                        : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
                     }`}
                   >
                     {cat}

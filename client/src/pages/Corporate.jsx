@@ -52,8 +52,8 @@ export const Corporate = () => {
               onClick={() => setEventType(pkg.title)}
               className={`flex-1 p-3.5 rounded-2xl border text-xs font-bold transition-all cursor-pointer text-left ${
                 eventType === pkg.title
-                  ? 'bg-[#D90000] text-white border-[#D90000] shadow-md'
-                  : 'bg-[#DBCEA5] hover:bg-[#caba8e] border-[#c5ba92] text-slate-900'
+                  ? 'bg-[#D90000] text-white border-[#D90000] shadow-md scale-105 font-black'
+                  : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] border border-slate-700 text-white'
               }`}
             >
               <div className="font-extrabold text-sm">{pkg.title}</div>
@@ -63,36 +63,36 @@ export const Corporate = () => {
         </div>
 
         {/* Estimate Calculator Card */}
-        <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md text-slate-900">
+        <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-md text-[#1A1A1A]">
           <div>
-            <div className="text-xs font-bold text-[#D90000] uppercase tracking-wider mb-1">Instant Cost Estimator</div>
-            <h3 className="text-2xl font-bold font-serif text-slate-900">{currentPackage.title}</h3>
-            <p className="text-xs text-slate-700 mt-1">{currentPackage.desc}</p>
+            <div className="text-xs font-black text-[#D90000] uppercase tracking-wider mb-1">Instant Cost Estimator</div>
+            <h3 className="text-2xl font-bold font-serif text-[#1A1A1A]">{currentPackage.title}</h3>
+            <p className="text-xs text-slate-800 font-medium mt-1">{currentPackage.desc}</p>
           </div>
 
           <div className="text-center md:text-right shrink-0">
-            <div className="text-xs text-slate-600">Estimated Package Price</div>
+            <div className="text-xs text-slate-700 font-medium">Estimated Package Price</div>
             <div className="text-3xl font-extrabold font-serif text-[#D90000]">₹{estimatedTotal.toLocaleString()}</div>
-            <div className="text-[10px] text-slate-800 font-semibold">({attendees} Seats @ ₹{currentPackage.costPerSeat}/head)</div>
+            <div className="text-[10px] text-[#1A1A1A] font-bold">({attendees} Seats @ ₹{currentPackage.costPerSeat}/head)</div>
           </div>
         </div>
 
         {/* Inquiry Form */}
-        <form onSubmit={handleSubmit} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-5 shadow-md text-slate-900">
+        <form onSubmit={handleSubmit} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-5 shadow-md text-[#1A1A1A]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-900 mb-2">Company Name</label>
-              <input type="text" required placeholder="Acme Tech Solutions" className="w-full p-3 rounded-2xl bg-white text-slate-900 placeholder-slate-500 border border-slate-300 text-xs font-semibold focus:outline-none shadow-inner" />
+              <label className="block text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2">COMPANY NAME</label>
+              <input type="text" required placeholder="Acme Tech Solutions" className="w-full p-3 rounded-2xl bg-[#FFFFFF] text-[#1A1A1A] placeholder-[#666666] border border-slate-400 text-xs font-semibold focus:outline-none focus:border-[#D90000] shadow-inner" />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-900 mb-2">Contact Person Email</label>
-              <input type="email" required placeholder="events@acme.com" className="w-full p-3 rounded-2xl bg-white text-slate-900 placeholder-slate-500 border border-slate-300 text-xs font-semibold focus:outline-none shadow-inner" />
+              <label className="block text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2">CONTACT PERSON EMAIL</label>
+              <input type="email" required placeholder="events@acme.com" className="w-full p-3 rounded-2xl bg-[#FFFFFF] text-[#1A1A1A] placeholder-[#666666] border border-slate-400 text-xs font-semibold focus:outline-none focus:border-[#D90000] shadow-inner" />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-900 mb-2">Number of Guest Attendees ({attendees} Guests)</label>
+            <label className="block text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2">NUMBER OF GUEST ATTENDEES ({attendees} GUESTS)</label>
             <input
               type="range"
               min={20}

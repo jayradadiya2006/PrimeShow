@@ -440,25 +440,25 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/90 dark:bg-[#06080C]/95 backdrop-blur-2xl overflow-y-auto animate-fade-in">
-      <div className="relative w-full max-w-md bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/95 rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl shadow-amber-500/10 text-white font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
+      <div className="relative w-full max-w-md bg-[#DBCEA5] rounded-3xl p-6 sm:p-8 border border-[#c5ba92] shadow-2xl text-slate-900 font-sans">
         
         {/* Top Header Controls: Clean Back to Home Button & Close Icon */}
-        <div className="flex items-center justify-between mb-6 pb-2 border-b border-white/10">
+        <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#c5ba92]">
           <button
             onClick={onClose}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-amber-500 hover:text-black text-amber-300 text-xs font-bold transition-all duration-200 border border-amber-400/20 shadow-md cursor-pointer group"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#D90000] hover:bg-[#b00000] text-white text-xs font-bold transition-all duration-200 shadow-md cursor-pointer group"
           >
-            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform text-white" />
             <span>Back to Home</span>
           </button>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-full bg-white border border-slate-300 text-slate-700 hover:text-slate-900 transition-colors cursor-pointer shadow-xs"
             title="Close Auth View"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 text-slate-800" />
           </button>
         </div>
 
@@ -467,30 +467,30 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
 
         {/* Brand Header with Modern Typography */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-amber-300 text-black font-extrabold font-serif text-2xl mb-3 shadow-lg shadow-amber-500/25 ring-2 ring-amber-400/30">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#D90000] text-white font-extrabold font-serif text-2xl mb-3 shadow-md">
             P
           </div>
-          <h3 className="text-2xl font-extrabold tracking-tight text-white font-sans">Welcome to PrimeShow</h3>
-          <p className="text-xs text-amber-300/90 font-medium tracking-wide mt-1">Ultra-Luxury Cinema Booking & Entertainment Suite</p>
+          <h3 className="text-2xl font-bold tracking-tight text-slate-900 font-sans">Welcome to PrimeShow</h3>
+          <p className="text-xs text-[#D90000] font-bold tracking-wide mt-1">Ultra-Luxury Cinema Booking & Entertainment Suite</p>
         </div>
 
         {/* Mode Switcher Tabs */}
-        <div className="grid grid-cols-3 gap-1 bg-white/5 p-1 rounded-2xl border border-white/10 mb-6 text-xs font-semibold">
+        <div className="grid grid-cols-3 gap-1 bg-white p-1 rounded-2xl border border-slate-300 mb-6 text-xs font-semibold shadow-xs">
           <button
             onClick={() => { setActiveTab('login'); setErrorMsg(''); }}
-            className={`py-2 rounded-xl transition-all cursor-pointer ${activeTab === 'login' ? 'bg-amber-500 text-black font-bold shadow-md' : 'text-white/70 hover:text-white'}`}
+            className={`py-2 rounded-xl transition-all cursor-pointer ${activeTab === 'login' ? 'bg-[#D90000] text-white font-bold shadow-md' : 'text-slate-700 hover:text-slate-900'}`}
           >
             Sign In
           </button>
           <button
             onClick={() => { setActiveTab('otp'); setErrorMsg(''); }}
-            className={`py-2 rounded-xl transition-all cursor-pointer ${activeTab === 'otp' ? 'bg-amber-500 text-black font-bold shadow-md' : 'text-white/70 hover:text-white'}`}
+            className={`py-2 rounded-xl transition-all cursor-pointer ${activeTab === 'otp' ? 'bg-[#D90000] text-white font-bold shadow-md' : 'text-slate-700 hover:text-slate-900'}`}
           >
             Mobile OTP
           </button>
           <button
             onClick={() => { setActiveTab('register'); setErrorMsg(''); }}
-            className={`py-2 rounded-xl transition-all cursor-pointer ${activeTab === 'register' ? 'bg-amber-500 text-black font-bold shadow-md' : 'text-white/70 hover:text-white'}`}
+            className={`py-2 rounded-xl transition-all cursor-pointer ${activeTab === 'register' ? 'bg-[#D90000] text-white font-bold shadow-md' : 'text-slate-700 hover:text-slate-900'}`}
           >
             Register
           </button>
@@ -498,7 +498,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-medium mb-4 text-center">
+          <div className="p-3 rounded-xl bg-red-100 border border-red-300 text-red-700 text-xs font-semibold mb-4 text-center">
             {errorMsg}
           </div>
         )}
@@ -507,33 +507,33 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         {activeTab === 'login' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div className="relative">
-              <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-white/40" />
+              <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 required
                 placeholder="Email Address or Mobile Phone Number"
                 value={loginIdentifier}
                 onChange={(e) => setLoginIdentifier(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-xs text-white placeholder-white/40"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#D90000]"
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-white/40" />
+              <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
               <input
                 type="password"
                 required
                 placeholder="Password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-xs text-white placeholder-white/40"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#D90000]"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-bold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 transition-all cursor-pointer"
+              className="w-full py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-bold text-xs shadow-md transition-all cursor-pointer"
             >
               {loading ? 'Authenticating...' : 'Sign In to Account'}
             </button>
@@ -545,7 +545,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
           <div className="space-y-4 animate-fade-in">
             {!otpSent ? (
               <form onSubmit={handleSendOtp} className="space-y-4">
-                <div className="text-xs text-white/60 text-center mb-1">
+                <div className="text-xs text-slate-700 font-medium text-center mb-1">
                   Enter your 10-digit mobile number to receive a secure SMS verification code.
                 </div>
 
@@ -555,18 +555,18 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                     <select
                       value={countryCode}
                       onChange={(e) => setCountryCode(e.target.value)}
-                      className="w-full h-full py-3 px-2 rounded-xl glass-input text-xs text-white bg-slate-900/80 border border-white/15 focus:border-amber-400 appearance-none cursor-pointer text-center font-bold"
+                      className="w-full h-full py-3 px-2 rounded-xl bg-white text-xs text-slate-900 border border-slate-300 focus:border-[#D90000] appearance-none cursor-pointer text-center font-bold"
                     >
-                      <option value="+91" className="bg-slate-900 text-white">🇮🇳 +91</option>
-                      <option value="+1" className="bg-slate-900 text-white">🇺🇸 +1</option>
-                      <option value="+44" className="bg-slate-900 text-white">🇬🇧 +44</option>
-                      <option value="+971" className="bg-slate-900 text-white">🇦🇪 +971</option>
+                      <option value="+91" className="bg-white text-slate-900">🇮🇳 +91</option>
+                      <option value="+1" className="bg-white text-slate-900">🇺🇸 +1</option>
+                      <option value="+44" className="bg-white text-slate-900">🇬🇧 +44</option>
+                      <option value="+971" className="bg-white text-slate-900">🇦🇪 +971</option>
                     </select>
                   </div>
 
                   {/* Phone Input with 10-digit validation */}
                   <div className="relative flex-1">
-                    <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-white/40" />
+                    <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
                     <input
                       type="tel"
                       required
@@ -574,13 +574,13 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                       placeholder="98765 43210"
                       value={otpPhone}
                       onChange={(e) => setOtpPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-xs text-white placeholder-white/40 font-mono tracking-wider"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 font-mono tracking-wider focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
                 </div>
 
                 {statusMsg && loading && (
-                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-center text-xs text-amber-300 animate-pulse font-medium">
+                  <div className="p-3 rounded-xl bg-white border border-slate-300 text-center text-xs text-[#D90000] animate-pulse font-bold">
                     ⚡ {statusMsg}
                   </div>
                 )}
@@ -588,11 +588,11 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       <span>{statusMsg || 'Dispatching SMS OTP...'}</span>
                     </>
                   ) : (

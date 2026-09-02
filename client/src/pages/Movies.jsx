@@ -219,19 +219,19 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
             
             {/* Genre Row */}
             <div>
-              <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Filter className="w-3 h-3 text-[#D90000]" />
-                <span>Genre</span>
+              <div className="text-[11px] font-black text-[#1A1A1A] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-[#D90000]" />
+                <span>GENRE</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {genresList.map(g => (
                   <button
                     key={g}
                     onClick={() => setSelectedGenre(g)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       selectedGenre === g
-                        ? 'bg-[#D90000] text-white shadow-md'
-                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
+                        ? 'bg-[#D90000] text-white shadow-md font-black scale-105'
+                        : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
                     }`}
                   >
                     {g}
@@ -242,19 +242,19 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
             {/* Language Row */}
             <div>
-              <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Filter className="w-3 h-3 text-[#D90000]" />
-                <span>Language</span>
+              <div className="text-[11px] font-black text-[#1A1A1A] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-[#D90000]" />
+                <span>LANGUAGE</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {languagesList.map(l => (
                   <button
                     key={l}
                     onClick={() => setSelectedLanguage(l)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       selectedLanguage === l
-                        ? 'bg-[#D90000] text-white shadow-md'
-                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
+                        ? 'bg-[#D90000] text-white shadow-md font-black scale-105'
+                        : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
                     }`}
                   >
                     {l}
@@ -265,19 +265,19 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
             {/* Format Row */}
             <div>
-              <div className="text-[10px] font-bold text-slate-800 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Filter className="w-3 h-3 text-[#D90000]" />
-                <span>Format</span>
+              <div className="text-[11px] font-black text-[#1A1A1A] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-[#D90000]" />
+                <span>FORMAT</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {formatsList.map(f => (
                   <button
                     key={f}
                     onClick={() => setSelectedFormat(f)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                       selectedFormat === f
-                        ? 'bg-[#D90000] text-white shadow-md'
-                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
+                        ? 'bg-[#D90000] text-white shadow-md font-black scale-105'
+                        : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
                     }`}
                   >
                     {f}
@@ -295,13 +295,13 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
             {/* Backdrop click dismiss */}
             <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)}></div>
 
-            <div className="relative w-5/6 max-w-xs h-full bg-[#DBCEA5] border-l border-[#c5ba92] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left text-slate-900">
+            <div className="relative w-5/6 max-w-xs h-full bg-[#DBCEA5] border-l border-[#c5ba92] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left text-[#1A1A1A]">
               <div>
                 {/* Accessible Close (✕) Button & Header */}
                 <div className="flex items-center justify-between pb-4 border-b border-[#c5ba92] mb-6">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-5 h-5 text-[#D90000]" />
-                    <span className="text-sm font-bold uppercase tracking-wider text-slate-900">Movie Filters</span>
+                    <span className="text-sm font-black uppercase tracking-wider text-[#1A1A1A]">Movie Filters</span>
                   </div>
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
@@ -318,7 +318,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                   
                   {/* Genre Filter */}
                   <div>
-                    <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select Genre</h4>
+                    <h4 className="text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2.5">Select Genre</h4>
                     <div className="flex flex-wrap gap-2">
                       {genresList.map(g => (
                         <button
@@ -327,7 +327,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             selectedGenre === g
                               ? 'bg-[#D90000] text-white shadow-md'
-                              : 'bg-white border border-slate-300 text-slate-800'
+                              : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white'
                           }`}
                         >
                           {g}
@@ -338,7 +338,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
                   {/* Language Filter */}
                   <div>
-                    <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select Language</h4>
+                    <h4 className="text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2.5">Select Language</h4>
                     <div className="flex flex-wrap gap-2">
                       {languagesList.map(l => (
                         <button
@@ -347,7 +347,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             selectedLanguage === l
                               ? 'bg-[#D90000] text-white shadow-md'
-                              : 'bg-white border border-slate-300 text-slate-800'
+                              : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white'
                           }`}
                         >
                           {l}
@@ -358,7 +358,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
 
                   {/* Format Filter */}
                   <div>
-                    <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select Format</h4>
+                    <h4 className="text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2.5">Select Format</h4>
                     <div className="flex flex-wrap gap-2">
                       {formatsList.map(f => (
                         <button
@@ -367,7 +367,7 @@ export const Movies = ({ onSelectMovie, onBookNow }) => {
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             selectedFormat === f
                               ? 'bg-[#D90000] text-white shadow-md'
-                              : 'bg-white border border-slate-300 text-slate-800'
+                              : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white'
                           }`}
                         >
                           {f}

@@ -93,7 +93,7 @@ const MainAppContent = () => {
   ].includes(activeTab) || isCityOpen || isAuthOpen;
 
   return (
-    <div className="relative min-h-screen bg-slate-100 dark:bg-[#0A0C10] text-slate-900 dark:text-slate-100 transition-colors duration-300 flex flex-col justify-between selection:bg-amber-500 selection:text-black font-sans">
+    <div className="relative min-h-screen bg-[#FFFFFF] text-slate-900 flex flex-col justify-between selection:bg-[#D90000] selection:text-white font-sans">
       
       {/* Background Theme Surface */}
       <MotionBackground />

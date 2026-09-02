@@ -61,7 +61,7 @@ export const GiftCards = () => {
           
           <div className="hidden md:block space-y-6">
             <div>
-              <label className="block text-xs font-bold text-slate-900 mb-2">Select Theme Design</label>
+              <label className="block text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2">SELECT THEME DESIGN</label>
               <div className="grid grid-cols-3 gap-3">
                 {cardThemes.map((th) => (
                   <button
@@ -77,14 +77,14 @@ export const GiftCards = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-900 mb-2">Gift Amount (₹)</label>
+              <label className="block text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2">GIFT AMOUNT (₹)</label>
               <div className="grid grid-cols-4 gap-3">
                 {[500, 1000, 2500, 5000].map(amt => (
                   <button
                     type="button"
                     key={amt}
                     onClick={() => setGiftAmount(amt)}
-                    className={`py-2.5 rounded-2xl text-xs font-extrabold border cursor-pointer transition-all ${giftAmount === amt ? 'bg-[#D90000] text-white border-[#D90000] shadow-md' : 'bg-white border-slate-300 text-slate-900 hover:bg-slate-100'}`}
+                    className={`py-2.5 rounded-2xl text-xs font-extrabold border cursor-pointer transition-all ${giftAmount === amt ? 'bg-[#D90000] text-white border-[#D90000] shadow-md scale-105 font-black' : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'}`}
                   >
                     ₹{amt}
                   </button>
@@ -94,14 +94,14 @@ export const GiftCards = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-900 mb-2">Recipient Email Address</label>
+            <label className="block text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2">RECIPIENT EMAIL ADDRESS</label>
             <input
               type="email"
               required
               placeholder="friend@example.com"
               value={recipientEmail}
               onChange={(e) => setRecipientEmail(e.target.value)}
-              className="w-full p-3 rounded-2xl bg-white text-slate-900 placeholder-slate-500 border border-slate-300 text-xs font-semibold focus:outline-none shadow-inner"
+              className="w-full p-3 rounded-2xl bg-[#FFFFFF] text-[#1A1A1A] placeholder-[#666666] border border-slate-400 text-xs font-semibold focus:outline-none focus:border-[#D90000] shadow-inner"
             />
           </div>
 

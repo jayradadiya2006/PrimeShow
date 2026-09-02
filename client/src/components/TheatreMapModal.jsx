@@ -54,33 +54,33 @@ export const TheatreMapModal = ({ isOpen, onClose, theatre }) => {
   return (
     <div 
       onClick={onClose}
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto"
       style={{ zIndex: 99999 }}
     >
       {/* Modal Card Container */}
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="relative w-[94vw] sm:w-full max-w-2xl glass-modal rounded-3xl p-4 sm:p-6 border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.9)] text-white max-h-[85vh] flex flex-col my-auto border-amber-500/20 overflow-hidden"
+        className="relative w-[94vw] sm:w-full max-w-2xl bg-[#DBCEA5] rounded-3xl p-4 sm:p-6 border border-[#c5ba92] shadow-2xl text-slate-900 max-h-[85vh] flex flex-col my-auto overflow-hidden font-sans"
       >
         
         {/* Top Header Bar */}
-        <div className="flex items-start justify-between gap-3 pb-3 sm:pb-4 border-b border-white/10 shrink-0">
+        <div className="flex items-start justify-between gap-3 pb-3 sm:pb-4 border-b border-[#c5ba92] shrink-0">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-400/30 shrink-0 mt-0.5 shadow-md shadow-amber-500/10">
-              <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="p-2.5 sm:p-3 rounded-2xl bg-[#D90000] text-white shrink-0 mt-0.5 shadow-md">
+              <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-lg sm:text-xl font-bold font-sans text-white truncate max-w-[220px] sm:max-w-md">{theatreName}</h3>
+                <h3 className="text-lg sm:text-xl font-bold font-sans text-slate-900 truncate max-w-[220px] sm:max-w-md">{theatreName}</h3>
                 {city && (
-                  <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold border border-cyan-400/30 uppercase tracking-wider shrink-0">
+                  <span className="px-2 py-0.5 rounded-full bg-[#D90000] text-white text-[10px] font-bold uppercase tracking-wider shrink-0 shadow-xs">
                     {city}
                   </span>
                 )}
               </div>
               {address && (
-                <p className="text-[11px] sm:text-xs text-white/70 mt-1 flex items-center gap-1.5 line-clamp-1">
-                  <Navigation className="w-3 h-3 text-amber-400 shrink-0" />
+                <p className="text-[11px] sm:text-xs text-slate-700 font-medium mt-1 flex items-center gap-1.5 line-clamp-1">
+                  <Navigation className="w-3 h-3 text-[#D90000] shrink-0" />
                   <span className="truncate">{address}</span>
                 </p>
               )}
@@ -90,15 +90,15 @@ export const TheatreMapModal = ({ isOpen, onClose, theatre }) => {
           {/* Prominent Close (X) Icon Button */}
           <button
             onClick={onClose}
-            className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-rose-500 text-white/80 hover:text-white transition-all cursor-pointer shrink-0 border border-white/10 hover:border-rose-400 shadow-md active:scale-95 ml-2"
+            className="p-2 sm:p-2.5 rounded-full bg-[#D90000] hover:bg-[#b00000] text-white transition-all cursor-pointer shrink-0 shadow-md active:scale-95 ml-2"
             title="Close Map (Esc)"
           >
-            <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] text-white" />
           </button>
         </div>
 
         {/* Map Container - Responsive Embedded Iframe */}
-        <div className="my-3 sm:my-4 rounded-2xl overflow-hidden border border-white/15 bg-slate-950 relative shadow-inner shrink-0 flex-1 min-h-[220px] sm:min-h-[280px] h-[260px] sm:h-[340px]">
+        <div className="my-3 sm:my-4 rounded-2xl overflow-hidden border border-slate-300 bg-white relative shadow-inner shrink-0 flex-1 min-h-[220px] sm:min-h-[280px] h-[260px] sm:h-[340px]">
           <iframe
             title={`Google Map for ${theatreName}`}
             src={embedSrc}
@@ -113,8 +113,8 @@ export const TheatreMapModal = ({ isOpen, onClose, theatre }) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-white/10 shrink-0">
-          <p className="text-[10px] sm:text-[11px] text-white/60 hidden sm:block">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#c5ba92] shrink-0">
+          <p className="text-[10px] sm:text-[11px] text-slate-700 font-medium hidden sm:block">
             📍 Interactive map • Click backdrop or Esc to close
           </p>
 
@@ -123,15 +123,15 @@ export const TheatreMapModal = ({ isOpen, onClose, theatre }) => {
               href={externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Open in Google Maps App / Full View</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-3.5 h-3.5 text-white" />
             </a>
 
             <button
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors cursor-pointer border border-white/10 shrink-0"
+              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs transition-colors cursor-pointer border border-slate-300 shrink-0"
             >
               Close
             </button>

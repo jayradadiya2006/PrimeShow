@@ -223,25 +223,25 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#050508] text-slate-900 dark:text-white pb-20 font-sans transition-colors duration-300">
+    <div className="min-h-screen bg-[#FFFFFF] text-slate-900 pb-20 font-sans">
       
       {/* Dedicated Minimal Header Bar for Profile Page */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-slate-300 dark:border-white/10 px-4 sm:px-8 py-4 flex items-center justify-between shadow-lg mb-6">
+      <header className="sticky top-0 z-50 bg-[#DBCEA5] border-b border-[#c5ba92] px-4 sm:px-8 py-4 flex items-center justify-between shadow-md mb-6 text-slate-900">
         <button
           onClick={onReturnHome}
-          className="flex items-center gap-2 text-xs sm:text-sm font-extrabold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors group cursor-pointer"
+          className="flex items-center gap-2 text-xs sm:text-sm font-extrabold text-[#D90000] hover:text-[#b00000] transition-colors group cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
-            <ArrowLeft className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-full bg-[#D90000]/10 flex items-center justify-center group-hover:-translate-x-1 transition-transform">
+            <ArrowLeft className="w-4 h-4 text-[#D90000]" />
           </div>
           <span>Back to Home</span>
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400">
-            <User className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-xl bg-[#D90000] flex items-center justify-center text-white">
+            <User className="w-4 h-4 text-white" />
           </div>
-          <span className="text-base sm:text-lg font-bold tracking-wide">My Account Suite</span>
+          <span className="text-base sm:text-lg font-bold tracking-wide text-slate-900">My Account Suite</span>
         </div>
 
         <div className="w-20"></div> {/* Spacer for symmetry */}
@@ -250,45 +250,45 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         
         {savedMsg && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-lg animate-fade-in">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <div className="mb-6 p-4 rounded-2xl bg-[#66DD6A]/20 border border-[#66DD6A] text-slate-900 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-sm animate-fade-in">
+            <CheckCircle2 className="w-5 h-5 text-[#66DD6A]" />
             <span>{savedMsg}</span>
           </div>
         )}
 
         {/* Profile Header Banner Card */}
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
+        <div className="bg-[#DBCEA5] p-6 sm:p-8 rounded-3xl border border-[#c5ba92] mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md text-slate-900">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="relative group">
               <img
                 src={currentAvatar}
                 alt={user.name}
-                className="w-24 h-24 rounded-full object-cover border-2 border-amber-400/60 shadow-2xl"
+                className="w-24 h-24 rounded-full object-cover border-2 border-slate-300 shadow-xl"
               />
               <button 
                 onClick={() => setIsAvatarModalOpen(true)}
-                className="absolute bottom-0 right-0 p-2.5 rounded-full bg-amber-500 hover:bg-amber-400 text-black shadow-lg hover:scale-110 transition-transform cursor-pointer"
+                className="absolute bottom-0 right-0 p-2.5 rounded-full bg-[#D90000] hover:bg-[#b00000] text-white shadow-md hover:scale-110 transition-transform cursor-pointer"
                 title="Change Profile Photo"
               >
-                <Camera className="w-4 h-4" />
+                <Camera className="w-4 h-4 text-white" />
               </button>
             </div>
 
             <div className="text-center sm:text-left">
               <div className="flex items-center justify-center sm:justify-start gap-2">
-                <h1 className="text-2xl font-bold font-sans text-white">{user.name}</h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold uppercase">
+                <h1 className="text-2xl font-bold font-sans text-slate-900">{user.name}</h1>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#D90000] text-white text-[10px] font-bold uppercase shadow-xs">
                   {user.role} Member
                 </span>
               </div>
-              <p className="text-xs text-white/60 mt-1">@{user.username || email.split('@')[0]} • {user.email} • {user.phone}</p>
+              <p className="text-xs text-slate-700 font-medium mt-1">@{user.username || email.split('@')[0]} • {user.email} • {user.phone}</p>
               
               <div className="mt-3 flex items-center justify-center sm:justify-start gap-4 text-xs font-semibold">
-                <span className="text-amber-300">★ {user.rewardsPoints || 1250} Reward Points</span>
-                <span className="text-white/40">•</span>
-                <span className="text-white/80">{myBookings.length} Bookings</span>
-                <span className="text-white/40">•</span>
-                <span className="text-amber-400">{city}</span>
+                <span className="text-[#D90000]">★ {user.rewardsPoints || 1250} Reward Points</span>
+                <span className="text-slate-400">•</span>
+                <span className="text-slate-800">{myBookings.length} Bookings</span>
+                <span className="text-slate-400">•</span>
+                <span className="text-[#D90000]">{city}</span>
               </div>
             </div>
           </div>
@@ -296,28 +296,28 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => { setIsEditing(!isEditing); setActiveTab('profile-info'); }}
-              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-lg cursor-pointer ${
+              className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-md cursor-pointer ${
                 isEditing
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/40'
-                  : 'bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-[#D90000] hover:bg-[#b00000] text-white'
               }`}
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3 className="w-4 h-4 text-white" />
               <span>{isEditing ? 'Cancel Edit' : 'Edit Profile'}</span>
             </button>
 
             <button
               onClick={() => setIsAvatarModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl glass-panel hover:bg-white/10 text-white/80 text-xs font-bold transition-all flex items-center gap-1.5 border border-white/10 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 hover:bg-slate-100 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
-              <Upload className="w-4 h-4 text-amber-400" />
+              <Upload className="w-4 h-4 text-[#D90000]" />
               <span>Upload Photo</span>
             </button>
           </div>
         </div>
 
         {/* Profile Tab Navigation Bar */}
-        <div className="flex overflow-x-auto gap-2 p-1.5 glass-panel rounded-2xl border border-white/10 mb-8 text-xs font-semibold">
+        <div className="flex overflow-x-auto gap-2 p-1.5 bg-[#DBCEA5] rounded-2xl border border-[#c5ba92] mb-8 text-xs font-semibold text-slate-900">
           {[
             { id: 'profile-info', label: 'Personal Details', icon: User },
             { id: 'notifications', label: `Notifications (${unreadNotifCount})`, icon: Bell, badge: unreadNotifCount },
@@ -335,14 +335,14 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all whitespace-nowrap cursor-pointer relative ${
                   isActive
-                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
-                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                    ? 'bg-[#D90000] text-white font-bold shadow-md'
+                    : 'text-slate-800 hover:text-slate-900 hover:bg-white/40'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-amber-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#D90000]'}`} />
                 <span>{tab.label}</span>
                 {tab.badge > 0 && (
-                  <span className="ml-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  <span className="ml-1 w-4 h-4 rounded-full bg-white text-[#D90000] text-[9px] font-bold flex items-center justify-center">
                     {tab.badge}
                   </span>
                 )}
@@ -351,20 +351,20 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
           })}
         </div>
 
-        {/* Tab 1: Personal Details (Auto-Populated & Fully Editable) */}
+        {/* Tab 1: Personal Details */}
         {activeTab === 'profile-info' && (
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="bg-[#DBCEA5] p-6 sm:p-8 rounded-3xl border border-[#c5ba92] space-y-6 text-slate-900 shadow-md">
+            <div className="flex items-center justify-between border-b border-[#c5ba92] pb-4">
               <div>
-                <h2 className="text-xl font-bold font-sans text-white">Personal Profile & Registration Details</h2>
-                <p className="text-xs text-white/60">Manage your profile details. Registration data is automatically pre-populated.</p>
+                <h2 className="text-xl font-bold font-sans text-slate-900">Personal Profile & Registration Details</h2>
+                <p className="text-xs text-slate-700 font-medium">Manage your profile details. Registration data is automatically pre-populated.</p>
               </div>
 
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                <Edit3 className="w-4 h-4" />
+                <Edit3 className="w-4 h-4 text-white" />
                 <span>{isEditing ? 'Exit Editing' : 'Edit Profile'}</span>
               </button>
             </div>

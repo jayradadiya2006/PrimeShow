@@ -160,11 +160,11 @@ export const AuthProvider = ({ children }) => {
 
   // Theme Preference State: 'dark' | 'light' | 'system'
   const [themePreference, setThemePreferenceState] = useState(() => {
-    return localStorage.getItem('primeshow_theme_mode') || 'dark';
+    return localStorage.getItem('primeshow_theme_mode') || 'light';
   });
 
   // Derived effective theme ('dark' or 'light')
-  const [effectiveTheme, setEffectiveTheme] = useState('dark');
+  const [effectiveTheme, setEffectiveTheme] = useState('light');
 
   // Support messages stream state
   const [supportMessages, setSupportMessages] = useState([]);

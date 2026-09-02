@@ -190,8 +190,8 @@ export const Offers = ({ onSelectCategory }) => {
               onClick={() => setActiveBankFilter(bank)}
               className={`px-4 py-2 rounded-full transition-all cursor-pointer shrink-0 ${
                 activeBankFilter === bank
-                  ? 'bg-[#D90000] text-white font-extrabold shadow-md'
-                  : 'bg-[#DBCEA5] hover:bg-[#caba8e] text-slate-900 border border-[#c5ba92]'
+                  ? 'bg-[#D90000] text-white font-extrabold shadow-md scale-105'
+                  : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
               }`}
             >
               {bank}
@@ -205,12 +205,12 @@ export const Offers = ({ onSelectCategory }) => {
             {/* Backdrop click dismiss */}
             <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)}></div>
 
-            <div className="relative w-5/6 max-w-xs h-full bg-[#DBCEA5] border-l border-[#c5ba92] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left text-slate-900">
+            <div className="relative w-5/6 max-w-xs h-full bg-[#DBCEA5] border-l border-[#c5ba92] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left text-[#1A1A1A]">
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#c5ba92] mb-6">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-5 h-5 text-[#D90000]" />
-                    <span className="text-sm font-bold uppercase tracking-wider text-slate-900">Offer Category</span>
+                    <span className="text-sm font-black uppercase tracking-wider text-[#1A1A1A]">Offer Category</span>
                   </div>
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
@@ -223,7 +223,7 @@ export const Offers = ({ onSelectCategory }) => {
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select Bank / Voucher Type</h4>
+                  <h4 className="text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2.5">Select Bank / Voucher Type</h4>
                   <div className="grid grid-cols-1 gap-2">
                     {bankTypes.map(bank => (
                       <button
@@ -235,11 +235,11 @@ export const Offers = ({ onSelectCategory }) => {
                         className={`w-full text-left p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
                           activeBankFilter === bank
                             ? 'bg-[#D90000] text-white shadow-md'
-                            : 'bg-white border border-slate-300 text-slate-800'
+                            : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white'
                         }`}
                       >
                         <span>{bank}</span>
-                        {activeBankFilter === bank && <Check className="w-4 h-4" />}
+                        {activeBankFilter === bank && <Check className="w-4 h-4 text-white" />}
                       </button>
                     ))}
                   </div>

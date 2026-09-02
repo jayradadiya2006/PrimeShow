@@ -229,8 +229,8 @@ export const Theatres = ({ onSelectTheatre }) => {
               onClick={() => setActiveCityFilter(city)}
               className={`px-4 py-2 rounded-full transition-all cursor-pointer shrink-0 ${
                 activeCityFilter === city
-                  ? 'bg-[#D90000] text-white font-extrabold shadow-md'
-                  : 'bg-[#DBCEA5] hover:bg-[#caba8e] text-slate-900 border border-[#c5ba92]'
+                  ? 'bg-[#D90000] text-white font-extrabold shadow-md scale-105'
+                  : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
               }`}
             >
               {city}
@@ -244,12 +244,12 @@ export const Theatres = ({ onSelectTheatre }) => {
             {/* Backdrop click dismiss */}
             <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)}></div>
 
-            <div className="relative w-5/6 max-w-xs h-full bg-[#DBCEA5] border-l border-[#c5ba92] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left text-slate-900">
+            <div className="relative w-5/6 max-w-xs h-full bg-[#DBCEA5] border-l border-[#c5ba92] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left text-[#1A1A1A]">
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#c5ba92] mb-6">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-5 h-5 text-[#D90000]" />
-                    <span className="text-sm font-bold uppercase tracking-wider text-slate-900">City Filter</span>
+                    <span className="text-sm font-black uppercase tracking-wider text-[#1A1A1A]">City Filter</span>
                   </div>
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
@@ -262,7 +262,7 @@ export const Theatres = ({ onSelectTheatre }) => {
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select City</h4>
+                  <h4 className="text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2.5">Select City</h4>
                   <div className="grid grid-cols-1 gap-2">
                     {citiesList.map(city => (
                       <button
@@ -274,14 +274,14 @@ export const Theatres = ({ onSelectTheatre }) => {
                         className={`w-full text-left p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
                           activeCityFilter === city
                             ? 'bg-[#D90000] text-white shadow-md'
-                            : 'bg-white border border-slate-300 text-slate-800'
+                            : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white'
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
+                          <MapPin className="w-4 h-4 text-[#D90000]" />
                           <span>{city}</span>
                         </div>
-                        {activeCityFilter === city && <Check className="w-4 h-4" />}
+                        {activeCityFilter === city && <Check className="w-4 h-4 text-white" />}
                       </button>
                     ))}
                   </div>
