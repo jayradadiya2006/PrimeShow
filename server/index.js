@@ -2244,10 +2244,9 @@ app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   try {
-    if (mongoose.connection.readyState === 1) {
-      const dbMovies = await Movie.find().sort({ createdAt: -1 }).lean();
-      return res.json(dbMovies || []);
-    }
+    await connectDB();
+    const dbMovies = await Movie.find().sort({ createdAt: -1 }).lean();
+    return res.json(dbMovies || []);
   } catch (err) {
     console.warn('⚠️ Error fetching movies from MongoDB Atlas:', err.message);
   }
@@ -2260,11 +2259,10 @@ app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   res.setHeader('Expires', '0');
   const { id } = req.params;
   try {
-    if (mongoose.connection.readyState === 1) {
-      const dbMovie = await Movie.findOne(buildIdFilter(id)).lean();
-      if (dbMovie) return res.json(dbMovie);
-      return res.status(404).json({ error: 'Movie not found' });
-    }
+    await connectDB();
+    const dbMovie = await Movie.findOne(buildIdFilter(id)).lean();
+    if (dbMovie) return res.json(dbMovie);
+    return res.status(404).json({ error: 'Movie not found' });
   } catch (err) {}
   const movie = movies.find(m => m.id === id || m._id === id);
   if (!movie) return res.status(404).json({ error: 'Movie not found' });
@@ -2280,11 +2278,8 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
   const { date, city } = req.query;
 
   try {
-    // mongoose imported at top level
-    let movieDoc = null;
-    if (mongoose.connection.readyState === 1) {
-      movieDoc = await Movie.findOne(buildIdFilter(id)).lean();
-    }
+    await connectDB();
+    let movieDoc = await Movie.findOne(buildIdFilter(id)).lean();
     if (!movieDoc) {
       const cleanId = String(id || '').trim().toLowerCase();
       movieDoc = movies.find(m => m.id === id || m._id === id || (m.title && m.title.trim().toLowerCase() === cleanId));
@@ -2354,6 +2349,7 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
 });
 
 app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
+  await connectDB();
   const mId = req.body.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
   const movieTitle = (req.body.title || req.body.movieName || req.body.name || '').trim();
 
@@ -2393,20 +2389,17 @@ app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
   };
 
   try {
-    let savedDoc = null;
-    if (mongoose.connection.readyState === 1) {
-      savedDoc = await Movie.findOneAndUpdate(
-        buildIdFilter(mId),
-        newMovie,
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-    }
+    const savedDoc = await Movie.findOneAndUpdate(
+      buildIdFilter(mId),
+      newMovie,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
-    if (!savedDoc && mongoose.connection.readyState === 1) {
+    if (!savedDoc) {
       return res.status(500).json({ success: false, error: 'Failed to save movie to MongoDB Atlas' });
     }
 
-    const plainDoc = savedDoc ? (savedDoc.toObject ? savedDoc.toObject() : savedDoc) : newMovie;
+    const plainDoc = savedDoc.toObject ? savedDoc.toObject() : savedDoc;
     console.log('✅ [MongoDB Atlas]: Movie saved successfully! ID:', plainDoc.id, '_id:', plainDoc._id, 'Title:', plainDoc.title);
 
     const existingIdx = movies.findIndex(m => m.id === plainDoc.id || m._id === plainDoc.id);
@@ -2437,6 +2430,7 @@ app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
 });
 
 app.put(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
+  await connectDB();
   const { id } = req.params;
   const updateData = { ...req.body };
   if (updateData.title) updateData.title = String(updateData.title).trim();
@@ -2446,14 +2440,11 @@ app.put(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   if (updateData.youtubeUrl) updateData.trailerUrl = updateData.youtubeUrl;
 
   try {
-    let updatedDoc = null;
-    if (mongoose.connection.readyState === 1) {
-      updatedDoc = await Movie.findOneAndUpdate(
-        buildIdFilter(id),
-        { $set: updateData },
-        { new: true }
-      );
-    }
+    const updatedDoc = await Movie.findOneAndUpdate(
+      buildIdFilter(id),
+      { $set: updateData },
+      { new: true }
+    );
 
     const plainMovie = updatedDoc ? (updatedDoc.toObject ? updatedDoc.toObject() : updatedDoc) : { id, ...updateData };
 
@@ -2485,9 +2476,8 @@ app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
 
   // 1. Delete from MongoDB Atlas
   try {
-    if (mongoose.connection.readyState === 1) {
-      await Movie.deleteOne(buildIdFilter(id));
-    }
+    await connectDB();
+    await Movie.deleteOne(buildIdFilter(id));
   } catch (err) {
     console.warn('⚠️ Error deleting movie from MongoDB Atlas:', err.message);
   }

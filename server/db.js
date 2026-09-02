@@ -10,7 +10,9 @@ try {
 try {
   mongoose.set('returnDocument', 'after');
 } catch (e) {}
-mongoose.set('bufferCommands', false);
+
+// Enable command buffering for robust Mongoose connection readiness
+mongoose.set('bufferCommands', true);
 
 import {
   User,
@@ -232,33 +234,45 @@ const initialBanners = [
   }
 ];
 
-let isConnected = false;
+let cached = global.mongoose || { conn: null, promise: null };
+global.mongoose = cached;
 
 async function connectDB() {
   const dbPassword = encodeURIComponent("jay&radhu2006");
   const fallbackUri = `mongodb+srv://jayradadiya2006_db_user:${dbPassword}@cluster0.aiq5c3r.mongodb.net/primeshow?retryWrites=true&w=majority`;
   const uri = process.env.MONGODB_URI || fallbackUri;
 
-  if (mongoose.connection.readyState === 1) {
-    return true;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
   }
 
-  try {
-    console.log(`🔄 Connecting strictly to MongoDB Atlas Cloud Database...`);
-    const conn = await mongoose.connect(uri, {
+  if (!cached.promise || mongoose.connection.readyState === 0) {
+    const opts = {
+      bufferCommands: true,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 15000
-    });
+    };
 
-    isConnected = true;
-    console.log(`>>> CONNECTED TO CLOUD DB: ${conn.connection.host}`);
-    await seedDatabaseIfEmpty();
-    return true;
-  } catch (err) {
-    console.error(`❌ MongoDB Atlas Connection Error: ${err.message}`);
-    throw err;
+    console.log(`🔄 Connecting strictly to MongoDB Atlas Cloud Database...`);
+    cached.promise = mongoose.connect(uri, opts).then(async (m) => {
+      console.log(`>>> CONNECTED TO CLOUD DB: ${m.connection.host}`);
+      await seedDatabaseIfEmpty();
+      return m;
+    }).catch(err => {
+      console.error(`❌ MongoDB Atlas Connection Error: ${err.message}`);
+      cached.promise = null;
+      throw err;
+    });
   }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (e) {
+    cached.promise = null;
+    throw e;
+  }
+  return cached.conn;
 }
 
 async function seedDatabaseIfEmpty() {
