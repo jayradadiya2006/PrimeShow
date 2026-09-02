@@ -3427,39 +3427,39 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
 
 
-        {/* Tab: Admin Dynamic Content Control Panel (CMS Editor - Step 2 Requirement) */}
+        {/* Tab: Admin Dynamic Content Control Panel (CMS Editor) */}
         {activeTab === 'cms-editor' && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in text-[#1A1A1A]">
             <div>
-              <h1 className="text-3xl font-bold font-sans text-white">Admin Dynamic Content Control Panel (CMS)</h1>
-              <p className="text-xs text-cyan-300">Centralized control panel to broadcast homepage announcements, set operating city, and customize global platform themes in real-time.</p>
+              <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">Admin Dynamic Content Control Panel (CMS)</h1>
+              <p className="text-xs text-slate-800 font-semibold mt-1">Centralized control panel to broadcast homepage announcements, set operating city, and customize global platform themes in real-time.</p>
             </div>
 
             {/* Global Settings & Ticker Form */}
-            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
-              <h3 className="text-lg font-bold font-sans text-white flex items-center gap-2">
-                <Compass className="w-5 h-5 text-cyan-400" />
+            <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-6 shadow-md text-[#1A1A1A]">
+              <h3 className="text-lg font-black font-sans text-[#1A1A1A] flex items-center gap-2">
+                <Compass className="w-5 h-5 text-[#D90000]" />
                 <span>Global Platform & Live Announcement Configuration</span>
               </h3>
 
               <form onSubmit={handleGlobalCmsSave} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Platform Branding Title</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Platform Branding Title</label>
                     <input
                       type="text"
                       value={platformTitleInput}
                       onChange={(e) => setPlatformTitleInput(e.target.value)}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Primary Operating City</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Primary Operating City</label>
                     <select
                       value={activeCityInput}
                       onChange={(e) => setActiveCityInput(e.target.value)}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     >
                       {GUJARAT_CITIES.map(c => (
                         <option key={c} value={c}>{c}</option>
@@ -3469,28 +3469,28 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Top Announcement Ticker Message (Broadcasted Live to All Users)</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Top Announcement Ticker Message (Broadcasted Live to All Users)</label>
                   <textarea
                     rows="2"
                     value={bannerAnnouncementInput}
                     onChange={(e) => setBannerAnnouncementInput(e.target.value)}
                     placeholder="⚡ Exclusive Offer: Get 50% Flat Discount on IMAX & VIP Recliner Tickets!"
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-[#FFFFFF] border border-slate-300 shadow-sm">
                   <div>
-                    <div className="font-bold text-sm text-white">System Maintenance Mode</div>
-                    <div className="text-xs text-white/50">Enable maintenance banner across all active customer panels</div>
+                    <div className="font-black text-sm text-[#1A1A1A]">System Maintenance Mode</div>
+                    <div className="text-xs text-slate-700 font-semibold">Enable maintenance banner across all active customer panels</div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setMaintenanceModeToggle(!maintenanceModeToggle)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
                       maintenanceModeToggle
-                        ? 'bg-rose-500 text-white'
-                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        ? 'bg-[#D90000] text-white'
+                        : 'bg-[#2B2B2B] text-white hover:bg-[#4A4A4A]'
                     }`}
                   >
                     {maintenanceModeToggle ? 'ENABLED (MAINTENANCE ON)' : 'DISABLED (NORMAL)'}
@@ -3500,7 +3500,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <button
                   type="submit"
                   disabled={cmsSaveLoading}
-                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-emerald-400 text-black font-extrabold text-xs shadow-lg shadow-cyan-500/25 hover:brightness-110 cursor-pointer flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3.5 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer flex items-center justify-center gap-2 transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>{cmsSaveLoading ? 'Publishing & Syncing...' : 'Save & Sync CMS Config Globally'}</span>
@@ -3512,38 +3512,38 @@ export const AdminDashboard = ({ onReturnHome }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div 
                 onClick={() => handleTabChange('hero')}
-                className="glass-panel p-5 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/60 transition-all cursor-pointer group"
+                className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] hover:border-[#D90000] transition-all cursor-pointer group shadow-md"
               >
-                <Image className="w-8 h-8 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-bold text-white text-sm">Hero Banner Slideshow</h4>
-                <p className="text-xs text-white/50 mt-1">Manage homepage featured movie banners, prices & ratings.</p>
+                <Image className="w-8 h-8 text-[#D90000] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-black text-[#1A1A1A] text-sm">Hero Banner Slideshow</h4>
+                <p className="text-xs text-slate-800 font-semibold mt-1">Manage homepage featured movie banners, prices & ratings.</p>
               </div>
 
               <div 
                 onClick={() => handleTabChange('strips')}
-                className="glass-panel p-5 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/60 transition-all cursor-pointer group"
+                className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] hover:border-[#D90000] transition-all cursor-pointer group shadow-md"
               >
-                <Zap className="w-8 h-8 text-amber-400 mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-bold text-white text-sm">Feature Action Strips</h4>
-                <p className="text-xs text-white/50 mt-1">Customize quick action chips on the home landing screen.</p>
+                <Zap className="w-8 h-8 text-[#F5B400] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-black text-[#1A1A1A] text-sm">Feature Action Strips</h4>
+                <p className="text-xs text-slate-800 font-semibold mt-1">Customize quick action chips on the home landing screen.</p>
               </div>
 
               <div 
                 onClick={() => handleTabChange('upcoming')}
-                className="glass-panel p-5 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/60 transition-all cursor-pointer group"
+                className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] hover:border-[#D90000] transition-all cursor-pointer group shadow-md"
               >
-                <Award className="w-8 h-8 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-bold text-white text-sm">Upcoming Movie Releases</h4>
-                <p className="text-xs text-white/50 mt-1">Add coming soon posters and launch release dates.</p>
+                <Award className="w-8 h-8 text-purple-700 mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-black text-[#1A1A1A] text-sm">Upcoming Movie Releases</h4>
+                <p className="text-xs text-slate-800 font-semibold mt-1">Add coming soon posters and launch release dates.</p>
               </div>
 
               <div 
                 onClick={() => handleTabChange('notifications')}
-                className="glass-panel p-5 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/60 transition-all cursor-pointer group"
+                className="bg-[#DBCEA5] p-5 rounded-2xl border border-[#c5ba92] hover:border-[#D90000] transition-all cursor-pointer group shadow-md"
               >
-                <Bell className="w-8 h-8 text-emerald-400 mb-2 group-hover:scale-110 transition-transform" />
-                <h4 className="font-bold text-white text-sm">Broadcast System Alerts</h4>
-                <p className="text-xs text-white/50 mt-1">Send instant push notification alerts to all user profiles.</p>
+                <Bell className="w-8 h-8 text-[#2C5745] mb-2 group-hover:scale-110 transition-transform" />
+                <h4 className="font-black text-[#1A1A1A] text-sm">Broadcast System Alerts</h4>
+                <p className="text-xs text-slate-800 font-semibold mt-1">Send instant push notification alerts to all user profiles.</p>
               </div>
             </div>
           </div>
@@ -3551,49 +3551,49 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab: Hero Section Slideshow Management (Full CRUD) */}
         {activeTab === 'hero' && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in text-[#1A1A1A]">
             <div>
-              <h1 className="text-3xl font-bold font-sans text-white">Hero Section Slideshow Management</h1>
-              <p className="text-xs text-cyan-300">Create, update, or remove featured movie banners and slideshow items for the homepage.</p>
+              <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">Hero Section Slideshow Management</h1>
+              <p className="text-xs text-slate-800 font-semibold mt-1">Create, update, or remove featured movie banners and slideshow items for the homepage.</p>
             </div>
 
             {/* Create / Edit Hero Slide Form */}
-            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
-              <h3 className="text-lg font-bold font-sans text-white">
+            <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-6 shadow-md text-[#1A1A1A]">
+              <h3 className="text-lg font-black font-sans text-[#1A1A1A]">
                 {editingHeroSlideId ? 'Edit Hero Slide Banner' : 'Add New Hero Slide Banner'}
               </h3>
 
               <form onSubmit={handleSaveHeroSlide} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Movie Title *</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Movie Title *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Avatar: Fire and Ash"
                       value={heroForm.title}
                       onChange={(e) => setHeroForm({ ...heroForm, title: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Tagline / Synopsis</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Tagline / Synopsis</label>
                     <input
                       type="text"
                       placeholder="e.g. Native IMAX 3D Experience"
                       value={heroForm.tagline}
                       onChange={(e) => setHeroForm({ ...heroForm, tagline: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Feature Badge</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Feature Badge</label>
                     <select
                       value={heroForm.badge}
                       onChange={(e) => setHeroForm({ ...heroForm, badge: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     >
                       <option value="BLOCKBUSTER">BLOCKBUSTER</option>
                       <option value="TRENDING">TRENDING</option>
@@ -3604,41 +3604,41 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Rating (e.g. 9.4)</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Rating (e.g. 9.4)</label>
                     <input
                       type="number"
                       step="0.1"
                       value={heroForm.rating}
                       onChange={(e) => setHeroForm({ ...heroForm, rating: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Ticket Price Rate (₹)</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Ticket Price Rate (₹)</label>
                     <input
                       type="number"
                       value={heroForm.price}
                       onChange={(e) => setHeroForm({ ...heroForm, price: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Languages (comma separated)</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Languages (comma separated)</label>
                     <input
                       type="text"
                       placeholder="English, Hindi, Tamil, Telugu"
                       value={heroForm.languages}
                       onChange={(e) => setHeroForm({ ...heroForm, languages: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
                 </div>
 
                 {/* Banner Image URL & Uploader */}
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-cyan-300">Banner Image URL / File *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E]">Banner Image URL / File *</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -3646,9 +3646,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       placeholder="Banner Image URL (https://...)"
                       value={heroForm.banner}
                       onChange={(e) => setHeroForm({ ...heroForm, banner: e.target.value })}
-                      className="flex-1 p-3 rounded-xl glass-input text-xs text-white"
+                      className="flex-1 p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
-                    <label className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1.5">
+                    <label className="px-4 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm">
                       <span>Browse File</span>
                       <input
                         type="file"
@@ -3670,7 +3670,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs cursor-pointer shadow-lg shadow-cyan-500/20"
+                    className="px-6 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer shadow-md"
                   >
                     {editingHeroSlideId ? 'Update Slide & Sync Live' : '+ Add Slide to Slideshow'}
                   </button>
@@ -3685,7 +3685,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           price: 480, banner: '', movieId: 'mov_1'
                         });
                       }}
-                      className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                      className="px-4 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                     >
                       Cancel Edit
                     </button>
@@ -3696,7 +3696,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Configured Hero Slides Cards List */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
+              <h3 className="text-sm font-black text-[#1A1A1A] uppercase tracking-wider">
                 Current Active Hero Banners ({(Array.isArray(heroSlidesList) ? heroSlidesList : []).length} Slides)
               </h3>
 
@@ -3744,49 +3744,49 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab: Home Page Feature Strips Management (CRUD) */}
         {activeTab === 'strips' && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in text-[#1A1A1A]">
             <div>
-              <h1 className="text-3xl font-bold font-sans text-white">Home Page Feature Strips</h1>
-              <p className="text-xs text-cyan-300">Manage quick action chips and promotional feature strips visible on the homepage.</p>
+              <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">Home Page Feature Strips</h1>
+              <p className="text-xs text-slate-800 font-semibold mt-1">Manage quick action chips and promotional feature strips visible on the homepage.</p>
             </div>
 
             {/* Create / Edit Feature Strip Form */}
-            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
-              <h3 className="text-lg font-bold font-sans text-white">
+            <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-6 shadow-md text-[#1A1A1A]">
+              <h3 className="text-lg font-black font-sans text-[#1A1A1A]">
                 {editingFeatId ? 'Edit Feature Action Chip' : 'Add New Feature Action Chip'}
               </h3>
 
               <form onSubmit={handleSaveFeatureStrip} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Feature Title *</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Feature Title *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Instant UPI Pass"
                       value={featForm.title}
                       onChange={(e) => setFeatForm({ ...featForm, title: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Subtitle / Details</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Subtitle / Details</label>
                     <input
                       type="text"
                       placeholder="e.g. Instant QR pass generation"
                       value={featForm.subtitle}
                       onChange={(e) => setFeatForm({ ...featForm, subtitle: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Badge Tag</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Badge Tag</label>
                     <select
                       value={featForm.badge}
                       onChange={(e) => setFeatForm({ ...featForm, badge: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     >
                       <option value="INSTANT">INSTANT</option>
                       <option value="LUXURY">LUXURY</option>
@@ -3797,11 +3797,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Icon Style</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Icon Style</label>
                     <select
                       value={featForm.icon}
                       onChange={(e) => setFeatForm({ ...featForm, icon: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     >
                       <option value="Zap">Zap (Lightning)</option>
                       <option value="Film">Film (Cinema)</option>
@@ -3816,7 +3816,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs cursor-pointer shadow-lg shadow-cyan-500/20"
+                    className="px-6 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer shadow-md"
                   >
                     {editingFeatId ? 'Update Feature Chip' : '+ Add Feature Action Chip'}
                   </button>
@@ -3827,7 +3827,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         setEditingFeatId(null);
                         setFeatForm({ title: '', subtitle: '', badge: 'INSTANT', icon: 'Zap' });
                       }}
-                      className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                      className="px-4 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                     >
                       Cancel Edit
                     </button>
@@ -3838,36 +3838,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Configured Feature Strips Cards List */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
+              <h3 className="text-sm font-black text-[#1A1A1A] uppercase tracking-wider">
                 Current Active Feature Chips ({(Array.isArray(featureStripsList) ? featureStripsList : []).length} Chips)
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {(Array.isArray(featureStripsList) ? featureStripsList : []).map((feat) => (
-                  <div key={feat.id} className="glass-panel rounded-2xl p-4 border border-white/10 flex items-center justify-between gap-3">
+                  <div key={feat.id} className="bg-[#DBCEA5] rounded-2xl p-4 border border-[#c5ba92] flex items-center justify-between gap-3 shadow-md text-[#1A1A1A]">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white">{feat.title}</span>
+                        <span className="text-sm font-black text-[#1A1A1A]">{feat.title}</span>
                         {feat.badge && (
-                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold uppercase">
+                          <span className="px-2 py-0.5 rounded bg-[#D90000] text-white text-[9px] font-black uppercase">
                             {feat.badge}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-white/60">{feat.subtitle}</p>
+                      <p className="text-xs text-slate-800 font-semibold mt-1">{feat.subtitle}</p>
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         onClick={() => handleEditFeatClick(feat)}
-                        className="p-2 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black transition-colors cursor-pointer"
+                        className="p-2 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white transition-colors cursor-pointer shadow-sm"
                         title="Edit Chip"
                       >
-                        <Edit className="w-3.5 h-3.5" />
+                        <Edit className="w-3.5 h-3.5 text-white" />
                       </button>
                       <button
                         onClick={() => handleDeleteFeatClick(feat.id)}
-                        className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                        className="p-2 rounded-xl bg-[#D90000] hover:bg-red-700 text-white transition-colors cursor-pointer shadow-sm"
                         title="Delete Chip"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -3882,68 +3882,68 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab: Upcoming Releases Management (CRUD) */}
         {activeTab === 'upcoming' && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in text-[#1A1A1A]">
             <div>
-              <h1 className="text-3xl font-bold font-sans text-white">Upcoming Releases Management</h1>
-              <p className="text-xs text-cyan-300">Upload upcoming movies, release dates, and posters featured on the homepage carousel.</p>
+              <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">Upcoming Releases Management</h1>
+              <p className="text-xs text-slate-800 font-semibold mt-1">Upload upcoming movies, release dates, and posters featured on the homepage carousel.</p>
             </div>
 
             {/* Create / Edit Upcoming Release Form */}
-            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
-              <h3 className="text-lg font-bold font-sans text-white">
+            <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-6 shadow-md text-[#1A1A1A]">
+              <h3 className="text-lg font-black font-sans text-[#1A1A1A]">
                 {editingUpcomingId ? 'Edit Upcoming Release' : 'Add New Upcoming Release'}
               </h3>
 
               <form onSubmit={handleSaveUpcomingMovie} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Movie Title *</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Movie Title *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Avengers: Secret Wars"
                       value={upcomingForm.title}
                       onChange={(e) => setUpcomingForm({ ...upcomingForm, title: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Release Date Tag *</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Release Date Tag *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Dec 2026 or Diwali 2026"
                       value={upcomingForm.release}
                       onChange={(e) => setUpcomingForm({ ...upcomingForm, release: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Genres (comma separated)</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Genres (comma separated)</label>
                     <input
                       type="text"
                       placeholder="e.g. Action, Superhero, Sci-Fi"
                       value={upcomingForm.genres}
                       onChange={(e) => setUpcomingForm({ ...upcomingForm, genres: e.target.value })}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
                   </div>
                 </div>
 
                 {/* Poster Image URL & Uploader */}
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-cyan-300">Poster Image URL / File</label>
+                  <label className="block text-xs font-black text-[#2C1A0E]">Poster Image URL / File</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       placeholder="Poster Image URL (https://...)"
                       value={upcomingForm.poster}
                       onChange={(e) => setUpcomingForm({ ...upcomingForm, poster: e.target.value })}
-                      className="flex-1 p-3 rounded-xl glass-input text-xs text-white"
+                      className="flex-1 p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
                     />
-                    <label className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1.5">
+                    <label className="px-4 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm">
                       <span>Browse File</span>
                       <input
                         type="file"
@@ -3965,7 +3965,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
-                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs cursor-pointer shadow-lg shadow-cyan-500/20"
+                    className="px-6 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer shadow-md"
                   >
                     {editingUpcomingId ? 'Update Release' : '+ Add Upcoming Release'}
                   </button>
@@ -3976,7 +3976,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         setEditingUpcomingId(null);
                         setUpcomingForm({ title: '', release: 'Dec 2026', poster: '', genres: 'Action, Sci-Fi', synopsis: '' });
                       }}
-                      className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                      className="px-4 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                     >
                       Cancel Edit
                     </button>
@@ -3987,37 +3987,37 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Configured Upcoming Releases Cards List */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">
+              <h3 className="text-sm font-black text-[#1A1A1A] uppercase tracking-wider">
                 Current Active Upcoming Releases ({(Array.isArray(upcomingMoviesList) ? upcomingMoviesList : []).length} Titles)
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {(Array.isArray(upcomingMoviesList) ? upcomingMoviesList : []).map((mov) => (
-                  <div key={mov.id} className="glass-panel rounded-2xl p-3 border border-white/10 flex flex-col justify-between space-y-2">
+                  <div key={mov.id} className="bg-[#DBCEA5] rounded-2xl p-3 border border-[#c5ba92] flex flex-col justify-between space-y-2 shadow-md text-[#1A1A1A]">
                     <div>
-                      <div className="relative h-44 rounded-xl overflow-hidden border border-white/10 mb-2">
+                      <div className="relative h-44 rounded-xl overflow-hidden border border-slate-300 mb-2">
                         <img src={mov.poster} alt={mov.title} className="w-full h-full object-cover" />
-                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-purple-500 text-white text-[9px] font-black uppercase">
+                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-[#D90000] text-white text-[9px] font-black uppercase shadow-sm">
                           {mov.release}
                         </span>
                       </div>
-                      <h4 className="text-xs font-bold text-white truncate">{mov.title}</h4>
-                      <p className="text-[10px] text-white/50 truncate">
+                      <h4 className="text-xs font-black text-[#1A1A1A] truncate">{mov.title}</h4>
+                      <p className="text-[10px] text-slate-700 font-bold truncate">
                         {Array.isArray(mov.genres) ? mov.genres.join(', ') : mov.genres}
                       </p>
                     </div>
 
-                    <div className="flex justify-end gap-1.5 pt-2 border-t border-white/10">
+                    <div className="flex justify-end gap-1.5 pt-2 border-t border-[#c5ba92]">
                       <button
                         onClick={() => handleEditUpcomingClick(mov)}
-                        className="p-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white transition-colors cursor-pointer shadow-sm"
                         title="Edit Title"
                       >
-                        <Edit className="w-3.5 h-3.5" />
+                        <Edit className="w-3.5 h-3.5 text-white" />
                       </button>
                       <button
                         onClick={() => handleDeleteUpcomingClick(mov.id)}
-                        className="p-1.5 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-[#D90000] hover:bg-red-700 text-white transition-colors cursor-pointer shadow-sm"
                         title="Delete Title"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -4032,55 +4032,55 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 2: Movie & Cast Management CRUD */}
         {activeTab === 'movies' && (
-          <div className="space-y-8">
-            <h1 className="text-3xl font-bold font-sans text-white">Movie, Trailer & Cast Management</h1>
+          <div className="space-y-8 animate-fade-in text-[#1A1A1A]">
+            <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">Movie, Trailer & Cast Management</h1>
 
             {/* Movie Form */}
-            <form onSubmit={handleSaveMovie} className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-4">
-              <h3 className="text-base font-bold font-sans text-white">
+            <form onSubmit={handleSaveMovie} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A]">
+              <h3 className="text-base font-black font-sans text-[#1A1A1A]">
                 {editingMovieId ? 'Edit Movie Details' : 'Add New Movie to Catalog'}
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Movie Title *</label>
-                  <input type="text" required value={movieForm.title} onChange={e => setMovieForm({...movieForm, title: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Movie Title *</label>
+                  <input type="text" required value={movieForm.title} onChange={e => setMovieForm({...movieForm, title: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Director *</label>
-                  <input type="text" value={movieForm.director} onChange={e => setMovieForm({...movieForm, director: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Director *</label>
+                  <input type="text" value={movieForm.director} onChange={e => setMovieForm({...movieForm, director: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Producer</label>
-                  <input type="text" placeholder="Producer Name" value={movieForm.producer || ''} onChange={e => setMovieForm({...movieForm, producer: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Producer</label>
+                  <input type="text" placeholder="Producer Name" value={movieForm.producer || ''} onChange={e => setMovieForm({...movieForm, producer: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Rating (e.g. 9.4)</label>
-                  <input type="number" step="0.1" value={movieForm.rating} onChange={e => setMovieForm({...movieForm, rating: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Rating (e.g. 9.4)</label>
+                  <input type="number" step="0.1" value={movieForm.rating} onChange={e => setMovieForm({...movieForm, rating: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Certificate / Rating *</label>
-                  <input type="text" placeholder="UA 16+, UA, U, A" value={movieForm.parentalRating || 'UA'} onChange={e => setMovieForm({...movieForm, parentalRating: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Certificate / Rating *</label>
+                  <input type="text" placeholder="UA 16+, UA, U, A" value={movieForm.parentalRating || 'UA'} onChange={e => setMovieForm({...movieForm, parentalRating: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Release Date *</label>
-                  <input type="text" placeholder="YYYY-MM-DD (e.g. 2026-12-18)" value={movieForm.releaseDate || '2026-12-18'} onChange={e => setMovieForm({...movieForm, releaseDate: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Release Date *</label>
+                  <input type="text" placeholder="YYYY-MM-DD (e.g. 2026-12-18)" value={movieForm.releaseDate || '2026-12-18'} onChange={e => setMovieForm({...movieForm, releaseDate: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Genres (comma separated)</label>
-                  <input type="text" value={movieForm.genres} onChange={e => setMovieForm({...movieForm, genres: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Genres (comma separated)</label>
+                  <input type="text" value={movieForm.genres} onChange={e => setMovieForm({...movieForm, genres: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Languages</label>
-                  <input type="text" value={movieForm.languages} onChange={e => setMovieForm({...movieForm, languages: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Languages</label>
+                  <input type="text" value={movieForm.languages} onChange={e => setMovieForm({...movieForm, languages: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Formats (e.g. IMAX 3D, Dolby Atmos)</label>
-                  <input type="text" value={movieForm.formats} onChange={e => setMovieForm({...movieForm, formats: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Formats (e.g. IMAX 3D, Dolby Atmos)</label>
+                  <input type="text" value={movieForm.formats} onChange={e => setMovieForm({...movieForm, formats: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Target City / Hub *</label>
-                  <select value={movieForm.city || 'Surat'} onChange={e => setMovieForm({...movieForm, city: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black">
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Target City / Hub *</label>
+                  <select value={movieForm.city || 'Surat'} onChange={e => setMovieForm({...movieForm, city: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]">
                     <option value="All">All Cities (Statewide)</option>
                     {GUJARAT_CITIES.map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -4091,18 +4091,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* YouTube Trailer Link */}
               <div>
-                <label className="block text-xs font-bold text-cyan-300 mb-1">YouTube Trailer Link / Embed URL *</label>
-                <input type="text" value={movieForm.trailerUrl || ''} onChange={e => setMovieForm({...movieForm, trailerUrl: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white" placeholder="https://www.youtube.com/watch?v=..." />
+                <label className="block text-xs font-black text-[#2C1A0E] mb-1">YouTube Trailer Link / Embed URL *</label>
+                <input type="text" value={movieForm.trailerUrl || ''} onChange={e => setMovieForm({...movieForm, trailerUrl: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" placeholder="https://www.youtube.com/watch?v=..." />
               </div>
 
               {/* Dynamic Image Fields: Poster & Background Banner */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 1. Movie Thumbnail Poster */}
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-cyan-300">1. Movie Thumbnail Poster (Small Detail Poster)</label>
+                  <label className="block text-xs font-black text-[#2C1A0E]">1. Movie Thumbnail Poster (Small Detail Poster)</label>
                   <div className="flex gap-2">
-                    <input type="text" value={movieForm.poster || ''} onChange={e => setMovieForm({...movieForm, poster: e.target.value})} className="flex-1 p-3 rounded-xl glass-input text-xs text-white" placeholder="Poster Image URL (https://...)" />
-                    <label className="px-3 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1">
+                    <input type="text" value={movieForm.poster || ''} onChange={e => setMovieForm({...movieForm, poster: e.target.value})} className="flex-1 p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" placeholder="Poster Image URL (https://...)" />
+                    <label className="px-3 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1 shadow-sm">
                       <span>Upload</span>
                       <input type="file" accept="image/*" onChange={(e) => {
                         const file = e.target.files?.[0];
@@ -4118,10 +4118,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 {/* 2. Main Background Banner */}
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-cyan-300">2. Main Background Banner (Backdrop Image)</label>
+                  <label className="block text-xs font-black text-[#2C1A0E]">2. Main Background Banner (Backdrop Image)</label>
                   <div className="flex gap-2">
-                    <input type="text" value={movieForm.banner || ''} onChange={e => setMovieForm({...movieForm, banner: e.target.value})} className="flex-1 p-3 rounded-xl glass-input text-xs text-white" placeholder="Banner/Backdrop URL (https://...)" />
-                    <label className="px-3 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1">
+                    <input type="text" value={movieForm.banner || ''} onChange={e => setMovieForm({...movieForm, banner: e.target.value})} className="flex-1 p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" placeholder="Banner/Backdrop URL (https://...)" />
+                    <label className="px-3 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1 shadow-sm">
                       <span>Upload</span>
                       <input type="file" accept="image/*" onChange={(e) => {
                         const file = e.target.files?.[0];
@@ -4137,16 +4137,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-cyan-300 mb-1">Synopsis / Description</label>
-                <textarea rows={3} value={movieForm.synopsis} onChange={e => setMovieForm({...movieForm, synopsis: e.target.value})} className="w-full p-3 rounded-xl glass-input text-xs text-white"></textarea>
+                <label className="block text-xs font-black text-[#2C1A0E] mb-1">Synopsis / Description</label>
+                <textarea rows={3} value={movieForm.synopsis} onChange={e => setMovieForm({...movieForm, synopsis: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"></textarea>
               </div>
 
               <div className="flex gap-3">
-                <button type="submit" className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs cursor-pointer">
+                <button type="submit" className="px-6 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer shadow-md">
                   {editingMovieId ? 'Update Movie & Sync Live' : 'Add Movie & Sync Live'}
                 </button>
                 {editingMovieId && (
-                  <button type="button" onClick={() => setEditingMovieId(null)} className="px-4 py-3 rounded-xl bg-white/10 text-white text-xs font-bold cursor-pointer">
+                  <button type="button" onClick={() => setEditingMovieId(null)} className="px-4 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm">
                     Cancel Edit
                   </button>
                 )}
@@ -4154,17 +4154,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </form>
 
             {/* Cast Management Section */}
-            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-4">
-              <h3 className="text-base font-bold font-sans text-white">Cast & Crew Management Module</h3>
+            <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A]">
+              <h3 className="text-base font-black font-sans text-[#1A1A1A]">Cast & Crew Management Module</h3>
               <form onSubmit={handleAddCastMember} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <select value={castMovieId} onChange={e => setCastMovieId(e.target.value)} className="p-3 rounded-xl glass-input text-xs text-white bg-black">
+                <select value={castMovieId} onChange={e => setCastMovieId(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]">
                   {moviesList.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
                 </select>
-                <input type="text" required placeholder="Cast Actor Name" value={castName} onChange={e => setCastName(e.target.value)} className="p-3 rounded-xl glass-input text-xs text-white" />
-                <input type="text" placeholder="Character Role Name" value={castRole} onChange={e => setCastRole(e.target.value)} className="p-3 rounded-xl glass-input text-xs text-white" />
-                <input type="text" placeholder="Photo URL or Browse File" value={castPhoto} onChange={e => setCastPhoto(e.target.value)} className="p-3 rounded-xl glass-input text-xs text-white" />
+                <input type="text" required placeholder="Cast Actor Name" value={castName} onChange={e => setCastName(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" />
+                <input type="text" placeholder="Character Role Name" value={castRole} onChange={e => setCastRole(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" />
+                <input type="text" placeholder="Photo URL or Browse File" value={castPhoto} onChange={e => setCastPhoto(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" />
                 <div className="sm:col-span-4 flex items-center gap-3">
-                  <label className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer">
+                  <label className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm">
                     Upload Photo File
                     <input type="file" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -4175,7 +4175,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       }
                     }} className="hidden" />
                   </label>
-                  <button type="submit" className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs cursor-pointer">
+                  <button type="submit" className="px-6 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer shadow-md">
                     Add / Replace Cast Member
                   </button>
                 </div>
@@ -4183,17 +4183,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </div>
 
             {/* Show Dates & Theatre Schedule Management Module */}
-            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6">
-              <div className="border-b border-white/10 pb-3">
-                <h3 className="text-lg font-bold font-sans text-white">Movie Show Dates & Theatre Schedule Manager</h3>
-                <p className="text-xs text-amber-300">Configure available booking dates, theatres, and showtime slots for each movie</p>
+            <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-6 shadow-md text-[#1A1A1A]">
+              <div className="border-b border-[#c5ba92] pb-3">
+                <h3 className="text-lg font-black font-sans text-[#1A1A1A]">Movie Show Dates & Theatre Schedule Manager</h3>
+                <p className="text-xs text-slate-800 font-semibold mt-1">Configure available booking dates, theatres, and showtime slots for each movie</p>
               </div>
 
               {/* Movie & Date Selector Controls */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/5 p-4 rounded-2xl border border-white/10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#FFFFFF] p-4 rounded-2xl border border-slate-300 shadow-sm">
                 {/* 1. Select Movie */}
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1.5">1. Select Target Movie *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1.5">1. Select Target Movie *</label>
                   <select
                     value={schedMovieId}
                     onChange={(e) => {
@@ -4204,7 +4204,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         setSelectedSchedDate(targetM.showDates[0]);
                       }
                     }}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     {(Array.isArray(moviesList) ? moviesList : []).map(m => (
                       <option key={m.id} value={m.id}>{m.title}</option>
@@ -4214,15 +4214,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 {/* 2. Configure Available Dates */}
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1.5">2. Add New Booking Date *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1.5">2. Add New Booking Date *</label>
                   <form onSubmit={handleAddScheduleDate} className="flex gap-2">
                     <input
                       type="date"
                       value={schedDateInput}
                       onChange={(e) => setSchedDateInput(e.target.value)}
-                      className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold cursor-pointer"
+                      className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold cursor-pointer focus:outline-none focus:border-[#D90000]"
                     />
-                    <button type="submit" className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shrink-0 cursor-pointer">
+                    <button type="submit" className="px-4 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shrink-0 cursor-pointer shadow-md">
                       Add Date
                     </button>
                   </form>
@@ -4236,16 +4236,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 const showDates = targetM?.showDates || [];
                 return (
                   <div className="space-y-2">
-                    <span className="text-xs font-bold text-white/80 block">Configured Dates for {targetM?.title}:</span>
+                    <span className="text-xs font-black text-[#1A1A1A] block">Configured Dates for {targetM?.title}:</span>
                     <div className="flex flex-wrap gap-2">
                       {showDates.map(dStr => (
                         <span
                           key={dStr}
                           onClick={() => setSelectedSchedDate(dStr)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-2 cursor-pointer transition-all ${
                             selectedSchedDate === dStr
-                              ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                              : 'bg-white/10 text-white hover:bg-white/20'
+                              ? 'bg-[#D90000] text-white shadow-md'
+                              : 'bg-[#FFFFFF] text-[#1A1A1A] border border-slate-300 hover:bg-slate-100'
                           }`}
                         >
                           <span>📅 {dStr}</span>
@@ -4255,7 +4255,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                               e.stopPropagation();
                               handleDeleteScheduleDate(schedMovieId, dStr);
                             }}
-                            className="text-rose-400 hover:text-rose-200 font-extrabold ml-1"
+                            className="text-rose-600 hover:text-rose-800 font-extrabold ml-1"
                             title="Remove date from user site"
                           >
                             ✕
@@ -4263,7 +4263,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         </span>
                       ))}
                       {showDates.length === 0 && (
-                        <span className="text-xs text-white/40 italic">No dates configured. Add a date above.</span>
+                        <span className="text-xs text-slate-700 font-medium italic">No dates configured. Add a date above.</span>
                       )}
                     </div>
                   </div>
@@ -4271,14 +4271,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
               })()}
 
               {/* Add Theatre & Show Slot Form for Selected Date */}
-              <div className="pt-4 border-t border-white/10 space-y-4">
-                <h4 className="text-sm font-bold text-amber-400">
-                  3. Add Theatre & Show Slot for Date: <span className="underline">{selectedSchedDate}</span>
+              <div className="pt-4 border-t border-[#c5ba92] space-y-4">
+                <h4 className="text-sm font-black text-[#1A1A1A]">
+                  3. Add Theatre & Show Slot for Date: <span className="underline text-[#D90000]">{selectedSchedDate}</span>
                 </h4>
 
-                <form onSubmit={handleAddDateScopedShowSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                <form onSubmit={handleAddDateScopedShowSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-[#FFFFFF] p-4 rounded-2xl border border-slate-300 shadow-sm">
                   <div>
-                    <label className="block text-[11px] font-bold text-cyan-300 mb-1">City Filter *</label>
+                    <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">City Filter *</label>
                     <select
                       value={schedCity || 'Surat'}
                       onChange={e => {
@@ -4299,7 +4299,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           setSchedAddress('');
                         }
                       }}
-                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                      className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     >
                       {availableCities.map(c => (
                         <option key={c} value={c}>{c}</option>
@@ -4308,7 +4308,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-amber-300 mb-1">Select Theatre (Live MongoDB Atlas) *</label>
+                    <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Select Theatre (Live MongoDB Atlas) *</label>
                     <select
                       value={schedTheatreName}
                       onChange={e => {
@@ -4323,7 +4323,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           }
                         }
                       }}
-                      className="w-full p-2.5 rounded-xl glass-input text-xs text-amber-300 bg-black font-bold"
+                      className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     >
                       {(() => {
                         const safeThs = Array.isArray(theatresList) ? theatresList : [];
@@ -4341,16 +4341,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-white/70 mb-1">Address</label>
-                    <input type="text" value={schedAddress} onChange={e => setSchedAddress(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" placeholder="Auto-filled address" />
+                    <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Address</label>
+                    <input type="text" value={schedAddress} onChange={e => setSchedAddress(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" placeholder="Auto-filled address" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-white/70 mb-1">Screen Name</label>
-                    <input type="text" value={schedScreen} onChange={e => setSchedScreen(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                    <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Screen Name</label>
+                    <input type="text" value={schedScreen} onChange={e => setSchedScreen(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-white/70 mb-1">Format *</label>
-                    <select value={schedFormat} onChange={e => setSchedFormat(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black">
+                    <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Format *</label>
+                    <select value={schedFormat} onChange={e => setSchedFormat(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]">
                       <option value="IMAX 3D">IMAX 3D</option>
                       <option value="4DX">4DX</option>
                       <option value="Dolby Atmos">Dolby Atmos</option>
@@ -4359,15 +4359,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-white/70 mb-1">Show Time *</label>
-                    <input type="text" required placeholder="e.g. 07:30 PM" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
+                    <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Show Time *</label>
+                    <input type="text" required placeholder="e.g. 07:30 PM" value={schedTime} onChange={e => setSchedTime(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-white/70 mb-1">Price (₹) *</label>
-                    <input type="number" required value={schedPrice} onChange={e => setSchedPrice(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                    <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Price (₹) *</label>
+                    <input type="number" required value={schedPrice} onChange={e => setSchedPrice(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                   </div>
                   <div className="flex items-end">
-                    <button type="submit" className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 cursor-pointer">
+                    <button type="submit" className="w-full py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer">
                       + Add Show Slot
                     </button>
                   </div>
@@ -4382,28 +4382,28 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 
                 return (
                   <div className="space-y-3 pt-2">
-                    <h4 className="text-xs font-bold text-white/70 uppercase">
+                    <h4 className="text-xs font-black text-[#1A1A1A] uppercase">
                       Scheduled Theatres & Times for {selectedSchedDate} ({schedsForDate?.length || 0} Theatres):
                     </h4>
 
                     {schedsForDate && schedsForDate.length > 0 ? (
                       <div className="space-y-3">
                         {schedsForDate.map((th) => (
-                          <div key={th.id || th.name} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div key={th.id || th.name} className="p-4 rounded-2xl bg-[#FFFFFF] border border-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
                             <div className="space-y-1">
-                              <div className="text-sm font-bold text-white flex items-center gap-2">
+                              <div className="text-sm font-black text-[#1A1A1A] flex items-center gap-2">
                                 <span>{th.name}</span>
-                                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-medium">{th.city}</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-[#2C5745]/20 text-[#2C5745] font-black">{th.city}</span>
                               </div>
-                              <div className="text-[11px] text-white/50">{th.address}</div>
+                              <div className="text-[11px] text-slate-700 font-bold">{th.address}</div>
                               <div className="flex flex-wrap gap-1.5 pt-1">
                                 {th.shows?.map((sh) => (
-                                  <span key={sh.id} className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold flex items-center gap-1.5">
+                                  <span key={sh.id} className="px-2.5 py-1 rounded-lg bg-[#DBCEA5] border border-[#c5ba92] text-[#1A1A1A] text-xs font-black flex items-center gap-1.5">
                                     <span>{sh.time} ({sh.format}) - ₹{sh.price}</span>
                                     <button
                                       type="button"
                                       onClick={() => deleteShowSlotFromMovieTheatre(schedMovieId, selectedSchedDate, th.id, sh.id)}
-                                      className="text-rose-400 hover:text-rose-200 font-extrabold ml-1"
+                                      className="text-[#D90000] hover:text-red-800 font-black ml-1"
                                       title="Delete showtime"
                                     >
                                       ✕
@@ -4416,7 +4416,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             <button
                               type="button"
                               onClick={() => deleteTheatreFromMovieDate(schedMovieId, selectedSchedDate, th.id)}
-                              className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white text-rose-300 text-xs font-bold transition-all border border-rose-500/30 cursor-pointer shrink-0"
+                              className="px-3 py-1.5 rounded-xl bg-[#D90000] hover:bg-red-700 text-white text-xs font-black transition-all cursor-pointer shrink-0 shadow-sm"
                             >
                               Remove Theatre
                             </button>
@@ -4424,7 +4424,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         ))}
                       </div>
                     ) : (
-                      <div className="p-6 rounded-2xl bg-white/5 text-center text-xs text-white/40 italic">
+                      <div className="p-6 rounded-2xl bg-[#FFFFFF] border border-slate-300 text-center text-xs text-slate-700 font-semibold italic">
                         No theatres currently scheduled for {selectedSchedDate}. Use the form above to add a show slot.
                       </div>
                     )}
@@ -4436,36 +4436,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Movies List Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {moviesList.map(m => (
-                <div key={m.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-4">
+                <div key={m.id} className="bg-[#DBCEA5] p-5 rounded-3xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A]">
                   <div className="flex items-center gap-3">
-                    <img src={m.poster} alt={m.title} className="w-14 h-20 object-cover rounded-xl border border-amber-400/40" />
+                    <img src={m.poster} alt={m.title} className="w-14 h-20 object-cover rounded-xl border border-slate-300 shadow-sm" />
                     <div>
-                      <div className="text-sm font-bold text-white line-clamp-1">{m.title}</div>
-                      <div className="text-xs text-cyan-300">★ {m.rating} • {m.duration}</div>
-                      <div className="text-[10px] text-white/50">{m.director}</div>
+                      <div className="text-sm font-black text-[#1A1A1A] line-clamp-1">{m.title}</div>
+                      <div className="text-xs text-[#D90000] font-black">★ {m.rating} • {m.duration}</div>
+                      <div className="text-[10px] text-slate-700 font-bold">{m.director}</div>
                     </div>
                   </div>
 
                   {/* Cast Members List */}
                   {m.cast && m.cast.length > 0 && (
-                    <div className="pt-2 border-t border-white/10">
-                      <span className="text-[10px] font-bold text-cyan-300 uppercase block mb-1">Cast Members</span>
+                    <div className="pt-2 border-t border-[#c5ba92]">
+                      <span className="text-[10px] font-black text-[#1A1A1A] uppercase block mb-1">Cast Members</span>
                       <div className="flex flex-wrap gap-1.5">
                         {m.cast.map(c => (
-                          <span key={c.id || c.name} className="px-2 py-0.5 rounded bg-white/10 text-[10px] text-white flex items-center gap-1">
+                          <span key={c.id || c.name} className="px-2 py-0.5 rounded bg-[#FFFFFF] text-[10px] text-[#1A1A1A] font-bold border border-slate-300 flex items-center gap-1">
                             <span>{c.name} ({c.role})</span>
-                            <button onClick={() => handleDeleteCastMember(m.id, c.id)} className="text-rose-400 font-bold hover:text-rose-300 ml-1">×</button>
+                            <button onClick={() => handleDeleteCastMember(m.id, c.id)} className="text-[#D90000] font-black hover:text-red-800 ml-1">×</button>
                           </span>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
-                    <button onClick={() => handleEditMovieClick(m)} className="p-2 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black transition-colors" title="Edit Movie">
-                      <Edit className="w-4 h-4" />
+                  <div className="flex justify-end gap-2 pt-2 border-t border-[#c5ba92]">
+                    <button onClick={() => handleEditMovieClick(m)} className="p-2 rounded-xl bg-[#2B2B2B] text-white hover:bg-[#4A4A4A] transition-colors shadow-sm" title="Edit Movie">
+                      <Edit className="w-4 h-4 text-white" />
                     </button>
-                    <button onClick={() => handleDeleteMovie(m.id)} className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors" title="Delete Movie">
+                    <button onClick={() => handleDeleteMovie(m.id)} className="p-2 rounded-xl bg-[#D90000] text-white hover:bg-red-700 transition-colors shadow-sm" title="Delete Movie">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -4477,11 +4477,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 3: Cinema & Screen Specific Seat Operations */}
         {activeTab === 'seats' && (
-          <div className="glass-panel p-6 rounded-3xl border border-[#B0A695] space-y-6 bg-[#EBE3D5]">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-[#B0A695]/50 pb-4">
+          <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-6 shadow-md text-[#1A1A1A]">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-[#c5ba92] pb-4">
               <div>
-                <h1 className="text-3xl font-bold font-sans text-[#776B5D]">Real-Time Seat Management & Live Tracking</h1>
-                <p className="text-xs text-[#776B5D]">Synchronized with MongoDB Atlas. Select City → Theatre → Movie → Date → Time Slot to unlock grid & publish live layouts.</p>
+                <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">Real-Time Seat Management & Live Tracking</h1>
+                <p className="text-xs text-slate-800 font-semibold mt-1">Synchronized with MongoDB Atlas. Select City → Theatre → Movie → Date → Time Slot to unlock grid & publish live layouts.</p>
               </div>
 
               <div className="flex items-center gap-3 shrink-0 flex-wrap">
@@ -4491,26 +4491,26 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   disabled={!isSeatGridUnlocked}
                   className={`px-5 py-2.5 rounded-2xl font-black text-xs flex items-center gap-2 shadow-md transition-all ${
                     isSeatGridUnlocked
-                      ? 'bg-[#776B5D] hover:bg-[#63574A] text-[#F3EEEA] shadow-[#776B5D]/20 cursor-pointer font-black'
-                      : 'bg-[#F3EEEA] text-[#776B5D]/40 cursor-not-allowed border border-[#B0A695]'
+                      ? 'bg-[#D90000] hover:bg-[#b00000] text-white shadow-md cursor-pointer font-black'
+                      : 'bg-slate-300 text-slate-500 cursor-not-allowed border border-slate-400'
                   }`}
                 >
-                  <CheckCircle2 className="w-4 h-4 text-[#F3EEEA]" />
+                  <CheckCircle2 className="w-4 h-4 text-white" />
                   <span>Publish & Approve Seat Layout</span>
                 </button>
 
-                <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#F3EEEA] border border-[#B0A695] text-[#776B5D] text-xs font-bold shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-[#776B5D] animate-pulse"></span>
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#FFFFFF] border border-slate-400 text-[#1A1A1A] text-xs font-black shrink-0 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
                   <span>Live MongoDB Atlas Synced</span>
                 </div>
               </div>
             </div>
 
             {/* Cascading 5-Tier Controls Row: City -> Theatre -> Movie -> Show Date -> Show Time */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-[#F3EEEA]/80 p-4 rounded-2xl border border-[#B0A695]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-[#FFFFFF] p-4 rounded-2xl border border-slate-300 shadow-sm">
               {/* Filter 1: Select City */}
               <div>
-                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">1. City (MongoDB Atlas) *</label>
+                <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">1. City (MongoDB Atlas) *</label>
                 <select
                   value={selectedCity || ''}
                   onChange={e => {
@@ -4527,7 +4527,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedTheatreId(thsInCity[0].id);
                     }
                   }}
-                  className="w-full p-2.5 rounded-xl glass-input text-xs text-[#776B5D] bg-[#F3EEEA] border border-[#B0A695] font-bold"
+                  className="w-full p-2.5 rounded-xl bg-[#FFFFFF] text-xs text-[#1A1A1A] border border-slate-400 font-bold focus:outline-none focus:border-[#D90000]"
                 >
                   <option value="">-- Select City --</option>
                   {(availableCities || []).map(city => (
@@ -4538,7 +4538,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 2: Select Cinema / Theatre */}
               <div>
-                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">2. Cinema / Theatre *</label>
+                <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">2. Cinema / Theatre *</label>
                 <select
                   value={selectedTheatreId || ''}
                   disabled={!selectedCity}
@@ -4552,7 +4552,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedSeatMovieId(moviesList[0].id || moviesList[0]._id);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#B0A695] ${!selectedCity ? 'text-[#776B5D]/40 cursor-not-allowed bg-[#F3EEEA]/60' : 'text-[#776B5D] bg-[#F3EEEA]'}`}
+                  className={`w-full p-2.5 rounded-xl text-xs font-bold border border-slate-400 focus:outline-none focus:border-[#D90000] ${!selectedCity ? 'text-slate-400 cursor-not-allowed bg-slate-100' : 'text-[#1A1A1A] bg-[#FFFFFF]'}`}
                 >
                   <option value="">-- Select Theatre --</option>
                   {(theatresInSelectedCity || []).length > 0 ? (
@@ -4567,7 +4567,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 3: Select Movie (Database Live) */}
               <div>
-                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">3. Movie (Database Live) *</label>
+                <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">3. Movie (Database Live) *</label>
                 <select
                   value={selectedSeatMovieId || ''}
                   disabled={!selectedTheatreId}
@@ -4580,7 +4580,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedSchedDate(availableDatesForSeatCombo[0]);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#B0A695] ${!selectedTheatreId ? 'text-[#776B5D]/40 cursor-not-allowed bg-[#F3EEEA]/60' : 'text-[#776B5D] bg-[#F3EEEA]'}`}
+                  className={`w-full p-2.5 rounded-xl text-xs font-bold border border-slate-400 focus:outline-none focus:border-[#D90000] ${!selectedTheatreId ? 'text-slate-400 cursor-not-allowed bg-slate-100' : 'text-[#1A1A1A] bg-[#FFFFFF]'}`}
                 >
                   <option value="">-- Select Movie --</option>
                   {(moviesList || []).map(m => (
@@ -4593,7 +4593,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 4: Show Date */}
               <div>
-                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">4. Show Date *</label>
+                <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">4. Show Date *</label>
                 <select
                   value={selectedSchedDate || ''}
                   disabled={!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0}
@@ -4605,7 +4605,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setSelectedShowSlotTime(availableShowtimesForSeatCombo[0]);
                     }
                   }}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#B0A695] ${!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0 ? 'text-[#776B5D]/40 cursor-not-allowed bg-[#F3EEEA]/60' : 'text-[#776B5D] bg-[#F3EEEA]'}`}
+                  className={`w-full p-2.5 rounded-xl text-xs font-bold border border-slate-400 focus:outline-none focus:border-[#D90000] ${!selectedSeatMovieId || (availableDatesForSeatCombo || []).length === 0 ? 'text-slate-400 cursor-not-allowed bg-slate-100' : 'text-[#1A1A1A] bg-[#FFFFFF]'}`}
                 >
                   <option value="">-- Select Show Date --</option>
                   {(availableDatesForSeatCombo || []).length > 0 ? (
@@ -4620,12 +4620,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Filter 5: Show Time Slot */}
               <div>
-                <label className="block text-[11px] font-bold text-[#776B5D] mb-1">5. Show Time Slot *</label>
+                <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">5. Show Time Slot *</label>
                 <select
                   value={selectedShowSlotTime || ''}
                   disabled={!selectedSchedDate}
                   onChange={e => setSelectedShowSlotTime(e.target.value)}
-                  className={`w-full p-2.5 rounded-xl glass-input text-xs font-bold border border-[#B0A695] ${!selectedSchedDate ? 'text-[#776B5D]/40 cursor-not-allowed bg-[#F3EEEA]/60' : 'text-[#776B5D] bg-[#F3EEEA]'}`}
+                  className={`w-full p-2.5 rounded-xl text-xs font-bold border border-slate-400 focus:outline-none focus:border-[#D90000] ${!selectedSchedDate ? 'text-slate-400 cursor-not-allowed bg-slate-100' : 'text-[#1A1A1A] bg-[#FFFFFF]'}`}
                 >
                   <option value="">-- Select Time Slot --</option>
                   {(availableShowtimesForSeatCombo || []).map(t => (
@@ -4636,49 +4636,49 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </div>
 
             {/* Live Filter Indicator Bar */}
-            <div className="p-4 rounded-2xl bg-[#F3EEEA] border border-[#B0A695] text-xs text-[#776B5D] flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-slate-300 text-xs text-[#1A1A1A] flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-sm font-semibold">
               <div>
-                📍 Live Tracking Filter: <strong className="text-[#1A1A1A]">{selectedCity || 'Select City'}</strong> → <strong className="text-[#1A1A1A]">{activeTheatreObj?.name || 'Select Theatre'}</strong> → <strong className="text-[#776B5D]">{activeSeatMovieObj?.title || 'Select Movie'}</strong> → <strong className="text-[#1A1A1A]">{selectedSchedDate || 'Select Date'}</strong> → <strong className="text-[#776B5D]">{selectedShowSlotTime || 'Select Time'}</strong>
+                📍 Live Tracking Filter: <strong className="text-[#D90000] font-black">{selectedCity || 'Select City'}</strong> → <strong className="text-[#1A1A1A] font-black">{activeTheatreObj?.name || 'Select Theatre'}</strong> → <strong className="text-[#2C5745] font-black">{activeSeatMovieObj?.title || 'Select Movie'}</strong> → <strong className="text-[#1A1A1A] font-black">{selectedSchedDate || 'Select Date'}</strong> → <strong className="text-[#D90000] font-black">{selectedShowSlotTime || 'Select Time'}</strong>
               </div>
               <div className="flex items-center gap-3 text-xs flex-wrap">
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Green: Available Seats
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100 border border-emerald-400 text-emerald-900 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span> Green: Available Seats
                 </span>
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-600/30 border border-rose-400/40 text-rose-300 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Red: Booked by User ({Object.keys(liveBookedSeatsMap).length})
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-100 border border-rose-400 text-rose-900 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600"></span> Red: Booked by User ({Object.keys(liveBookedSeatsMap).length})
                 </span>
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Yellow: Admin Blocked 🔒 ({(currentLayout?.blockedSeats || []).length})
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 border border-amber-400 text-amber-900 font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Yellow: Admin Blocked 🔒 ({(currentLayout?.blockedSeats || []).length})
                 </span>
               </div>
             </div>
 
             {/* Locked vs Unlocked Container */}
             {!isSeatGridUnlocked ? (
-              <div className="p-8 sm:p-12 rounded-3xl bg-black/40 border border-white/10 text-center space-y-4 my-6 select-none">
-                <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto border border-amber-400/30 shadow-lg shadow-amber-500/20">
-                  <Lock className="w-8 h-8 animate-pulse" />
+              <div className="p-8 sm:p-12 rounded-3xl bg-[#FFFFFF] border border-slate-300 text-center space-y-4 my-6 select-none shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto border border-amber-300 shadow-md">
+                  <Lock className="w-8 h-8 animate-pulse text-[#2C1A0E]" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-white font-sans">Seat Grid Customization Locked</h3>
-                  <p className="text-xs text-cyan-300/80 max-w-md mx-auto">
+                  <h3 className="text-lg font-black text-[#1A1A1A] font-sans">Seat Grid Customization Locked</h3>
+                  <p className="text-xs text-slate-700 font-bold max-w-md mx-auto">
                     Please complete all 5 dynamic dropdown selections above in sequence (<strong>1. City → 2. Theatre → 3. Movie → 4. Show Date → 5. Show Time Slot</strong>) to unlock seat pricing, layout editing, and 1-click publishing to MongoDB Atlas.
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedCity ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-black border ${selectedCity ? 'bg-[#D90000] text-white border-[#D90000]' : 'bg-slate-100 text-slate-500 border-slate-300'}`}>
                     {selectedCity ? `✓ 1. ${selectedCity}` : '1. City'}
                   </span>
-                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedTheatreId ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-black border ${selectedTheatreId ? 'bg-[#D90000] text-white border-[#D90000]' : 'bg-slate-100 text-slate-500 border-slate-300'}`}>
                     {selectedTheatreId ? `✓ 2. ${activeTheatreObj?.name || 'Theatre'}` : '2. Theatre'}
                   </span>
-                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedSeatMovieId ? 'bg-amber-500/20 text-amber-300 border-amber-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-black border ${selectedSeatMovieId ? 'bg-[#D90000] text-white border-[#D90000]' : 'bg-slate-100 text-slate-500 border-slate-300'}`}>
                     {selectedSeatMovieId ? `✓ 3. ${activeSeatMovieObj?.title || 'Movie'}` : '3. Movie'}
                   </span>
-                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedSchedDate ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-black border ${selectedSchedDate ? 'bg-[#D90000] text-white border-[#D90000]' : 'bg-slate-100 text-slate-500 border-slate-300'}`}>
                     {selectedSchedDate ? `✓ 4. ${selectedSchedDate}` : '4. Date'}
                   </span>
-                  <span className={`px-3 py-1.5 rounded-xl text-xs font-bold border ${selectedShowSlotTime ? 'bg-purple-500/20 text-purple-300 border-purple-400/40' : 'bg-white/5 text-white/40 border-white/10'}`}>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-black border ${selectedShowSlotTime ? 'bg-[#D90000] text-white border-[#D90000]' : 'bg-slate-100 text-slate-500 border-slate-300'}`}>
                     {selectedShowSlotTime ? `✓ 5. ${selectedShowSlotTime}` : '5. Time Slot'}
                   </span>
                 </div>
@@ -4686,39 +4686,39 @@ export const AdminDashboard = ({ onReturnHome }) => {
             ) : (
               <>
                 {/* Interactive Visual Layout Grid & Seat Price Editor */}
-                <div className="p-4 sm:p-6 rounded-3xl bg-black/40 border border-white/10 space-y-5">
+                <div className="p-4 sm:p-6 rounded-3xl bg-[#FFFFFF] border border-slate-300 space-y-5 shadow-sm">
                   <div className="w-full max-w-xl mx-auto text-center shrink-0">
-                    <div className="screen-curve mb-2"></div>
-                    <span className="text-[9px] sm:text-[10px] font-bold tracking-widest text-amber-300/90 uppercase">
+                    <div className="screen-curve mb-2 border-b-4 border-[#2B1B17]"></div>
+                    <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-[#2C1A0E] uppercase">
                       ▲ CINEMATIC SCREEN THIS WAY (FRONT) ▲
                     </span>
                   </div>
 
-                  <div className="w-full overflow-auto max-h-[60vh] sm:max-h-[68vh] p-3 sm:p-5 my-2 rounded-2xl bg-black/30 border border-white/10 flex flex-col items-center select-none">
+                  <div className="w-full overflow-auto max-h-[60vh] sm:max-h-[68vh] p-3 sm:p-5 my-2 rounded-2xl bg-slate-50 border border-slate-300 flex flex-col items-center select-none">
                     <div className="min-w-max flex flex-col items-center justify-center space-y-5 py-2 px-2">
                       {(seatRowsList || []).map((tierObj) => {
                         const rowCurrentPrice = seatPriceInputs[tierObj.row] !== undefined ? seatPriceInputs[tierObj.row] : tierObj.price;
                         return (
-                          <div key={tierObj.row} className="flex flex-col items-center w-full bg-white/5 p-3 rounded-2xl border border-white/10 space-y-2">
+                          <div key={tierObj.row} className="flex flex-col items-center w-full bg-[#DBCEA5] p-3 rounded-2xl border border-[#c5ba92] space-y-2 text-[#1A1A1A] shadow-sm">
                             
                             {/* Seat Row Header with Inline 'Edit Seat Price' Input & Button */}
-                            <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center justify-between gap-3 flex-wrap w-full border-b border-white/10 pb-2">
+                            <div className="text-xs font-black text-[#1A1A1A] uppercase tracking-wider flex items-center justify-between gap-3 flex-wrap w-full border-b border-[#c5ba92] pb-2">
                               <div className="flex items-center gap-2">
-                                <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-black">Row {tierObj.row}</span>
-                                <span className="text-white font-bold">{tierObj.tier}</span>
-                                <span className="text-white/40 font-normal">({tierObj.seatsCount} seats)</span>
+                                <span className="px-2.5 py-1 rounded-lg bg-[#2B1B17] text-white text-xs font-black">Row {tierObj.row}</span>
+                                <span className="text-[#1A1A1A] font-black">{tierObj.tier}</span>
+                                <span className="text-slate-700 font-bold">({tierObj.seatsCount} seats)</span>
                               </div>
 
                               {/* Dynamic Inline Price Editor */}
-                              <div className="flex items-center gap-2 bg-black/60 px-3 py-1.5 rounded-xl border border-amber-400/40">
-                                <span className="text-[11px] text-amber-300 font-bold">Edit Ticket Price (₹):</span>
+                              <div className="flex items-center gap-2 bg-[#FFFFFF] px-3 py-1.5 rounded-xl border border-slate-400 shadow-sm">
+                                <span className="text-[11px] text-[#2C1A0E] font-black">Edit Ticket Price (₹):</span>
                                 <input
                                   type="number"
                                   min={50}
                                   max={5000}
                                   value={rowCurrentPrice}
                                   onChange={e => setSeatPriceInputs({ ...seatPriceInputs, [tierObj.row]: e.target.value })}
-                                  className="w-20 p-1.5 rounded-lg bg-black text-amber-300 font-bold text-xs border border-white/20 text-center"
+                                  className="w-20 p-1.5 rounded-lg bg-[#FFFFFF] text-[#1A1A1A] font-black text-xs border border-slate-400 text-center focus:outline-none focus:border-[#D90000]"
                                 />
                                 <button
                                   type="button"
@@ -4727,14 +4727,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                     setActionSuccess(`Updated Row ${tierObj.row} price to ₹${rowCurrentPrice} in MongoDB Atlas!`);
                                     setTimeout(() => setActionSuccess(''), 3000);
                                   }}
-                                  className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black text-[11px] font-extrabold cursor-pointer shadow-md shadow-amber-500/30"
+                                  className="px-3 py-1.5 rounded-lg bg-[#D90000] hover:bg-[#b00000] text-white text-[11px] font-black cursor-pointer shadow-md"
                                 >
                                   Save Price
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => deleteRowFromScreenLayout(isolatedLayoutKey, tierObj.row)}
-                                  className="text-rose-400 hover:text-rose-200 text-xs font-bold ml-1 cursor-pointer"
+                                  className="text-[#D90000] hover:text-red-800 text-xs font-black ml-1 cursor-pointer"
                                   title="Delete entire row"
                                 >
                                   [Delete]
@@ -4744,7 +4744,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                             {/* Interactive Seat Grid */}
                             <div className="flex items-center justify-center gap-2 sm:gap-3 w-full pt-1">
-                              <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+                              <span className="w-6 text-xs font-black text-[#1A1A1A] text-center shrink-0">{tierObj.row}</span>
 
                               <div className="flex items-center gap-1.5 sm:gap-2.5">
                                 {Array.from({ length: tierObj.seatsCount }).map((_, idx) => {
@@ -4775,12 +4775,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                           setTimeout(() => setActionSuccess(''), 3000);
                                         }
                                       }}
-                                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-mono text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center shrink-0 ${
+                                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl font-mono text-xs sm:text-sm font-black transition-all duration-200 flex items-center justify-center shrink-0 shadow-sm ${
                                         isBooked
-                                          ? 'bg-rose-600 border-2 border-rose-400 text-white font-extrabold shadow-lg shadow-rose-600/30 cursor-not-allowed opacity-90'
+                                          ? 'bg-rose-600 border-2 border-rose-700 text-white cursor-not-allowed opacity-90'
                                           : isAdminBlocked
-                                          ? 'bg-amber-500 border-2 border-amber-400 text-black font-extrabold shadow-lg shadow-amber-500/30 cursor-pointer hover:scale-105'
-                                          : 'bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-400/50 text-emerald-300 font-bold hover:scale-105 cursor-pointer'
+                                          ? 'bg-amber-400 border-2 border-amber-500 text-black cursor-pointer hover:scale-105'
+                                          : 'bg-emerald-600 hover:bg-emerald-700 border border-emerald-800 text-white hover:scale-105 cursor-pointer'
                                       }`}
                                       title={
                                         isBooked
@@ -4796,7 +4796,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                 })}
                               </div>
 
-                              <span className="w-6 text-xs font-bold text-white/50 text-center shrink-0">{tierObj.row}</span>
+                              <span className="w-6 text-xs font-black text-[#1A1A1A] text-center shrink-0">{tierObj.row}</span>
                             </div>
                           </div>
                         );
@@ -4806,27 +4806,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 {/* Add / Customize Seat Row Form */}
-                <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4">
-                  <h3 className="text-sm font-bold text-cyan-300 uppercase">+ Add New Seat Row & Category Tier</h3>
+                <div className="p-6 rounded-3xl bg-[#FFFFFF] border border-slate-300 space-y-4 shadow-sm">
+                  <h3 className="text-sm font-black text-[#1A1A1A] uppercase">+ Add New Seat Row & Category Tier</h3>
                   <form onSubmit={handleAddRowForm} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Row Letter (e.g. A, H, K) *</label>
-                      <input type="text" maxLength={2} required placeholder="Row Letter" value={newRowChar} onChange={e => setNewRowChar(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white uppercase font-bold" />
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Row Letter (e.g. A, H, K) *</label>
+                      <input type="text" maxLength={2} required placeholder="Row Letter" value={newRowChar} onChange={e => setNewRowChar(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] uppercase font-bold focus:outline-none focus:border-[#D90000]" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Category / Tier Name *</label>
-                      <input type="text" required placeholder="e.g. Executive Recliner" value={newRowTier} onChange={e => setNewRowTier(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white" />
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Category / Tier Name *</label>
+                      <input type="text" required placeholder="e.g. Executive Recliner" value={newRowTier} onChange={e => setNewRowTier(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Ticket Price (₹) *</label>
-                      <input type="number" required value={newRowPrice} onChange={e => setNewRowPrice(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Ticket Price (₹) *</label>
+                      <input type="number" required value={newRowPrice} onChange={e => setNewRowPrice(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Number of Seats *</label>
-                      <input type="number" min={1} max={25} required value={newRowSeatsCount} onChange={e => setNewRowSeatsCount(e.target.value)} className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold" />
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Number of Seats *</label>
+                      <input type="number" min={1} max={25} required value={newRowSeatsCount} onChange={e => setNewRowSeatsCount(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                     </div>
                     <div className="flex items-end">
-                      <button type="submit" className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer">
+                      <button type="submit" className="w-full py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer">
                         + Add / Save Row
                       </button>
                     </div>
@@ -4839,15 +4839,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <button
                       type="button"
                       onClick={() => handleSaveIsolatedSeatLayout(true)}
-                      className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-black text-xs shadow-xl shadow-emerald-500/30 flex items-center gap-2 cursor-pointer transition-all"
+                      className="px-6 py-3 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md flex items-center gap-2 cursor-pointer transition-all"
                     >
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4 text-white" />
                       <span>Publish & Approve Seat Layout (MongoDB Atlas)</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSaveIsolatedSeatLayout(false)}
-                      className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer"
+                      className="px-4 py-3 rounded-2xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white font-bold text-xs cursor-pointer shadow-sm"
                     >
                       Save Draft Layout
                     </button>
@@ -4865,7 +4865,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setActionSuccess('Reset show slot layout to standard 4-Tier template.');
                       setTimeout(() => setActionSuccess(''), 3000);
                     }}
-                    className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                   >
                     Reset Standard 4-Tier Template
                   </button>
@@ -4877,22 +4877,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 4: Offers Module CRUD */}
         {activeTab === 'offers' && (
-          <div className="space-y-6">
+          <div className="space-y-6 text-[#1A1A1A]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold font-sans text-white">Offers & Promos Management</h1>
-                <p className="text-xs text-amber-300">Control animated slide show banners & bank coupon cards</p>
+                <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">Offers & Promos Management</h1>
+                <p className="text-xs text-slate-800 font-semibold mt-1">Control animated slide show banners & bank coupon cards</p>
               </div>
 
               {/* Sub-Tab Switcher */}
-              <div className="flex gap-2 p-1 rounded-2xl glass-panel border border-white/10">
+              <div className="flex gap-2 p-1 rounded-2xl bg-[#DBCEA5] border border-[#c5ba92] shadow-sm">
                 <button
                   type="button"
                   onClick={() => setOfferSubTab('banners')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     offerSubTab === 'banners'
-                      ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                      : 'text-white/70 hover:text-white'
+                      ? 'bg-[#D90000] text-white shadow-md'
+                      : 'text-[#1A1A1A] hover:bg-[#FFFFFF]'
                   }`}
                 >
                   🎠 Carousel Slide Banners ({offerBannersList.length})
@@ -4901,10 +4901,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <button
                   type="button"
                   onClick={() => setOfferSubTab('cards')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     offerSubTab === 'cards'
-                      ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20'
-                      : 'text-white/70 hover:text-white'
+                      ? 'bg-[#D90000] text-white shadow-md'
+                      : 'text-[#1A1A1A] hover:bg-[#FFFFFF]'
                   }`}
                 >
                   💳 Bank Coupon Cards ({offersList.length})
@@ -4916,42 +4916,42 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {offerSubTab === 'banners' && (
               <div className="space-y-8">
                 {/* Form to Add / Edit Banner Slide */}
-                <form onSubmit={handleSaveBanner} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
-                  <h3 className="text-lg font-bold text-amber-400">
+                <form onSubmit={handleSaveBanner} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 max-w-4xl shadow-md text-[#1A1A1A]">
+                  <h3 className="text-lg font-black font-sans text-[#1A1A1A]">
                     {editingBannerId ? 'Edit Carousel Banner Slide' : 'Add New Offer Slide Show Banner'}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="md:col-span-2">
-                      <label className="block text-xs font-bold text-white mb-1">Banner Title *</label>
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">Banner Title *</label>
                       <input
                         type="text"
                         required
                         placeholder="e.g. Buy 1 Get 1 FREE on IMAX 3D Movies"
                         value={bannerForm.title}
                         onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
-                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-white mb-1">Promo Code *</label>
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">Promo Code *</label>
                       <input
                         type="text"
                         required
                         placeholder="e.g. BOGOIMAX"
                         value={bannerForm.code}
                         onChange={(e) => setBannerForm({ ...bannerForm, code: e.target.value.toUpperCase() })}
-                        className="w-full p-3 rounded-xl glass-input text-xs text-white font-mono font-bold uppercase"
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-mono font-bold uppercase focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-white mb-1">Category *</label>
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">Category *</label>
                       <select
                         value={bannerForm.category}
                         onChange={(e) => setBannerForm({ ...bannerForm, category: e.target.value })}
-                        className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       >
                         <option value="Movies">Movies</option>
                         <option value="Theatres">Theaters</option>
@@ -4962,47 +4962,47 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-white mb-1">CTA Button Label</label>
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">CTA Button Label</label>
                       <input
                         type="text"
                         placeholder="e.g. Book Movie Ticket"
                         value={bannerForm.ctaText}
                         onChange={(e) => setBannerForm({ ...bannerForm, ctaText: e.target.value })}
-                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-white mb-1">Expiry Date</label>
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">Expiry Date</label>
                       <input
                         type="text"
                         placeholder="e.g. 2026-12-31"
                         value={bannerForm.expiryDate}
                         onChange={(e) => setBannerForm({ ...bannerForm, expiryDate: e.target.value })}
-                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
 
                     <div className="md:col-span-3">
-                      <label className="block text-xs font-bold text-white mb-1">Banner Image URL *</label>
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">Banner Image URL *</label>
                       <input
                         type="url"
                         required
                         placeholder="https://images.unsplash.com/..."
                         value={bannerForm.image}
                         onChange={(e) => setBannerForm({ ...bannerForm, image: e.target.value })}
-                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
 
                     <div className="md:col-span-3">
-                      <label className="block text-xs font-bold text-white mb-1">Tagline / Description</label>
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">Tagline / Description</label>
                       <input
                         type="text"
                         placeholder="Enter catchy offer description..."
                         value={bannerForm.tagline}
                         onChange={(e) => setBannerForm({ ...bannerForm, tagline: e.target.value })}
-                        className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                        className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
                   </div>
@@ -5015,14 +5015,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           setEditingBannerId(null);
                           setBannerForm({ title: '', tagline: '', code: '', category: 'Movies', image: '', expiryDate: '2026-12-31', ctaText: 'Claim Offer', ctaLink: 'movies' });
                         }}
-                        className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold cursor-pointer"
+                        className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                       >
                         Cancel Edit
                       </button>
                     )}
                     <button
                       type="submit"
-                      className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                      className="px-6 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer"
                     >
                       {editingBannerId ? 'Update Banner Slide' : 'Publish Banner Slide'}
                     </button>
@@ -5031,24 +5031,24 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 {/* Banner Banners List */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-white">Live Carousel Banners ({(Array.isArray(offerBannersList) ? offerBannersList : []).length})</h3>
+                  <h3 className="text-lg font-black text-[#1A1A1A]">Live Carousel Banners ({(Array.isArray(offerBannersList) ? offerBannersList : []).length})</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {(Array.isArray(offerBannersList) ? offerBannersList : []).map((ban) => (
-                      <div key={ban.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
+                      <div key={ban.id} className="bg-[#DBCEA5] p-5 rounded-3xl border border-[#c5ba92] space-y-3 flex flex-col justify-between shadow-md text-[#1A1A1A]">
                         <div className="flex items-start gap-4">
-                          <img src={ban.image} alt={ban.title} className="w-24 h-20 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
+                          <img src={ban.image} alt={ban.title} className="w-24 h-20 rounded-2xl object-cover border border-slate-300 shrink-0 shadow-sm" />
                           <div className="space-y-1">
-                            <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                            <span className="px-2 py-0.5 rounded bg-[#D90000] text-white font-black text-[10px] uppercase">
                               {ban.category}
                             </span>
-                            <h4 className="text-base font-bold text-white leading-tight">{ban.title}</h4>
-                            <p className="text-xs font-mono font-bold text-amber-400">Code: {ban.code}</p>
-                            <p className="text-[11px] text-white/50">{ban.tagline}</p>
+                            <h4 className="text-base font-black text-[#1A1A1A] leading-tight">{ban.title}</h4>
+                            <p className="text-xs font-mono font-bold text-[#D90000]">Code: {ban.code}</p>
+                            <p className="text-[11px] text-slate-700 font-bold">{ban.tagline}</p>
                           </div>
                         </div>
 
-                        <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
+                        <div className="flex gap-2 justify-end pt-2 border-t border-[#c5ba92]">
                           <button
                             onClick={() => {
                               setEditingBannerId(ban.id);
@@ -5063,14 +5063,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                                 ctaLink: ban.ctaLink || 'movies'
                               });
                             }}
-                            className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                           >
-                            <Edit className="w-3.5 h-3.5" /> Edit
+                            <Edit className="w-3.5 h-3.5 text-white" /> Edit
                           </button>
 
                           <button
                             onClick={() => handleDeleteBanner(ban.id)}
-                            className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-[#D90000] hover:bg-red-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Delete
                           </button>
@@ -5085,43 +5085,43 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* SUB-TAB B: Bank Discount Cards CRUD */}
             {offerSubTab === 'cards' && (
               <div className="space-y-6">
-                <form onSubmit={handleSaveOffer} className="glass-panel p-6 rounded-3xl border border-white/10 max-w-xl space-y-4">
-                  <h3 className="text-base font-bold text-amber-400">
+                <form onSubmit={handleSaveOffer} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] max-w-xl space-y-4 shadow-md text-[#1A1A1A]">
+                  <h3 className="text-base font-black text-[#1A1A1A]">
                     {editingOfferId ? 'Edit Bank Coupon' : 'Create New Bank Coupon & Card Promo'}
                   </h3>
 
                   <div>
-                    <label className="block text-xs font-bold text-white mb-1">Offer Title</label>
-                    <input type="text" required value={offerTitle} onChange={e => setOfferTitle(e.target.value)} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Offer Title</label>
+                    <input type="text" required value={offerTitle} onChange={e => setOfferTitle(e.target.value)} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-white mb-1">Promo Code</label>
-                      <input type="text" required value={offerCode} onChange={e => setOfferCode(e.target.value)} className="w-full p-3 rounded-xl glass-input text-xs text-white uppercase font-bold" />
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">Promo Code</label>
+                      <input type="text" required value={offerCode} onChange={e => setOfferCode(e.target.value)} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] uppercase font-bold focus:outline-none focus:border-[#D90000]" />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-white mb-1">Bank Partner</label>
-                      <input type="text" value={offerBank} onChange={e => setOfferBank(e.target.value)} className="w-full p-3 rounded-xl glass-input text-xs text-white" />
+                      <label className="block text-xs font-black text-[#2C1A0E] mb-1">Bank Partner</label>
+                      <input type="text" value={offerBank} onChange={e => setOfferBank(e.target.value)} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]" />
                     </div>
                   </div>
 
-                  <button type="submit" className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer">
+                  <button type="submit" className="w-full py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer">
                     {editingOfferId ? 'Update Offer & Sync' : 'Publish Offer Live'}
                   </button>
                 </form>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {(Array.isArray(offersList) ? offersList : []).map(off => (
-                    <div key={off.id || off.code} className="glass-panel p-5 rounded-3xl border border-white/10 flex items-center justify-between gap-4">
+                    <div key={off.id || off.code} className="bg-[#DBCEA5] p-5 rounded-3xl border border-[#c5ba92] flex items-center justify-between gap-4 shadow-md text-[#1A1A1A]">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-amber-400 text-sm">{off.code}</span>
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">{off.bank}</span>
+                          <span className="font-mono font-black text-[#D90000] text-sm">{off.code}</span>
+                          <span className="px-2 py-0.5 rounded bg-[#2C5745]/20 text-[#2C5745] text-[10px] font-black">{off.bank}</span>
                         </div>
-                        <h4 className="text-xs font-bold text-white mt-1">{off.title}</h4>
+                        <h4 className="text-xs font-black text-[#1A1A1A] mt-1">{off.title}</h4>
                       </div>
-                      <button onClick={() => handleDeleteOffer(off.id)} className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer">
+                      <button onClick={() => handleDeleteOffer(off.id)} className="p-2 rounded-xl bg-[#D90000] text-white hover:bg-red-700 transition-colors shadow-sm">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -5135,29 +5135,29 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 5: WhatsApp-Style Live Support Chat Desk */}
         {activeTab === 'support' && (
-          <div className="space-y-4">
-            <h1 className="text-3xl font-bold font-sans text-white">WhatsApp Live Support Desk</h1>
+          <div className="space-y-4 text-[#1A1A1A]">
+            <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">WhatsApp Live Support Desk</h1>
 
             {([...(supportMessages || [])].sort((a, b) => new Date(a.createdAt || a.timestamp || 0) - new Date(b.createdAt || b.timestamp || 0))).map(msg => (
-              <div key={msg.id} className="glass-panel p-5 rounded-3xl border border-cyan-400/30 space-y-3">
+              <div key={msg.id} className="bg-[#DBCEA5] p-5 rounded-3xl border border-[#c5ba92] space-y-3 shadow-md text-[#1A1A1A]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-cyan-300">{msg.userName} ({msg.userEmail})</span>
-                    <div className="text-[10px] text-white/40">{msg.subject} • {msg.createdAt}</div>
+                    <span className="text-xs font-black text-[#1A1A1A]">{msg.userName} ({msg.userEmail})</span>
+                    <div className="text-[10px] text-slate-700 font-bold">{msg.subject} • {msg.createdAt}</div>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${msg.status === 'replied' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-black ${msg.status === 'replied' ? 'bg-[#2C5745]/20 text-[#2C5745]' : 'bg-[#D90000]/20 text-[#D90000]'}`}>
                     {msg.status}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-xs text-white">
+                <div className="p-3 rounded-2xl bg-[#FFFFFF] border border-slate-300 text-xs text-[#1A1A1A] font-bold shadow-sm">
                   "{msg.message}"
                 </div>
 
                 {msg.reply ? (
-                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/30 text-xs text-emerald-200 flex items-center justify-between">
+                  <div className="p-3 rounded-2xl bg-[#2C5745]/10 border border-[#2C5745]/30 text-xs text-[#2C5745] font-bold flex items-center justify-between">
                     <span><strong>Admin Reply Sent:</strong> {msg.reply}</span>
-                    <span className="text-emerald-300 font-bold">✓✓</span>
+                    <span className="text-[#2C5745] font-black">✓✓</span>
                   </div>
                 ) : (
                   <div className="flex gap-2 pt-2">
@@ -5166,11 +5166,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       placeholder="Type instant reply to customer..."
                       value={replyTextMap[msg.id] || ''}
                       onChange={(e) => setReplyTextMap({ ...replyTextMap, [msg.id]: e.target.value })}
-                      className="flex-1 px-3 py-2 rounded-xl glass-input text-xs text-white"
+                      className="flex-1 px-3 py-2 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     />
                     <button
                       onClick={() => handleReplySubmit(msg.id)}
-                      className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs flex items-center gap-1"
+                      className="px-4 py-2 rounded-xl bg-[#2C5745] hover:bg-emerald-800 text-white font-black text-xs flex items-center gap-1 shadow-sm"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>Send Reply</span>
@@ -5184,34 +5184,34 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 7: Theatre & Showtimes Management CRUD */}
         {activeTab === 'theatres' && (
-          <div className="space-y-8">
-            <h2 className="text-2xl font-bold font-sans text-white">Theatre & Showtimes Management</h2>
+          <div className="space-y-8 text-[#1A1A1A]">
+            <h2 className="text-2xl font-black font-sans text-[#1A1A1A]">Theatre & Showtimes Management</h2>
 
             {/* Section A: Add / Edit Theatre Form */}
-            <form onSubmit={handleSaveTheatre} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
-              <h3 className="text-lg font-bold text-amber-400">
+            <form onSubmit={handleSaveTheatre} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 max-w-4xl shadow-md text-[#1A1A1A]">
+              <h3 className="text-lg font-black font-sans text-[#1A1A1A]">
                 {editingTheatreId ? 'Edit Multiplex Details' : 'Add New Multiplex Venue'}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Theatre Name *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Theatre Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. PVR Luxe, Nexus Mall"
                     value={theatreForm.name}
                     onChange={(e) => setTheatreForm({ ...theatreForm, name: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">City *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">City *</label>
                   <select
                     value={theatreForm.city || 'Surat'}
                     onChange={(e) => setTheatreForm({ ...theatreForm, city: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     {GUJARAT_CITIES.map(c => (
                       <option key={c} value={c}>{c}</option>
@@ -5220,83 +5220,83 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">State</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">State</label>
                   <input
                     type="text"
                     placeholder="e.g. Maharashtra"
                     value={theatreForm.state}
                     onChange={(e) => setTheatreForm({ ...theatreForm, state: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-bold text-white mb-1">Address *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Address *</label>
                   <input
                     type="text"
                     required
                     placeholder="Full street address..."
                     value={theatreForm.address}
                     onChange={(e) => setTheatreForm({ ...theatreForm, address: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Facilities / Amenities (Comma Separated)</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Facilities / Amenities (Comma Separated)</label>
                   <input
                     type="text"
                     placeholder="VIP Recliners, IMAX 3D, Dolby Atmos"
                     value={theatreForm.facilities}
                     onChange={(e) => setTheatreForm({ ...theatreForm, facilities: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Screens Count</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Screens Count</label>
                   <input
                     type="number"
                     value={theatreForm.screensCount}
                     onChange={(e) => setTheatreForm({ ...theatreForm, screensCount: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Total Seat Capacity</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Total Seat Capacity</label>
                   <input
                     type="number"
                     value={theatreForm.totalSeats}
                     onChange={(e) => setTheatreForm({ ...theatreForm, totalSeats: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-white mb-1">Banner Image URL</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Banner Image URL</label>
                   <input
                     type="url"
                     placeholder="https://images.unsplash.com/..."
                     value={theatreForm.image}
                     onChange={(e) => setTheatreForm({ ...theatreForm, image: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Logo URL</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Logo URL</label>
                   <input
                     type="url"
                     placeholder="https://images.unsplash.com/..."
                     value={theatreForm.logo}
                     onChange={(e) => setTheatreForm({ ...theatreForm, logo: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-bold text-amber-300 mb-1 flex items-center gap-1">
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1 flex items-center gap-1">
                     <span>📍 Google Maps Embed URL / Location Link</span>
                   </label>
                   <input
@@ -5304,7 +5304,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     placeholder="Paste Google Maps embed iframe URL or share link (e.g. https://maps.app.goo.gl/...)"
                     value={theatreForm.mapLocationUrl || ''}
                     onChange={(e) => setTheatreForm({ ...theatreForm, mapLocationUrl: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
               </div>
@@ -5317,14 +5317,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setEditingTheatreId(null);
                       setTheatreForm({ name: '', city: 'Mumbai', state: 'Maharashtra', address: '', logo: '', image: '', facilities: 'VIP Recliners, IMAX 3D', screensCount: 6, totalSeats: 200 });
                     }}
-                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold"
+                    className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                   >
                     Cancel Edit
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20"
+                  className="px-6 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer"
                 >
                   {editingTheatreId ? 'Update Theatre' : 'Add Theatre to System'}
                 </button>
@@ -5332,33 +5332,33 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </form>
 
             {/* Section A3: Dependent Date-Wise Hall & Price Slot Manager (3-Step Workflow) */}
-            <div className="glass-panel p-6 rounded-3xl border border-cyan-400/30 space-y-6 max-w-4xl">
-              <div className="border-b border-white/10 pb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-6 max-w-4xl shadow-md text-[#1A1A1A]">
+              <div className="border-b border-[#c5ba92] pb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div>
-                  <h3 className="text-lg font-bold font-sans text-white flex items-center gap-2">
+                  <h3 className="text-lg font-black font-sans text-[#1A1A1A] flex items-center gap-2">
                     <span>🏛️ Dependent Date-Wise Hall & Price Slot Manager</span>
                   </h3>
-                  <p className="text-xs text-cyan-300">Step 1: Add Date Slots ➔ Step 2: Select Date Chip Context ➔ Step 3: Configure Date-Wise Hall & Price</p>
+                  <p className="text-xs text-slate-800 font-semibold mt-1">Step 1: Add Date Slots ➔ Step 2: Select Date Chip Context ➔ Step 3: Configure Date-Wise Hall & Price</p>
                 </div>
-                <div className="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-xs font-bold font-mono">
+                <div className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] text-[#1A1A1A] border border-slate-300 text-xs font-black font-mono shadow-sm">
                   Active Date: {activeConfigDate || 'None'}
                 </div>
               </div>
 
               {/* Step 1: Add Date Slot Manager */}
-              <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/10">
-                <div className="text-xs font-bold text-cyan-300 uppercase tracking-wider">Step 1: Add Available Date Slots for Theatre</div>
+              <div className="space-y-3 bg-[#FFFFFF] p-4 rounded-2xl border border-slate-300 shadow-sm">
+                <div className="text-xs font-black text-[#1A1A1A] uppercase tracking-wider">Step 1: Add Available Date Slots for Theatre</div>
                 <form onSubmit={handleAddTheaterDateSlot} className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="date"
                     required
                     value={newTheaterDateInput}
                     onChange={e => setNewTheaterDateInput(e.target.value)}
-                    className="p-3 rounded-xl glass-input text-xs text-white font-bold cursor-pointer flex-1"
+                    className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold cursor-pointer flex-1 focus:outline-none focus:border-[#D90000]"
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 shrink-0 cursor-pointer"
+                    className="px-6 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shrink-0 cursor-pointer shadow-md"
                   >
                     + Add Date Slot
                   </button>
@@ -5366,21 +5366,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 {/* Render Added Date Slots as Selectable Tab Chips */}
                 <div className="space-y-1.5 pt-2">
-                  <label className="text-[11px] font-bold text-white/70 block">Select Date Chip to Configure Halls & Pricing:</label>
+                  <label className="text-[11px] font-black text-[#2C1A0E] block">Select Date Chip to Configure Halls & Pricing:</label>
                   <div className="flex flex-wrap gap-2">
                     {(configuredTheaterDates || []).map(dStr => (
                       <button
                         key={dStr}
                         type="button"
                         onClick={() => setActiveConfigDate(dStr)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                        className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
                           activeConfigDate === dStr
-                            ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-105'
-                            : 'bg-white/10 text-white hover:bg-white/20'
+                            ? 'bg-[#D90000] text-white shadow-md scale-105'
+                            : 'bg-[#FFFFFF] text-[#1A1A1A] border border-slate-300 hover:bg-slate-100'
                         }`}
                       >
                         <span>📅 {dStr}</span>
-                        {activeConfigDate === dStr && <span className="w-2 h-2 rounded-full bg-black animate-ping"></span>}
+                        {activeConfigDate === dStr && <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>}
                       </button>
                     ))}
                   </div>
@@ -5389,19 +5389,19 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               {/* Step 2: Active Date Context & Hall/Price Slot Form */}
               {activeConfigDate && (
-                <div className="space-y-4 pt-2 border-t border-white/10">
-                  <div className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                <div className="space-y-4 pt-2 border-t border-[#c5ba92]">
+                  <div className="text-xs font-black text-[#1A1A1A] uppercase tracking-wider flex items-center gap-2">
                     <span>Step 2: Configure Hall, Screen & Price for Date:</span>
-                    <span className="underline font-mono text-white text-sm">{activeConfigDate}</span>
+                    <span className="underline font-mono text-[#D90000] text-sm">{activeConfigDate}</span>
                   </div>
 
-                  <form onSubmit={handleSaveHallSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <form onSubmit={handleSaveHallSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-[#FFFFFF] p-4 rounded-2xl border border-slate-300 shadow-sm">
                     <div>
-                      <label className="block text-[11px] font-bold text-cyan-300 mb-1">Target Theatre *</label>
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Target Theatre *</label>
                       <select
                         value={hallSlotForm.theatreId || (Array.isArray(theatresList) ? theatresList[0]?.id : '') || ''}
                         onChange={e => setHallSlotForm({ ...hallSlotForm, theatreId: e.target.value })}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                        className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       >
                         {(Array.isArray(theatresList) ? theatresList : []).map(t => (
                           <option key={t.id} value={t.id}>{t.name} ({t.city})</option>
@@ -5410,11 +5410,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-cyan-300 mb-1">Target Movie *</label>
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Target Movie *</label>
                       <select
                         value={hallSlotForm.movieId || (Array.isArray(moviesList) ? moviesList[0]?.id : '') || ''}
                         onChange={e => setHallSlotForm({ ...hallSlotForm, movieId: e.target.value })}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                        className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       >
                         {(Array.isArray(moviesList) ? moviesList : []).map(m => (
                           <option key={m.id} value={m.id}>{m.title}</option>
@@ -5423,23 +5423,23 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Hall Name / Number *</label>
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Hall Name / Number *</label>
                       <input
                         type="text"
                         required
                         placeholder="e.g. Hall 1 (IMAX Laser)"
                         value={hallSlotForm.hallName}
                         onChange={e => setHallSlotForm({ ...hallSlotForm, hallName: e.target.value })}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                        className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Screen Format *</label>
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Screen Format *</label>
                       <select
                         value={hallSlotForm.format}
                         onChange={e => setHallSlotForm({ ...hallSlotForm, format: e.target.value })}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                        className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       >
                         <option value="IMAX 3D">IMAX 3D</option>
                         <option value="Dolby Atmos">Dolby Atmos</option>
@@ -5450,32 +5450,32 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Ticket Price (₹) *</label>
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Ticket Price (₹) *</label>
                       <input
                         type="number"
                         required
                         value={hallSlotForm.price}
                         onChange={e => setHallSlotForm({ ...hallSlotForm, price: e.target.value })}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                        className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Show Time *</label>
+                      <label className="block text-[11px] font-black text-[#2C1A0E] mb-1">Show Time *</label>
                       <input
                         type="text"
                         required
                         placeholder="e.g. 10:30 AM"
                         value={hallSlotForm.time}
                         onChange={e => setHallSlotForm({ ...hallSlotForm, time: e.target.value })}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-bold"
+                        className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                       />
                     </div>
 
                     <div className="sm:col-span-2 lg:col-span-3 flex justify-end pt-2">
                       <button
                         type="submit"
-                        className="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 cursor-pointer flex items-center gap-2"
+                        className="px-6 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer flex items-center gap-2"
                       >
                         <span>💾 Save Hall & Price Slot for {activeConfigDate}</span>
                       </button>
@@ -5498,27 +5498,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                     return (
                       <div className="space-y-2 pt-2">
-                        <div className="text-xs font-bold text-white/80 flex items-center justify-between">
+                        <div className="text-xs font-black text-[#1A1A1A] flex items-center justify-between">
                           <span>
-                            Configured Halls for <strong className="text-cyan-300">{activeThName}</strong> on <span className="text-amber-400">{activeConfigDate}</span> ({activeHalls.length} Halls Available):
+                            Configured Halls for <strong className="text-[#D90000]">{activeThName}</strong> on <span className="text-[#2C1A0E]">{activeConfigDate}</span> ({activeHalls.length} Halls Available):
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           {(Array.isArray(activeHalls) ? activeHalls : []).map((h, i) => (
-                            <div key={h.id || i} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs hover:border-cyan-400/40 transition-all">
+                            <div key={h.id || i} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-300 flex items-center justify-between text-xs hover:border-[#D90000] transition-all shadow-sm">
                               <div>
-                                <div className="font-bold text-white">{h.hallName}</div>
-                                <div className="text-[10px] text-cyan-300">{h.format} • {h.time}</div>
-                                {h.movieTitle && <div className="text-[9px] text-amber-300/80">Movie: {h.movieTitle}</div>}
+                                <div className="font-black text-[#1A1A1A]">{h.hallName}</div>
+                                <div className="text-[10px] text-[#D90000] font-black">{h.format} • {h.time}</div>
+                                {h.movieTitle && <div className="text-[9px] text-slate-700 font-bold">Movie: {h.movieTitle}</div>}
                               </div>
                               <div className="text-right">
-                                <div className="font-extrabold text-emerald-400 text-sm">₹{h.price}</div>
-                                <div className="text-[9px] text-white/40">Capacity: {h.totalSeats || 120}</div>
+                                <div className="font-black text-[#2C5745] text-sm">₹{h.price}</div>
+                                <div className="text-[9px] text-slate-600 font-semibold">Capacity: {h.totalSeats || 120}</div>
                               </div>
                             </div>
                           ))}
                           {activeHalls.length === 0 && (
-                            <div className="col-span-full p-4 rounded-xl bg-white/5 border border-white/10 text-xs text-white/40 italic text-center">
+                            <div className="col-span-full p-4 rounded-xl bg-[#FFFFFF] border border-slate-300 text-xs text-slate-700 font-semibold italic text-center">
                               No halls configured for {activeThName} on {activeConfigDate} yet. Use the form above to add a hall.
                             </div>
                           )}
@@ -5532,16 +5532,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Section C: Existing Theatres Directory */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-white">Configured Multiplex Venues ({(Array.isArray(theatresList) ? theatresList : []).length})</h3>
+              <h3 className="text-lg font-black text-[#1A1A1A]">Configured Multiplex Venues ({(Array.isArray(theatresList) ? theatresList : []).length})</h3>
 
               {(Array.isArray(theatresList) ? theatresList : []).map(t => (
-                <div key={t.id} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                <div key={t.id} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A]">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#c5ba92] pb-4">
                     <div className="flex items-center gap-4">
-                      <img src={t.image || t.logo} alt={t.name} className="w-16 h-16 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
+                      <img src={t.image || t.logo} alt={t.name} className="w-16 h-16 rounded-2xl object-cover border border-slate-300 shrink-0 shadow-sm" />
                       <div>
-                        <h4 className="text-lg font-bold text-white">{t.name}</h4>
-                        <p className="text-xs text-white/60">{t.address} • <strong className="text-amber-300">{t.city}</strong></p>
+                        <h4 className="text-lg font-black text-[#1A1A1A]">{t.name}</h4>
+                        <p className="text-xs text-slate-800 font-semibold">{t.address} • <strong className="text-[#D90000]">{t.city}</strong></p>
                       </div>
                     </div>
 
@@ -5562,14 +5562,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             totalSeats: t.totalSeats || 200
                           });
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                       >
-                        <Edit className="w-3.5 h-3.5" /> Edit
+                        <Edit className="w-3.5 h-3.5 text-white" /> Edit
                       </button>
 
                       <button
                         onClick={() => handleDeleteTheatre(t.id)}
-                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1"
+                        className="px-3 py-1.5 rounded-xl bg-[#D90000] hover:bg-red-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Delete
                       </button>
@@ -5615,20 +5615,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                     return (
                       <div>
-                        <h5 className="text-xs font-bold text-white/70 mb-2 flex items-center justify-between">
+                        <h5 className="text-xs font-black text-[#1A1A1A] mb-2 flex items-center justify-between">
                           <span>Scheduled Showtimes & Date-Wise Halls ({venueHallsList.length}):</span>
                         </h5>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                           {(Array.isArray(venueHallsList) ? venueHallsList : []).map((slot, idx) => (
-                            <div key={slot.id || idx} className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs hover:border-cyan-400/40 transition-all">
+                            <div key={slot.id || idx} className="p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-300 flex items-center justify-between text-xs hover:border-[#D90000] transition-all shadow-sm">
                               <div>
-                                <div className="font-bold text-amber-300">{slot.title}</div>
-                                <div className="text-[10px] text-cyan-300 font-semibold">{slot.hallName ? `${slot.hallName} • ` : ''}{slot.format} • {slot.time}</div>
-                                <div className="text-[9px] text-white/50">📅 Date: {slot.date} • ₹{slot.price}</div>
+                                <div className="font-black text-[#1A1A1A]">{slot.title}</div>
+                                <div className="text-[10px] text-[#D90000] font-black">{slot.hallName ? `${slot.hallName} • ` : ''}{slot.format} • {slot.time}</div>
+                                <div className="text-[9px] text-slate-700 font-bold">📅 Date: {slot.date} • ₹{slot.price}</div>
                               </div>
                               <button
                                 onClick={() => slot.isHall ? handleDeleteHallSlot(t.id, slot.id, slot.date) : handleDeleteShowSlot(t.id, slot.id)}
-                                className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white transition-all cursor-pointer"
+                                className="p-1.5 rounded-lg bg-[#D90000] hover:bg-red-700 text-white transition-all cursor-pointer shadow-sm"
                                 title="Delete Slot"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -5636,7 +5636,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             </div>
                           ))}
                           {venueHallsList.length === 0 && (
-                            <div className="col-span-full p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-white/40 italic text-center">
+                            <div className="col-span-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-300 text-xs text-slate-700 font-semibold italic text-center">
                               No scheduled showtimes or date-wise halls configured for this venue yet.
                             </div>
                           )}
@@ -5654,25 +5654,25 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 8: Events & Concerts Management (MongoDB Atlas Persistence) */}
         {activeTab === 'events' && (
-          <div className="space-y-8 animate-fade-in pb-10">
+          <div className="space-y-8 animate-fade-in pb-10 text-[#1A1A1A]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold font-sans text-white flex items-center gap-2">
+                <h1 className="text-2xl md:text-3xl font-black font-sans text-[#1A1A1A] flex items-center gap-2">
                   <span>🎪 Events & Concerts Management</span>
                 </h1>
-                <p className="text-xs text-amber-300">Create, edit, schedule show slots & manage live events synced directly with MongoDB Atlas</p>
+                <p className="text-xs text-slate-800 font-semibold mt-1">Create, edit, schedule show slots & manage live events synced directly with MongoDB Atlas</p>
               </div>
 
-              <div className="px-4 py-2 rounded-2xl glass-panel border border-cyan-400/30 text-xs font-bold text-cyan-300">
+              <div className="px-4 py-2 rounded-2xl bg-[#DBCEA5] border border-[#c5ba92] text-xs font-black text-[#1A1A1A] shadow-sm">
                 Total Events: {eventsList.length}
               </div>
             </div>
 
             {/* Section A: Create / Edit Event Form */}
-            <form onSubmit={handleSaveEvent} className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6 max-w-5xl shadow-2xl">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                <h3 className="text-lg font-bold text-amber-400 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-amber-400" />
+            <form onSubmit={handleSaveEvent} className="bg-[#DBCEA5] p-6 sm:p-8 rounded-3xl border border-[#c5ba92] space-y-6 max-w-5xl shadow-md text-[#1A1A1A]">
+              <div className="flex items-center justify-between border-b border-[#c5ba92] pb-4">
+                <h3 className="text-lg font-black text-[#1A1A1A] flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#D90000]" />
                   <span>{editingEventId ? 'Edit Event Details' : 'Create New Live Event'}</span>
                 </h3>
                 {editingEventId && (
@@ -5688,7 +5688,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         termsAndConditions: 'Non-refundable ticket. Entry permits 1 person per ticket.', bookingStatus: true
                       });
                     }}
-                    className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white/70 cursor-pointer"
+                    className="px-3 py-1 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-xs font-bold text-white cursor-pointer shadow-sm"
                   >
                     Cancel Edit
                   </button>
@@ -5698,23 +5698,23 @@ export const AdminDashboard = ({ onReturnHome }) => {
               {/* Grid 1: Basic Event Info */}
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-white/80 mb-1">Event Title / Name *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Event Title / Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Arijit Singh Live Concert 2027"
                     value={eventForm.title}
                     onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Category *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Category *</label>
                   <select
                     value={eventForm.category}
                     onChange={(e) => setEventForm({ ...eventForm, category: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14] font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="Live Concert">Live Concert</option>
                     <option value="Standup Comedy">Standup Comedy</option>
@@ -5728,11 +5728,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Badge / Tag</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Badge / Tag</label>
                   <select
                     value={eventForm.badge || 'LIVE'}
                     onChange={(e) => setEventForm({ ...eventForm, badge: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14] font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="LIVE">🔥 LIVE</option>
                     <option value="SELLING FAST">⚡ SELLING FAST</option>
@@ -5744,22 +5744,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Languages (Comma separated)</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Languages (Comma separated)</label>
                   <input
                     type="text"
                     placeholder="e.g. English, Hindi, Gujarati"
                     value={eventForm.languages}
                     onChange={(e) => setEventForm({ ...eventForm, languages: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Age Rating / Certificate</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Age Rating / Certificate</label>
                   <select
                     value={eventForm.ageRating || 'UA 16+'}
                     onChange={(e) => setEventForm({ ...eventForm, ageRating: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="All Ages">All Ages (Family Friendly)</option>
                     <option value="UA 16+">UA 16+ (Under 16 with Adult)</option>
@@ -5769,11 +5769,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">City Filter *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">City Filter *</label>
                   <select
                     value={eventForm.city || 'Surat'}
                     onChange={(e) => setEventForm({ ...eventForm, city: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="All">All Cities</option>
                     {GUJARAT_CITIES.map(c => (
@@ -5783,130 +5783,130 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Ticket Price per Person (₹) *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Ticket Price per Person (₹) *</label>
                   <input
                     type="number"
                     required
                     min={0}
                     value={eventForm.price}
                     onChange={(e) => setEventForm({ ...eventForm, price: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold text-emerald-400"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
               </div>
 
               {/* Grid 2: Venue & Location */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-white/10 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-[#c5ba92] pt-4">
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Venue Name *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Venue Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Indoor Stadium, Dumas Road"
                     value={eventForm.venue}
                     onChange={(e) => setEventForm({ ...eventForm, venue: e.target.value, address: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Full Venue Address</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Full Venue Address</label>
                   <input
                     type="text"
                     placeholder="e.g. Near VR Mall, Dumas Road, Surat - 395007"
                     value={eventForm.address}
                     onChange={(e) => setEventForm({ ...eventForm, address: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Google Maps Embed / Location Link</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Google Maps Embed / Location Link</label>
                   <input
                     type="text"
                     placeholder="https://maps.google.com/?q=..."
                     value={eventForm.mapLocationUrl}
                     onChange={(e) => setEventForm({ ...eventForm, mapLocationUrl: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-mono text-[11px]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
               </div>
 
               {/* Grid 3: Media & Capacity */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-white/10 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-[#c5ba92] pt-4">
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Thumbnail Image URL</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Thumbnail Image URL</label>
                   <input
                     type="url"
                     placeholder="https://images.unsplash.com/..."
                     value={eventForm.image}
                     onChange={(e) => setEventForm({ ...eventForm, image: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Backdrop Banner URL</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Backdrop Banner URL</label>
                   <input
                     type="url"
                     placeholder="https://images.unsplash.com/..."
                     value={eventForm.bannerUrl}
                     onChange={(e) => setEventForm({ ...eventForm, bannerUrl: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Total Capacity (Seats/Passes)</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Total Capacity (Seats/Passes)</label>
                   <input
                     type="number"
                     min={10}
                     value={eventForm.totalCapacity}
                     onChange={(e) => setEventForm({ ...eventForm, totalCapacity: e.target.value, availableSeats: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
               </div>
 
               {/* Descriptions & Terms */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/10 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#c5ba92] pt-4">
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Detailed Synopsis / Description</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Detailed Synopsis / Description</label>
                   <textarea
                     rows={3}
                     placeholder="Enter event highlights, artist lineup, schedule details..."
                     value={eventForm.description}
                     onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   ></textarea>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Terms & Conditions</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Terms & Conditions</label>
                   <textarea
                     rows={3}
                     placeholder="Enter entry rules, age restrictions, refund policy..."
                     value={eventForm.termsAndConditions}
                     onChange={(e) => setEventForm({ ...eventForm, termsAndConditions: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   ></textarea>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between pt-4 border-t border-[#c5ba92]">
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={eventForm.bookingStatus !== false}
                     onChange={(e) => setEventForm({ ...eventForm, bookingStatus: e.target.checked })}
-                    className="w-4 h-4 rounded text-amber-500 bg-black accent-amber-500"
+                    className="w-4 h-4 rounded text-[#D90000] accent-[#D90000]"
                   />
-                  <span className="text-xs font-bold text-white">Enable Active Ticket Bookings</span>
+                  <span className="text-xs font-black text-[#1A1A1A]">Enable Active Ticket Bookings</span>
                 </label>
 
                 <button
                   type="submit"
-                  className="px-8 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 cursor-pointer flex items-center gap-2"
+                  className="px-8 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer shadow-md flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   <span>{editingEventId ? 'Update Event & Sync to Atlas' : 'Publish Event & Save to MongoDB Atlas'}</span>
@@ -5915,26 +5915,26 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </form>
 
             {/* Section B: Event Dates, Time & Slot Schedule Manager */}
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-cyan-400/30 space-y-6 max-w-5xl shadow-2xl">
-              <div className="border-b border-white/10 pb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="bg-[#DBCEA5] p-6 sm:p-8 rounded-3xl border border-[#c5ba92] space-y-6 max-w-5xl shadow-md text-[#1A1A1A]">
+              <div className="border-b border-[#c5ba92] pb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-bold font-sans text-white flex items-center gap-2">
+                  <h3 className="text-lg font-black font-sans text-[#1A1A1A] flex items-center gap-2">
                     <span>📅 Event Dates, Time & Slot Schedule Manager</span>
                   </h3>
-                  <p className="text-xs text-cyan-300">Add custom date/time slots, hall stages, seat categories (VIP, Gold, Silver), and ticket prices directly into MongoDB Atlas</p>
+                  <p className="text-xs text-slate-800 font-semibold mt-1">Add custom date/time slots, hall stages, seat categories (VIP, Gold, Silver), and ticket prices directly into MongoDB Atlas</p>
                 </div>
-                <div className="px-3.5 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 text-xs font-bold font-mono">
+                <div className="px-3.5 py-1.5 rounded-xl bg-[#FFFFFF] text-[#1A1A1A] border border-slate-300 text-xs font-black font-mono shadow-sm">
                   Direct MongoDB $push Sync
                 </div>
               </div>
 
-              <form onSubmit={handleSaveEventSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-white/5 p-5 rounded-2xl border border-white/10">
+              <form onSubmit={handleSaveEventSlot} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-[#FFFFFF] p-5 rounded-2xl border border-slate-300 shadow-sm">
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Target Event *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Target Event *</label>
                   <select
                     value={eventSlotEventId || (Array.isArray(eventsList) ? eventsList[0]?.id : '') || ''}
                     onChange={(e) => setEventSlotEventId(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     {(Array.isArray(eventsList) ? eventsList : []).map(ev => (
                       <option key={ev.id} value={ev.id}>{ev.title} ({ev.city})</option>
@@ -5943,56 +5943,56 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Event Slot Date *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Event Slot Date *</label>
                   <input
                     type="date"
                     required
                     value={eventSlotDate}
                     onChange={(e) => setEventSlotDate(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold cursor-pointer"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold cursor-pointer focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Start Time *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Start Time *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. 07:00 PM"
                     value={eventSlotStartTime}
                     onChange={(e) => setEventSlotStartTime(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">End Time</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">End Time</label>
                   <input
                     type="text"
                     placeholder="e.g. 10:00 PM"
                     value={eventSlotEndTime}
                     onChange={(e) => setEventSlotEndTime(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Screen / Hall Stage</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Screen / Hall Stage</label>
                   <input
                     type="text"
                     placeholder="e.g. Main Concert Stage"
                     value={eventSlotScreen}
                     onChange={(e) => setEventSlotScreen(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Seat Category / Tier</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Seat Category / Tier</label>
                   <select
                     value={eventSlotTier}
                     onChange={(e) => setEventSlotTier(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="VIP">VIP Lounge Pass</option>
                     <option value="Gold">Gold Category</option>
@@ -6003,30 +6003,30 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Slot Ticket Price (₹) *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Slot Ticket Price (₹) *</label>
                   <input
                     type="number"
                     required
                     value={eventSlotPrice}
                     onChange={(e) => setEventSlotPrice(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold text-emerald-400"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white/80 mb-1">Slot Seat Capacity</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Slot Seat Capacity</label>
                   <input
                     type="number"
                     value={eventSlotCapacity}
                     onChange={(e) => setEventSlotCapacity(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white font-bold"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div className="sm:col-span-2 lg:col-span-3 flex justify-end items-end pt-1">
                   <button
                     type="submit"
-                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs shadow-md shadow-cyan-500/20 cursor-pointer flex items-center gap-2"
+                    className="px-6 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Push Showtime Slot to Event (MongoDB Atlas)</span>
@@ -6037,7 +6037,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Section C: Live Events Directory Cards View */}
             <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <h3 className="text-xl font-black text-[#1A1A1A] flex items-center gap-2">
                 <span>Configured Live Events ({(Array.isArray(eventsList) ? eventsList : []).length})</span>
               </h3>
 
@@ -6047,44 +6047,44 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   const slotsCount = Object.values(slotsMap).filter(Array.isArray).flat().length;
 
                   return (
-                    <div key={ev.id} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 shadow-xl flex flex-col justify-between">
+                    <div key={ev.id} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A] flex flex-col justify-between">
                       <div className="space-y-4">
                         <div className="flex items-start gap-4">
                           <img
                             src={ev.image || ev.bannerUrl || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80'}
                             alt={ev.title}
-                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border border-amber-400/40 shrink-0"
+                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border border-slate-300 shrink-0 shadow-sm"
                           />
                           <div className="space-y-1.5 flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-extrabold uppercase">
+                              <span className="px-2.5 py-0.5 rounded-lg bg-[#D90000] text-white text-[10px] font-black uppercase">
                                 {ev.badge || 'LIVE'}
                               </span>
-                              <span className="px-2.5 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 text-[10px] font-bold">
+                              <span className="px-2.5 py-0.5 rounded-lg bg-[#2C5745]/20 text-[#2C5745] text-[10px] font-black">
                                 {ev.category || 'Event'}
                               </span>
-                              <span className="px-2.5 py-0.5 rounded-lg bg-white/10 text-white/70 text-[10px]">
+                              <span className="px-2.5 py-0.5 rounded-lg bg-[#FFFFFF] text-[#1A1A1A] border border-slate-300 text-[10px] font-bold">
                                 {ev.ageRating || 'All Ages'}
                               </span>
                             </div>
 
-                            <h4 className="text-lg font-bold text-white truncate">{ev.title}</h4>
-                            <p className="text-xs text-white/70 truncate">📍 {ev.venue} • <strong className="text-amber-300">{ev.city}</strong></p>
-                            <p className="text-xs text-emerald-400 font-extrabold">₹{ev.price || ev.ticketPrice || 0} / person</p>
+                            <h4 className="text-lg font-black text-[#1A1A1A] truncate">{ev.title}</h4>
+                            <p className="text-xs text-slate-800 font-semibold truncate">📍 {ev.venue} • <strong className="text-[#D90000]">{ev.city}</strong></p>
+                            <p className="text-xs text-[#2C5745] font-black">₹{ev.price || ev.ticketPrice || 0} / person</p>
                           </div>
                         </div>
 
                         {/* Slots Summary */}
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-xs space-y-2">
-                          <div className="flex items-center justify-between text-white/80 font-bold">
+                        <div className="p-3 rounded-2xl bg-[#FFFFFF] border border-slate-300 text-xs space-y-2 shadow-sm">
+                          <div className="flex items-center justify-between text-[#1A1A1A] font-bold">
                             <span>📅 Date: {ev.date || ev.eventDate || 'Configured'}</span>
-                            <span className="text-cyan-300 font-mono text-[11px]">{slotsCount} Showtime Slots</span>
+                            <span className="text-[#D90000] font-mono font-black text-[11px]">{slotsCount} Showtime Slots</span>
                           </div>
                           {slotsCount > 0 && (
                             <div className="flex flex-wrap gap-1.5 pt-1">
                               {Object.entries(slotsMap).map(([dKey, slotsArr]) => (
                                 Array.isArray(slotsArr) && slotsArr.map((s, idx) => (
-                                  <span key={s.id || idx} className="px-2 py-1 rounded-lg bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 text-[10px] font-mono font-bold">
+                                  <span key={s.id || idx} className="px-2 py-1 rounded-lg bg-[#DBCEA5] border border-[#c5ba92] text-[#1A1A1A] text-[10px] font-mono font-black">
                                     {dKey}: {s.startTime || s.time} ({s.tier || 'VIP'} - ₹{s.price})
                                   </span>
                                 ))
@@ -6098,7 +6098,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             href={ev.mapLocationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:underline font-bold"
+                            className="inline-flex items-center gap-1.5 text-xs text-[#D90000] hover:underline font-black"
                           >
                             <Compass className="w-3.5 h-3.5" /> View Map Location
                           </a>
@@ -6106,14 +6106,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex items-center justify-between pt-3 border-t border-white/10 gap-2 flex-wrap">
+                      <div className="flex items-center justify-between pt-3 border-t border-[#c5ba92] gap-2 flex-wrap">
                         <button
                           type="button"
                           onClick={() => handleToggleEventBookingStatus(ev)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm ${
                             ev.bookingStatus !== false
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 hover:bg-emerald-500 hover:text-black'
-                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500 hover:text-white'
+                              ? 'bg-[#2C5745] text-white hover:bg-emerald-800'
+                              : 'bg-[#D90000] text-white hover:bg-red-700'
                           }`}
                         >
                           {ev.bookingStatus !== false ? '● Active' : '○ Disabled'}
@@ -6123,15 +6123,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           <button
                             type="button"
                             onClick={() => handleEditEventClick(ev)}
-                            className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                           >
-                            <Edit className="w-3.5 h-3.5" /> Edit
+                            <Edit className="w-3.5 h-3.5 text-white" /> Edit
                           </button>
 
                           <button
                             type="button"
                             onClick={() => handleDeleteEvent(ev.id)}
-                            className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-[#D90000] hover:bg-red-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Delete
                           </button>
@@ -6142,9 +6142,9 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 })}
 
                 {eventsList.length === 0 && (
-                  <div className="col-span-full p-8 rounded-3xl glass-panel text-center text-white/50 space-y-2">
-                    <p className="text-sm font-bold text-amber-300">No Events Created Yet</p>
-                    <p className="text-xs">Use the form above to add an event with banner, venue location, map link, date, and showtime slots.</p>
+                  <div className="col-span-full p-8 rounded-3xl bg-[#DBCEA5] border border-[#c5ba92] text-center text-[#1A1A1A] space-y-2 shadow-md">
+                    <p className="text-sm font-black text-[#D90000]">No Events Created Yet</p>
+                    <p className="text-xs text-slate-800 font-semibold">Use the form above to add an event with banner, venue location, map link, date, and showtime slots.</p>
                   </div>
                 )}
               </div>
@@ -6154,34 +6154,34 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 9: Plays & Theater CRUD */}
         {activeTab === 'plays' && (
-          <div className="space-y-8">
-            <h2 className="text-2xl font-bold font-sans text-white">Plays & Theater Shows Management</h2>
+          <div className="space-y-8 text-[#1A1A1A]">
+            <h2 className="text-2xl font-black font-sans text-[#1A1A1A]">Plays & Theater Shows Management</h2>
 
             {/* Section A: Add / Edit Play Form */}
-            <form onSubmit={handleSavePlay} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
-              <h3 className="text-lg font-bold text-amber-400">
+            <form onSubmit={handleSavePlay} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 max-w-4xl shadow-md text-[#1A1A1A]">
+              <h3 className="text-lg font-black font-sans text-[#1A1A1A]">
                 {editingPlayId ? 'Edit Theater Play Details' : 'Add New Theater Play'}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-white mb-1">Play Title / Name *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Play Title / Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Gujjubhai Banya Dabang"
                     value={playForm.title}
                     onChange={(e) => setPlayForm({ ...playForm, title: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Language *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Language *</label>
                   <select
                     value={playForm.language}
                     onChange={(e) => setPlayForm({ ...playForm, language: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="Gujarati">Gujarati</option>
                     <option value="Hindi">Hindi</option>
@@ -6191,11 +6191,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Genre / Category *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Genre / Category *</label>
                   <select
                     value={playForm.category}
                     onChange={(e) => setPlayForm({ ...playForm, category: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="Comedy Drama">Comedy Drama</option>
                     <option value="Comedy">Comedy</option>
@@ -6206,11 +6206,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Corner Tap / Badge</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Corner Tap / Badge</label>
                   <select
                     value={playForm.badge || 'HOT SELLER'}
                     onChange={(e) => setPlayForm({ ...playForm, badge: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="HOT SELLER">🔥 HOT SELLER</option>
                     <option value="HOUSEFULL SOON">⚡ HOUSEFULL SOON</option>
@@ -6221,11 +6221,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">City *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">City *</label>
                   <select
                     value={playForm.city || 'Surat'}
                     onChange={(e) => setPlayForm({ ...playForm, city: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="All">All Cities</option>
                     {GUJARAT_CITIES.map(c => (
@@ -6235,79 +6235,79 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-white mb-1">Theater Venue & Address *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Theater Venue & Address *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Royal Opera House, Mumbai"
                     value={playForm.venue}
                     onChange={(e) => setPlayForm({ ...playForm, venue: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Date *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Date *</label>
                   <input
                     type="text"
                     placeholder="e.g. 14 FEB 2027"
                     value={playForm.date}
                     onChange={(e) => setPlayForm({ ...playForm, date: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Showtime *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Showtime *</label>
                   <input
                     type="text"
                     placeholder="e.g. 08:00 PM"
                     value={playForm.time}
                     onChange={(e) => setPlayForm({ ...playForm, time: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Ticket Price per Person (₹) *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Ticket Price per Person (₹) *</label>
                   <input
                     type="number"
                     required
                     value={playForm.price}
                     onChange={(e) => setPlayForm({ ...playForm, price: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Total Seats Available</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Total Seats Available</label>
                   <input
                     type="number"
                     value={playForm.totalCapacity}
                     onChange={(e) => setPlayForm({ ...playForm, totalCapacity: e.target.value, availableSeats: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-white mb-1">Poster / Banner Image URL</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Poster / Banner Image URL</label>
                   <input
                     type="url"
                     placeholder="https://images.unsplash.com/..."
                     value={playForm.image}
                     onChange={(e) => setPlayForm({ ...playForm, image: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-bold text-white mb-1">Description / Synopsis</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Description / Synopsis</label>
                   <textarea
                     rows={3}
                     placeholder="Enter play synopsis, cast details, language overview..."
                     value={playForm.description}
                     onChange={(e) => setPlayForm({ ...playForm, description: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   ></textarea>
                 </div>
               </div>
@@ -6320,14 +6320,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setEditingPlayId(null);
                       setPlayForm({ title: '', language: 'Gujarati', category: 'Comedy Drama', badge: 'HOT SELLER', venue: '', city: 'Mumbai', date: '14 FEB 2027', time: '08:00 PM', price: 600, totalCapacity: 1200, availableSeats: 1200, image: '', description: '' });
                     }}
-                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                   >
                     Cancel Edit
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer"
                 >
                   {editingPlayId ? 'Update Play' : 'Create Theater Play'}
                 </button>
@@ -6336,29 +6336,29 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Section B: Existing Plays Directory */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-white">Configured Theater Plays ({(Array.isArray(playsList) ? playsList : []).length})</h3>
+              <h3 className="text-lg font-black text-[#1A1A1A]">Configured Theater Plays ({(Array.isArray(playsList) ? playsList : []).length})</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(Array.isArray(playsList) ? playsList : []).map(pl => (
-                  <div key={pl.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
+                  <div key={pl.id} className="bg-[#DBCEA5] p-5 rounded-3xl border border-[#c5ba92] space-y-3 flex flex-col justify-between shadow-md text-[#1A1A1A]">
                     <div className="flex items-start gap-4">
-                      <img src={pl.image} alt={pl.title} className="w-20 h-20 rounded-2xl object-cover border border-purple-400/40 shrink-0" />
+                      <img src={pl.image} alt={pl.title} className="w-20 h-20 rounded-2xl object-cover border border-slate-300 shrink-0 shadow-sm" />
                       <div className="space-y-1">
                         <div className="flex gap-1.5">
-                          <span className="px-2 py-0.5 rounded bg-purple-600/20 text-purple-300 font-bold text-[10px] uppercase">
+                          <span className="px-2 py-0.5 rounded bg-[#2B1B17] text-white font-black text-[10px] uppercase">
                             {pl.language}
                           </span>
-                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                          <span className="px-2 py-0.5 rounded bg-[#D90000] text-white font-black text-[10px] uppercase">
                             {pl.category}
                           </span>
                         </div>
-                        <h4 className="text-base font-bold text-white leading-tight">{pl.title}</h4>
-                        <p className="text-xs text-white/60">{pl.venue} • <strong className="text-amber-300">₹{pl.price}/ticket</strong></p>
-                        <p className="text-[11px] text-white/40">{pl.date} @ {pl.time} • Seats: {pl.availableSeats} / {pl.totalCapacity}</p>
+                        <h4 className="text-base font-black text-[#1A1A1A] leading-tight">{pl.title}</h4>
+                        <p className="text-xs text-slate-800 font-semibold">{pl.venue} • <strong className="text-[#D90000]">₹{pl.price}/ticket</strong></p>
+                        <p className="text-[11px] text-slate-700 font-bold">{pl.date} @ {pl.time} • Seats: {pl.availableSeats} / {pl.totalCapacity}</p>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
+                    <div className="flex gap-2 justify-end pt-2 border-t border-[#c5ba92]">
                       <button
                         onClick={() => {
                           setEditingPlayId(pl.id);
@@ -6378,14 +6378,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             description: pl.description || ''
                           });
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                       >
-                        <Edit className="w-3.5 h-3.5" /> Edit
+                        <Edit className="w-3.5 h-3.5 text-white" /> Edit
                       </button>
 
                       <button
                         onClick={() => handleDeletePlay(pl.id)}
-                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-[#D90000] hover:bg-red-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Delete
                       </button>
@@ -6400,34 +6400,34 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 10: Activities & Theme Parks CRUD */}
         {activeTab === 'activities' && (
-          <div className="space-y-8">
-            <h2 className="text-2xl font-bold font-sans text-white">Adventure & Theme Park Activities Management</h2>
+          <div className="space-y-8 text-[#1A1A1A]">
+            <h2 className="text-2xl font-black font-sans text-[#1A1A1A]">Adventure & Theme Park Activities Management</h2>
 
             {/* Section A: Add / Edit Activity Form */}
-            <form onSubmit={handleSaveActivity} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-4xl">
-              <h3 className="text-lg font-bold text-amber-400">
+            <form onSubmit={handleSaveActivity} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 max-w-4xl shadow-md text-[#1A1A1A]">
+              <h3 className="text-lg font-black font-sans text-[#1A1A1A]">
                 {editingActivityId ? 'Edit Activity Pass Details' : 'Add New Adventure Activity Pass'}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-white mb-1">Activity Title / Name *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Activity Title / Name *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Imagicaa Water Park & Snow World"
                     value={activityForm.title}
                     onChange={(e) => setActivityForm({ ...activityForm, title: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Category *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Category *</label>
                   <select
                     value={activityForm.category}
                     onChange={(e) => setActivityForm({ ...activityForm, category: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="Water Park">Water Park</option>
                     <option value="Theme Park">Theme Park</option>
@@ -6438,11 +6438,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Corner Tap / Badge</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Corner Tap / Badge</label>
                   <select
                     value={activityForm.badge || 'UNLIMITED ACCESS'}
                     onChange={(e) => setActivityForm({ ...activityForm, badge: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="UNLIMITED ACCESS">🌟 UNLIMITED ACCESS</option>
                     <option value="BEST VALUE">⚡ BEST VALUE</option>
@@ -6452,11 +6452,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">City *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">City *</label>
                   <select
                     value={activityForm.city || 'Surat'}
                     onChange={(e) => setActivityForm({ ...activityForm, city: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-black"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="All">All Cities</option>
                     {GUJARAT_CITIES.map(c => (
@@ -6466,71 +6466,71 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-white mb-1">Location & Address *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Location & Address *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Khopoli, Mumbai-Pune Expressway"
                     value={activityForm.location}
                     onChange={(e) => setActivityForm({ ...activityForm, location: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Validity Period *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Validity Period *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Full Day Pass (10:30 AM - 07:00 PM)"
                     value={activityForm.validity}
                     onChange={(e) => setActivityForm({ ...activityForm, validity: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Ticket Price per Pass (₹) *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Ticket Price per Pass (₹) *</label>
                   <input
                     type="number"
                     required
                     value={activityForm.price}
                     onChange={(e) => setActivityForm({ ...activityForm, price: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Total Pass Capacity</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Total Pass Capacity</label>
                   <input
                     type="number"
                     value={activityForm.totalCapacity}
                     onChange={(e) => setActivityForm({ ...activityForm, totalCapacity: e.target.value, availableSeats: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-bold text-white mb-1">Banner / Image URL</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Banner / Image URL</label>
                   <input
                     type="url"
                     placeholder="https://images.unsplash.com/..."
                     value={activityForm.image}
                     onChange={(e) => setActivityForm({ ...activityForm, image: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 {/* Dynamic Benefits Manager */}
-                <div className="md:col-span-3 space-y-2 p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <label className="block text-xs font-bold text-amber-400">Dynamic Benefits & Perks Manager</label>
+                <div className="md:col-span-3 space-y-2 p-4 rounded-2xl bg-[#FFFFFF] border border-slate-300 shadow-sm">
+                  <label className="block text-xs font-black text-[#2C1A0E]">Dynamic Benefits & Perks Manager</label>
                   
                   {/* Benefits Chips */}
                   <div className="flex flex-wrap gap-2 mb-2">
                     {(activityForm.benefits || []).map((b, idx) => (
-                      <span key={idx} className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold flex items-center gap-1.5">
+                      <span key={idx} className="px-3 py-1 rounded-full bg-[#DBCEA5] border border-[#c5ba92] text-[#1A1A1A] text-xs font-black flex items-center gap-1.5">
                         {b}
-                        <button type="button" onClick={() => handleRemoveBenefit(idx)} className="hover:text-rose-400">
+                        <button type="button" onClick={() => handleRemoveBenefit(idx)} className="hover:text-[#D90000]">
                           <X className="w-3 h-3" />
                         </button>
                       </span>
@@ -6544,12 +6544,12 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       placeholder="Enter benefit (e.g., Free Locker Access, Buffet Lunch, Fast Track Queue)"
                       value={newBenefitInput}
                       onChange={(e) => setNewBenefitInput(e.target.value)}
-                      className="flex-1 p-2.5 rounded-xl glass-input text-xs text-white"
+                      className="flex-1 p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                     />
                     <button
                       type="button"
                       onClick={handleAddBenefit}
-                      className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-md shadow-amber-500/20 cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer"
                     >
                       + Add Benefit
                     </button>
@@ -6557,13 +6557,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-bold text-white mb-1">Description / Overview</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Description / Overview</label>
                   <textarea
                     rows={3}
                     placeholder="Enter activity pass overview, safety guidelines..."
                     value={activityForm.description}
                     onChange={(e) => setActivityForm({ ...activityForm, description: e.target.value })}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   ></textarea>
                 </div>
               </div>
@@ -6576,14 +6576,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setEditingActivityId(null);
                       setActivityForm({ title: '', category: 'Water Park', badge: 'UNLIMITED ACCESS', location: '', city: 'Mumbai', validity: 'Full Day Pass (10:00 AM - 07:00 PM)', price: 1299, totalCapacity: 2000, availableSeats: 2000, image: '', description: '', benefits: ['Unlimited Rides', 'Free Entry'] });
                     }}
-                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                   >
                     Cancel Edit
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer"
                 >
                   {editingActivityId ? 'Update Activity Pass' : 'Create Activity Pass'}
                 </button>
@@ -6592,27 +6592,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             {/* Section B: Existing Activities Directory */}
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-white">Configured Adventure Passes ({(Array.isArray(activitiesList) ? activitiesList : []).length})</h3>
+              <h3 className="text-lg font-black text-[#1A1A1A]">Configured Adventure Passes ({(Array.isArray(activitiesList) ? activitiesList : []).length})</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(Array.isArray(activitiesList) ? activitiesList : []).map(act => (
-                  <div key={act.id} className="glass-panel p-5 rounded-3xl border border-white/10 space-y-3 flex flex-col justify-between">
+                  <div key={act.id} className="bg-[#DBCEA5] p-5 rounded-3xl border border-[#c5ba92] space-y-3 flex flex-col justify-between shadow-md text-[#1A1A1A]">
                     <div className="flex items-start gap-4">
-                      <img src={act.image} alt={act.title} className="w-20 h-20 rounded-2xl object-cover border border-amber-400/40 shrink-0" />
+                      <img src={act.image} alt={act.title} className="w-20 h-20 rounded-2xl object-cover border border-slate-300 shrink-0 shadow-sm" />
                       <div className="space-y-1">
                         <div className="flex gap-1.5">
-                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+                          <span className="px-2 py-0.5 rounded bg-[#D90000] text-white font-black text-[10px] uppercase">
                             {act.category}
                           </span>
                         </div>
-                        <h4 className="text-base font-bold text-white leading-tight">{act.title}</h4>
-                        <p className="text-xs text-white/60">{act.location} • <strong className="text-amber-300">₹{act.price}/pass</strong></p>
-                        <p className="text-[11px] text-white/40">{act.validity} • Passes: {act.availableSeats} / {act.totalCapacity}</p>
+                        <h4 className="text-base font-black text-[#1A1A1A] leading-tight">{act.title}</h4>
+                        <p className="text-xs text-slate-800 font-semibold">{act.location} • <strong className="text-[#D90000]">₹{act.price}/pass</strong></p>
+                        <p className="text-[11px] text-slate-700 font-bold">{act.validity} • Passes: {act.availableSeats} / {act.totalCapacity}</p>
                         
                         {act.benefits && (
                           <div className="flex flex-wrap gap-1 pt-1">
                             {(Array.isArray(act.benefits) ? act.benefits : []).map((b, i) => (
-                              <span key={i} className="px-1.5 py-0.5 rounded bg-white/5 text-[9px] text-white/70">
+                              <span key={i} className="px-1.5 py-0.5 rounded bg-[#FFFFFF] text-[9px] text-[#1A1A1A] font-bold border border-slate-300">
                                 ✓ {b}
                               </span>
                             ))}
@@ -6621,7 +6621,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 justify-end pt-2 border-t border-white/10">
+                    <div className="flex gap-2 justify-end pt-2 border-t border-[#c5ba92]">
                       <button
                         onClick={() => {
                           setEditingActivityId(act.id);
@@ -6640,14 +6640,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                             benefits: act.benefits || []
                           });
                         }}
-                        className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                       >
-                        <Edit className="w-3.5 h-3.5" /> Edit
+                        <Edit className="w-3.5 h-3.5 text-white" /> Edit
                       </button>
 
                       <button
                         onClick={() => handleDeleteActivity(act.id)}
-                        className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-[#D90000] hover:bg-red-700 text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Delete
                       </button>
@@ -6662,16 +6662,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 11: Broadcast Notifications System */}
         {activeTab === 'notifications' && (
-          <div className="space-y-8">
+          <div className="space-y-8 text-[#1A1A1A]">
             <div>
-              <h2 className="text-2xl font-bold font-sans text-white">Notifications Management & Broadcast Desk</h2>
-              <p className="text-xs text-cyan-300">Create, edit, broadcast, and delete live system announcements for all users.</p>
+              <h2 className="text-2xl font-black font-sans text-[#1A1A1A]">Notifications Management & Broadcast Desk</h2>
+              <p className="text-xs text-slate-800 font-semibold mt-1">Create, edit, broadcast, and delete live system announcements for all users.</p>
             </div>
 
             {/* Section A: Create / Edit Notification Form */}
-            <form onSubmit={handleSaveNotification} className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 max-w-3xl">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <h3 className="text-lg font-bold text-amber-400">
+            <form onSubmit={handleSaveNotification} className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 max-w-3xl shadow-md text-[#1A1A1A]">
+              <div className="flex items-center justify-between border-b border-[#c5ba92] pb-3">
+                <h3 className="text-lg font-black text-[#1A1A1A]">
                   {editingNotifId ? '✏️ Edit Notification Announcement' : '➕ Create New Broadcast Notification'}
                 </h3>
                 {editingNotifId && (
@@ -6686,7 +6686,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setNotifTargetType('ALL');
                       setSelectedNotifTargetUsers([]);
                     }}
-                    className="px-3 py-1 rounded-xl bg-white/10 text-white/70 hover:text-white text-xs font-bold"
+                    className="px-3 py-1 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                   >
                     Cancel Edit
                   </button>
@@ -6695,11 +6695,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 mb-1">Target Audience *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Target Audience *</label>
                   <select
                     value={notifTargetType}
                     onChange={(e) => setNotifTargetType(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="ALL">🌐 All Users (Global Broadcast)</option>
                     <option value="SPECIFIC">🎯 Specific User(s)</option>
@@ -6708,7 +6708,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 {notifTargetType === 'SPECIFIC' && (
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 mb-1">Select Target User(s) *</label>
+                    <label className="block text-xs font-black text-[#2C1A0E] mb-1">Select Target User(s) *</label>
                     <select
                       multiple
                       value={selectedNotifTargetUsers}
@@ -6716,7 +6716,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         const selectedOpts = Array.from(e.target.selectedOptions, option => option.value);
                         setSelectedNotifTargetUsers(selectedOpts);
                       }}
-                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white bg-black h-24 overflow-y-auto"
+                      className="w-full p-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold h-24 overflow-y-auto focus:outline-none focus:border-[#D90000]"
                     >
                       {(Array.isArray(usersDropdownList) ? usersDropdownList : []).map(u => (
                         <option key={u.id || u.email} value={u.id || u.email}>
@@ -6724,30 +6724,30 @@ export const AdminDashboard = ({ onReturnHome }) => {
                         </option>
                       ))}
                     </select>
-                    <p className="text-[10px] text-cyan-300 mt-1">Hold Ctrl/Cmd to select multiple specific users</p>
+                    <p className="text-[10px] text-slate-700 font-bold mt-1">Hold Ctrl/Cmd to select multiple specific users</p>
                   </div>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-bold text-white mb-1">Notification Title *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Notification Title *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. 🎟️ Flat 50% Off IMAX 3D Weekend Screening!"
                     value={notifTitle}
                     onChange={(e) => setNotifTitle(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Priority / Type *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Priority / Type *</label>
                   <select
                     value={notifType}
                     onChange={(e) => setNotifType(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="Info">ℹ️ Info (General Update)</option>
                     <option value="Alert">🚨 Alert (Urgent Notice)</option>
@@ -6756,24 +6756,24 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-xs font-bold text-white mb-1">Message Body / Detailed Announcement *</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Message Body / Detailed Announcement *</label>
                   <textarea
                     rows={3}
                     required
                     placeholder="Enter comprehensive notification announcement details..."
                     value={notifMessage}
                     onChange={(e) => setNotifMessage(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   ></textarea>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-white mb-1">Scheduled Date & Time (Optional)</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Scheduled Date & Time (Optional)</label>
                   <input
                     type="datetime-local"
                     value={notifDate}
                     onChange={(e) => setNotifDate(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
               </div>
@@ -6789,14 +6789,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       setNotifType('Info');
                       setNotifDate('');
                     }}
-                    className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 font-bold"
+                    className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                   >
                     Cancel
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-2"
+                  className="px-6 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Bell className="w-4 h-4" />
                   <span>{editingNotifId ? 'Update Notification' : 'Broadcast Notification Live'}</span>
@@ -6807,8 +6807,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Section B: Active Notifications Directory Table */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white">Active System Notifications ({(notifications || []).length})</h3>
-                <span className="text-xs text-white/50">Changes reflect instantly inside User Profile</span>
+                <h3 className="text-lg font-black text-[#1A1A1A]">Active System Notifications ({(notifications || []).length})</h3>
+                <span className="text-xs text-slate-800 font-semibold">Changes reflect instantly inside User Profile</span>
               </div>
 
               {(() => {
@@ -6819,47 +6819,47 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <div className="space-y-3">
                     {uniqueNotifications.map(n => {
                       const typeLabel = n.type || n.priority || 'Info';
-                      let badgeStyle = 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40';
+                      let badgeStyle = 'bg-[#2C5745]/20 text-[#2C5745] font-black border border-[#2C5745]/30';
                       if (typeLabel.toLowerCase().includes('alert')) {
-                        badgeStyle = 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+                        badgeStyle = 'bg-[#D90000]/20 text-[#D90000] font-black border border-[#D90000]/30';
                       } else if (typeLabel.toLowerCase().includes('offer') || typeLabel.toLowerCase().includes('promo')) {
-                        badgeStyle = 'bg-amber-500/20 text-amber-300 border-amber-400/40';
+                        badgeStyle = 'bg-amber-500/20 text-[#2C1A0E] font-black border border-amber-400/40';
                       }
 
                     return (
                       <div 
                         key={n.id} 
-                        className="glass-panel p-5 rounded-3xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all hover:border-amber-400/40"
+                        className="bg-[#DBCEA5] p-5 rounded-3xl border border-[#c5ba92] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md text-[#1A1A1A] transition-all"
                       >
                         <div className="space-y-1.5 flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${badgeStyle}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full border text-[10px] uppercase tracking-wider ${badgeStyle}`}>
                               {typeLabel}
                             </span>
-                            <h4 className="text-base font-bold text-white truncate">{n.title}</h4>
+                            <h4 className="text-base font-black text-[#1A1A1A] truncate">{n.title}</h4>
                           </div>
 
-                          <p className="text-xs text-white/80 leading-relaxed">{n.message}</p>
+                          <p className="text-xs text-slate-800 font-bold leading-relaxed">{n.message}</p>
 
-                          <div className="flex items-center gap-4 text-[11px] text-white/40 pt-1">
+                          <div className="flex items-center gap-4 text-[11px] text-slate-700 font-bold pt-1">
                             <span>📅 Posted: {new Date(n.createdAt || Date.now()).toLocaleString()}</span>
                             <span>•</span>
-                            <span className="text-cyan-400 font-mono">ID: {n.id}</span>
+                            <span className="text-[#D90000] font-mono">ID: {n.id}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-white/10 shrink-0">
+                        <div className="flex items-center gap-2 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-[#c5ba92] shrink-0">
                           <button
                             onClick={() => handleEditNotifClick(n)}
-                            className="px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-400/40 text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                            className="px-3.5 py-2 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
                           >
-                            <Edit className="w-3.5 h-3.5" />
+                            <Edit className="w-3.5 h-3.5 text-white" />
                             <span>Edit</span>
                           </button>
 
                           <button
                             onClick={() => handleDeleteNotifClick(n.id)}
-                            className="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                            className="px-3.5 py-2 rounded-xl bg-[#D90000] hover:bg-red-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             <span>Delete</span>
@@ -6870,10 +6870,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   })}
                 </div>
               ) : (
-                <div className="glass-panel p-12 rounded-3xl text-center text-white/50 space-y-2">
-                  <Bell className="w-10 h-10 text-cyan-400/40 mx-auto" />
-                  <h4 className="text-base font-bold text-white">No System Notifications Found</h4>
-                  <p className="text-xs text-white/60">Use the form above to broadcast your first announcement to all users.</p>
+                <div className="bg-[#DBCEA5] p-12 rounded-3xl border border-[#c5ba92] text-center text-[#1A1A1A] space-y-2 shadow-md">
+                  <Bell className="w-10 h-10 text-[#D90000] mx-auto" />
+                  <h4 className="text-base font-black text-[#1A1A1A]">No System Notifications Found</h4>
+                  <p className="text-xs text-slate-800 font-semibold">Use the form above to broadcast your first announcement to all users.</p>
                 </div>
               );
             })()}
@@ -6900,41 +6900,41 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 />
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-xl font-bold font-sans text-white">{selectedUserForActivity.name}</h3>
-                    <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold border border-cyan-400/40 uppercase">
+                    <h3 className="text-xl font-black font-sans text-[#1A1A1A]">{selectedUserForActivity.name}</h3>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#2C5745]/20 text-[#2C5745] text-[10px] font-black border border-[#2C5745]/30 uppercase">
                       {selectedUserForActivity.provider || 'LOCAL'} AUTH
                     </span>
                     {selectedUserForActivity.role === 'ADMIN' && (
-                      <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold border border-amber-400/40 uppercase">ADMIN</span>
+                      <span className="px-2 py-0.5 rounded-full bg-[#D90000] text-white text-[10px] font-black uppercase">ADMIN</span>
                     )}
                   </div>
-                  <p className="text-xs text-cyan-300 mt-0.5 font-mono">{selectedUserForActivity.email}</p>
-                  <p className="text-[11px] text-white/60 mt-0.5 flex items-center gap-3">
+                  <p className="text-xs text-slate-800 font-mono font-bold mt-0.5">{selectedUserForActivity.email}</p>
+                  <p className="text-[11px] text-slate-700 font-bold mt-0.5 flex items-center gap-3">
                     <span>📞 {selectedUserForActivity.phone || 'N/A'}</span>
                     <span>•</span>
                     <span>📍 {selectedUserForActivity.city || 'Surat'}</span>
                     <span>•</span>
-                    <span className="text-amber-300 font-bold">💎 {selectedUserForActivity.rewardsPoints || 500} Rewards Pts</span>
+                    <span className="text-[#D90000] font-black">💎 {selectedUserForActivity.rewardsPoints || 500} Rewards Pts</span>
                   </p>
                 </div>
               </div>
 
               <button
                 onClick={() => setIsUserActivityModalOpen(false)}
-                className="p-2 rounded-full bg-white/10 hover:bg-rose-500 text-white/80 hover:text-white transition-all cursor-pointer shrink-0 border border-white/10"
+                className="p-2 rounded-full bg-[#FFFFFF] hover:bg-[#D90000] text-[#1A1A1A] hover:text-white transition-all cursor-pointer shrink-0 border border-slate-300 shadow-sm"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Sub-Tabs Selector */}
-            <div className="flex items-center gap-2 pt-4 pb-2 border-b border-white/10 shrink-0 overflow-x-auto">
+            <div className="flex items-center gap-2 pt-4 pb-2 border-b border-[#c5ba92] shrink-0 overflow-x-auto">
               <button
                 onClick={() => setUserActivitySubTab('bookings')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   userActivitySubTab === 'bookings'
-                    ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
+                    ? 'bg-[#D90000] text-white shadow-md'
+                    : 'bg-[#FFFFFF] text-[#1A1A1A] hover:bg-slate-100 border border-slate-300'
                 }`}
               >
                 🎟️ Bookings History ({userActivityData?.bookings?.length || 0})
@@ -6942,10 +6942,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               <button
                 onClick={() => setUserActivitySubTab('timeline')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   userActivitySubTab === 'timeline'
-                    ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
+                    ? 'bg-[#2C5745] text-white shadow-md'
+                    : 'bg-[#FFFFFF] text-[#1A1A1A] hover:bg-slate-100 border border-slate-300'
                 }`}
               >
                 📜 Login & Session Timeline ({userActivityData?.logs?.length || 0})
@@ -6955,8 +6955,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
             {/* Sub-Tab Body */}
             <div className="my-4 overflow-y-auto flex-1 pr-1 space-y-4 min-h-[250px]">
               {isUserActivityLoading ? (
-                <div className="py-12 text-center text-cyan-300 font-bold">
-                  <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
+                <div className="py-12 text-center text-[#1A1A1A] font-black">
+                  <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2 text-[#D90000]" />
                   <span>Fetching activity log records...</span>
                 </div>
               ) : (
@@ -6966,30 +6966,30 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     <div className="space-y-3">
                       {Array.isArray(userActivityData?.bookings) && userActivityData.bookings.length > 0 ? (
                         userActivityData.bookings.map((b, idx) => (
-                          <div key={b.id || idx} className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-cyan-400/40 transition-colors">
+                          <div key={b.id || idx} className="bg-[#FFFFFF] p-4 rounded-2xl border border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#D90000] transition-colors shadow-sm text-[#1A1A1A]">
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-cyan-300 text-sm">{b.movieTitle || b.activityTitle || b.eventTitle || 'Cinema Ticket'}</span>
-                                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
+                                <span className="font-black text-[#1A1A1A] text-sm">{b.movieTitle || b.activityTitle || b.eventTitle || 'Cinema Ticket'}</span>
+                                <span className="px-2 py-0.5 rounded bg-[#2C5745]/20 text-[#2C5745] text-[10px] font-black">
                                   {b.status || 'CONFIRMED'}
                                 </span>
                               </div>
-                              <p className="text-xs text-white/60 mt-1">
-                                {b.theatreName || b.location || 'PrimeShow Multiplex'} • Seats: <strong className="text-white">{Array.isArray(b.seats) ? b.seats.join(', ') : (b.seats || 'General')}</strong>
+                              <p className="text-xs text-slate-800 font-bold mt-1">
+                                {b.theatreName || b.location || 'PrimeShow Multiplex'} • Seats: <strong className="text-[#D90000]">{Array.isArray(b.seats) ? b.seats.join(', ') : (b.seats || 'General')}</strong>
                               </p>
-                              <p className="text-[10px] text-white/40 mt-0.5">
+                              <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
                                 Order ID: {b.id} • Date: {b.showDate || b.date || 'Today'} • Time: {b.showTime || b.time || '10:00 AM'}
                               </p>
                             </div>
 
                             <div className="text-right shrink-0">
-                              <div className="text-base font-bold text-amber-400">₹{b.totalAmount || b.totalPrice || 450}</div>
-                              <div className="text-[10px] text-white/50">{b.paymentMethod || 'UPI Paid'}</div>
+                              <div className="text-base font-black text-[#2C5745]">₹{b.totalAmount || b.totalPrice || 450}</div>
+                              <div className="text-[10px] text-slate-600 font-bold">{b.paymentMethod || 'UPI Paid'}</div>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="p-8 text-center glass-panel rounded-2xl text-white/50 text-xs">
+                        <div className="p-8 text-center bg-[#FFFFFF] rounded-2xl border border-slate-300 text-slate-700 text-xs font-semibold">
                           No booking history recorded for this user yet.
                         </div>
                       )}
@@ -7010,31 +7010,31 @@ export const AdminDashboard = ({ onReturnHome }) => {
                           const isLogout = log.action === 'LOGGED_OUT';
                           
                           return (
-                            <div key={log.id || idx} className="glass-panel p-3.5 rounded-2xl border border-white/10 flex items-center justify-between gap-3">
+                            <div key={log.id || idx} className="bg-[#FFFFFF] p-3.5 rounded-2xl border border-slate-300 flex items-center justify-between gap-3 shadow-sm text-[#1A1A1A]">
                               <div className="flex items-center gap-3">
-                                <div className={`p-2.5 rounded-xl text-xs font-extrabold shrink-0 ${
-                                  isLogin ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-400/40' :
-                                  isLogout ? 'bg-rose-500/20 text-rose-400 border border-rose-400/40' :
-                                  'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40'
+                                <div className={`p-2.5 rounded-xl text-xs font-black shrink-0 ${
+                                  isLogin ? 'bg-[#2C5745]/20 text-[#2C5745]' :
+                                  isLogout ? 'bg-[#D90000]/20 text-[#D90000]' :
+                                  'bg-[#DBCEA5] text-[#1A1A1A]'
                                 }`}>
                                   {isLogin ? '🟢 LOGIN' : isLogout ? '🔴 LOGOUT' : '⚡ EVENT'}
                                 </div>
 
                                 <div>
-                                  <div className="font-bold text-white text-xs">{log.details || log.action}</div>
-                                  <div className="text-[10px] text-white/50 mt-0.5">User: {log.userName} ({log.userEmail})</div>
+                                  <div className="font-black text-[#1A1A1A] text-xs">{log.details || log.action}</div>
+                                  <div className="text-[10px] text-slate-700 font-bold mt-0.5">User: {log.userName} ({log.userEmail})</div>
                                 </div>
                               </div>
 
                               <div className="text-right shrink-0">
-                                <div className="text-xs font-mono font-bold text-cyan-300">{formattedDate} ({formattedDay})</div>
-                                <div className="text-[10px] text-white/60 font-mono mt-0.5">{formattedTime}</div>
+                                <div className="text-xs font-mono font-black text-[#1A1A1A]">{formattedDate} ({formattedDay})</div>
+                                <div className="text-[10px] text-slate-600 font-mono font-bold mt-0.5">{formattedTime}</div>
                               </div>
                             </div>
                           );
                         })
                       ) : (
-                        <div className="p-8 text-center glass-panel rounded-2xl text-white/50 text-xs">
+                        <div className="p-8 text-center bg-[#FFFFFF] rounded-2xl border border-slate-300 text-slate-700 text-xs font-semibold">
                           No recent login/logout timeline logs recorded for this user.
                         </div>
                       )}
@@ -7045,10 +7045,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-3 border-t border-white/10 flex justify-end shrink-0">
+            <div className="pt-3 border-t border-[#c5ba92] flex justify-end shrink-0">
               <button
                 onClick={() => setIsUserActivityModalOpen(false)}
-                className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white font-bold text-xs cursor-pointer transition-colors shadow-sm"
               >
                 Close Activity Profile
               </button>
@@ -7060,21 +7060,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
       {/* Edit User Details Modal */}
       {isEditUserModalOpen && editingUser && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
-          <div className="relative w-full max-w-lg glass-modal rounded-3xl p-6 border border-cyan-400/30 shadow-[0_0_50px_rgba(0,0,0,0.9)] text-white flex flex-col my-auto overflow-hidden">
-            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-lg bg-[#DBCEA5] rounded-3xl p-6 border border-[#c5ba92] shadow-2xl text-[#1A1A1A] flex flex-col my-auto overflow-hidden">
+            <div className="flex items-center justify-between pb-4 border-b border-[#c5ba92]">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300">
-                  <Edit3 className="w-5 h-5" />
+                <div className="p-2.5 rounded-xl bg-[#D90000] text-white shadow-sm">
+                  <Edit3 className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Edit User Profile</h3>
-                  <p className="text-xs text-cyan-300 font-mono">{editingUser.email}</p>
+                  <h3 className="text-lg font-black text-[#1A1A1A]">Edit User Profile</h3>
+                  <p className="text-xs text-slate-800 font-mono font-bold">{editingUser.email}</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsEditUserModalOpen(false)}
-                className="p-2 rounded-full bg-white/10 hover:bg-rose-500 text-white/80 transition-all cursor-pointer border border-white/10"
+                className="p-2 rounded-full bg-[#FFFFFF] hover:bg-[#D90000] text-[#1A1A1A] hover:text-white transition-all cursor-pointer border border-slate-300 shadow-sm"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -7082,66 +7082,66 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
             <form onSubmit={handleSaveUserEdit} className="space-y-4 pt-4">
               <div>
-                <label className="block text-xs font-bold text-white/70 mb-1">Full Name</label>
+                <label className="block text-xs font-black text-[#2C1A0E] mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={editUserForm.name}
                   onChange={(e) => setEditUserForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-white/70 mb-1">Email Address</label>
+                <label className="block text-xs font-black text-[#2C1A0E] mb-1">Email Address</label>
                 <input
                   type="email"
                   required
                   value={editUserForm.email}
                   onChange={(e) => setEditUserForm(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                  className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-white/70 mb-1">Phone Number</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Phone Number</label>
                   <input
                     type="text"
                     value={editUserForm.phone}
                     onChange={(e) => setEditUserForm(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/70 mb-1">City</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">City</label>
                   <input
                     type="text"
                     value={editUserForm.city}
                     onChange={(e) => setEditUserForm(prev => ({ ...prev, city: e.target.value }))}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-white/70 mb-1">Status</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Status</label>
                   <select
                     value={editUserForm.status}
                     onChange={(e) => setEditUserForm(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-slate-900"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="Online">🟢 Online</option>
                     <option value="Offline">🔴 Offline</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-white/70 mb-1">Auth Provider</label>
+                  <label className="block text-xs font-black text-[#2C1A0E] mb-1">Auth Provider</label>
                   <select
                     value={editUserForm.authProvider}
                     onChange={(e) => setEditUserForm(prev => ({ ...prev, authProvider: e.target.value }))}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-slate-900"
+                    className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"
                   >
                     <option value="LOCAL">LOCAL / Email</option>
                     <option value="GOOGLE">GOOGLE</option>
@@ -7150,18 +7150,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#c5ba92]">
                 <button
                   type="button"
                   onClick={() => setIsEditUserModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl glass-panel text-xs font-bold text-white/80 hover:text-white cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={editUserLoading}
-                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {editUserLoading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                   <span>Save Changes</span>
@@ -7174,36 +7174,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
       {/* Top Movies Expansion Modal (View All / More) */}
       {topMoviesModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="relative w-full max-w-3xl glass-modal rounded-3xl p-6 border border-cyan-400/30 shadow-[0_0_50px_rgba(0,0,0,0.9)] text-white max-h-[85vh] flex flex-col my-auto overflow-hidden">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative w-full max-w-3xl bg-[#DBCEA5] rounded-3xl p-6 border border-[#c5ba92] shadow-2xl text-[#1A1A1A] max-h-[85vh] flex flex-col my-auto overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+            <div className="flex items-center justify-between pb-4 border-b border-[#c5ba92] shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
+                <div className="w-10 h-10 rounded-2xl bg-[#D90000] text-white flex items-center justify-center shadow-sm">
                   <Film className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold font-sans text-white">All Booked Movies Ranking</h3>
-                  <p className="text-xs text-cyan-300">Global ordered list of all movies by ticket sales & revenue across cities</p>
+                  <h3 className="text-xl font-black font-sans text-[#1A1A1A]">All Booked Movies Ranking</h3>
+                  <p className="text-xs text-slate-800 font-semibold">Global ordered list of all movies by ticket sales & revenue across cities</p>
                 </div>
               </div>
 
               <button
                 onClick={() => setTopMoviesModalOpen(false)}
-                className="p-2 rounded-full bg-white/10 hover:bg-rose-500 text-white transition-all cursor-pointer border border-white/10"
+                className="p-2 rounded-full bg-[#FFFFFF] hover:bg-[#D90000] text-[#1A1A1A] hover:text-white transition-all cursor-pointer border border-slate-300 shadow-sm"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Search Bar */}
-            <div className="py-4 border-b border-white/10 shrink-0">
+            <div className="py-4 border-b border-[#c5ba92] shrink-0">
               <input
                 type="text"
                 placeholder="Search ranked movies by title..."
                 value={topMoviesSearchQuery}
                 onChange={(e) => setTopMoviesSearchQuery(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400"
+                className="w-full px-4 py-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
               />
             </div>
 
@@ -7215,20 +7215,20 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 if (filteredMovies.length === 0) {
                   return (
-                    <div className="p-8 text-center text-xs text-white/50">No movies matching "{topMoviesSearchQuery}" found.</div>
+                    <div className="p-8 text-center text-xs text-slate-700 font-semibold">No movies matching "{topMoviesSearchQuery}" found.</div>
                   );
                 }
 
                 return filteredMovies.map((movie, idx) => (
-                  <div key={idx} className="p-3.5 glass-panel rounded-2xl border border-white/10 flex items-center justify-between gap-4 hover:border-cyan-400/40 transition-all">
+                  <div key={idx} className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-slate-300 flex items-center justify-between gap-4 hover:border-[#D90000] transition-all shadow-sm text-[#1A1A1A]">
                     <div className="flex items-center gap-3.5 min-w-0">
-                      <span className="w-7 h-7 rounded-xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-xs font-bold text-cyan-300 font-mono shrink-0">
+                      <span className="w-7 h-7 rounded-xl bg-[#DBCEA5] border border-[#c5ba92] flex items-center justify-center text-xs font-black text-[#1A1A1A] font-mono shrink-0">
                         #{movie.rank || idx + 1}
                       </span>
-                      <img src={movie.poster} alt={movie.title} className="w-10 h-12 rounded-lg object-cover border border-slate-700 shrink-0" />
+                      <img src={movie.poster} alt={movie.title} className="w-10 h-12 rounded-lg object-cover border border-slate-300 shrink-0 shadow-sm" />
                       <div className="min-w-0">
-                        <h4 className="font-bold text-white text-sm truncate">{movie.title}</h4>
-                        <div className="flex items-center gap-3 text-xs text-white/60 mt-0.5">
+                        <h4 className="font-black text-[#1A1A1A] text-sm truncate">{movie.title}</h4>
+                        <div className="flex items-center gap-3 text-xs text-slate-700 font-bold mt-0.5">
                           <span>🎟️ {movie.bookings || 0} Bookings</span>
                           <span>•</span>
                           <span>🍿 {movie.tickets || 0} Tickets Sold</span>
@@ -7237,10 +7237,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     </div>
 
                     <div className="text-right shrink-0">
-                      <div className="font-mono font-extrabold text-cyan-300 text-sm">
+                      <div className="font-mono font-black text-[#2C5745] text-sm">
                         ₹{(movie.revenue || 0).toLocaleString('en-IN')}
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
+                      <span className="px-2 py-0.5 rounded-full bg-[#D90000] text-white text-[10px] font-black">
                         {movie.category || 'Movie'}
                       </span>
                     </div>
@@ -7250,11 +7250,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-3 border-t border-white/10 flex justify-between items-center shrink-0">
-              <span className="text-xs text-white/60">Showing {topMoviesList.length} Total Movies</span>
+            <div className="pt-3 border-t border-[#c5ba92] flex justify-between items-center shrink-0">
+              <span className="text-xs text-slate-800 font-bold">Showing {topMoviesList.length} Total Movies</span>
               <button
                 onClick={() => setTopMoviesModalOpen(false)}
-                className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs cursor-pointer transition-colors shadow-lg shadow-cyan-500/20"
+                className="px-5 py-2 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer transition-colors shadow-md"
               >
                 Close View
               </button>
@@ -7265,36 +7265,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
       {/* Top Theatres Expansion Modal (View All / More) */}
       {topTheatresModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="relative w-full max-w-3xl glass-modal rounded-3xl p-6 border border-blue-400/30 shadow-[0_0_50px_rgba(0,0,0,0.9)] text-white max-h-[85vh] flex flex-col my-auto overflow-hidden">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative w-full max-w-3xl bg-[#DBCEA5] rounded-3xl p-6 border border-[#c5ba92] shadow-2xl text-[#1A1A1A] max-h-[85vh] flex flex-col my-auto overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+            <div className="flex items-center justify-between pb-4 border-b border-[#c5ba92] shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-300">
-                  <Building className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-2xl bg-[#2B1B17] text-white flex items-center justify-center shadow-sm">
+                  <Building className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold font-sans text-white">All Configured Multiplex Venues (Live MongoDB Atlas)</h3>
-                  <p className="text-xs text-blue-300">Complete ranking of all active theatres by occupancy %, rating, and seat volume</p>
+                  <h3 className="text-xl font-black font-sans text-[#1A1A1A]">All Configured Multiplex Venues (Live MongoDB Atlas)</h3>
+                  <p className="text-xs text-slate-800 font-semibold">Complete ranking of all active theatres by occupancy %, rating, and seat volume</p>
                 </div>
               </div>
 
               <button
                 onClick={() => setTopTheatresModalOpen(false)}
-                className="p-2 rounded-full bg-white/10 hover:bg-rose-500 text-white transition-all cursor-pointer border border-white/10"
+                className="p-2 rounded-full bg-[#FFFFFF] hover:bg-[#D90000] text-[#1A1A1A] hover:text-white transition-all cursor-pointer border border-slate-300 shadow-sm"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Search Bar */}
-            <div className="py-4 border-b border-white/10 shrink-0">
+            <div className="py-4 border-b border-[#c5ba92] shrink-0">
               <input
                 type="text"
                 placeholder="Search active theatres by name or city (e.g. Surat, INOX, PVR)..."
                 value={topTheatresSearchQuery}
                 onChange={(e) => setTopTheatresSearchQuery(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-blue-400"
+                className="w-full px-4 py-2.5 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]"
               />
             </div>
 
@@ -7312,7 +7312,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                 if (filtered.length === 0) {
                   return (
-                    <div className="p-8 text-center text-xs text-white/50">
+                    <div className="p-8 text-center text-xs text-slate-700 font-semibold">
                       No theatres matching "{topTheatresSearchQuery}" found.
                     </div>
                   );
@@ -7323,29 +7323,29 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   const displayName = th?.nameAndCity || (th?.city ? `${th.name} - ${th.city}` : th?.name) || 'PrimeShow Theatre';
                   
                   return (
-                    <div key={th.theatreId || th.name || idx} className="p-4 glass-panel rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-blue-400/40 transition-all">
+                    <div key={th.theatreId || th.name || idx} className="p-4 bg-[#FFFFFF] rounded-2xl border border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#D90000] transition-all shadow-sm text-[#1A1A1A]">
                       <div className="flex items-center gap-3.5 min-w-0">
-                        <span className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-xs font-bold text-blue-300 font-mono shrink-0">
+                        <span className="w-8 h-8 rounded-xl bg-[#DBCEA5] border border-[#c5ba92] flex items-center justify-center text-xs font-black text-[#1A1A1A] font-mono shrink-0">
                           #{th.rank || idx + 1}
                         </span>
                         <div className="min-w-0">
-                          <h4 className="font-bold text-white text-sm truncate">{th.name || displayName}</h4>
-                          <div className="flex items-center gap-2 text-xs text-slate-300 mt-0.5">
-                            <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-semibold text-[10px]">{th.city || 'Gujarat'}</span>
+                          <h4 className="font-black text-[#1A1A1A] text-sm truncate">{th.name || displayName}</h4>
+                          <div className="flex items-center gap-2 text-xs text-slate-700 font-bold mt-0.5">
+                            <span className="px-2 py-0.5 rounded bg-[#D90000] text-white font-black text-[10px]">{th.city || 'Gujarat'}</span>
                             <span>•</span>
-                            <span className="text-amber-400 font-bold">★ {th.rating || 4.8} / 5.0 Rating</span>
+                            <span className="text-[#D90000] font-black">★ {th.rating || 4.8} / 5.0 Rating</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                      <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-300">
                         <div className="text-left sm:text-right">
-                          <div className="text-xs text-slate-400">Seats Sold: <strong className="text-white">{th.tickets || 0}</strong></div>
-                          <div className="text-[11px] text-emerald-400 font-semibold">Revenue: ₹{(th.revenue || 0).toLocaleString('en-IN')}</div>
+                          <div className="text-xs text-slate-700 font-bold">Seats Sold: <strong className="text-[#1A1A1A]">{th.tickets || 0}</strong></div>
+                          <div className="text-[11px] text-[#2C5745] font-black">Revenue: ₹{(th.revenue || 0).toLocaleString('en-IN')}</div>
                         </div>
                         <div className="text-right min-w-[70px]">
-                          <div className="font-mono font-black text-blue-400 text-base">{pct}%</div>
-                          <div className="text-[9px] text-slate-400 uppercase tracking-wider">Occupancy</div>
+                          <div className="font-mono font-black text-[#D90000] text-base">{pct}%</div>
+                          <div className="text-[9px] text-slate-600 font-black uppercase tracking-wider">Occupancy</div>
                         </div>
                       </div>
                     </div>
@@ -7355,13 +7355,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-3 border-t border-white/10 flex justify-between items-center shrink-0">
-              <span className="text-xs text-white/60">
+            <div className="pt-3 border-t border-[#c5ba92] flex justify-between items-center shrink-0">
+              <span className="text-xs text-slate-800 font-bold">
                 Showing {((allTheatresList && allTheatresList.length > 0) ? allTheatresList : topTheatresList).length} Total Venues
               </span>
               <button
                 onClick={() => setTopTheatresModalOpen(false)}
-                className="px-5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-black font-bold text-xs cursor-pointer transition-colors shadow-lg shadow-blue-500/20"
+                className="px-5 py-2 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer transition-colors shadow-md"
               >
                 Close View
               </button>
