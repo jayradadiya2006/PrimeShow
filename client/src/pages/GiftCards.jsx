@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Gift, CheckCircle2, MoreVertical, SlidersHorizontal, X, Check } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { apiClient } from '../services/api';
 
 export const GiftCards = () => {
+  const { user } = useAuth();
   const [giftAmount, setGiftAmount] = useState(1000);
   const [recipientEmail, setRecipientEmail] = useState('');
   const [purchased, setPurchased] = useState(false);
@@ -15,9 +18,27 @@ export const GiftCards = () => {
 
   const [selectedTheme, setSelectedTheme] = useState(cardThemes[0]);
 
-  const handlePurchase = (e) => {
+  const handlePurchase = async (e) => {
     e.preventDefault();
     if (!recipientEmail) return;
+    try {
+      await apiClient.post('/bookings/create', {
+        title: `Gift Card: ${selectedTheme.name}`,
+        category: 'Activity',
+        theatreName: `Digital E-Gift Card (${selectedTheme.name})`,
+        location: 'Online Voucher Delivery',
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        seats: [`Gift Voucher ₹${giftAmount}`],
+        totalAmount: Number(giftAmount),
+        paymentMethod: 'UPI (Instant)',
+        userId: user?.id || user?.firebaseUid || '',
+        userEmail: user?.email || recipientEmail,
+        userName: user?.name || recipientEmail.split('@')[0],
+        status: 'CONFIRMED'
+      });
+    } catch (err) {}
+
     setPurchased(true);
     setTimeout(() => setPurchased(false), 5000);
   };

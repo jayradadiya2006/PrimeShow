@@ -726,8 +726,21 @@ export const BookingProvider = ({ children }) => {
       }));
     }
 
+    let loggedUser = null;
+    try {
+      const savedUser = localStorage.getItem('primeshow_user');
+      if (savedUser) loggedUser = JSON.parse(savedUser);
+    } catch (e) {}
+
+    const targetUserId = bookingDetails.userId || loggedUser?.id || loggedUser?.firebaseUid || '';
+    const targetUserEmail = bookingDetails.userEmail || loggedUser?.email || 'guest@primeshow.com';
+    const targetUserName = bookingDetails.userName || loggedUser?.name || 'VIP Guest';
+
     try {
       await API.post('/bookings/create', {
+        userId: targetUserId,
+        userEmail: targetUserEmail,
+        userName: targetUserName,
         showId: activeBooking.show?.id || bookingDetails.showId || 'sh_101',
         movieId: movieId,
         movieTitle: movieTitle,

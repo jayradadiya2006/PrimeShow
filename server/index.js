@@ -1754,6 +1754,12 @@ app.all(userSyncPaths, async (req, res) => {
       await logUserActivity(syncedUser.email, syncedUser.name, 'LOGGED_IN', 'User session synchronized');
     } catch (e) {}
 
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('USER_UPDATED', syncedUser);
+      req.app.get('socketio').emit('USER_REGISTERED_EVENT', syncedUser);
+    }
+    broadcastToAllClients('USER_UPDATED', syncedUser);
+
     const sessionToken = jwt.sign(syncedUser, JWT_SECRET, { expiresIn: '7d' });
     return res.status(200).json({ success: true, message: 'User synced successfully', token: sessionToken, user: syncedUser });
   } catch (err) {
@@ -1778,29 +1784,42 @@ app.post(['/api/auth/logout', '/auth/logout'], async (req, res) => {
   const { email, userId } = req.body;
   const targetEmail = (email || '').toLowerCase().trim();
 
-  if (targetEmail) {
+  if (targetEmail || userId) {
     const memUser = globalRegisteredUsersMap.get(targetEmail);
     if (memUser) {
       memUser.isOnline = false;
       memUser.lastLogoutTime = new Date().toISOString();
+      memUser.lastLogoutAt = new Date().toISOString();
       globalRegisteredUsersMap.set(targetEmail, memUser);
     }
 
+    let updatedUserObj = null;
     if (mongoose.connection.readyState === 1) {
       try {
-        const dbUser = await User.findOne({
-          $or: [{ email: targetEmail }, { id: userId }]
-        });
+        const queryOr = [];
+        if (targetEmail) queryOr.push({ email: targetEmail });
+        if (userId) queryOr.push({ id: userId });
+
+        const dbUser = await User.findOne({ $or: queryOr });
         if (dbUser) {
           dbUser.isOnline = false;
+          dbUser.lastLogoutAt = new Date();
           dbUser.lastLogoutTime = new Date();
           await dbUser.save();
+          updatedUserObj = dbUser.toObject();
           await logUserActivity(dbUser.email, dbUser.name, 'LOGGED_OUT', 'Logged out of session');
         }
       } catch (err) {
         console.warn('Logout status update warning:', err.message);
       }
     }
+
+    const broadcastPayload = updatedUserObj || { email: targetEmail, id: userId, isOnline: false, lastLogoutTime: new Date().toISOString() };
+    if (req.app.get('socketio')) {
+      req.app.get('socketio').emit('USER_UPDATED', broadcastPayload);
+      req.app.get('socketio').emit('USER_LOGGED_OUT', broadcastPayload);
+    }
+    broadcastToAllClients('USER_UPDATED', broadcastPayload);
   }
 
   return res.json({ success: true, message: 'User session logged out successfully' });

@@ -1368,14 +1368,23 @@ export const AdminDashboard = ({ onReturnHome }) => {
       fetchFinancialStats();
       fetchTopMoviesAnalytics();
       fetchTopTheatresAnalytics();
+      fetchAdminUsers(userCurrentPage, userSearchQuery);
+    });
+
+    socket.on('USER_UPDATED', (data) => {
+      console.log('⚡ [Admin Socket Alert]: User status/profile updated', data);
+      fetchAdminUsers(userCurrentPage, userSearchQuery);
+    });
+
+    socket.on('USER_LOGGED_OUT', (data) => {
+      console.log('⚡ [Admin Socket Alert]: User logged out', data);
+      fetchAdminUsers(userCurrentPage, userSearchQuery);
     });
 
     socket.on('NEW_USER_REGISTERED', (data) => {
       console.log('⚡ [Admin Socket Alert]: New user registered', data);
       setActionSuccess(`⚡ New User Registered! ${data.name || data.email}`);
-      if (activeTab === 'users') {
-        fetchAdminUsers(userCurrentPage, userSearchQuery);
-      }
+      fetchAdminUsers(userCurrentPage, userSearchQuery);
       setTimeout(() => setActionSuccess(''), 5000);
     });
 
@@ -1387,10 +1396,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
     return () => {
       socket.off('NEW_USER_BOOKING');
+      socket.off('BOOKING_CREATED');
+      socket.off('USER_UPDATED');
+      socket.off('USER_LOGGED_OUT');
       socket.off('NEW_USER_REGISTERED');
       socket.off('NEW_SUPPORT_MESSAGE');
     };
-  }, [socket, activeTab]);
+  }, [socket, activeTab, userCurrentPage, userSearchQuery]);
 
   // Handle Full Movie Save (Create / Edit)
   const handleSaveMovie = async (e) => {

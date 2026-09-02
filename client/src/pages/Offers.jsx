@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Tag, Copy, Check, ShieldCheck, Sparkles, RefreshCw, Search, X, MoreVertical, SlidersHorizontal, ArrowRight } from 'lucide-react';
 import API, { API_BASE } from '../services/api';
 import { OfferCarousel } from '../components/OfferCarousel';
+import { useAuth } from '../context/AuthContext';
 
 export const Offers = ({ onSelectCategory }) => {
+  const { user } = useAuth();
   const [offersList, setOffersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copiedCode, setCopiedCode] = useState(null);
@@ -64,9 +66,20 @@ export const Offers = ({ onSelectCategory }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleCopy = (code) => {
+  const handleCopy = async (code) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
+    try {
+      if (user?.email) {
+        await API.post('/user-activities', {
+          userEmail: user.email,
+          userName: user.name,
+          action: 'CLAIMED_OFFER',
+          details: `Copied promo voucher code: ${code}`,
+          category: 'Offers'
+        });
+      }
+    } catch (e) {}
     setTimeout(() => setCopiedCode(null), 3000);
   };
 
