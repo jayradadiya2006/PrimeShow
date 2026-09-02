@@ -6977,29 +6977,51 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   {userActivitySubTab === 'bookings' && (
                     <div className="space-y-3">
                       {Array.isArray(userActivityData?.bookings) && userActivityData.bookings.length > 0 ? (
-                        userActivityData.bookings.map((b, idx) => (
-                          <div key={b.id || idx} className="bg-[#FFFFFF] p-4 rounded-2xl border border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#D90000] transition-colors shadow-sm text-[#1A1A1A]">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-black text-[#1A1A1A] text-sm">{b.movieTitle || b.activityTitle || b.eventTitle || 'Cinema Ticket'}</span>
-                                <span className="px-2 py-0.5 rounded bg-[#2C5745]/20 text-[#2C5745] text-[10px] font-black">
-                                  {b.status || 'CONFIRMED'}
-                                </span>
-                              </div>
-                              <p className="text-xs text-slate-800 font-bold mt-1">
-                                {b.theatreName || b.location || 'PrimeShow Multiplex'} • Seats: <strong className="text-[#D90000]">{Array.isArray(b.seats) ? b.seats.join(', ') : (b.seats || 'General')}</strong>
-                              </p>
-                              <p className="text-[10px] text-slate-600 font-semibold mt-0.5">
-                                Order ID: {b.id} • Date: {b.showDate || b.date || 'Today'} • Time: {b.showTime || b.time || '10:00 AM'}
-                              </p>
-                            </div>
+                        userActivityData.bookings.map((b, idx) => {
+                          const cat = (b.category || 'Movie').toUpperCase();
+                          const catColor = 
+                            cat === 'MOVIE' ? 'bg-[#D90000] text-white' :
+                            cat === 'EVENT' ? 'bg-[#2C5745] text-white' :
+                            cat === 'PLAY' ? 'bg-[#854D0E] text-white' :
+                            'bg-[#2B2B2B] text-white';
 
-                            <div className="text-right shrink-0">
-                              <div className="text-base font-black text-[#2C5745]">₹{b.totalAmount || b.totalPrice || 450}</div>
-                              <div className="text-[10px] text-slate-600 font-bold">{b.paymentMethod || 'UPI Paid'}</div>
+                          return (
+                            <div key={b.id || idx} className="bg-[#FFFFFF] p-4 rounded-2xl border border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#D90000] transition-colors shadow-sm text-[#1A1A1A]">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase shadow-xs ${catColor}`}>
+                                    {b.category || 'Movie'}
+                                  </span>
+                                  <span className="font-black text-[#1A1A1A] text-sm">
+                                    {b.title || b.movieTitle || b.activityTitle || b.eventTitle || b.playTitle || 'Cinema Ticket'}
+                                  </span>
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                                    b.status === 'CANCELLED' ? 'bg-rose-500/20 text-rose-800' : 'bg-[#2C5745]/20 text-[#2C5745]'
+                                  }`}>
+                                    {b.status || 'CONFIRMED'}
+                                  </span>
+                                </div>
+
+                                <p className="text-xs text-slate-800 font-bold">
+                                  📍 {b.theatreName || b.venue || b.location || 'PrimeShow Venue'} • Seats/Tickets: <strong className="text-[#D90000]">{Array.isArray(b.seats) ? b.seats.join(', ') : (b.seats || '1 Pass')}</strong>
+                                </p>
+
+                                <p className="text-[10px] text-slate-600 font-semibold flex items-center gap-2 flex-wrap">
+                                  <span>🆔 {b.bookingId || b.id}</span>
+                                  <span>•</span>
+                                  <span>📅 {b.showDate || b.date || 'Today'}</span>
+                                  <span>•</span>
+                                  <span>⏰ {b.showTime || b.time || '10:00 AM'}</span>
+                                </p>
+                              </div>
+
+                              <div className="text-left sm:text-right shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
+                                <div className="text-base font-black text-[#2C5745]">₹{b.totalAmount || b.totalPrice || 450}</div>
+                                <div className="text-[10px] text-slate-600 font-bold">{b.paymentMethod || 'UPI Paid'}</div>
+                              </div>
                             </div>
-                          </div>
-                        ))
+                          );
+                        })
                       ) : (
                         <div className="p-8 text-center bg-[#FFFFFF] rounded-2xl border border-slate-300 text-slate-700 text-xs font-semibold">
                           No booking history recorded for this user yet.
@@ -7014,15 +7036,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       {Array.isArray(userActivityData?.logs) && userActivityData.logs.length > 0 ? (
                         userActivityData.logs.map((log, idx) => {
                           const logTime = new Date(log.timestamp || log.createdAt);
-                          const formattedDate = logTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                          const formattedDay = logTime.toLocaleDateString('en-GB', { weekday: 'short' });
-                          const formattedTime = logTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                          const formattedDate = isNaN(logTime) ? 'Recently' : logTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                          const formattedDay = isNaN(logTime) ? '' : logTime.toLocaleDateString('en-GB', { weekday: 'short' });
+                          const formattedTime = isNaN(logTime) ? '' : logTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                           
-                          const isLogin = log.action === 'LOGGED_IN';
-                          const isLogout = log.action === 'LOGGED_OUT';
+                          const isLogin = log.action === 'LOGGED_IN' || (log.action && log.action.includes('LOGIN'));
+                          const isLogout = log.action === 'LOGGED_OUT' || (log.action && log.action.includes('LOGOUT'));
                           
                           return (
-                            <div key={log.id || idx} className="bg-[#FFFFFF] p-3.5 rounded-2xl border border-slate-300 flex items-center justify-between gap-3 shadow-sm text-[#1A1A1A]">
+                            <div key={log.id || idx} className="bg-[#FFFFFF] p-3.5 rounded-2xl border border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm text-[#1A1A1A]">
                               <div className="flex items-center gap-3">
                                 <div className={`p-2.5 rounded-xl text-xs font-black shrink-0 ${
                                   isLogin ? 'bg-[#2C5745]/20 text-[#2C5745]' :
@@ -7034,12 +7056,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
                                 <div>
                                   <div className="font-black text-[#1A1A1A] text-xs">{log.details || log.action}</div>
-                                  <div className="text-[10px] text-slate-700 font-bold mt-0.5">User: {log.userName} ({log.userEmail})</div>
+                                  <div className="text-[10px] text-slate-700 font-bold mt-0.5">
+                                    User: {log.userName || selectedUserForActivity?.name || 'Customer'} ({log.userEmail || selectedUserForActivity?.email})
+                                  </div>
                                 </div>
                               </div>
 
-                              <div className="text-right shrink-0">
-                                <div className="text-xs font-mono font-black text-[#1A1A1A]">{formattedDate} ({formattedDay})</div>
+                              <div className="text-left sm:text-right shrink-0">
+                                <div className="text-xs font-mono font-black text-[#1A1A1A]">{formattedDate} {formattedDay ? `(${formattedDay})` : ''}</div>
                                 <div className="text-[10px] text-slate-600 font-mono font-bold mt-0.5">{formattedTime}</div>
                               </div>
                             </div>

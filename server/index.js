@@ -465,11 +465,6 @@ const seedInitialUsersList = [
     isOnline: false,
     lastLoginTime: new Date(Date.now() - 3600000 * 24).toISOString(),
     lastLogoutTime: new Date(Date.now() - 3600000 * 20).toISOString(),
-    lastActive: new Date(Date.now() - 3600000 * 24).toISOString(),
-    createdAt: new Date('2026-02-01').toISOString()
-  }
-];
-
 seedInitialUsersList.forEach(u => globalRegisteredUsersMap.set(u.email.toLowerCase(), u));
 
 const upsertUserRecord = async (userData) => {
@@ -477,16 +472,16 @@ const upsertUserRecord = async (userData) => {
   
   const firebaseUid = userData.firebaseUid || userData.uid || userData.authProviderId || userData.googleId || null;
   const rawEmail = userData.email || userData.user?.email || userData.profile?.email || '';
-  if (!rawEmail && !firebaseUid) return null;
+  const phone = userData.phone || userData.phoneNumber || userData.user?.phone || '';
+  if (!rawEmail && !firebaseUid && !phone) return null;
 
-  const email = rawEmail ? rawEmail.toLowerCase().trim() : '';
+  const email = rawEmail ? rawEmail.toLowerCase().trim() : (phone ? `phone_${phone.replace(/\D/g, '')}@primeshow.com` : '');
   let name = userData.name || userData.user?.name || userData.profile?.name;
   if (!name && email) name = email.split('@')[0].toUpperCase();
 
   const avatar = userData.profilePicture || userData.avatar || userData.user?.profilePicture || userData.user?.avatar || userData.profile?.picture || ('https://api.dicebear.com/7.x/adventurer-neutral/svg?seed=' + name + '&backgroundColor=0f172a');
   const provider = userData.provider || userData.authProvider || (firebaseUid ? 'FIREBASE' : 'LOCAL');
   const role = (email === 'admin@primeshow.com' || userData.role === 'ADMIN') ? 'ADMIN' : (userData.role || 'CUSTOMER');
-  const phone = userData.phone || userData.phoneNumber || userData.user?.phone || '+91 9876543210';
   const city = userData.city || userData.user?.city || 'Surat';
 
   // mongoose imported at top level
@@ -505,11 +500,16 @@ const upsertUserRecord = async (userData) => {
         dbDoc = await User.findOne({ email });
       }
 
+      // 3. Fallback search by phone
+      if (!dbDoc && phone) {
+        dbDoc = await User.findOne({ $or: [{ phone }, { phoneNumber: phone }, { whatsappPhone: phone }] });
+      }
+
       if (dbDoc) {
         if (firebaseUid && !dbDoc.firebaseUid) {
           dbDoc.firebaseUid = firebaseUid;
         }
-        if (name) dbDoc.name = name;
+        if (name && name !== dbDoc.name) dbDoc.name = name;
         if (avatar) {
           dbDoc.avatar = avatar;
           dbDoc.profilePicture = avatar;
@@ -518,18 +518,22 @@ const upsertUserRecord = async (userData) => {
           dbDoc.phone = phone;
           dbDoc.phoneNumber = phone;
         }
+        if (city && city !== 'Surat') {
+          dbDoc.city = city;
+        }
         dbDoc.isOnline = true;
         dbDoc.lastLoginAt = new Date();
         dbDoc.lastLoginTime = new Date();
         dbDoc.lastActive = new Date();
         dbDoc.authProvider = provider.toLowerCase().includes('google') ? 'google' : (provider.toLowerCase().includes('phone') || provider.toLowerCase().includes('otp') ? 'phone' : 'email');
+        dbDoc.provider = provider;
         await dbDoc.save();
 
         const userObj = dbDoc.toObject();
         if (email) globalRegisteredUsersMap.set(email, userObj);
         return userObj;
       } else {
-        const stableId = firebaseUid ? `usr_${firebaseUid}` : `usr_${Date.now()}`;
+        const stableId = firebaseUid ? `usr_${firebaseUid}` : (phone ? `usr_phone_${phone.replace(/\D/g, '')}` : `usr_${Date.now()}`);
         const normalizedAuth = provider.toLowerCase().includes('google') ? 'google' : (provider.toLowerCase().includes('phone') || provider.toLowerCase().includes('otp') ? 'phone' : 'email');
         const newRecord = {
           id: stableId,
@@ -537,8 +541,8 @@ const upsertUserRecord = async (userData) => {
           name: name || 'PrimeShow User',
           username: email ? email.split('@')[0].toLowerCase() : `user_${Date.now()}`,
           email: email,
-          phone: phone,
-          phoneNumber: phone,
+          phone: phone || '+91 9876543210',
+          phoneNumber: phone || '+91 9876543210',
           role: role,
           city: city,
           rewardsPoints: userData.rewardsPoints || 500,
@@ -564,11 +568,6 @@ const upsertUserRecord = async (userData) => {
     }
   }
 
-  const existing = email ? (globalRegisteredUsersMap.get(email) || {}) : {};
-  const mergedRecord = {
-    id: existing.id || (firebaseUid ? `usr_${firebaseUid}` : `usr_${Date.now()}`),
-    firebaseUid: firebaseUid || existing.firebaseUid,
-    name: name || existing.name || 'PrimeShow User',
     username: email ? email.split('@')[0].toLowerCase() : `user_${Date.now()}`,
     email: email,
     phone: phone || existing.phone,
@@ -1150,9 +1149,33 @@ app.get(['/api/admin/users/list', '/admin/users/list', '/api/users/list', '/user
 app.get(userRoutesPaths, async (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = (req.query.search || '').trim().toLowerCase();
+
     if (mongoose.connection.readyState === 1) {
-      const dbUsers = await User.find().sort({ updatedAt: -1, createdAt: -1 }).lean();
-      if (dbUsers && dbUsers.length > 0) {
+      let queryFilter = {};
+      if (search) {
+        queryFilter.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { phone: { $regex: search, $options: 'i' } },
+          { phoneNumber: { $regex: search, $options: 'i' } },
+          { username: { $regex: search, $options: 'i' } },
+          { city: { $regex: search, $options: 'i' } },
+          { provider: { $regex: search, $options: 'i' } },
+          { authProvider: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      const totalUsers = await User.countDocuments(queryFilter);
+      const dbUsers = await User.find(queryFilter)
+        .sort({ lastLoginTime: -1, updatedAt: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
+      if (dbUsers) {
         const usersWithStats = await Promise.all(dbUsers.map(async (user) => {
           const totalBookings = await Booking.countDocuments({ 
             $or: [{ userId: user.id }, { userId: String(user._id) }, { userEmail: user.email }] 
@@ -1163,18 +1186,43 @@ app.get(userRoutesPaths, async (req, res) => {
             status: user.isOnline ? 'Online' : (user.status || 'Offline')
           };
         }));
-        return res.status(200).json({ success: true, users: usersWithStats });
+
+        return res.status(200).json({
+          success: true,
+          users: usersWithStats,
+          totalUsers,
+          totalPages: Math.ceil(totalUsers / limit) || 1,
+          currentPage: page
+        });
       }
     }
   } catch (err) {
     console.warn('MongoDB Users Query Warning:', err.message);
   }
-  const memoryUsers = Array.from(globalRegisteredUsersMap.values()).map(u => ({
+
+  let memoryUsers = Array.from(globalRegisteredUsersMap.values());
+  if (search) {
+    memoryUsers = memoryUsers.filter(u =>
+      (u.name && u.name.toLowerCase().includes(search)) ||
+      (u.email && u.email.toLowerCase().includes(search)) ||
+      (u.phone && u.phone.toLowerCase().includes(search)) ||
+      (u.city && u.city.toLowerCase().includes(search))
+    );
+  }
+
+  const paginated = memoryUsers.slice((page - 1) * limit, page * limit).map(u => ({
     ...u,
     totalBookings: 0,
     status: u.isOnline ? 'Online' : 'Offline'
   }));
-  return res.status(200).json({ success: true, users: memoryUsers });
+
+  return res.status(200).json({
+    success: true,
+    users: paginated,
+    totalUsers: memoryUsers.length,
+    totalPages: Math.ceil(memoryUsers.length / limit) || 1,
+    currentPage: page
+  });
 });
 
 // Admin Real-Time System Activity Logs & Financial Aggregations Endpoint
@@ -1307,16 +1355,19 @@ app.get([
     const formattedBookings = rawBookings.map(b => ({
       id: b.id || b._id,
       bookingId: b.id || b.transactionId || `BK-${b._id}`,
-      movieTitle: b.movieTitle || b.title || b.eventTitle || b.activityTitle || 'PrimeShow Ticket',
-      activityTitle: b.movieTitle || b.title || b.eventTitle || b.activityTitle || 'PrimeShow Ticket',
-      eventTitle: b.movieTitle || b.title || b.eventTitle || b.activityTitle || 'PrimeShow Ticket',
-      theatreName: b.theatreName || b.venue || b.city || 'PrimeShow Cinema',
-      location: b.theatreName || b.venue || b.city || 'PrimeShow Cinema',
-      showDate: b.showDate || b.date || '2026-08-23',
-      date: b.showDate || b.date || '2026-08-23',
-      showTime: b.showTime || b.time || '07:30 PM',
-      time: b.showTime || b.time || '07:30 PM',
-      seats: Array.isArray(b.seats) ? b.seats : (b.seats ? [b.seats] : ['Seat 1']),
+      category: b.category || (b.movieId ? 'Movie' : (b.eventId ? 'Event' : (b.playId || b.playlistId ? 'Play' : (b.activityId ? 'Activity' : 'Movie')))),
+      title: b.movieTitle || b.playTitle || b.eventTitle || b.activityTitle || b.title || 'PrimeShow Ticket',
+      movieTitle: b.movieTitle || b.playTitle || b.eventTitle || b.activityTitle || b.title || 'PrimeShow Ticket',
+      activityTitle: b.movieTitle || b.playTitle || b.eventTitle || b.activityTitle || b.title || 'PrimeShow Ticket',
+      eventTitle: b.movieTitle || b.playTitle || b.eventTitle || b.activityTitle || b.title || 'PrimeShow Ticket',
+      theatreName: b.theatreName || b.venue || b.location || b.city || 'PrimeShow Cinema',
+      venue: b.theatreName || b.venue || b.location || b.city || 'PrimeShow Cinema',
+      location: b.theatreName || b.venue || b.location || b.city || 'PrimeShow Cinema',
+      showDate: b.showDate || b.date || b.selectedDate || '2026-08-23',
+      date: b.showDate || b.date || b.selectedDate || '2026-08-23',
+      showTime: b.showTime || b.time || b.slotTime || '07:30 PM',
+      time: b.showTime || b.time || b.slotTime || '07:30 PM',
+      seats: Array.isArray(b.seats) ? b.seats : (b.seats ? [b.seats] : (b.ticketCount ? [`${b.ticketCount} Ticket(s)`] : ['Seat 1'])),
       totalAmount: Number(b.totalAmount || b.totalPrice || b.price || 450),
       totalPrice: Number(b.totalAmount || b.totalPrice || b.price || 450),
       paymentMethod: b.paymentMethod || 'UPI (Instant)',
@@ -1857,52 +1908,24 @@ app.post(['/api/auth/verify-otp', '/auth/verify-otp'], async (req, res) => {
   otpStore.delete(formattedPhone);
 
   // Database Sync & Account Retrieval/Creation
-  let dbUser = null;
-  try {
-    dbUser = await User.findOne({ 
-      $or: [
-        { phone: formattedPhone },
-        { phone: phone.replace(/\D/g, '') },
-        { whatsappPhone: formattedPhone }
-      ]
-    });
-
-    if (dbUser) {
-      dbUser.phone = formattedPhone;
-      dbUser.provider = dbUser.provider || 'PHONE_OTP';
-      await dbUser.save();
-    } else {
-      const phoneDigits = formattedPhone.replace(/\D/g, '');
-      dbUser = new User({
-        id: `usr_phone_${Date.now()}`,
-        name: `Phone User (${phoneDigits.slice(-4)})`,
-        username: `user_${phoneDigits.slice(-6)}`,
-        email: `phone_${phoneDigits}@primeshow.com`,
-        phone: formattedPhone,
-        altPhone: '',
-        whatsappPhone: formattedPhone,
-        role: 'CUSTOMER',
-        rewardsPoints: 500,
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
-        provider: 'PHONE_OTP'
-      });
-      await dbUser.save();
-    }
-  } catch (dbErr) {
-    console.warn('MongoDB User Sync Warning for OTP verification:', dbErr.message);
-  }
-
-  const finalUserData = dbUser ? dbUser.toObject() : {
-    id: `usr_phone_${Date.now()}`,
-    name: `Phone User (${phone.slice(-4)})`,
-    username: `user_${phone.replace(/\D/g, '').slice(-6)}`,
-    email: `phone_${phone.replace(/\D/g, '')}@primeshow.com`,
+  const finalUserData = await upsertUserRecord({
     phone: formattedPhone,
-    role: 'CUSTOMER',
-    rewardsPoints: 500,
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80',
-    provider: 'PHONE_OTP'
-  };
+    email: `phone_${formattedPhone.replace(/\D/g, '')}@primeshow.com`,
+    name: `Phone User (${formattedPhone.slice(-4)})`,
+    provider: 'PHONE_OTP',
+    authProvider: 'phone',
+    role: 'CUSTOMER'
+  });
+
+  try {
+    await logUserActivity(
+      finalUserData.email,
+      finalUserData.name,
+      'LOGGED_IN',
+      'Logged in via Mobile Phone OTP Verification',
+      { authProvider: 'phone', phone: formattedPhone }
+    );
+  } catch (e) {}
 
   const sessionToken = jwt.sign(finalUserData, JWT_SECRET, { expiresIn: '7d' });
   return res.json({ token: sessionToken, user: finalUserData });
