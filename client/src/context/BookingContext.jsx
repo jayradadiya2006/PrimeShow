@@ -305,47 +305,18 @@ const MOCK_MOVIES = [
 ];
 
 export const BookingProvider = ({ children }) => {
-  const [moviesList, setMoviesList] = useState(MOCK_MOVIES);
+  const [moviesList, setMoviesList] = useState([]);
   const [theatresList, setTheatresList] = useState([]);
   
   const fetchMovies = async () => {
     try {
       const res = await API.get('/movies');
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setMoviesList(prev => {
-          const serverMap = new Map(res.data.map(m => [m.id || m._id, m]));
-          const updatedList = prev.map(m => {
-            const serverM = serverMap.get(m.id) || serverMap.get(m._id);
-            if (serverM) {
-              const mergedDates = Array.from(new Set([
-                ...(m.showDates || []),
-                ...(serverM.showDates || [])
-              ]));
-              const mergedSchedules = {
-                ...(m.schedules || {}),
-                ...(serverM.schedules || {})
-              };
-              return {
-                ...m,
-                ...serverM,
-                showDates: mergedDates,
-                schedules: mergedSchedules
-              };
-            }
-            return m;
-          });
-
-          const prevIds = new Set(prev.map(m => m.id || m._id));
-          res.data.forEach(srvM => {
-            if (!prevIds.has(srvM.id) && !prevIds.has(srvM._id)) {
-              updatedList.unshift(srvM);
-            }
-          });
-
-          return updatedList;
-        });
+      if (res.data && Array.isArray(res.data)) {
+        setMoviesList(res.data);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.warn('⚠️ Error fetching movies from MongoDB Atlas:', err.message);
+    }
   };
 
   const fetchTheatres = async (city = '') => {
@@ -1073,7 +1044,7 @@ export const BookingProvider = ({ children }) => {
   const fetchUpcomingMovies = async () => {
     try {
       const res = await API.get(`/upcoming-movies?t=${Date.now()}`);
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+      if (res.data && Array.isArray(res.data)) {
         setUpcomingMoviesList(res.data);
       }
     } catch (err) {}
@@ -1235,18 +1206,8 @@ export const BookingProvider = ({ children }) => {
     } catch (err) {}
   };
 
-  // Upcoming Movies Dynamic Store & Persistent LocalStorage
-  const [upcomingMoviesList, setUpcomingMoviesList] = useState(() => {
-    const saved = localStorage.getItem('primeshow_upcoming_movies_v1');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return DEFAULT_UPCOMING_MOVIES;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('primeshow_upcoming_movies_v1', JSON.stringify(upcomingMoviesList));
-  }, [upcomingMoviesList]);
+  // Upcoming Movies Dynamic Store (MongoDB Atlas Single Source of Truth)
+  const [upcomingMoviesList, setUpcomingMoviesList] = useState([]);
 
   const addUpcomingMovie = async (movieObj) => {
     const newMovie = { id: `up_${Date.now()}`, ...movieObj };

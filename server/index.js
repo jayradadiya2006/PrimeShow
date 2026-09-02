@@ -2235,30 +2235,14 @@ app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   try {
-    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       const dbMovies = await Movie.find().sort({ createdAt: -1 }).lean();
-      if (dbMovies && dbMovies.length > 0) {
-        const dbIds = new Set(dbMovies.map(m => m.id));
-        const combined = dbMovies.map(dbM => {
-          const memM = movies.find(m => m.id === dbM.id);
-          if (memM) {
-            const mergedDates = Array.from(new Set([...(memM.showDates || []), ...(dbM.showDates || [])]));
-            const mergedSchedules = { ...(memM.schedules || {}), ...(dbM.schedules || {}) };
-            return { ...memM, ...dbM, showDates: mergedDates, schedules: mergedSchedules };
-          }
-          return dbM;
-        });
-        movies.forEach(m => {
-          if (!dbIds.has(m.id)) combined.push(m);
-        });
-        return res.json(combined);
-      }
+      return res.json(dbMovies || []);
     }
   } catch (err) {
     console.warn('⚠️ Error fetching movies from MongoDB Atlas:', err.message);
   }
-  res.json(movies);
+  return res.json(movies || []);
 });
 
 app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
@@ -2267,13 +2251,13 @@ app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   res.setHeader('Expires', '0');
   const { id } = req.params;
   try {
-    // mongoose imported at top level
     if (mongoose.connection.readyState === 1) {
       const dbMovie = await Movie.findOne(buildIdFilter(id)).lean();
       if (dbMovie) return res.json(dbMovie);
+      return res.status(404).json({ error: 'Movie not found' });
     }
   } catch (err) {}
-  const movie = movies.find(m => m.id === id);
+  const movie = movies.find(m => m.id === id || m._id === id);
   if (!movie) return res.status(404).json({ error: 'Movie not found' });
   res.json(movie);
 });
@@ -6333,11 +6317,11 @@ const seedDatabaseIfEmpty = async () => {
   try {
     if (mongoose.connection.readyState !== 1) return;
 
-    const movieCount = await Movie.countDocuments({});
-    if (movieCount === 0 && movies.length > 0) {
-      await Movie.insertMany(movies);
-      console.log('🌱 Seeded MongoDB Atlas with initial Movie records');
-    }
+    // Movie auto-seeding disabled to ensure deleted movies remain deleted permanently
+    // const movieCount = await Movie.countDocuments({});
+    // if (movieCount === 0 && movies.length > 0) {
+    //   await Movie.insertMany(movies);
+    // }
 
     const theatreCount = await Theatre.countDocuments({});
     if (theatreCount === 0 && theatres.length > 0) {
