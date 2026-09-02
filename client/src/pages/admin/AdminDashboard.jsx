@@ -3702,37 +3702,49 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {(Array.isArray(heroSlidesList) ? heroSlidesList : []).map((slide) => (
-                  <div key={slide.id} className="glass-panel rounded-3xl p-4 border border-white/10 space-y-3 relative overflow-hidden group">
-                    <div className="relative h-40 rounded-2xl overflow-hidden border border-white/10">
-                      <img src={slide.banner} alt={slide.title} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                      <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[10px] font-black uppercase">
-                        {slide.badge || 'BLOCKBUSTER'}
-                      </span>
-                    </div>
+                  <div key={slide.id} className="bg-[#DBCEA5] rounded-3xl p-4 border border-[#c5ba92] space-y-3 relative overflow-hidden group shadow-md text-[#1A1A1A] flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="relative h-40 rounded-2xl overflow-hidden border border-slate-300 shadow-sm">
+                        <img src={slide.banner} alt={slide.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                        <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-[#D90000] text-white text-[10px] font-black uppercase shadow-sm">
+                          {slide.badge || 'BLOCKBUSTER'}
+                        </span>
+                      </div>
 
-                    <div>
-                      <h4 className="text-base font-bold text-white truncate">{slide.title}</h4>
-                      <p className="text-xs text-amber-300 italic truncate">{slide.tagline}</p>
-                      <div className="text-[11px] text-white/60 mt-1">
-                        ⭐ {slide.rating || 9.0} • ₹{slide.price || 480} • {Array.isArray(slide.languages) ? slide.languages.join(', ') : slide.languages}
+                      <div>
+                        <h4 className="text-base font-black text-[#1A1A1A] truncate">{slide.title}</h4>
+                        <p className="text-xs text-slate-800 font-bold italic truncate mt-0.5">{slide.tagline}</p>
+                        <div className="text-[11px] text-[#1A1A1A] font-black mt-1.5 flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2 py-0.5 rounded bg-[#FFFFFF] border border-slate-300 text-[#1A1A1A] font-black">
+                            ⭐ {slide.rating || 9.0}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-[#FFFFFF] border border-slate-300 text-[#2C5745] font-black">
+                            ₹{slide.price || 480}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-[#FFFFFF] border border-slate-300 text-slate-800 font-bold truncate max-w-[150px]">
+                            {Array.isArray(slide.languages) ? slide.languages.join(', ') : slide.languages}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+                    <div className="flex justify-end gap-2 pt-2 border-t border-[#c5ba92]">
                       <button
                         onClick={() => handleEditHeroSlideClick(slide)}
-                        className="p-2 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500 hover:text-black transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-[#854D0E] hover:bg-[#63380b] text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                         title="Edit Slide"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3.5 h-3.5 text-white" />
+                        <span>Edit</span>
                       </button>
                       <button
                         onClick={() => handleDeleteHeroSlideClick(slide.id)}
-                        className="p-2 rounded-xl bg-rose-500/20 text-rose-300 hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-[#991B1B] hover:bg-[#7f1d1d] text-white text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
                         title="Delete Slide"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5 text-white" />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </div>
