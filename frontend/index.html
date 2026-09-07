@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A0C10" />
+
+    <!-- Primary SEO Metadata -->
+    <title>PrimeShow | India's Ultra-Luxury Movie & Ticket Booking Platform</title>
+    <meta name="description" content="Book movies, IMAX 3D shows, luxury multiplex tickets, private screening halls, live concerts, and adventure park passes on PrimeShow." />
+    <meta name="keywords" content="PrimeShow, movie tickets, IMAX 3D, movie booking, PVR Directors Cut, INOX Megaplex, cinema seats, online ticket booking" />
+    <meta name="author" content="PrimeShow Entertainment" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ['Instrument Serif', 'Georgia', 'serif'],
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+            },
+            colors: {
+              pitch: '#050508',
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-slate-100 dark:bg-[#0A0C10] text-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen font-sans antialiased overflow-x-hidden">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "primeshow-backend",
+  "version": "1.0.0",
+  "description": "PrimeShow Node.js Express REST API & Real-time Socket.IO Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "server": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongodb": "^7.6.0",
+    "socket.io": "^4.8.3"
+  }
+}

@@ -1,0 +1,1238 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
+import API, { API_BASE } from '../services/api';
+import { safeLocalStorageSet, safeLocalStorageGet, getImageFromIDB } from '../utils/imageStorage';
+
+const BookingContext = createContext();
+
+const getSocketBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+  return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : '';
+};
+const SOCKET_BASE = getSocketBaseUrl();
+
+const DEFAULT_HERO_SLIDES = [
+  {
+    id: 'hero_1',
+    movieId: 'mov_1',
+    title: 'Stree 2: Sarkate Ka Aatank',
+    tagline: 'The Legend Returns to Protect Chanderi',
+    badge: 'BLOCKBUSTER',
+    rating: 9.5,
+    votesCount: 94800,
+    duration: '2h 29m',
+    genres: ['Horror', 'Comedy', 'Blockbuster'],
+    languages: ['Hindi'],
+    price: 350,
+    banner: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+    synopsis: 'The town of Chanderi faces a new terrifying threat as Sarkate strikes, forcing Vicky and his friends to reunite with Stree.'
+  },
+  {
+    id: 'hero_2',
+    movieId: 'mov_2',
+    title: 'Jawan: Extended Cut',
+    tagline: 'An Unstoppable Force of Justice',
+    badge: 'TRENDING',
+    rating: 9.3,
+    votesCount: 88200,
+    duration: '2h 50m',
+    genres: ['Action', 'Thriller'],
+    languages: ['Hindi', 'Tamil', 'Telugu'],
+    price: 400,
+    banner: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=1920&q=80',
+    synopsis: 'A high-octane action thriller highlighting the emotional journey of a man who is set to rectify the wrongs in society.'
+  },
+  {
+    id: 'hero_3',
+    movieId: 'mov_3',
+    title: 'Pushpa 2: The Rule',
+    tagline: 'Wilder, Fiercer & Bigger Than Ever',
+    badge: 'CRITICS CHOICE',
+    rating: 9.4,
+    votesCount: 92400,
+    duration: '3h 10m',
+    genres: ['Action', 'Crime', 'Drama'],
+    languages: ['Telugu', 'Hindi', 'Tamil'],
+    price: 450,
+    banner: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80',
+    synopsis: 'The clash between Pushpa Raj and Bhanwar Singh Shekhawat intensifies as Pushpa expands his red sandalwood empire.'
+  }
+];
+
+const DEFAULT_FEATURE_STRIPS = [
+  {
+    id: 'feat_1',
+    title: 'Instant UPI Ticket Pass',
+    subtitle: 'Scan Jay Hiralal Radadiya QR for instant pass generation',
+    icon: 'Zap',
+    color: 'amber',
+    badge: 'INSTANT'
+  },
+  {
+    id: 'feat_2',
+    title: 'Private Cinema Screen',
+    subtitle: 'Book full theatre lounge for private birthday parties',
+    icon: 'Film',
+    color: 'purple',
+    badge: 'LUXURY'
+  },
+  {
+    id: 'feat_3',
+    title: 'Exclusive Promo Vouchers',
+    subtitle: 'Flat 50% discount on IMAX 3D recliners using PRIMESHOW50',
+    icon: 'Gift',
+    color: 'emerald',
+    badge: 'OFFER'
+  },
+  {
+    id: 'feat_4',
+    title: 'Expert VIP Concierge',
+    subtitle: 'Dedicated lounge assistance & gourmet dining booking',
+    icon: 'Sparkles',
+    color: 'cyan',
+    badge: 'VIP'
+  }
+];
+
+const DEFAULT_UPCOMING_MOVIES = [
+  {
+    id: 'up_1',
+    title: 'Avengers: Secret Wars',
+    release: 'Dec 2026',
+    poster: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+    genres: ['Action', 'Superhero'],
+    synopsis: 'The multiverse collapses as heroes assemble for the ultimate cosmic showdown.'
+  },
+  {
+    id: 'up_2',
+    title: 'The Dark Knight: Legacy',
+    release: 'Nov 2026',
+    poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80',
+    genres: ['Action', 'Crime'],
+    synopsis: 'A new vigilante emerges in Gotham City to honor the shadow of Batman.'
+  },
+  {
+    id: 'up_3',
+    title: 'Interstellar II: Beyond Horizon',
+    release: 'Jan 2027',
+    poster: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80',
+    genres: ['Sci-Fi', 'Adventure'],
+    synopsis: 'Explorers venture through an uncharted wormhole in search of human salvation.'
+  },
+  {
+    id: 'up_4',
+    title: 'Gladiator: Rise of Empires',
+    release: 'Oct 2026',
+    poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
+    genres: ['Action', 'Drama'],
+    synopsis: 'Colosseum legends collide in ancient Rome for supreme honor.'
+  }
+];
+
+const MOCK_MOVIES = [
+  {
+    id: 'mov_1',
+    title: 'Stree 2: Sarkate Ka Aatank',
+    tagline: 'The Legend Returns to Protect Chanderi',
+    synopsis: 'The town of Chanderi faces a new terrifying threat as Sarkate strikes, forcing Vicky and his friends to reunite with Stree to save their town.',
+    duration: '2h 29m',
+    rating: 9.5,
+    votesCount: 94800,
+    parentalRating: 'UA 13+',
+    releaseDate: '2026-08-15',
+    showDates: ['2026-07-31', '2026-08-01', '2026-08-02'],
+    genres: ['Horror', 'Comedy', 'Blockbuster'],
+    languages: ['Hindi'],
+    formats: ['IMAX 2D', 'Dolby Atmos', '2D'],
+    poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80',
+    banner: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+    trailerUrl: 'https://www.youtube.com/watch?v=KVnheWaLUXs',
+    director: 'Amar Kaushik',
+    producer: 'Dinesh Vijan & Jyoti Deshpande',
+    cast: [
+      { id: 'c_1', name: 'Rajkummar Rao', role: 'Vicky', character: 'Vicky', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80' },
+      { id: 'c_2', name: 'Shraddha Kapoor', role: 'Stree', character: 'Stree', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80' },
+      { id: 'c_3', name: 'Pankaj Tripathi', role: 'Rudra', character: 'Rudra', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80' }
+    ],
+    theatres: [
+      {
+        id: 'th_1',
+        name: 'PVR Director\'s Cut, Palladium Mall',
+        city: 'Mumbai',
+        address: 'Lower Parel, Mumbai',
+        facilities: ['VIP Recliners', 'Dolby Atmos', 'Gourmet In-Seat Dining'],
+        shows: [
+          { id: 'sh_101', time: '10:00 AM', format: 'Dolby Atmos', price: 450, tier: 'Recliner', screen: 'Screen 1', availableSeats: 80 },
+          { id: 'sh_102', time: '01:30 PM', format: 'Dolby Atmos', price: 550, tier: 'Recliner', screen: 'Screen 1', availableSeats: 65 }
+        ]
+      }
+    ],
+    status: 'Now Showing',
+    featured: true
+  }
+];
+
+export const BookingProvider = ({ children }) => {
+  const [moviesList, setMoviesList] = useState(() => {
+    const saved = safeLocalStorageGet('primeshow_movies_v1', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+    return MOCK_MOVIES;
+  });
+  const [theatresList, setTheatresList] = useState([]);
+
+  useEffect(() => {
+    safeLocalStorageSet('primeshow_movies_v1', moviesList);
+  }, [moviesList]);
+  
+  const fetchMovies = async () => {
+    try {
+      const res = await API.get('/movies');
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setMoviesList(res.data);
+      }
+    } catch (err) {
+      console.warn('⚠️ Error fetching movies from server API (Using Offline Cache):', err.message);
+    }
+  };
+
+  const fetchTheatres = async (city = '') => {
+    try {
+      const url = city && city !== 'All' ? `/admin/theatres?city=${encodeURIComponent(city)}` : '/admin/theatres';
+      const res = await API.get(url);
+      if (res.data && Array.isArray(res.data)) {
+        setTheatresList(res.data);
+        return res.data;
+      }
+    } catch (err) {
+      console.warn('⚠️ Error fetching theatres from Local MongoDB:', err.message);
+    }
+    return [];
+  };
+
+  const addTheatreToGlobalStore = async (theatreObj) => {
+    const newTh = {
+      id: theatreObj.id || `th_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      ...theatreObj
+    };
+    setTheatresList(prev => [newTh, ...prev.filter(t => t.id !== newTh.id)]);
+    try {
+      const res = await API.post('/admin/theatres', newTh);
+      if (res.data && res.data.id) {
+        setTheatresList(prev => [res.data, ...prev.filter(t => t.id !== res.data.id)]);
+      }
+    } catch (err) {}
+    return newTh;
+  };
+
+  const updateTheatreInGlobalStore = async (theatreId, updatedFields) => {
+    setTheatresList(prev => prev.map(t => t.id === theatreId ? { ...t, ...updatedFields } : t));
+    try {
+      await API.put(`/admin/theatres/${theatreId}`, updatedFields);
+    } catch (err) {}
+  };
+
+  const deleteTheatreFromGlobalStore = async (theatreId) => {
+    setTheatresList(prev => prev.filter(t => t.id !== theatreId));
+    try {
+      await API.delete(`/admin/theatres/${theatreId}`);
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    fetchMovies();
+    fetchTheatres();
+  }, []);
+
+  // Master Dynamic Screen Seat Configuration Store
+  const DEFAULT_SEAT_ROWS = [
+    { row: 'N', tier: 'Classic Normal (Screen Front)', price: 280, seatsCount: 12 },
+    { row: 'P', tier: 'Premium Tier', price: 480, seatsCount: 12 },
+    { row: 'R', tier: 'Luxury Recliner', price: 650, seatsCount: 10 },
+    { row: 'V', tier: 'VIP Gold Lounge (Back Tier)', price: 950, seatsCount: 8 }
+  ];
+
+  const [screenLayoutsMap, setScreenLayoutsMap] = useState({});
+
+  const fetchScreenLayoutsFromBackend = async () => {
+    try {
+      const res = await API.get('/screen-layouts');
+      const dataMap = res.data?.screenLayouts || (typeof res.data === 'object' ? res.data : {});
+      if (dataMap && Object.keys(dataMap).length > 0) {
+        setScreenLayoutsMap(prev => ({ ...prev, ...dataMap }));
+      }
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    fetchScreenLayoutsFromBackend();
+  }, []);
+
+  const saveScreenLayoutToBackend = async (screenId, layoutObj) => {
+    try {
+      await API.post('/screen-layouts/save', {
+        screenId,
+        rows: layoutObj.rows || [],
+        blockedSeats: layoutObj.blockedSeats || [],
+        customStatuses: layoutObj.customStatuses || {},
+        isApproved: layoutObj.isApproved || false
+      });
+      await fetchScreenLayoutsFromBackend();
+    } catch (err) {
+      console.warn('⚠️ Error persisting screen layout to Local MongoDB:', err.message);
+    }
+  };
+
+  const getScreenLayout = (screenId = 'sc_1') => {
+    return screenLayoutsMap[screenId] || {
+      screenId,
+      screenName: 'Screen 1',
+      rows: DEFAULT_SEAT_ROWS,
+      blockedSeats: [],
+      customStatuses: {}
+    };
+  };
+
+  const updateRowPriceInScreenLayout = async (screenId = 'sc_1', rowChar, newPrice) => {
+    const priceNum = Number(newPrice);
+    let updatedLayout = null;
+
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const existingRows = current.rows || [];
+      const updatedRows = existingRows.map(r => r.row === rowChar ? { ...r, price: priceNum } : r);
+      updatedLayout = { ...current, rows: updatedRows };
+      return {
+        ...prev,
+        [screenId]: updatedLayout
+      };
+    });
+
+    if (updatedLayout) {
+      saveScreenLayoutToBackend(screenId, updatedLayout);
+    }
+  };
+
+  const updateScreenRowsConfig = (screenId = 'sc_1', updatedRows) => {
+    let updatedLayout = null;
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      updatedLayout = { ...current, rows: updatedRows };
+      return {
+        ...prev,
+        [screenId]: updatedLayout
+      };
+    });
+
+    if (updatedLayout) {
+      saveScreenLayoutToBackend(screenId, updatedLayout);
+    }
+  };
+
+  const toggleBlockSeatForScreen = (screenId = 'sc_1', seatId) => {
+    let updatedLayout = null;
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const blocked = current.blockedSeats || [];
+      const isBlocked = blocked.includes(seatId);
+      const updatedBlocked = isBlocked
+        ? blocked.filter(s => s !== seatId)
+        : [...blocked, seatId];
+      
+      const custom = { ...(current.customStatuses || {}) };
+      if (!isBlocked) {
+        custom[seatId] = 'BLOCKED';
+      } else {
+        delete custom[seatId];
+      }
+
+      updatedLayout = { ...current, blockedSeats: updatedBlocked, customStatuses: custom };
+      return {
+        ...prev,
+        [screenId]: updatedLayout
+      };
+    });
+
+    if (updatedLayout) {
+      saveScreenLayoutToBackend(screenId, updatedLayout);
+    }
+  };
+
+  const setManualSeatStatusForScreen = (screenId = 'sc_1', seatId, newStatus) => {
+    let updatedLayout = null;
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const custom = { ...(current.customStatuses || {}) };
+      let blocked = [...(current.blockedSeats || [])];
+
+      if (newStatus === 'BLOCKED') {
+        if (!blocked.includes(seatId)) blocked.push(seatId);
+        custom[seatId] = 'BLOCKED';
+      } else if (newStatus === 'AVAILABLE') {
+        blocked = blocked.filter(s => s !== seatId);
+        delete custom[seatId];
+      } else {
+        custom[seatId] = newStatus;
+      }
+
+      updatedLayout = { ...current, blockedSeats: blocked, customStatuses: custom };
+      return {
+        ...prev,
+        [screenId]: updatedLayout
+      };
+    });
+
+    if (updatedLayout) {
+      saveScreenLayoutToBackend(screenId, updatedLayout);
+    }
+  };
+
+  const addRowToScreenLayout = (screenId = 'sc_1', rowChar, tierName, price, seatsCount) => {
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const existingRows = current.rows || [];
+      const updatedRows = [...existingRows.filter(r => r.row !== rowChar), {
+        row: rowChar.toUpperCase(),
+        tier: tierName,
+        price: Number(price),
+        seatsCount: Number(seatsCount)
+      }];
+      return {
+        ...prev,
+        [screenId]: { ...current, rows: updatedRows }
+      };
+    });
+  };
+
+  const deleteRowFromScreenLayout = (screenId = 'sc_1', rowChar) => {
+    setScreenLayoutsMap(prev => {
+      const current = prev[screenId] || { screenId, rows: DEFAULT_SEAT_ROWS, blockedSeats: [], customStatuses: {} };
+      const updatedRows = (current.rows || []).filter(r => r.row !== rowChar);
+      return {
+        ...prev,
+        [screenId]: { ...current, rows: updatedRows }
+      };
+    });
+  };
+
+  const [activeBooking, setActiveBooking] = useState({
+    movie: null,
+    theatre: null,
+    show: null,
+    selectedSeats: [],
+    selectedTier: 'Recliner',
+    appliedCoupon: null,
+    discountAmount: 0,
+    paymentMethod: 'UPI'
+  });
+
+  // Dynamic User Bookings Store
+  const [myBookings, setMyBookings] = useState(() => {
+    const saved = localStorage.getItem('primeshow_my_bookings_v2');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
+
+  const fetchUserBookings = async (userId, userEmail) => {
+    if (!userId && !userEmail) return;
+    try {
+      const res = await API.get('/bookings', {
+        params: { userId: userId || '', userEmail: userEmail || '', email: userEmail || '' }
+      });
+      if (res.data && Array.isArray(res.data.bookings)) {
+        setMyBookings(res.data.bookings);
+      } else if (Array.isArray(res.data)) {
+        setMyBookings(res.data);
+      }
+    } catch (err) {
+      console.warn('⚠️ Error fetching user bookings from MongoDB:', err.message);
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('primeshow_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        if (u && (u.id || u.email)) {
+          fetchUserBookings(u.id, u.email);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('primeshow_my_bookings_v2', JSON.stringify(myBookings));
+  }, [myBookings]);
+
+  // Global Tracked Booked Seats Map
+  const [showBookedSeatsMap, setShowBookedSeatsMap] = useState({
+    sh_101: ['C4', 'C5', 'D6', 'D7'],
+    sh_102: ['E1', 'E2']
+  });
+
+  const selectShowForBooking = (movieObj, theatreObj, showObj) => {
+    setActiveBooking({
+      movie: movieObj,
+      theatre: theatreObj,
+      show: showObj,
+      selectedSeats: [],
+      selectedTier: 'Recliner',
+      appliedCoupon: null,
+      discountAmount: 0,
+      paymentMethod: 'UPI'
+    });
+  };
+
+  const toggleSeatSelection = (seatId, tierPrice, tierName) => {
+    setActiveBooking(prev => {
+      const exists = prev.selectedSeats.includes(seatId);
+      const updatedSeats = exists
+        ? prev.selectedSeats.filter(s => s !== seatId)
+        : [...prev.selectedSeats, seatId];
+      
+      return {
+        ...prev,
+        selectedSeats: updatedSeats,
+        selectedTier: tierName || prev.selectedTier
+      };
+    });
+  };
+
+  const applyCoupon = async (code, totalAmount) => {
+    try {
+      const res = await API.post('/coupons/verify', 
+        { code, amount: totalAmount }
+      );
+      
+      setActiveBooking(prev => ({
+        ...prev,
+        appliedCoupon: res.data.code,
+        discountAmount: res.data.discountAmount
+      }));
+
+      return { success: true, description: res.data.description, discountAmount: res.data.discountAmount };
+    } catch (err) {
+      const cleanCode = code.toUpperCase().trim();
+      if (cleanCode === 'PRIMESHOW50') {
+        const disc = Math.min(Math.round(totalAmount * 0.5), 250);
+        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'PRIMESHOW50', discountAmount: disc }));
+        return { success: true, description: '50% Flat Discount applied!', discountAmount: disc };
+      } else if (cleanCode === 'LUXURY200') {
+        const disc = 200;
+        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'LUXURY200', discountAmount: disc }));
+        return { success: true, description: 'Flat ₹200 Cashback applied!', discountAmount: disc };
+      } else if (cleanCode === 'ADMINVIP') {
+        const disc = 500;
+        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'ADMINVIP', discountAmount: disc }));
+        return { success: true, description: 'VIP Admin ₹500 Pass applied!', discountAmount: disc };
+      }
+
+      return { success: false, error: err.response?.data?.error || 'Invalid or non-eligible coupon code' };
+    }
+  };
+
+  const removeCoupon = () => {
+    setActiveBooking(prev => ({ ...prev, appliedCoupon: null, discountAmount: 0 }));
+  };
+
+  const confirmBooking = async (bookingDetails) => {
+    const bookingId = `bk_${Math.floor(100000 + Math.random() * 900000)}`;
+    
+    const targetMovie = activeBooking.movie || {};
+    const movieId = bookingDetails.movieId || targetMovie.id || targetMovie._id || 'mov_1';
+    const movieTitle = bookingDetails.movieTitle || targetMovie.title || 'Movie';
+    const poster = bookingDetails.poster || targetMovie.poster || targetMovie.banner || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80';
+    
+    const activeTh = activeBooking.theatre || {};
+    const theatreId = bookingDetails.theatreId || bookingDetails.targetTheaterId || bookingDetails.theaterId || activeTh.id || activeTh._id || 'th_1';
+    const theatreName = bookingDetails.theatreName || bookingDetails.name || activeTh.name || 'Multiplex Cinema';
+    const theatreCity = bookingDetails.city || bookingDetails.theatreCity || activeTh.city || 'Surat';
+
+    const numSeats = Number(bookingDetails.ticketCount || bookingDetails.seatsBookedCount || bookingDetails.totalSeats || (bookingDetails.seats ? bookingDetails.seats.length : 1));
+
+    const newBooking = {
+      id: bookingId,
+      ...bookingDetails,
+      movieId,
+      movieTitle,
+      poster,
+      theatreId,
+      theatreName,
+      city: theatreCity,
+      seatsBookedCount: numSeats,
+      ticketCount: numSeats,
+      tickets: numSeats,
+      bookingDate: new Date().toISOString(),
+      status: 'CONFIRMED',
+      qrCodeData: `PRIMESHOW-${bookingId}-${movieTitle.replace(/\s+/g, '')}-${bookingDetails.seats ? bookingDetails.seats.join('') : ''}`
+    };
+
+    setMyBookings(prev => [newBooking, ...prev]);
+
+    if (activeBooking.show?.id) {
+      const showId = activeBooking.show.id;
+      setShowBookedSeatsMap(prev => ({
+        ...prev,
+        [showId]: Array.from(new Set([...(prev[showId] || []), ...(bookingDetails.seats || [])]))
+      }));
+    }
+
+    let loggedUser = null;
+    try {
+      const savedUser = localStorage.getItem('primeshow_user');
+      if (savedUser) loggedUser = JSON.parse(savedUser);
+    } catch (e) {}
+
+    const targetUserId = bookingDetails.userId || loggedUser?.id || loggedUser?.firebaseUid || '';
+    const targetUserEmail = bookingDetails.userEmail || loggedUser?.email || 'guest@primeshow.com';
+    const targetUserName = bookingDetails.userName || loggedUser?.name || 'VIP Guest';
+
+    try {
+      await API.post('/bookings/create', {
+        userId: targetUserId,
+        userEmail: targetUserEmail,
+        userName: targetUserName,
+        showId: activeBooking.show?.id || bookingDetails.showId || 'sh_101',
+        movieId: movieId,
+        movieTitle: movieTitle,
+        title: movieTitle,
+        poster: poster,
+        posterUrl: poster,
+        theatreId: theatreId,
+        targetTheaterId: theatreId,
+        theaterId: theatreId,
+        theatreName: theatreName,
+        theatre: theatreName,
+        venue: theatreName,
+        city: theatreCity,
+        theatreCity: theatreCity,
+        screenName: activeBooking.show?.screenName || bookingDetails.screenName || 'Screen 1',
+        seats: bookingDetails.seats || ['C4'],
+        seatsBooked: bookingDetails.seats || ['C4'],
+        seatsBookedCount: numSeats,
+        ticketCount: numSeats,
+        tickets: numSeats,
+        tier: bookingDetails.tier || 'Recliner',
+        totalAmount: Number(bookingDetails.totalAmount || 480),
+        couponCode: bookingDetails.couponCode || '',
+        paymentMethod: bookingDetails.paymentMethod || 'UPI (Instant)',
+        basePrice: bookingDetails.basePrice || 400,
+        convenienceFee: bookingDetails.convenienceFee || 40,
+        tax: bookingDetails.tax || 20,
+        discount: bookingDetails.discount || 0,
+        category: bookingDetails.category || 'Movie',
+        bookingType: bookingDetails.bookingType || 'movie'
+      });
+    } catch (err) {
+      console.warn('⚠️ Error posting booking to server:', err);
+    }
+
+    return newBooking;
+  };
+
+  const lockSeatsForShow = async (showId, seats) => {
+    if (!showId || !seats || seats.length === 0) return;
+    
+    // Immediately lock seats in global state map so Admin and user view them as booked/held
+    setShowBookedSeatsMap(prev => ({
+      ...prev,
+      [showId]: Array.from(new Set([...(prev[showId] || []), ...seats]))
+    }));
+
+    try {
+      await API.post('/bookings/hold-seats', {
+        showId,
+        seats
+      });
+    } catch (err) {}
+  };
+
+  const addMovieToGlobalStore = async (newMovieData) => {
+    const moviePayload = {
+      id: newMovieData.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      ...newMovieData,
+      title: (newMovieData.title || newMovieData.movieName || '').trim() || 'Untitled Movie',
+      duration: newMovieData.duration || '2h 30m',
+      rating: newMovieData.rating || 9.0,
+      votesCount: newMovieData.votesCount || 100,
+      parentalRating: newMovieData.parentalRating || 'UA',
+      releaseDate: newMovieData.releaseDate || new Date().toISOString().split('T')[0],
+      showDates: newMovieData.showDates || ['2026-07-31', '2026-08-01'],
+      genres: Array.isArray(newMovieData.genres) ? newMovieData.genres : (newMovieData.genres ? String(newMovieData.genres).split(',').map(s=>s.trim()) : ['Action']),
+      languages: Array.isArray(newMovieData.languages) ? newMovieData.languages : (newMovieData.languages ? String(newMovieData.languages).split(',').map(s=>s.trim()) : ['English', 'Hindi']),
+      formats: Array.isArray(newMovieData.formats) ? newMovieData.formats : (newMovieData.formats ? String(newMovieData.formats).split(',').map(s=>s.trim()) : ['IMAX 3D', 'Dolby Atmos']),
+      poster: newMovieData.poster || newMovieData.posterUrl || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      banner: newMovieData.banner || newMovieData.bannerUrl || newMovieData.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      trailerUrl: newMovieData.trailerUrl || newMovieData.youtubeUrl || 'https://www.youtube.com/watch?v=d9MyW72ELq0',
+      director: newMovieData.director || 'Famous Director',
+      producer: newMovieData.producer || 'PrimeShow Studios',
+      cast: newMovieData.cast || [],
+      theatres: newMovieData.theatres || [],
+      status: newMovieData.status || 'Now Showing',
+      featured: newMovieData.featured !== undefined ? newMovieData.featured : true,
+      city: newMovieData.city || 'All',
+      cities: newMovieData.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
+    };
+
+    setMoviesList(prev => [moviePayload, ...prev.filter(m => m.id !== moviePayload.id)]);
+
+    try {
+      const res = await API.post('/movies', moviePayload);
+      const data = res.data;
+      const savedMovie = data.movie || data;
+
+      if (data && (data.success || data.id || data._id || savedMovie.id || savedMovie._id)) {
+        setMoviesList(prev => {
+          const filtered = prev.filter(m => m.id !== savedMovie.id && m._id !== savedMovie._id);
+          return [savedMovie, ...filtered];
+        });
+        return { success: true, movie: savedMovie };
+      }
+    } catch (err) {
+      console.warn('⚠️ Server API offline, movie saved to offline local store:', err.message);
+    }
+    return { success: true, movie: moviePayload, offline: true };
+  };
+
+  const updateMovieInGlobalStore = async (movieId, updatedFields) => {
+    let updatedMovieObj = null;
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId || m._id === movieId) {
+        updatedMovieObj = { ...m, ...updatedFields };
+        return updatedMovieObj;
+      }
+      return m;
+    }));
+
+    try {
+      const res = await API.put(`/movies/${encodeURIComponent(movieId)}`, updatedFields);
+      const data = res.data;
+      const savedMovie = data.movie || data;
+      if (data && (data.success || data.id || data._id || savedMovie.id)) {
+        return { success: true, movie: savedMovie };
+      }
+    } catch (err) {
+      console.warn('⚠️ Server API offline, movie updated in offline local store:', err.message);
+    }
+    return { success: true, movie: updatedMovieObj || updatedFields, offline: true };
+  };
+
+  const deleteMovieFromGlobalStore = async (movieId) => {
+    setMoviesList(prev => prev.filter(m => m.id !== movieId && m._id !== movieId && m.title !== movieId));
+    try {
+      await API.delete(`/movies/${encodeURIComponent(movieId)}`);
+    } catch (err) {
+      console.warn('⚠️ Server API offline, movie deleted from offline local store:', err.message);
+    }
+    return { success: true, offline: true };
+  };
+
+  // Show Management Helpers with Async Backend Persistence to Local MongoDB
+  const addShowDateToMovie = async (movieId, dateStr) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId || m._id === movieId) {
+        const existingDates = m.showDates || [];
+        if (!existingDates.includes(dateStr)) {
+          return { ...m, showDates: [...existingDates, dateStr] };
+        }
+      }
+      return m;
+    }));
+
+    try {
+      const res = await API.post('/admin/movies/add-date', {
+        targetMovieId: movieId,
+        movieId,
+        dateStr,
+        date: dateStr
+      });
+      if (res.data && res.data.movie) {
+        const updatedMovie = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? { ...m, ...updatedMovie } : m));
+      }
+    } catch (err) {
+      console.error('❌ Error persisting show date to Local MongoDB:', err.message);
+    }
+  };
+
+  const deleteShowDateFromMovie = async (movieId, dateStr) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId || m._id === movieId) {
+        const existingDates = m.showDates || [];
+        const updatedDates = existingDates.filter(d => d !== dateStr);
+        const updatedSchedules = { ...(m.schedules || {}) };
+        delete updatedSchedules[dateStr];
+        return { ...m, showDates: updatedDates, schedules: updatedSchedules };
+      }
+      return m;
+    }));
+
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        action: 'DELETE_DATE',
+        movieId,
+        targetMovieId: movieId,
+        dateStr
+      });
+      if (res.data && res.data.movie) {
+        const updatedMovie = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? { ...m, ...updatedMovie } : m));
+      }
+    } catch (err) {
+      console.error('❌ Error deleting show date from Local MongoDB:', err.message);
+    }
+  };
+
+  const addShowSlotToMovieTheatre = async (movieId, dateStr, theatreObj, showSlotObj) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId || m._id === movieId) {
+        const schedules = { ...(m.schedules || {}) };
+        const dateTheatres = schedules[dateStr] ? JSON.parse(JSON.stringify(schedules[dateStr])) : [];
+        const theatreIndex = dateTheatres.findIndex(t => t.id === theatreObj.id || (t.name && t.name.trim().toLowerCase() === (theatreObj.name || '').trim().toLowerCase()));
+
+        if (theatreIndex > -1) {
+          const targetTheatre = dateTheatres[theatreIndex];
+          const existingShows = targetTheatre.shows || [];
+          const isDuplicate = existingShows.some(s => s.time === showSlotObj.time && s.format === showSlotObj.format);
+          if (!isDuplicate) {
+            targetTheatre.shows = [...existingShows, showSlotObj];
+          }
+        } else {
+          dateTheatres.push({
+            id: theatreObj.id || `th_${Date.now()}`,
+            name: theatreObj.name || 'PVR Cinemas',
+            city: theatreObj.city || 'Surat',
+            address: theatreObj.address || 'Central Complex',
+            facilities: theatreObj.facilities || ['IMAX 3D', 'VIP Recliners'],
+            shows: [showSlotObj]
+          });
+        }
+        schedules[dateStr] = dateTheatres;
+        const existingDates = m.showDates || [];
+        const updatedDates = existingDates.includes(dateStr) ? existingDates : [...existingDates, dateStr];
+        return { ...m, showDates: updatedDates, schedules };
+      }
+      return m;
+    }));
+
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        movieId,
+        targetMovieId: movieId,
+        action: 'ADD_SHOW_SLOT',
+        dateStr,
+        date: dateStr,
+        theatreObj,
+        theatre: theatreObj,
+        showSlotObj,
+        show: showSlotObj
+      });
+      if (res.data && res.data.movie) {
+        const updatedMovie = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? { ...m, ...updatedMovie } : m));
+      }
+    } catch (err) {
+      console.error('❌ Error persisting show slot to Local MongoDB:', err.message);
+    }
+  };
+
+  const deleteShowSlotFromMovieTheatre = async (movieId, dateStr, theatreId, showId) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId || m._id === movieId) {
+        const schedules = { ...(m.schedules || {}) };
+        if (schedules[dateStr]) {
+          schedules[dateStr] = schedules[dateStr].map(t => {
+            if (t.id === theatreId) {
+              return { ...t, shows: (t.shows || []).filter(s => s.id !== showId) };
+            }
+            return t;
+          }).filter(t => t.shows && t.shows.length > 0);
+        }
+        return { ...m, schedules };
+      }
+      return m;
+    }));
+
+    try {
+      const res = await API.post('/admin/movies/schedule', {
+        action: 'DELETE_SHOW_SLOT',
+        movieId,
+        targetMovieId: movieId,
+        dateStr,
+        theatreId,
+        showId
+      });
+      if (res.data && res.data.movie) {
+        const updatedMovie = res.data.movie;
+        setMoviesList(prev => prev.map(m => (m.id === movieId || m._id === movieId) ? { ...m, ...updatedMovie } : m));
+      }
+    } catch (err) {
+      console.error('❌ Error deleting show slot from Local MongoDB:', err.message);
+    }
+  };
+
+  const deleteTheatreFromMovieDate = (movieId, dateStr, theatreId) => {
+    setMoviesList(prev => prev.map(m => {
+      if (m.id === movieId) {
+        const schedules = { ...(m.schedules || {}) };
+        if (schedules[dateStr]) {
+          schedules[dateStr] = schedules[dateStr].filter(t => t.id !== theatreId);
+        } else if (m.theatres) {
+          return { ...m, theatres: m.theatres.filter(t => t.id !== theatreId) };
+        }
+        return { ...m, schedules };
+      }
+      return m;
+    }));
+  };
+
+  // Hero Section Slideshow Dynamic Store & Persistent LocalStorage
+  const [heroSlidesList, setHeroSlidesList] = useState(() => {
+    const saved = safeLocalStorageGet('primeshow_hero_slides_v1', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) {
+      return saved;
+    }
+    return DEFAULT_HERO_SLIDES;
+  });
+
+  // Resolve any IndexedDB image references on initialization
+  useEffect(() => {
+    let isMounted = true;
+    const resolveIDBImages = async () => {
+      if (!Array.isArray(heroSlidesList)) return;
+      let hasIDBRefs = false;
+      const resolved = await Promise.all(heroSlidesList.map(async (slide) => {
+        const copy = { ...slide };
+        if (typeof copy.banner === 'string' && copy.banner.startsWith('idb:')) {
+          hasIDBRefs = true;
+          const idbKey = copy.banner.replace('idb:', '');
+          const imgData = await getImageFromIDB(idbKey);
+          if (imgData) copy.banner = imgData;
+        }
+        if (typeof copy.imageUrl === 'string' && copy.imageUrl.startsWith('idb:')) {
+          hasIDBRefs = true;
+          const idbKey = copy.imageUrl.replace('idb:', '');
+          const imgData = await getImageFromIDB(idbKey);
+          if (imgData) copy.imageUrl = imgData;
+        }
+        return copy;
+      }));
+      if (hasIDBRefs && isMounted) {
+        setHeroSlidesList(resolved);
+      }
+    };
+    resolveIDBImages();
+    return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    safeLocalStorageSet('primeshow_hero_slides_v1', heroSlidesList);
+  }, [heroSlidesList]);
+
+  const addHeroSlide = async (slideObj) => {
+    const newSlide = {
+      id: `hero_${Date.now()}`,
+      ...slideObj
+    };
+    setHeroSlidesList(prev => [newSlide, ...prev]);
+    try {
+      const res = await API.post('/hero-slides', newSlide);
+      if (res.data && Array.isArray(res.data)) {
+        setHeroSlidesList(res.data);
+      }
+    } catch (err) {}
+    return newSlide;
+  };
+
+  const updateHeroSlide = async (slideId, updatedFields) => {
+    setHeroSlidesList(prev => prev.map(s => s.id === slideId ? { ...s, ...updatedFields } : s));
+  };
+
+  const deleteHeroSlide = async (slideId) => {
+    setHeroSlidesList(prev => prev.filter(s => s.id !== slideId));
+    try {
+      const res = await API.delete(`/hero-slides/${slideId}`);
+      if (res.data && Array.isArray(res.data)) {
+        setHeroSlidesList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  // Feature Strips Dynamic Store & Central API Synchronization
+  const [featureStripsList, setFeatureStripsList] = useState(DEFAULT_FEATURE_STRIPS);
+
+  const fetchFeatureStrips = async () => {
+    try {
+      const res = await API.get(`/feature-chips?t=${Date.now()}`);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setFeatureStripsList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  const fetchHeroSlides = async () => {
+    try {
+      const res = await API.get(`/hero-slides?t=${Date.now()}`);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setHeroSlidesList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  const fetchUpcomingMovies = async () => {
+    try {
+      const res = await API.get(`/upcoming-movies?t=${Date.now()}`);
+      if (res.data && Array.isArray(res.data)) {
+        setUpcomingMoviesList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  const fetchAllGlobalData = () => {
+    fetchMovies();
+    fetchTheatres();
+    fetchFeatureStrips();
+    fetchHeroSlides();
+    fetchUpcomingMovies();
+  };
+
+  useEffect(() => {
+    fetchAllGlobalData();
+
+    const interval = setInterval(() => {
+      fetchAllGlobalData();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Real-Time Socket.io Synchronization across ALL active User Panels & Sessions
+  useEffect(() => {
+    let cmsSocket = null;
+    try {
+      cmsSocket = io(SOCKET_BASE, {
+        transports: ['polling', 'websocket'],
+        autoConnect: true,
+        reconnectionAttempts: 3,
+        timeout: 5000
+      });
+      cmsSocket.on('connect_error', () => {});
+
+      cmsSocket.on('MOVIE_UPDATED', (movie) => {
+        console.log('⚡ [BookingContext] Real-time MOVIE_UPDATED received:', movie);
+        if (movie && movie.id) {
+          setMoviesList(prev => {
+            const exists = prev.some(m => m.id === movie.id);
+            if (exists) {
+              return prev.map(m => m.id === movie.id ? { ...m, ...movie } : m);
+            } else {
+              return [movie, ...prev];
+            }
+          });
+        } else {
+          fetchMovies();
+        }
+      });
+
+      cmsSocket.on('MOVIE_DELETED', (data) => {
+        console.log('⚡ [BookingContext] Real-time MOVIE_DELETED received:', data);
+        if (data && data.id) {
+          setMoviesList(prev => prev.filter(m => m.id !== data.id));
+        } else {
+          fetchMovies();
+        }
+      });
+
+      cmsSocket.on('THEATRE_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('THEATRE_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('SHOW_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('SHOW_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('EVENT_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('EVENT_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('PLAY_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('PLAY_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('ACTIVITY_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('ACTIVITY_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('OFFER_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('OFFER_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('OFFER_BANNERS_UPDATED', () => fetchAllGlobalData());
+
+      cmsSocket.on('FEATURE_CHIPS_UPDATED', (chips) => {
+        console.log('⚡ [BookingContext] Real-time FEATURE_CHIPS_UPDATED received:', chips);
+        if (Array.isArray(chips)) {
+          setFeatureStripsList(chips);
+        }
+      });
+
+      cmsSocket.on('HERO_SLIDES_UPDATED', (slides) => {
+        if (Array.isArray(slides)) {
+          setHeroSlidesList(slides);
+        }
+      });
+
+      cmsSocket.on('UPCOMING_MOVIES_UPDATED', (movies) => {
+        if (Array.isArray(movies)) {
+          setUpcomingMoviesList(movies);
+        }
+      });
+
+      cmsSocket.on('LAYOUT_DATA_UPDATED', (payload) => {
+        console.log('⚡ [BookingContext] Real-time LAYOUT_DATA_UPDATED received:', payload);
+        fetchAllGlobalData();
+        if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
+          setFeatureStripsList(payload.featureStripsList);
+        }
+        if (payload && payload.heroSlidesList && Array.isArray(payload.heroSlidesList)) {
+          setHeroSlidesList(payload.heroSlidesList);
+        }
+        if (payload && payload.upcomingMoviesList && Array.isArray(payload.upcomingMoviesList)) {
+          setUpcomingMoviesList(payload.upcomingMoviesList);
+        }
+      });
+
+      cmsSocket.on('GLOBAL_ADMIN_UPDATE', (payload) => {
+        console.log('⚡ [BookingContext] Real-time GLOBAL_ADMIN_UPDATE received:', payload);
+        fetchAllGlobalData();
+        if (payload && payload.featureStripsList && Array.isArray(payload.featureStripsList)) {
+          setFeatureStripsList(payload.featureStripsList);
+        }
+        if (payload && payload.heroSlidesList && Array.isArray(payload.heroSlidesList)) {
+          setHeroSlidesList(payload.heroSlidesList);
+        }
+        if (payload && payload.upcomingMoviesList && Array.isArray(payload.upcomingMoviesList)) {
+          setUpcomingMoviesList(payload.upcomingMoviesList);
+        }
+      });
+    } catch (e) {
+      console.warn('Socket connection note in BookingContext:', e.message);
+    }
+
+    return () => {
+      if (cmsSocket) cmsSocket.disconnect();
+    };
+  }, []);
+
+  const addFeatureStrip = async (stripObj) => {
+    const newStrip = { id: `feat_${Date.now()}`, ...stripObj };
+    setFeatureStripsList(prev => [newStrip, ...prev]);
+    try {
+      const res = await API.post('/feature-chips', newStrip);
+      if (res.data && Array.isArray(res.data)) {
+        setFeatureStripsList(res.data);
+      }
+    } catch (err) {}
+    return newStrip;
+  };
+
+  const updateFeatureStrip = async (stripId, updatedFields) => {
+    setFeatureStripsList(prev => prev.map(s => s.id === stripId ? { ...s, ...updatedFields } : s));
+    try {
+      const res = await API.put(`/feature-chips/${stripId}`, updatedFields);
+      if (res.data && Array.isArray(res.data)) {
+        setFeatureStripsList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  const deleteFeatureStrip = async (stripId) => {
+    setFeatureStripsList(prev => prev.filter(s => s.id !== stripId));
+    try {
+      const res = await API.delete(`/feature-chips/${stripId}`);
+      if (res.data && Array.isArray(res.data)) {
+        setFeatureStripsList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  // Upcoming Movies Dynamic Store (Local MongoDB Single Source of Truth)
+  const [upcomingMoviesList, setUpcomingMoviesList] = useState([]);
+
+  const addUpcomingMovie = async (movieObj) => {
+    const newMovie = { id: `up_${Date.now()}`, ...movieObj };
+    setUpcomingMoviesList(prev => [newMovie, ...prev]);
+    try {
+      const res = await API.post('/upcoming-movies', newMovie);
+      if (res.data && Array.isArray(res.data)) {
+        setUpcomingMoviesList(res.data);
+      }
+    } catch (err) {}
+    return newMovie;
+  };
+
+  const updateUpcomingMovie = async (movieId, updatedFields) => {
+    setUpcomingMoviesList(prev => prev.map(m => m.id === movieId ? { ...m, ...updatedFields } : m));
+  };
+
+  const deleteUpcomingMovie = async (movieId) => {
+    setUpcomingMoviesList(prev => prev.filter(m => m.id !== movieId));
+    try {
+      const res = await API.delete(`/upcoming-movies/${movieId}`);
+      if (res.data && Array.isArray(res.data)) {
+        setUpcomingMoviesList(res.data);
+      }
+    } catch (err) {}
+  };
+
+  return (
+    <BookingContext.Provider value={{
+      moviesList,
+      fetchMovies,
+      addMovieToGlobalStore,
+      updateMovieInGlobalStore,
+      deleteMovieFromGlobalStore,
+      addShowDateToMovie,
+      deleteShowDateFromMovie,
+      addShowSlotToMovieTheatre,
+      deleteShowSlotFromMovieTheatre,
+      deleteTheatreFromMovieDate,
+      screenLayoutsMap,
+      getScreenLayout,
+      updateScreenRowsConfig,
+      updateRowPriceInScreenLayout,
+      fetchScreenLayoutsFromBackend,
+      toggleBlockSeatForScreen,
+      setManualSeatStatusForScreen,
+      addRowToScreenLayout,
+      deleteRowFromScreenLayout,
+      activeBooking,
+      selectShowForBooking,
+      toggleSeatSelection,
+      applyCoupon,
+      removeCoupon,
+      confirmBooking,
+      myBookings,
+      setMyBookings,
+      fetchUserBookings,
+      showBookedSeatsMap,
+      lockSeatsForShow,
+      heroSlidesList,
+      addHeroSlide,
+      updateHeroSlide,
+      deleteHeroSlide,
+      featureStripsList,
+      addFeatureStrip,
+      updateFeatureStrip,
+      deleteFeatureStrip,
+      theatresList,
+      setTheatresList,
+      fetchTheatres,
+      addTheatreToGlobalStore,
+      updateTheatreInGlobalStore,
+      deleteTheatreFromGlobalStore,
+      upcomingMoviesList,
+      addUpcomingMovie,
+      updateUpcomingMovie,
+      deleteUpcomingMovie
+    }}>
+      {children}
+    </BookingContext.Provider>
+  );
+};
+
+export const useBooking = () => useContext(BookingContext);

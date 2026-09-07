@@ -1,0 +1,36 @@
+[
+  {
+    "id": "bk_test_101",
+    "bookingId": "bk_test_101",
+    "userId": "usr_test_1",
+    "userEmail": "jay@example.com",
+    "userName": "Jay Radadiya",
+    "movieId": "mov_1",
+    "movieTitle": "Cinema Ticket",
+    "title": "Cinema Ticket",
+    "poster": "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80",
+    "theatreId": "th_1788430582168_742",
+    "theatreName": "PrimeShow Multiplex",
+    "venue": "PrimeShow Multiplex",
+    "city": "Surat",
+    "screenName": "Screen 1",
+    "showId": "th_1788430582168_742_mov_1_2026-09-19_04:30 PM",
+    "screenId": "th_1788430582168_742_mov_1_2026-09-19_04:30 PM",
+    "isolatedLayoutKey": "th_1788430582168_742_mov_1_2026-09-19_04:30 PM",
+    "seats": [
+      "B4",
+      "B5"
+    ],
+    "seatsBookedCount": 2,
+    "ticketCount": 2,
+    "tier": "Recliner",
+    "totalAmount": 900,
+    "paymentMethod": "UPI (Instant)",
+    "category": "Movie",
+    "bookingType": "movie",
+    "showDate": "2026-09-19",
+    "showTime": "04:30 PM",
+    "status": "CONFIRMED",
+    "createdAt": "2026-09-03T11:48:01.700Z"
+  }
+]
