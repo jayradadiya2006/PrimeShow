@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
@@ -16,8 +17,8 @@ const io = new Server(server, {
 });
 
 const PORT = process.env.PORT || 8000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017';
-const DB_NAME = process.env.MONGO_DB_NAME || 'show_db';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
+const DB_NAME = process.env.MONGO_DB_NAME || 'primeshow';
 
 // Dynamic CORS Header Middleware
 app.use((req, res, next) => {
@@ -38,18 +39,26 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 let db = null;
 let mongoClient = null;
 
-// Connect to Local MongoDB
+// Connect to MongoDB Atlas or Local MongoDB
 async function connectDB() {
   try {
+    const isAtlas = MONGO_URI.includes('mongodb+srv://') || MONGO_URI.includes('.mongodb.net');
     mongoClient = new MongoClient(MONGO_URI, {
-      connectTimeoutMS: 3000,
-      serverSelectionTimeoutMS: 3000
+      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 10000
     });
     await mongoClient.connect();
-    db = mongoClient.db(DB_NAME);
-    console.log(`✅ Connected to Local MongoDB Database: ${MONGO_URI}/${DB_NAME}`);
+
+    if (MONGO_URI.includes('.mongodb.net/') && MONGO_URI.split('.mongodb.net/')[1]?.split('?')[0]) {
+      const uriDbName = MONGO_URI.split('.mongodb.net/')[1].split('?')[0];
+      db = mongoClient.db(uriDbName || DB_NAME);
+    } else {
+      db = mongoClient.db(DB_NAME);
+    }
+
+    console.log(`✅ MongoDB Atlas Connected Successfully (Database: ${db.databaseName})`);
   } catch (err) {
-    console.error(`❌ MongoDB direct connection failed: ${err.message}. Ensure MongoDB service is active on ${MONGO_URI}. Fallback JSON storage active for offline development.`);
+    console.error(`❌ MongoDB direct connection failed: ${err.message}. Fallback JSON storage active for offline development.`);
     db = null;
   }
 }
