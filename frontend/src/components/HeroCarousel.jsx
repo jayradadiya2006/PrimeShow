@@ -5,7 +5,7 @@ const movies = [
   {
     id: 1,
     badge: 'BLOCKBUSTER',
-    title: 'Avatar: Fire and Ash',
+    title: 'mirzapur',
     tagline: 'Enter the Uncharted Regions of Pandora in Native IMAX 3D',
     description: 'Enter the Uncharted Regions of Pandora in Native IMAX 3D',
     rating: '9.4 (43K)',
@@ -38,7 +38,7 @@ const movies = [
   {
     id: 4,
     badge: 'MUST WATCH',
-    title: 'Cinematic Experience',
+    title: 'cocktail 2',
     tagline: 'Watch the Big Screen Magic in PrimeShow IMAX',
     description: 'Watch the Big Screen Magic in PrimeShow IMAX',
     rating: '9.0 (15K)',
@@ -49,7 +49,7 @@ const movies = [
   {
     id: 5,
     badge: 'LATEST RELEASE',
-    title: 'PrimeShow Special',
+    title: 'bhooth bangla',
     tagline: 'Experience Ultra Luxury Cinema with Premium Comfort',
     description: 'Experience Ultra Luxury Cinema with Premium Comfort',
     rating: '9.5 (50K)',
