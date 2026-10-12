@@ -252,17 +252,6 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
             )}
           </div>
 
-          {/* Small Circular Movie Image Thumbnail immediately beside existing avatar */}
-          <div className="flex items-center">
-            <img
-              src={HEADER_MOVIE_THUMBNAILS[0]}
-              alt="Movie Thumbnail"
-              title="Spider-Man: No Way Home"
-              className="w-8 h-8 rounded-full object-cover border border-slate-300 dark:border-white/20 hover:scale-105 transition-transform duration-200 cursor-pointer shadow-xs header-movie-thumbnail"
-              onClick={() => setActiveTab('movies')}
-            />
-          </div>
-
           {/* Mobile Hamburger / Three-Lines Menu Icon (☰) */}
           <button
             onClick={() => setIsMobileDrawerOpen(!isMobileDrawerOpen)}
