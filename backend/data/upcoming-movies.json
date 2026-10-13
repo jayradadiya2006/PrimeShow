@@ -1,0 +1,77 @@
+[
+  {
+    "id": "up_avengers_secret_wars",
+    "title": "Avengers: Secret Wars",
+    "release": "Dec 2026",
+    "releaseDateTag": "Dec 2026",
+    "genres": [
+      "Action",
+      "Sci-Fi",
+      "Adventure"
+    ],
+    "poster": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHRu2OGjr1xiHI1mTwYIwhaqgpMhQgfrFTePu3w6T2xw&s=10",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHRu2OGjr1xiHI1mTwYIwhaqgpMhQgfrFTePu3w6T2xw&s=10",
+    "synopsis": "Earth's mightiest heroes unite across the multiverse in an epic confrontation against cosmic threats.",
+    "_id": "6ace08b99b097e7bd219f345"
+  },
+  {
+    "id": "up_ramayana_part1",
+    "title": "Ramayana: Part 1",
+    "release": "Nov 2026",
+    "releaseDateTag": "Nov 2026",
+    "genres": [
+      "Mythological",
+      "Action",
+      "Fantasy"
+    ],
+    "poster": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHUIrI9Ytd4-3kbWNXKMB6kaWvb1Q_hJPvsTc3lf7IVA&s=10",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHUIrI9Ytd4-3kbWNXKMB6kaWvb1Q_hJPvsTc3lf7IVA&s=10",
+    "synopsis": "The epic timeless tale of Lord Rama, righteousness, and courage brought to the grand IMAX screen.",
+    "_id": "6ace08b99b097e7bd219f346"
+  },
+  {
+    "id": "up_love_and_war",
+    "title": "Love & War",
+    "release": "Jan 2027",
+    "releaseDateTag": "Jan 2027",
+    "genres": [
+      "Romance",
+      "Drama",
+      "War"
+    ],
+    "poster": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnm4ohArZvblsu4yjno3gqKIIEAdOr_U3xrLHoS7_QpQ&s=10",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnm4ohArZvblsu4yjno3gqKIIEAdOr_U3xrLHoS7_QpQ&s=10",
+    "synopsis": "An intense romantic saga set against the turbulent backdrop of war, duty, and immense sacrifices.",
+    "_id": "6ace08b99b097e7bd219f347"
+  },
+  {
+    "id": "up_spiderman_beyond_spiderverse",
+    "title": "Spider-Man: Beyond the Spider-Verse",
+    "release": "Jun 2027",
+    "releaseDateTag": "Jun 2027",
+    "genres": [
+      "Animation",
+      "Action",
+      "Sci-Fi"
+    ],
+    "poster": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyXHGB4QGlPsIaULimO_ql2DhZYCyCamGfAfFjeWoImw&s=10",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyXHGB4QGlPsIaULimO_ql2DhZYCyCamGfAfFjeWoImw&s=10",
+    "synopsis": "Miles Morales journeys across the multiverse to determine his own destiny and save those he loves.",
+    "_id": "6ace08b99b097e7bd219f348"
+  },
+  {
+    "id": "up_spirit_prabhas",
+    "title": "Spirit",
+    "release": "Mar 2027",
+    "releaseDateTag": "Mar 2027",
+    "genres": [
+      "Action",
+      "Crime",
+      "Thriller"
+    ],
+    "poster": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQtvlYipQ8YVR5eahH9lS2truLLqh8-xPJ6OdmZA9RNA&s=10",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQtvlYipQ8YVR5eahH9lS2truLLqh8-xPJ6OdmZA9RNA&s=10",
+    "synopsis": "A high-octane action thriller navigating a fiercely dedicated cop, underworld crime, and justice.",
+    "_id": "6ace08b99b097e7bd219f349"
+  }
+]

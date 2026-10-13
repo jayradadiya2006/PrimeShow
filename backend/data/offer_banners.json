@@ -1,0 +1,17 @@
+[
+  {
+    "id": "ban_bogo_imax_3d",
+    "title": "Buy 1 Get 1 FREE on IMAX 3D Blockbusters",
+    "tagline": "Book 2 or more tickets for any IMAX 3D screening and get the second ticket 100% free. Applicable on all weekend evening shows.",
+    "description": "Book 2 or more tickets for any IMAX 3D screening and get the second ticket 100% free. Applicable on all weekend evening shows.",
+    "code": "BOGOIMAX",
+    "category": "Movies",
+    "categoryBadge": "🎬 MOVIES SPECIAL",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQ6ji5VoYPGPa950NqbAp7W-neEdHma9vio7Db5JqtTA&s=10",
+    "expiryDate": "2026-12-31",
+    "ctaText": "Claim Offer",
+    "ctaLabel": "Claim Offer",
+    "ctaLink": "movies",
+    "_id": "6ace08b99b097e7bd219f34e"
+  }
+]

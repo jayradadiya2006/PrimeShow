@@ -1,0 +1,38 @@
+[
+  {
+    "id": "feat_upi_pass",
+    "title": "Instant UPI Ticket Pass",
+    "subtitle": "Scan QR Code for instant pass generation",
+    "badge": "INSTANT",
+    "icon": "Zap",
+    "color": "amber",
+    "_id": "6ace08b99b097e7bd219f34a"
+  },
+  {
+    "id": "feat_private_cinema",
+    "title": "Private Cinema Screen",
+    "subtitle": "Book full theatre lounge for private birthday parties",
+    "badge": "LUXURY",
+    "icon": "Film",
+    "color": "purple",
+    "_id": "6ace08b99b097e7bd219f34b"
+  },
+  {
+    "id": "feat_promo_vouchers",
+    "title": "Exclusive Promo Vouchers",
+    "subtitle": "Flat 50% discount on IMAX 3D recliners using PRIMESHOW50",
+    "badge": "OFFER",
+    "icon": "Zap",
+    "color": "emerald",
+    "_id": "6ace08b99b097e7bd219f34c"
+  },
+  {
+    "id": "feat_vip_concierge",
+    "title": "Expert VIP Concierge",
+    "subtitle": "Dedicated lounge assistance & gourmet dining booking",
+    "badge": "VIP",
+    "icon": "Sparkles",
+    "color": "cyan",
+    "_id": "6ace08b99b097e7bd219f34d"
+  }
+]

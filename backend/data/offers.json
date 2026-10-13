@@ -1,0 +1,18 @@
+[
+  {
+    "id": "off_hdfc_movie_25",
+    "title": "Flat 25% Off with HDFC Bank Credit Cards",
+    "code": "HDFCMOVIE25",
+    "category": "Bank Offer / Cards",
+    "bank": "HDFC Bank",
+    "discount": "25% Instant Discount up to ₹250",
+    "discountValue": 250,
+    "minBookingValue": 500,
+    "ctaText": "Apply Coupon",
+    "ctaLabel": "Apply Coupon",
+    "expiryDate": "2026-12-31",
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSS2DWsI_sAiiqQiNFhEVSP2qNLNWazJuztdNNfSfJgzA&s=10",
+    "description": "Valid once per user per month on HDFC Bank Visa and Mastercard credit cards. Valid across all movie, event, and play bookings.",
+    "_id": "6ace08b99b097e7bd219f34f"
+  }
+]

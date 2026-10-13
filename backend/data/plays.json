@@ -1,0 +1,36 @@
+[
+  {
+    "id": "pl_gujjubhai_ni_golmaal_surat",
+    "title": "Gujjubhai Ni Golmaal",
+    "language": "Gujarati",
+    "category": "Comedy Drama",
+    "badge": "🔥 HOT SELLER",
+    "city": "Surat",
+    "venue": "Sanjeev Kumar Auditorium, Hazira Road, Adajan Gam, Pal, Surat - 394510",
+    "date": "14 NOV 2026",
+    "time": "08:30 PM",
+    "price": 500,
+    "totalCapacity": 1150,
+    "availableSeats": 1150,
+    "image": "https://image.tmdb.org/t/p/w780/sTDcx4mcrHPdUQ5IX11PJyd0ksw.jpg",
+    "description": "The iconic Gujjubhai franchise returns with an uproarious laugh riot. When an everyday Gujarati patriarch finds himself tangled in an accidental mix-up involving real estate confusion and meddling relatives, chaos ensues in true comedic fashion. Starring Siddharth Randeria and an ensemble Gujarati stage cast.",
+    "_id": "6ace08b99b097e7bd219f352"
+  },
+  {
+    "id": "pl_mughal_e_azam_surat",
+    "title": "Mughal-e-Azam: The Musical",
+    "language": "Hindi",
+    "category": "Historical Drama",
+    "badge": "🔥 HOT SELLER",
+    "city": "Surat",
+    "venue": "Pandit Dindayal Upadhyay Indoor Stadium, Athwalines, Surat - 395007",
+    "date": "28 DEC 2026",
+    "time": "07:00 PM",
+    "price": 1200,
+    "totalCapacity": 2200,
+    "availableSeats": 2200,
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJWaBwwHfB6prGstRVgBkCjqOFkA_m45bQt1XYLUPN2g&s=10",
+    "description": "Feroz Abbas Khan’s Broadway-style tribute to K. Asif’s timeless cinematic classic. Experience the tragic saga of Prince Salim and courtesan Anarkali told through live Kathak performances, soul-stirring classical music, exquisite Manish Malhotra period costumes, and grand theatrical set designs.",
+    "_id": "6ace08b99b097e7bd219f353"
+  }
+]
