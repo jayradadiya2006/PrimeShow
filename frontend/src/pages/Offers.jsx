@@ -3,11 +3,103 @@ import { Tag, Copy, Check, ShieldCheck, Sparkles, RefreshCw, Search, X, MoreVert
 import API, { API_BASE } from '../services/api';
 import { OfferCarousel } from '../components/OfferCarousel';
 import { useAuth } from '../context/AuthContext';
+import { safeLocalStorageSet, safeLocalStorageGet } from '../utils/imageStorage';
+
+export const DEFAULT_OFFERS = [
+  {
+    id: 'off_hdfc_movie_25',
+    title: 'Flat 25% Off with HDFC Bank Credit Cards',
+    code: 'HDFCMOVIE25',
+    category: 'Bank Offer / Cards',
+    bank: 'HDFC Bank',
+    discount: '25% Instant Discount up to ₹250',
+    discountValue: 250,
+    minBookingValue: 500,
+    ctaText: 'Apply Coupon',
+    ctaLabel: 'Apply Coupon',
+    expiryDate: '2026-12-31',
+    description: 'Valid once per user per month on HDFC Bank Visa and Mastercard credit cards across movie, event, and play bookings.'
+  },
+  {
+    id: 'off_primeshow_50',
+    title: '50% Flat Discount on IMAX & VIP Bookings',
+    code: 'PRIMESHOW50',
+    category: 'Exclusive',
+    bank: 'All Cards & UPI',
+    discount: '50% Off up to ₹250',
+    discountValue: 250,
+    minBookingValue: 400,
+    ctaText: 'Apply Coupon',
+    ctaLabel: 'Apply Coupon',
+    expiryDate: '2026-12-31',
+    description: 'Valid on all credit cards, debit cards, and UPI payments for prime recliners and VIP auditorium tickets.'
+  },
+  {
+    id: 'off_icici_bogo',
+    title: 'Buy 1 Get 1 FREE on ICICI Bank Cards',
+    code: 'ICICICINEMA',
+    category: 'Bank Offer / Cards',
+    bank: 'ICICI Bank',
+    discount: 'Free Second Ticket up to ₹300',
+    discountValue: 300,
+    minBookingValue: 500,
+    ctaText: 'Apply Coupon',
+    ctaLabel: 'Apply Coupon',
+    expiryDate: '2026-12-31',
+    description: 'Buy 1 ticket and get the second ticket free on ICICI Coral, Rubyx, and Sapphiro credit cards every month.'
+  },
+  {
+    id: 'off_sbi_100',
+    title: 'Flat ₹100 Off on Movie & Stage Drama Tickets',
+    code: 'SBICARD100',
+    category: 'Bank Offer / Cards',
+    bank: 'SBI Card',
+    discount: 'Flat ₹100 Off',
+    discountValue: 100,
+    minBookingValue: 500,
+    ctaText: 'Apply Coupon',
+    ctaLabel: 'Apply Coupon',
+    expiryDate: '2026-12-31',
+    description: 'Valid on all SBI Credit Cards for bookings above ₹500 across Gujarat theatres and cultural halls.'
+  },
+  {
+    id: 'off_axis_neo',
+    title: 'Flat 10% Instant Discount on Axis Bank Cards',
+    code: 'AXISNEO',
+    category: 'Bank Offer / Cards',
+    bank: 'Axis Bank',
+    discount: '10% Instant Discount up to ₹150',
+    discountValue: 150,
+    minBookingValue: 400,
+    ctaText: 'Apply Coupon',
+    ctaLabel: 'Apply Coupon',
+    expiryDate: '2026-12-31',
+    description: 'Enjoy 10% off up to ₹150 on tickets and F&B combos with Axis Bank debit and credit cards.'
+  },
+  {
+    id: 'off_admin_vip',
+    title: 'Exclusive VIP Pass - Flat ₹500 Off',
+    code: 'ADMINVIP',
+    category: 'Exclusive',
+    bank: 'PrimeShow Exclusive',
+    discount: 'Flat ₹500 Off',
+    discountValue: 500,
+    minBookingValue: 1200,
+    ctaText: 'Apply Coupon',
+    ctaLabel: 'Apply Coupon',
+    expiryDate: '2026-12-31',
+    description: 'Special privilege code for PrimeShow Gold Club and VIP members on bulk bookings and auditorium screenings.'
+  }
+];
 
 export const Offers = ({ onSelectCategory }) => {
-  const { user } = useAuth();
-  const [offersList, setOffersList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, socket } = useAuth();
+  const [offersList, setOffersList] = useState(() => {
+    const saved = safeLocalStorageGet('primeshow_offers_v1', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+    return DEFAULT_OFFERS;
+  });
+  const [loading, setLoading] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeBankFilter, setActiveBankFilter] = useState('All');
@@ -15,45 +107,91 @@ export const Offers = ({ onSelectCategory }) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchContainerRef = useRef(null);
 
+  useEffect(() => {
+    if (offersList && offersList.length > 0) {
+      safeLocalStorageSet('primeshow_offers_v1', offersList);
+    }
+  }, [offersList]);
+
   const fetchOffers = async () => {
-    setLoading(true);
+    if (offersList.length === 0) {
+      setLoading(true);
+    }
     try {
       const res = await API.get('/offers');
-      setOffersList(res.data);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setOffersList(res.data);
+        safeLocalStorageSet('primeshow_offers_v1', res.data);
+      }
     } catch (err) {
-      setOffersList([
-        {
-          id: 'off_1',
-          code: 'PRIMESHOW50',
-          title: '50% Flat Discount on IMAX & VIP Bookings',
-          description: 'Valid on all credit cards and UPI payments. Max discount ₹250.',
-          bank: 'All Cards & UPI',
-          expiryDate: '2026-12-31'
-        },
-        {
-          id: 'off_2',
-          code: 'LUXURY200',
-          title: 'Flat ₹200 Cashback for HDFC Bank Cards',
-          description: 'Min transaction value ₹800. Applicable twice per user account.',
-          bank: 'HDFC Bank',
-          expiryDate: '2026-11-30'
-        },
-        {
-          id: 'off_3',
-          code: 'ADMINVIP',
-          title: 'Exclusive VIP Pass - Flat ₹500 Off',
-          description: 'Special privilege code for PrimeShow Gold Club members.',
-          bank: 'PrimeShow Exclusive',
-          expiryDate: '2026-12-31'
-        }
-      ]);
+      console.warn('⚠️ Fetch offers network error (using cached offers):', err.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchOffers();
-  }, []);
+    if (!socket) return;
+
+    const handleOfferUpdate = (updated) => {
+      if (!updated) {
+        fetchOffers();
+        return;
+      }
+      if (updated.deletedId) {
+        setOffersList(prev => {
+          const next = prev.filter(o => o.id !== updated.deletedId && o._id !== updated.deletedId);
+          safeLocalStorageSet('primeshow_offers_v1', next);
+          return next;
+        });
+        return;
+      }
+      const docId = updated.id || updated._id;
+      if (docId) {
+        setOffersList(prev => {
+          const exists = prev.some(o => o.id === docId || o._id === docId);
+          const next = exists 
+            ? prev.map(o => (o.id === docId || o._id === docId) ? { ...o, ...updated } : o)
+            : [updated, ...prev];
+          safeLocalStorageSet('primeshow_offers_v1', next);
+          return next;
+        });
+      } else {
+        fetchOffers();
+      }
+    };
+
+    socket.on('OFFER_UPDATED', handleOfferUpdate);
+    socket.on('OFFERS_UPDATED', handleOfferUpdate);
+    socket.on('OFFER_DELETED', (data) => {
+      const idToDelete = data?.id || data?.deletedId;
+      if (idToDelete) {
+        setOffersList(prev => {
+          const next = prev.filter(o => o.id !== idToDelete && o._id !== idToDelete);
+          safeLocalStorageSet('primeshow_offers_v1', next);
+          return next;
+        });
+      }
+    });
+    socket.on('OFFERS_DELETED', (data) => {
+      const idToDelete = data?.id || data?.deletedId;
+      if (idToDelete) {
+        setOffersList(prev => {
+          const next = prev.filter(o => o.id !== idToDelete && o._id !== idToDelete);
+          safeLocalStorageSet('primeshow_offers_v1', next);
+          return next;
+        });
+      }
+    });
+
+    return () => {
+      socket.off('OFFER_UPDATED', handleOfferUpdate);
+      socket.off('OFFERS_UPDATED', handleOfferUpdate);
+      socket.off('OFFER_DELETED');
+      socket.off('OFFERS_DELETED');
+    };
+  }, [socket]);
 
   // Handle clicking outside of search dropdown
   useEffect(() => {

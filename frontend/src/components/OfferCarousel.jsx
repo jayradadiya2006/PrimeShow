@@ -1,16 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Copy, Check, Tag, Sparkles, ArrowRight, Pause, Play } from 'lucide-react';
 import API, { API_BASE } from '../services/api';
+import { safeLocalStorageSet, safeLocalStorageGet } from '../utils/imageStorage';
 
 export const OfferCarousel = ({ onSelectCategory }) => {
-  const [banners, setBanners] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(null);
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState('All');
-  const [progress, setProgress] = useState(0);
-  const timerRef = useRef(null);
-
   const defaultBanners = [
     {
       id: 'ban_1',
@@ -74,16 +67,27 @@ export const OfferCarousel = ({ onSelectCategory }) => {
     }
   ];
 
+  const [banners, setBanners] = useState(() => {
+    const saved = safeLocalStorageGet('primeshow_offer_banners_v1', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+    return defaultBanners;
+  });
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(null);
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState('All');
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef(null);
+
   const fetchBanners = async () => {
     try {
       const res = await API.get('/offers/banners');
-      if (res.data && res.data.length > 0) {
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setBanners(res.data);
-      } else {
-        setBanners(defaultBanners);
+        safeLocalStorageSet('primeshow_offer_banners_v1', res.data);
       }
     } catch (err) {
-      setBanners(defaultBanners);
+      console.warn('Using cached offer banners:', err.message);
     }
   };
 

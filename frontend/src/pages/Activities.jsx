@@ -3,11 +3,151 @@ import { Heart, Search, Filter, MapPin, Clock, Check, Ticket, Sparkles, X, Refre
 import API, { API_BASE } from '../services/api';
 import { ActivityBookingModal } from '../components/ActivityBookingModal';
 import { useAuth } from '../context/AuthContext';
+import { safeLocalStorageSet, safeLocalStorageGet } from '../utils/imageStorage';
+
+export const DEFAULT_GUJARAT_ACTIVITIES = [
+  {
+    id: 'act_amazia_waterpark_surat',
+    title: 'Amaazia Water Park & Amusement Kingdom',
+    category: 'Water Park',
+    badge: '☀️ UNLIMITED ACCESS',
+    city: 'Surat',
+    location: 'Opp. Dumbal Transport Godown, Vesu Canal Rd, Parvat Patiya, Surat, Gujarat 395010',
+    validity: 'Full Day Pass (10:00 AM - 06:00 PM)',
+    price: 999,
+    totalCapacity: 2500,
+    availableSeats: 2500,
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQa46PiPd7SGNHGFSsFRIQ0HRjmfWB5TDKUzibbkB8W8w&s=10',
+    benefits: [
+      'Unlimited Water Rides',
+      'Wave Pool Access',
+      'Free Locker Access',
+      'Rain Dance DJ Party',
+      'Safety Lifejackets Included'
+    ],
+    description: 'Beat the heat at Surat’s premier water theme park featuring world-class spiral slides, multi-lane racers, a massive wave pool, and lazy river channels.'
+  },
+  {
+    id: 'act_woop_trampoline_surat',
+    title: 'Woop! Trampoline & Adventure Park Pass',
+    category: 'Adventure Sport',
+    badge: '🔥 Popular',
+    city: 'Surat',
+    location: 'Dumas Road, Near Decathlon, Bhimpur, Surat, Gujarat 394550',
+    validity: '2 Hours All-Access (11:00 AM - 09:00 PM)',
+    price: 699,
+    totalCapacity: 800,
+    availableSeats: 800,
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAJdse3mXj4kjAmaoF0n10b277oYBLn8gNhr6tBwwTkw&s=10',
+    benefits: [
+      'Free Anti-Skid Grip Socks',
+      'Unlimited Trampoline Arena',
+      'Ninja Warrior Obstacle Course',
+      'Foam Pit & Wall Climbing',
+      'Arcade Game Zone Discount'
+    ],
+    description: 'An action-packed indoor adventure hub featuring wall-to-wall trampolines, foam pits, rope courses, slam dunk zones, and dodgeball arenas.'
+  },
+  {
+    id: 'act_ahmedabad_shott',
+    title: 'Shott Go-Karting & VR Gaming Arena',
+    category: 'Arcade Zone',
+    badge: '⚡ HIGH SPEED',
+    city: 'Ahmedabad',
+    location: 'Sindhu Bhavan Road, Bodakdev, Ahmedabad, Gujarat 380054',
+    validity: '3-Hour All-Access Pass (11:00 AM - 11:00 PM)',
+    price: 899,
+    totalCapacity: 600,
+    availableSeats: 420,
+    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
+    benefits: [
+      'Electric Go-Kart Racing (10 Laps)',
+      'Virtual Reality 9D Simulator',
+      '10-Pin Bowling Lane Pass',
+      '50 Arcade Game Credits'
+    ],
+    description: 'Ahmedabad’s premier entertainment center boasting high-speed European electric go-karts, immersive virtual reality simulators, laser tag battles, and luxury bowling lanes.'
+  },
+  {
+    id: 'act_vadodara_water',
+    title: 'S-Cube Water Park & Gujarat Fun World',
+    category: 'Water Park',
+    badge: '🌊 FAMILY FAVORITE',
+    city: 'Vadodara',
+    location: 'Opp. Vrindavan Garden, Ajwa Road, Vadodara, Gujarat 391510',
+    validity: 'Full Day Splash Pass (10:30 AM - 06:00 PM)',
+    price: 799,
+    totalCapacity: 2200,
+    availableSeats: 1450,
+    image: 'https://images.unsplash.com/photo-1582650625119-3a31f8fa2699?auto=format&fit=crop&w=800&q=80',
+    benefits: [
+      'Unlimited Water Slides & Cyclone',
+      'Wave Pool & Rain Dance with DJ',
+      'Kids Pirate Splash Fortress',
+      'Changing Rooms & Free Locker'
+    ],
+    description: 'Gujarat\'s iconic water park located near Ajwa Gardens featuring exhilarating spiral slides, typhoon wave pool, musical rain dance arena, and kid-friendly splash zones.'
+  },
+  {
+    id: 'act_rajkot_karting',
+    title: 'Race Track Pro Go-Karting Arena',
+    category: 'Adventure Sport',
+    badge: '🏎️ THRILL PASS',
+    city: 'Rajkot',
+    location: 'Near Speedwell Party Plot, Kalawad Road, Rajkot, Gujarat 360005',
+    validity: '1-Hour Racing Session',
+    price: 599,
+    totalCapacity: 400,
+    availableSeats: 280,
+    image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80',
+    benefits: [
+      '20 Laps High-Torque Karting',
+      'DOT-Certified Helmet & Safety Gear',
+      'Live Digital Lap Timing Leaderboard',
+      'Pit Lane Winner Photo Opportunity'
+    ],
+    description: 'Experience raw speed on Saurashtra\'s top asphalt racing track. Features twin-engine Honda karts, sharp hairpin turns, high-grip racing tires, and electronic timing sensors.'
+  },
+  {
+    id: 'act_della_3',
+    title: 'Della Adventure Park Extreme Pass',
+    category: 'Adventure Sport',
+    badge: 'POPULAR',
+    location: 'Lonavala / Near Gujarat Border',
+    city: 'Lonavala',
+    validity: 'Full Day Extreme Pass',
+    price: 1999,
+    totalCapacity: 1500,
+    availableSeats: 410,
+    benefits: ['Swoop Swing (100ft Drop)', 'Sky Cycling & Zipline', 'ATV Dirt Track Ride', 'Paintball Battle Zone'],
+    image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80',
+    description: 'India\'s largest extreme adventure park offering over 50 thrill activities, ATV dirt racing, sky cycling, and high-altitude drop swings.'
+  },
+  {
+    id: 'act_smaaash_4',
+    title: 'Smaaash VR & Laser Tag Gaming Arena',
+    category: 'Arcade Zone',
+    badge: 'UNLIMITED ACCESS',
+    location: 'Lower Parel, Mumbai',
+    city: 'Mumbai',
+    validity: '3-Hour Unlimited Gaming Pass',
+    price: 999,
+    totalCapacity: 800,
+    availableSeats: 260,
+    benefits: ['Unlimited Arcade Games', 'VR Coaster Simulation', 'Multiplayer Laser Tag Arena', '10-Pin Bowling Alley'],
+    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
+    description: 'Next-gen virtual reality gaming hub featuring interactive 9D simulators, immersive laser tag battles, bowling lanes, and arcade classics.'
+  }
+];
 
 export const Activities = () => {
   const { selectedCity, socket } = useAuth();
-  const [activitiesList, setActivitiesList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [activitiesList, setActivitiesList] = useState(() => {
+    const saved = safeLocalStorageGet('primeshow_activities_v1', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+    return DEFAULT_GUJARAT_ACTIVITIES;
+  });
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -18,69 +158,24 @@ export const Activities = () => {
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (activitiesList && activitiesList.length > 0) {
+      safeLocalStorageSet('primeshow_activities_v1', activitiesList);
+    }
+  }, [activitiesList]);
+
   const fetchActivities = async () => {
-    setLoading(true);
+    if (activitiesList.length === 0) {
+      setLoading(true);
+    }
     try {
       const res = await API.get('/activities');
-      setActivitiesList(res.data);
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setActivitiesList(res.data);
+        safeLocalStorageSet('primeshow_activities_v1', res.data);
+      }
     } catch (err) {
-      setActivitiesList([
-        {
-          id: 'act_surat_1',
-          title: 'Amaazia Water Park & Snow World',
-          category: 'Water Park',
-          badge: 'UNLIMITED ACCESS',
-          location: 'Opp. BRTS Bus Stop, Dumbhal, Surat',
-          city: 'Surat',
-          validity: 'Full Day Pass (10:30 AM - 07:00 PM)',
-          price: 999,
-          totalCapacity: 3000,
-          availableSeats: 850,
-          benefits: ['Unlimited Water Slides', 'Free Snow World Access', 'Wave Pool Entry', 'Complimentary Buffet Lunch'],
-          image: 'https://images.unsplash.com/photo-1582650625119-3a31f8fa2699?auto=format&fit=crop&w=800&q=80',
-          description: 'Surat\'s premier international water park featuring high-thrill slides, wave pools, lazy rivers, and sub-zero snow world!'
-        },
-        {
-          id: 'act_ahmedabad_1',
-          title: 'Shott Go-Karting & VR Gaming Arena',
-          category: 'Arcade Zone',
-          badge: 'HIGH SPEED',
-          location: 'Sindhu Bhavan Road, Ahmedabad',
-          city: 'Ahmedabad',
-          validity: '3-Hour All-Access Pass',
-          price: 899,
-        },
-        {
-          id: 'act_3',
-          title: 'Della Adventure Park Extreme Sports Pass',
-          category: 'Adventure Sport',
-          badge: 'POPULAR',
-          location: 'Lonavala, Maharashtra',
-          city: 'Lonavala',
-          validity: 'Full Day Extreme Pass',
-          price: 1999,
-          totalCapacity: 1500,
-          availableSeats: 410,
-          benefits: ['Swoop Swing (100ft Drop)', 'Sky Cycling & Zipline', 'ATV Dirt Track Ride', 'Paintball Battle Zone'],
-          image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80',
-          description: 'India\'s largest extreme adventure park offering over 50 thrill activities, ATV dirt racing, sky cycling, and high-altitude drop swings.'
-        },
-        {
-          id: 'act_4',
-          title: 'Smaaash VR & Laser Tag Gaming Arena',
-          category: 'Arcade Zone',
-          badge: 'UNLIMITED ACCESS',
-          location: 'Lower Parel, Mumbai',
-          city: 'Mumbai',
-          validity: '3-Hour Unlimited Gaming Pass',
-          price: 999,
-          totalCapacity: 800,
-          availableSeats: 260,
-          benefits: ['Unlimited Arcade Games', 'VR Coaster Simulation', 'Multiplayer Laser Tag Arena', '10-Pin Bowling Alley'],
-          image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
-          description: 'Next-gen virtual reality gaming hub featuring interactive 9D simulators, immersive laser tag battles, bowling lanes, and arcade classics.'
-        }
-      ]);
+      console.warn('⚠️ Fetch activities network error (using cached activities):', err.message);
     } finally {
       setLoading(false);
     }
@@ -96,15 +191,22 @@ export const Activities = () => {
         return;
       }
       if (updated.deletedId) {
-        setActivitiesList(prev => prev.filter(a => a.id !== updated.deletedId && a._id !== updated.deletedId));
+        setActivitiesList(prev => {
+          const next = prev.filter(a => a.id !== updated.deletedId && a._id !== updated.deletedId);
+          safeLocalStorageSet('primeshow_activities_v1', next);
+          return next;
+        });
         return;
       }
       const docId = updated.id || updated._id;
       if (docId) {
         setActivitiesList(prev => {
           const exists = prev.some(a => a.id === docId || a._id === docId);
-          if (exists) return prev.map(a => (a.id === docId || a._id === docId) ? { ...a, ...updated } : a);
-          return [updated, ...prev];
+          const next = exists 
+            ? prev.map(a => (a.id === docId || a._id === docId) ? { ...a, ...updated } : a)
+            : [updated, ...prev];
+          safeLocalStorageSet('primeshow_activities_v1', next);
+          return next;
         });
       } else {
         fetchActivities();
@@ -115,11 +217,23 @@ export const Activities = () => {
     socket.on('ACTIVITIES_UPDATED', handleActivityUpdate);
     socket.on('ACTIVITY_DELETED', (data) => {
       const idToDelete = data?.id || data?.deletedId;
-      if (idToDelete) setActivitiesList(prev => prev.filter(a => a.id !== idToDelete && a._id !== idToDelete));
+      if (idToDelete) {
+        setActivitiesList(prev => {
+          const next = prev.filter(a => a.id !== idToDelete && a._id !== idToDelete);
+          safeLocalStorageSet('primeshow_activities_v1', next);
+          return next;
+        });
+      }
     });
     socket.on('ACTIVITIES_DELETED', (data) => {
       const idToDelete = data?.id || data?.deletedId;
-      if (idToDelete) setActivitiesList(prev => prev.filter(a => a.id !== idToDelete && a._id !== idToDelete));
+      if (idToDelete) {
+        setActivitiesList(prev => {
+          const next = prev.filter(a => a.id !== idToDelete && a._id !== idToDelete);
+          safeLocalStorageSet('primeshow_activities_v1', next);
+          return next;
+        });
+      }
     });
 
     return () => {

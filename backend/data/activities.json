@@ -42,5 +42,68 @@
     ],
     "description": "An action-packed indoor adventure hub featuring wall-to-wall trampolines, foam pits, rope courses, slam dunk zones, and dodgeball arenas. Grip jump socks are mandatory for arena entry. Suitable for all age groups with trained marshals on deck.",
     "_id": "6ace08b99b097e7bd219f351"
+  },
+  {
+    "id": "act_ahmedabad_shott",
+    "title": "Shott Go-Karting & VR Gaming Arena",
+    "category": "Arcade Zone",
+    "badge": "⚡ HIGH SPEED",
+    "city": "Ahmedabad",
+    "location": "Sindhu Bhavan Road, Bodakdev, Ahmedabad, Gujarat 380054",
+    "validity": "3-Hour All-Access Pass (11:00 AM - 11:00 PM)",
+    "price": 899,
+    "totalCapacity": 600,
+    "availableSeats": 420,
+    "image": "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80",
+    "benefits": [
+      "Electric Go-Kart Racing (10 Laps)",
+      "Virtual Reality 9D Simulator",
+      "10-Pin Bowling Lane Pass",
+      "50 Arcade Game Credits"
+    ],
+    "description": "Ahmedabad’s premier entertainment center boasting high-speed European electric go-karts, immersive virtual reality simulators, laser tag battles, and luxury bowling lanes.",
+    "_id": "6ace08b99b097e7bd219f352"
+  },
+  {
+    "id": "act_vadodara_water",
+    "title": "S-Cube Water Park & Gujarat Fun World",
+    "category": "Water Park",
+    "badge": "🌊 FAMILY FAVORITE",
+    "city": "Vadodara",
+    "location": "Opp. Vrindavan Garden, Ajwa Road, Vadodara, Gujarat 391510",
+    "validity": "Full Day Splash Pass (10:30 AM - 06:00 PM)",
+    "price": 799,
+    "totalCapacity": 2200,
+    "availableSeats": 1450,
+    "image": "https://images.unsplash.com/photo-1582650625119-3a31f8fa2699?auto=format&fit=crop&w=800&q=80",
+    "benefits": [
+      "Unlimited Water Slides & Cyclone",
+      "Wave Pool & Rain Dance with DJ",
+      "Kids Pirate Splash Fortress",
+      "Changing Rooms & Free Locker"
+    ],
+    "description": "Gujarat's iconic water park located near Ajwa Gardens featuring exhilarating spiral slides, typhoon wave pool, musical rain dance arena, and kid-friendly splash zones.",
+    "_id": "6ace08b99b097e7bd219f353"
+  },
+  {
+    "id": "act_rajkot_karting",
+    "title": "Race Track Pro Go-Karting Arena",
+    "category": "Adventure Sport",
+    "badge": "🏎️ THRILL PASS",
+    "city": "Rajkot",
+    "location": "Near Speedwell Party Plot, Kalawad Road, Rajkot, Gujarat 360005",
+    "validity": "1-Hour Racing Session",
+    "price": 599,
+    "totalCapacity": 400,
+    "availableSeats": 280,
+    "image": "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80",
+    "benefits": [
+      "20 Laps High-Torque Karting",
+      "DOT-Certified Helmet & Safety Gear",
+      "Live Digital Lap Timing Leaderboard",
+      "Pit Lane Winner Photo Opportunity"
+    ],
+    "description": "Experience raw speed on Saurashtra's top asphalt racing track. Features twin-engine Honda karts, sharp hairpin turns, high-grip racing tires, and electronic timing sensors.",
+    "_id": "6ace08b99b097e7bd219f354"
   }
 ]
