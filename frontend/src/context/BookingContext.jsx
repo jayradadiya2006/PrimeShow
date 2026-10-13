@@ -100,36 +100,54 @@ const DEFAULT_FEATURE_STRIPS = [
 
 const DEFAULT_UPCOMING_MOVIES = [
   {
-    id: 'up_1',
+    id: 'up_avengers_secret_wars',
     title: 'Avengers: Secret Wars',
     release: 'Dec 2026',
-    poster: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-    genres: ['Action', 'Superhero'],
-    synopsis: 'The multiverse collapses as heroes assemble for the ultimate cosmic showdown.'
+    releaseDateTag: 'Dec 2026',
+    genres: ['Action', 'Sci-Fi', 'Adventure'],
+    poster: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHRu2OGjr1xiHI1mTwYIwhaqgpMhQgfrFTePu3w6T2xw&s=10',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHRu2OGjr1xiHI1mTwYIwhaqgpMhQgfrFTePu3w6T2xw&s=10',
+    synopsis: "Earth's mightiest heroes unite across the multiverse in an epic confrontation against cosmic threats."
   },
   {
-    id: 'up_2',
-    title: 'The Dark Knight: Legacy',
+    id: 'up_ramayana_part1',
+    title: 'Ramayana: Part 1',
     release: 'Nov 2026',
-    poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80',
-    genres: ['Action', 'Crime'],
-    synopsis: 'A new vigilante emerges in Gotham City to honor the shadow of Batman.'
+    releaseDateTag: 'Nov 2026',
+    genres: ['Mythological', 'Action', 'Fantasy'],
+    poster: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHUIrI9Ytd4-3kbWNXKMB6kaWvb1Q_hJPvsTc3lf7IVA&s=10',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHUIrI9Ytd4-3kbWNXKMB6kaWvb1Q_hJPvsTc3lf7IVA&s=10',
+    synopsis: 'The epic timeless tale of Lord Rama, righteousness, and courage brought to the grand IMAX screen.'
   },
   {
-    id: 'up_3',
-    title: 'Interstellar II: Beyond Horizon',
+    id: 'up_love_and_war',
+    title: 'Love & War',
     release: 'Jan 2027',
-    poster: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80',
-    genres: ['Sci-Fi', 'Adventure'],
-    synopsis: 'Explorers venture through an uncharted wormhole in search of human salvation.'
+    releaseDateTag: 'Jan 2027',
+    genres: ['Romance', 'Drama', 'War'],
+    poster: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnm4ohArZvblsu4yjno3gqKIIEAdOr_U3xrLHoS7_QpQ&s=10',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnm4ohArZvblsu4yjno3gqKIIEAdOr_U3xrLHoS7_QpQ&s=10',
+    synopsis: 'An intense romantic saga set against the turbulent backdrop of war, duty, and immense sacrifices.'
   },
   {
-    id: 'up_4',
-    title: 'Gladiator: Rise of Empires',
-    release: 'Oct 2026',
-    poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
-    genres: ['Action', 'Drama'],
-    synopsis: 'Colosseum legends collide in ancient Rome for supreme honor.'
+    id: 'up_spiderman_beyond_spiderverse',
+    title: 'Spider-Man: Beyond the Spider-Verse',
+    release: 'Jun 2027',
+    releaseDateTag: 'Jun 2027',
+    genres: ['Animation', 'Action', 'Sci-Fi'],
+    poster: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyXHGB4QGlPsIaULimO_ql2DhZYCyCamGfAfFjeWoImw&s=10',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSyXHGB4QGlPsIaULimO_ql2DhZYCyCamGfAfFjeWoImw&s=10',
+    synopsis: 'Miles Morales journeys across the multiverse to determine his own destiny and save those he loves.'
+  },
+  {
+    id: 'up_spirit_prabhas',
+    title: 'Spirit',
+    release: 'Mar 2027',
+    releaseDateTag: 'Mar 2027',
+    genres: ['Action', 'Crime', 'Thriller'],
+    poster: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQtvlYipQ8YVR5eahH9lS2truLLqh8-xPJ6OdmZA9RNA&s=10',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQtvlYipQ8YVR5eahH9lS2truLLqh8-xPJ6OdmZA9RNA&s=10',
+    synopsis: 'A high-octane action thriller navigating a fiercely dedicated cop, underworld crime, and justice.'
   }
 ];
 
@@ -1079,6 +1097,8 @@ export const BookingProvider = ({ children }) => {
       cmsSocket.on('UPCOMING_MOVIES_UPDATED', (movies) => {
         if (Array.isArray(movies)) {
           setUpcomingMoviesList(movies);
+        } else {
+          fetchUpcomingMovies();
         }
       });
 
@@ -1151,31 +1171,39 @@ export const BookingProvider = ({ children }) => {
   };
 
   // Upcoming Movies Dynamic Store (Local MongoDB Single Source of Truth)
-  const [upcomingMoviesList, setUpcomingMoviesList] = useState([]);
+  const [upcomingMoviesList, setUpcomingMoviesList] = useState(() => {
+    const saved = safeLocalStorageGet('primeshow_upcoming_v1', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+    return DEFAULT_UPCOMING_MOVIES;
+  });
+
+  useEffect(() => {
+    safeLocalStorageSet('primeshow_upcoming_v1', upcomingMoviesList);
+  }, [upcomingMoviesList]);
 
   const addUpcomingMovie = async (movieObj) => {
-    const newMovie = { id: `up_${Date.now()}`, ...movieObj };
-    setUpcomingMoviesList(prev => [newMovie, ...prev]);
+    const newMovie = { id: movieObj.id || `up_${Date.now()}`, ...movieObj };
+    setUpcomingMoviesList(prev => [newMovie, ...prev.filter(m => m.id !== newMovie.id)]);
     try {
-      const res = await API.post('/upcoming-movies', newMovie);
-      if (res.data && Array.isArray(res.data)) {
-        setUpcomingMoviesList(res.data);
-      }
+      await API.post('/upcoming-movies', newMovie);
+      await fetchUpcomingMovies();
     } catch (err) {}
     return newMovie;
   };
 
   const updateUpcomingMovie = async (movieId, updatedFields) => {
     setUpcomingMoviesList(prev => prev.map(m => m.id === movieId ? { ...m, ...updatedFields } : m));
+    try {
+      await API.put(`/upcoming-movies/${movieId}`, updatedFields);
+      await fetchUpcomingMovies();
+    } catch (err) {}
   };
 
   const deleteUpcomingMovie = async (movieId) => {
     setUpcomingMoviesList(prev => prev.filter(m => m.id !== movieId));
     try {
-      const res = await API.delete(`/upcoming-movies/${movieId}`);
-      if (res.data && Array.isArray(res.data)) {
-        setUpcomingMoviesList(res.data);
-      }
+      await API.delete(`/upcoming-movies/${movieId}`);
+      await fetchUpcomingMovies();
     } catch (err) {}
   };
 
@@ -1226,6 +1254,7 @@ export const BookingProvider = ({ children }) => {
       updateTheatreInGlobalStore,
       deleteTheatreFromGlobalStore,
       upcomingMoviesList,
+      fetchUpcomingMovies,
       addUpcomingMovie,
       updateUpcomingMovie,
       deleteUpcomingMovie

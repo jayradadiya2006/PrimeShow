@@ -12,6 +12,121 @@ import { AdminTabErrorBoundary } from '../../components/AdminErrorBoundary';
 import { GUJARAT_CITIES } from '../../constants/cities';
 import { compressImage } from '../../utils/imageStorage';
 
+const DEFAULT_FALLBACK_OFFERS = [
+  {
+    id: "off_hdfc_movie_25",
+    title: "Flat 25% Off with HDFC Bank Credit Cards",
+    code: "HDFCMOVIE25",
+    category: "Bank Offer / Cards",
+    bank: "HDFC Bank",
+    discount: "25% Instant Discount up to ₹250",
+    discountValue: 250,
+    minBookingValue: 500,
+    ctaText: "Apply Coupon",
+    ctaLabel: "Apply Coupon",
+    expiryDate: "2026-12-31",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSS2DWsI_sAiiqQiNFhEVSP2qNLNWazJuztdNNfSfJgzA&s=10",
+    description: "Valid once per user per month on HDFC Bank Visa and Mastercard credit cards. Valid across all movie, event, and play bookings."
+  }
+];
+
+const DEFAULT_FALLBACK_BANNERS = [
+  {
+    id: "ban_bogo_imax_3d",
+    title: "Buy 1 Get 1 FREE on IMAX 3D Blockbusters",
+    tagline: "Book 2 or more tickets for any IMAX 3D screening and get the second ticket 100% free. Applicable on all weekend evening shows.",
+    description: "Book 2 or more tickets for any IMAX 3D screening and get the second ticket 100% free. Applicable on all weekend evening shows.",
+    code: "BOGOIMAX",
+    category: "Movies",
+    categoryBadge: "🎬 MOVIES SPECIAL",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQ6ji5VoYPGPa950NqbAp7W-neEdHma9vio7Db5JqtTA&s=10",
+    expiryDate: "2026-12-31",
+    ctaText: "Claim Offer",
+    ctaLabel: "Claim Offer",
+    ctaLink: "movies"
+  }
+];
+
+const DEFAULT_FALLBACK_PLAYS = [
+  {
+    id: "pl_gujjubhai_ni_golmaal_surat",
+    title: "Gujjubhai Ni Golmaal",
+    language: "Gujarati",
+    category: "Comedy Drama",
+    badge: "🔥 HOT SELLER",
+    city: "Surat",
+    venue: "Sanjeev Kumar Auditorium, Hazira Road, Adajan Gam, Pal, Surat - 394510",
+    date: "14 NOV 2026",
+    time: "08:30 PM",
+    price: 500,
+    totalCapacity: 1150,
+    availableSeats: 1150,
+    image: "https://image.tmdb.org/t/p/w780/sTDcx4mcrHPdUQ5IX11PJyd0ksw.jpg",
+    description: "The iconic Gujjubhai franchise returns with an uproarious laugh riot. Starring Siddharth Randeria and an ensemble Gujarati stage cast."
+  },
+  {
+    id: "pl_mughal_e_azam_surat",
+    title: "Mughal-e-Azam: The Musical",
+    language: "Hindi",
+    category: "Historical Drama",
+    badge: "🔥 HOT SELLER",
+    city: "Surat",
+    venue: "Pandit Dindayal Upadhyay Indoor Stadium, Athwalines, Surat - 395007",
+    date: "28 DEC 2026",
+    time: "07:00 PM",
+    price: 1200,
+    totalCapacity: 2200,
+    availableSeats: 2200,
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJWaBwwHfB6prGstRVgBkCjqOFkA_m45bQt1XYLUPN2g&s=10",
+    description: "Feroz Abbas Khan’s Broadway-style tribute to K. Asif’s timeless cinematic classic."
+  }
+];
+
+const DEFAULT_FALLBACK_ACTIVITIES = [
+  {
+    id: "act_amazia_waterpark_surat",
+    title: "Amaazia Water Park & Amusement Kingdom",
+    category: "Water Park",
+    badge: "☀️ UNLIMITED ACCESS",
+    city: "Surat",
+    location: "Opp. Dumbal Transport Godown, Vesu Canal Rd, Parvat Patiya, Surat, Gujarat 395010",
+    validity: "Full Day Pass (10:00 AM - 06:00 PM)",
+    price: 999,
+    totalCapacity: 2500,
+    availableSeats: 2500,
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQa46PiPd7SGNHGFSsFRIQ0HRjmfWB5TDKUzibbkB8W8w&s=10",
+    benefits: [
+      "Unlimited Water Rides",
+      "Wave Pool Access",
+      "Free Locker Access",
+      "Rain Dance DJ Party",
+      "Safety Lifejackets Included"
+    ],
+    description: "Beat the heat at Surat’s premier water theme park featuring world-class spiral slides, multi-lane racers, a massive wave pool, and lazy river channels."
+  },
+  {
+    id: "act_woop_trampoline_surat",
+    title: "Woop! Trampoline & Adventure Park Pass",
+    category: "Adventure Sport",
+    badge: "🔥 Popular",
+    city: "Surat",
+    location: "Dumas Road, Near Decathlon, Bhimpur, Surat, Gujarat 394550",
+    validity: "2 Hours All-Access (11:00 AM - 09:00 PM)",
+    price: 699,
+    totalCapacity: 800,
+    availableSeats: 800,
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAJdse3mXj4kjAmaoF0n10b277oYBLn8gNhr6tBwwTkw&s=10",
+    benefits: [
+      "Free Anti-Skid Grip Socks",
+      "Unlimited Trampoline Arena",
+      "Ninja Warrior Obstacle Course",
+      "Foam Pit & Wall Climbing",
+      "Arcade Game Zone Discount"
+    ],
+    description: "An action-packed indoor adventure hub featuring wall-to-wall trampolines, foam pits, rope courses, slam dunk zones, and dodgeball arenas."
+  }
+];
+
 export const AdminDashboard = ({ onReturnHome }) => {
   const { 
     user, login, adminLogin, logout, token, loading, authLoading: globalAuthLoading, supportMessages, replyToSupportMessage, 
@@ -25,7 +140,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
     heroSlidesList, addHeroSlide, updateHeroSlide, deleteHeroSlide,
     featureStripsList, addFeatureStrip, updateFeatureStrip, deleteFeatureStrip,
     theatresList, setTheatresList, fetchTheatres, addTheatreToGlobalStore, updateTheatreInGlobalStore, deleteTheatreFromGlobalStore,
-    upcomingMoviesList, addUpcomingMovie, updateUpcomingMovie, deleteUpcomingMovie
+    upcomingMoviesList, fetchUpcomingMovies, addUpcomingMovie, updateUpcomingMovie, deleteUpcomingMovie
   } = useBooking();
   const [activeTab, setActiveTab] = useState('analytics');
 
@@ -239,7 +354,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   };
 
   // Admin Offers & Seats State
-  const [offersList, setOffersList] = useState([]);
+  const [offersList, setOffersList] = useState(DEFAULT_FALLBACK_OFFERS);
   const [actionSuccess, setActionSuccess] = useState('');
 
   // Cinema & Screen Scoped Seat State
@@ -804,7 +919,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [eventSlotCapacity, setEventSlotCapacity] = useState(500);
 
   // Plays CRUD State
-  const [playsList, setPlaysList] = useState([]);
+  const [playsList, setPlaysList] = useState(DEFAULT_FALLBACK_PLAYS);
   const [playForm, setPlayForm] = useState({
     title: '',
     language: 'Gujarati',
@@ -822,7 +937,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   });
   const [editingPlayId, setEditingPlayId] = useState(null);
   // Activities CRUD State
-  const [activitiesList, setActivitiesList] = useState([]);
+  const [activitiesList, setActivitiesList] = useState(DEFAULT_FALLBACK_ACTIVITIES);
   const [activityForm, setActivityForm] = useState({
     title: '',
     category: 'Water Park',
@@ -841,7 +956,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const [editingActivityId, setEditingActivityId] = useState(null);
 
   // Offer Banners CRUD State
-  const [offerBannersList, setOfferBannersList] = useState([]);
+  const [offerBannersList, setOfferBannersList] = useState(DEFAULT_FALLBACK_BANNERS);
   const [offerSubTab, setOfferSubTab] = useState('banners'); // 'banners' | 'cards'
   const [bannerForm, setBannerForm] = useState({
     title: '',
@@ -988,25 +1103,36 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const fetchAdminData = async () => {
     try {
       const [offRes, banRes, thRes, evRes, plRes, actRes] = await Promise.allSettled([
-        API.get('/offers', { timeout: 5000 }),
-        API.get('/offers/banners', { timeout: 5000 }),
-        API.get('/theatres', { timeout: 5000 }),
-        API.get('/events', { timeout: 5000 }),
-        API.get('/plays', { timeout: 5000 }),
-        API.get('/activities', { timeout: 5000 })
+        API.get('/offers', { timeout: 8000 }),
+        API.get('/offers/banners', { timeout: 8000 }),
+        API.get('/theatres', { timeout: 8000 }),
+        API.get('/events', { timeout: 8000 }),
+        API.get('/plays', { timeout: 8000 }),
+        API.get('/activities', { timeout: 8000 })
       ]);
-      if (offRes.status === 'fulfilled' && offRes.value.data) setOffersList(offRes.value.data);
-      if (banRes.status === 'fulfilled' && banRes.value.data) setOfferBannersList(banRes.value.data);
-      if (thRes.status === 'fulfilled' && thRes.value.data) setTheatresList(thRes.value.data);
-      if (evRes.status === 'fulfilled' && evRes.value.data) setEventsList(evRes.value.data);
-      if (plRes.status === 'fulfilled' && plRes.value.data) setPlaysList(plRes.value.data);
-      if (actRes.status === 'fulfilled' && actRes.value.data) setActivitiesList(actRes.value.data);
+      if (offRes.status === 'fulfilled' && Array.isArray(offRes.value.data) && offRes.value.data.length > 0) {
+        setOffersList(offRes.value.data);
+      }
+      if (banRes.status === 'fulfilled' && Array.isArray(banRes.value.data) && banRes.value.data.length > 0) {
+        setOfferBannersList(banRes.value.data);
+      }
+      if (thRes.status === 'fulfilled' && Array.isArray(thRes.value.data) && thRes.value.data.length > 0) {
+        setTheatresList(thRes.value.data);
+      }
+      if (evRes.status === 'fulfilled' && Array.isArray(evRes.value.data) && evRes.value.data.length > 0) {
+        setEventsList(evRes.value.data);
+      }
+      if (plRes.status === 'fulfilled' && Array.isArray(plRes.value.data) && plRes.value.data.length > 0) {
+        setPlaysList(plRes.value.data);
+      }
+      if (actRes.status === 'fulfilled' && Array.isArray(actRes.value.data) && actRes.value.data.length > 0) {
+        setActivitiesList(actRes.value.data);
+      }
+      if (typeof fetchUpcomingMovies === 'function') {
+        fetchUpcomingMovies();
+      }
     } catch (err) {
-      setOffersList([
-        { id: 'off_1', code: 'PRIMESHOW50', title: '50% Flat Discount on IMAX & VIP Bookings', bank: 'All Cards & UPI' },
-        { id: 'off_2', code: 'LUXURY200', title: 'Flat ₹200 Cashback for HDFC Bank Cards', bank: 'HDFC Bank' }
-      ]);
-      setTheatresList([]);
+      console.warn('⚠️ Error in fetchAdminData:', err);
     }
   };
 
@@ -1321,7 +1447,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
       fetchRevenueChartData(revenueRange);
       fetchBookingChartData(bookingRange);
       fetchTopMoviesAnalytics();
-      fetchTopTheatresAnalytics();
+    } else if (['upcoming', 'offers', 'activities', 'plays', 'strips', 'hero', 'theatres', 'events', 'cms-editor'].includes(activeTab)) {
+      fetchAdminData();
+      if (typeof fetchUpcomingMovies === 'function') {
+        fetchUpcomingMovies();
+      }
     }
   }, [activeTab, userCurrentPage, activityCurrentPage, activityCategoryTab, revenueRange, bookingRange]);
 
@@ -1801,18 +1931,22 @@ export const AdminDashboard = ({ onReturnHome }) => {
     };
 
     if (editingOfferId) {
+      let saved = { id: editingOfferId, ...offerPayload };
       try {
-        await API.put(`/offers/${editingOfferId}`, offerPayload);
+        const res = await API.put(`/offers/${editingOfferId}`, offerPayload);
+        const dataDoc = res.data?.offer || res.data?.data || (res.data?.id ? res.data : null);
+        if (dataDoc) saved = { ...saved, ...dataDoc };
       } catch (err) {}
-      setOffersList(offersList.map(o => o.id === editingOfferId ? { ...o, ...offerPayload } : o));
+      setOffersList(prev => prev.map(o => o.id === editingOfferId ? { ...o, ...saved } : o));
       setActionSuccess('Offer updated successfully!');
     } else {
+      let saved = { id: `off_${Date.now()}`, ...offerPayload, expiryDate: '2026-12-31' };
       try {
         const res = await API.post('/offers', offerPayload);
-        setOffersList([res.data, ...offersList]);
-      } catch (err) {
-        setOffersList([{ id: `off_${Date.now()}`, ...offerPayload, expiryDate: '2026-12-31' }, ...offersList]);
-      }
+        const dataDoc = res.data?.offer || res.data?.data || (res.data?.id ? res.data : null);
+        if (dataDoc) saved = { ...saved, ...dataDoc };
+      } catch (err) {}
+      setOffersList(prev => [saved, ...prev.filter(o => o.id !== saved.id)]);
       setActionSuccess('New offer published live!');
     }
 
@@ -2306,15 +2440,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingPlayId) {
+        let saved = { id: editingPlayId, ...playForm };
         const res = await API.put(`/plays/${editingPlayId}`, playForm);
-        setPlaysList(playsList.map(p => p.id === editingPlayId ? res.data : p));
+        const dataDoc = res.data?.play || res.data?.data || (res.data?.id ? res.data : null);
+        if (dataDoc) saved = { ...saved, ...dataDoc };
+        setPlaysList(prev => prev.map(p => p.id === editingPlayId ? { ...p, ...saved } : p));
         setActionSuccess('Play details updated successfully!');
       } else {
+        let saved = { id: `pl_${Date.now()}`, ...playForm };
         const res = await API.post('/plays', playForm);
-        setPlaysList([res.data, ...playsList]);
+        const dataDoc = res.data?.play || res.data?.data || (res.data?.id ? res.data : null);
+        if (dataDoc) saved = { ...saved, ...dataDoc };
+        setPlaysList(prev => [saved, ...prev.filter(p => p.id !== saved.id)]);
         setActionSuccess('New Theater Play added successfully!');
       }
-      setPlayForm({ title: '', language: 'Gujarati', category: 'Comedy Drama', badge: 'HOT SELLER', venue: '', city: 'Mumbai', date: '14 FEB 2027', time: '08:00 PM', price: 600, totalCapacity: 1200, availableSeats: 1200, image: '', description: '' });
+      setPlayForm({ title: '', language: 'Gujarati', category: 'Comedy Drama', badge: 'HOT SELLER', venue: '', city: 'Surat', date: '14 FEB 2027', time: '08:00 PM', price: 600, totalCapacity: 1200, availableSeats: 1200, image: '', description: '' });
       setEditingPlayId(null);
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {
@@ -2326,7 +2466,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const handleDeletePlay = async (id) => {
     try {
       await API.delete(`/plays/${id}`);
-      setPlaysList(playsList.filter(p => p.id !== id));
+      setPlaysList(prev => prev.filter(p => p.id !== id));
       setActionSuccess('Play deleted!');
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {}
@@ -2353,15 +2493,21 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingActivityId) {
+        let saved = { id: editingActivityId, ...activityForm };
         const res = await API.put(`/activities/${editingActivityId}`, activityForm);
-        setActivitiesList(activitiesList.map(a => a.id === editingActivityId ? res.data : a));
+        const dataDoc = res.data?.activity || res.data?.activitie || res.data?.data || (res.data?.id ? res.data : null);
+        if (dataDoc) saved = { ...saved, ...dataDoc };
+        setActivitiesList(prev => prev.map(a => a.id === editingActivityId ? { ...a, ...saved } : a));
         setActionSuccess('Activity pass details updated successfully!');
       } else {
+        let saved = { id: `act_${Date.now()}`, ...activityForm };
         const res = await API.post('/activities', activityForm);
-        setActivitiesList([res.data, ...activitiesList]);
+        const dataDoc = res.data?.activity || res.data?.activitie || res.data?.data || (res.data?.id ? res.data : null);
+        if (dataDoc) saved = { ...saved, ...dataDoc };
+        setActivitiesList(prev => [saved, ...prev.filter(a => a.id !== saved.id)]);
         setActionSuccess('New Adventure Activity Pass created successfully!');
       }
-      setActivityForm({ title: '', category: 'Water Park', badge: 'UNLIMITED ACCESS', location: '', city: 'Mumbai', validity: 'Full Day Pass (10:00 AM - 07:00 PM)', price: 1299, totalCapacity: 2000, availableSeats: 2000, image: '', description: '', benefits: ['Unlimited Rides', 'Free Entry'] });
+      setActivityForm({ title: '', category: 'Water Park', badge: 'UNLIMITED ACCESS', location: '', city: 'Surat', validity: 'Full Day Pass (10:00 AM - 07:00 PM)', price: 1299, totalCapacity: 2000, availableSeats: 2000, image: '', description: '', benefits: ['Unlimited Rides', 'Free Entry'] });
       setEditingActivityId(null);
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {
@@ -2373,7 +2519,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const handleDeleteActivity = async (id) => {
     try {
       await API.delete(`/activities/${id}`);
-      setActivitiesList(activitiesList.filter(a => a.id !== id));
+      setActivitiesList(prev => prev.filter(a => a.id !== id));
       setActionSuccess('Activity pass deleted!');
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {}
@@ -2383,12 +2529,18 @@ export const AdminDashboard = ({ onReturnHome }) => {
     e.preventDefault();
     try {
       if (editingBannerId) {
+        let saved = { id: editingBannerId, ...bannerForm };
         const res = await API.put(`/offers/banners/${editingBannerId}`, bannerForm);
-        setOfferBannersList(offerBannersList.map(b => b.id === editingBannerId ? res.data : b));
+        const dataDoc = res.data?.banner || res.data?.data || (res.data?.id ? res.data : null);
+        if (dataDoc) saved = { ...saved, ...dataDoc };
+        setOfferBannersList(prev => prev.map(b => b.id === editingBannerId ? { ...b, ...saved } : b));
         setActionSuccess('Banner slide updated successfully!');
       } else {
+        let saved = { id: `ban_${Date.now()}`, ...bannerForm };
         const res = await API.post('/offers/banners', bannerForm);
-        setOfferBannersList([res.data, ...offerBannersList]);
+        const dataDoc = res.data?.banner || res.data?.data || (res.data?.id ? res.data : null);
+        if (dataDoc) saved = { ...saved, ...dataDoc };
+        setOfferBannersList(prev => [saved, ...prev.filter(b => b.id !== saved.id)]);
         setActionSuccess('New Offer Carousel Banner created successfully!');
       }
       setBannerForm({ title: '', tagline: '', code: '', category: 'Movies', image: '', expiryDate: '2026-12-31', ctaText: 'Claim Offer', ctaLink: 'movies' });
@@ -2403,7 +2555,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   const handleDeleteBanner = async (id) => {
     try {
       await API.delete(`/offers/banners/${id}`);
-      setOfferBannersList(offerBannersList.filter(b => b.id !== id));
+      setOfferBannersList(prev => prev.filter(b => b.id !== id));
       setActionSuccess('Banner slide deleted!');
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {}

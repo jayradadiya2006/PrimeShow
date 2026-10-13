@@ -810,21 +810,24 @@ app.get(['/api/offers/banners', '/api/admin/offers/banners'], async (req, res) =
 });
 
 app.post(['/api/offers/banners', '/api/admin/offers/banners'], async (req, res) => {
-  const doc = { id: `ban_${Date.now()}`, ...req.body };
+  const doc = { id: req.body.id || `ban_${Date.now()}`, ...req.body };
   await DataStore.insertOne('offer_banners', doc);
   io.emit('OFFER_BANNERS_UPDATED', doc);
-  res.status(201).json({ success: true, banner: doc });
+  res.status(201).json({ success: true, ...doc, banner: doc });
 });
 
 app.put(['/api/offers/banners/:id', '/api/admin/offers/banners/:id'], async (req, res) => {
   const targetId = req.params.id;
   await DataStore.updateOne('offer_banners', { id: targetId }, req.body);
-  res.json({ success: true, banner: { id: targetId, ...req.body } });
+  const updated = await DataStore.findOne('offer_banners', { id: targetId });
+  const finalDoc = updated || { id: targetId, ...req.body };
+  res.json({ success: true, ...finalDoc, banner: finalDoc });
 });
 
 app.delete(['/api/offers/banners/:id', '/api/admin/offers/banners/:id'], async (req, res) => {
   const targetId = req.params.id;
   await DataStore.deleteOne('offer_banners', { id: targetId });
+  io.emit('OFFER_BANNERS_UPDATED', { deletedId: targetId });
   res.json({ success: true, message: 'Banner deleted' });
 });
 
@@ -1638,15 +1641,18 @@ app.post([
     const doc = { id: req.body.id || `${storeName.slice(0, 3)}_${Date.now()}`, ...req.body };
     await DataStore.insertOne(storeName, doc);
     io.emit(`${storeName.replace('-', '_').toUpperCase()}_UPDATED`, doc);
-    res.status(201).json({ success: true, [storeName.slice(0, -1)]: doc });
+    const singular = storeName.endsWith('ies') ? storeName.slice(0, -3) + 'y' : storeName.slice(0, -1);
+    res.status(201).json({ success: true, ...doc, data: doc, [storeName]: doc, [singular]: doc, [storeName.slice(0, -1)]: doc });
   });
 
   app.put([`/api/${entity}/:id`, `/api/admin/${entity}/:id`], async (req, res) => {
     const targetId = req.params.id;
     await DataStore.updateOne(storeName, { id: targetId }, req.body);
     const updated = await DataStore.findOne(storeName, { id: targetId });
-    io.emit(`${storeName.replace('-', '_').toUpperCase()}_UPDATED`, updated);
-    res.json({ success: true, [storeName.slice(0, -1)]: updated || { id: targetId, ...req.body } });
+    const finalDoc = updated || { id: targetId, ...req.body };
+    io.emit(`${storeName.replace('-', '_').toUpperCase()}_UPDATED`, finalDoc);
+    const singular = storeName.endsWith('ies') ? storeName.slice(0, -3) + 'y' : storeName.slice(0, -1);
+    res.json({ success: true, ...finalDoc, data: finalDoc, [storeName]: finalDoc, [singular]: finalDoc, [storeName.slice(0, -1)]: finalDoc });
   });
 
   app.delete([`/api/${entity}/:id`, `/api/admin/${entity}/:id`], async (req, res) => {
