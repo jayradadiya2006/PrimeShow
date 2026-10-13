@@ -1,13 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Film, Shield, Star, PlaySquare, Search, Filter, ArrowRight, X, MoreVertical, SlidersHorizontal, Check } from 'lucide-react';
+import { io } from 'socket.io-client';
 import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useBooking } from '../context/BookingContext';
 import { TheatreMapModal } from '../components/TheatreMapModal';
+
+const getSocketBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+  return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : '';
+};
+const SOCKET_BASE = getSocketBaseUrl();
 
 export const Theatres = ({ onSelectTheatre }) => {
   const { selectedCity } = useAuth();
-  const [theatresList, setTheatresList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { theatresList: contextTheatres } = useBooking();
+  const [theatresList, setTheatresList] = useState(contextTheatres && contextTheatres.length > 0 ? contextTheatres : []);
+  const [loading, setLoading] = useState(theatresList.length === 0);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCityFilter, setActiveCityFilter] = useState('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -16,87 +29,86 @@ export const Theatres = ({ onSelectTheatre }) => {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const searchContainerRef = useRef(null);
 
-  useEffect(() => {
-    const fetchTheatres = async () => {
-      setLoading(true);
-      try {
-        const res = await API.get('/theatres');
+  const fetchTheatres = async () => {
+    try {
+      const res = await API.get('/theatres');
+      if (Array.isArray(res.data) && res.data.length > 0) {
         setTheatresList(res.data);
-      } catch (err) {
-        setTheatresList([
-          {
-            id: 'th_surat_1',
-            name: 'INOX VR Mall, Dumas Road',
-            city: 'Surat',
-            state: 'Gujarat',
-            address: 'Dumas Road, Magdalla, Surat',
-            facilities: ['VIP Recliners', 'IMAX 3D', 'Dolby Atmos 360', 'Gourmet In-Seat Dining', 'Valet Parking'],
-            screensCount: 7,
-            totalSeats: 280,
-            image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80'
-          },
-          {
-            id: 'th_surat_2',
-            name: 'PVR Rahul Raj Mall',
-            city: 'Surat',
-            state: 'Gujarat',
-            address: 'Piplod Main Road, Surat',
-            facilities: ['4DX Motion Seats', 'Dolby Atmos', 'Executive Lounges'],
-            screensCount: 6,
-            totalSeats: 220,
-            image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80'
-          },
-          {
-            id: 'th_ahmedabad_1',
-            name: 'PVR Acropolis Mall, Thaltej',
-            city: 'Ahmedabad',
-            state: 'Gujarat',
-            address: 'SG Highway, Thaltej, Ahmedabad',
-            facilities: ['IMAX 3D', 'Play House', '4DX'],
-            screensCount: 9,
-            totalSeats: 340,
-            image: 'https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=800&q=80'
-          },
-          {
-            id: 'th_rajkot_1',
-            name: 'Cinepolis Crystal Mall',
-            city: 'Rajkot',
-            state: 'Gujarat',
-            address: 'Kalawad Road, Rajkot',
-            facilities: ['VIP Recliners', 'Dolby 7.1 Sound'],
-            screensCount: 5,
-            totalSeats: 190,
-            image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80'
-          },
-          {
-            id: 'th_vadodara_1',
-            name: 'Inox Seven Seas Mall',
-            city: 'Vadodara',
-            state: 'Gujarat',
-            address: 'Fatehgunj, Vadodara',
-            facilities: ['Dolby Atmos', 'Executive Lounge'],
-            screensCount: 6,
-            totalSeats: 210,
-            image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80'
-          },
-          {
-            id: 'th_bhavnagar_1',
-            name: 'Himalaya Multiplex',
-            city: 'Bhavnagar',
-            state: 'Gujarat',
-            address: 'Subhashnagar, Bhavnagar',
-            facilities: ['Digital 4K', 'Snack Bar'],
-            screensCount: 4,
-            totalSeats: 160,
-            image: 'https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=800&q=80'
-          }
-        ]);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.warn('⚠️ Fetching theatres fallback:', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    if (contextTheatres && contextTheatres.length > 0) {
+      setTheatresList(contextTheatres);
+      setLoading(false);
+    }
     fetchTheatres();
+  }, [contextTheatres]);
+
+  // Real-Time Socket Synchronization for Theatres (Insert, Update, Delete)
+  useEffect(() => {
+    let socket = null;
+    try {
+      socket = io(SOCKET_BASE, {
+        transports: ['polling', 'websocket'],
+        autoConnect: true,
+        reconnectionAttempts: 5,
+        timeout: 5000
+      });
+      socket.on('connect_error', () => {});
+
+      const handleTheatreUpdate = (theatreDoc) => {
+        if (!theatreDoc) {
+          fetchTheatres();
+          return;
+        }
+        if (theatreDoc.deletedId) {
+          setTheatresList(prev => prev.filter(t => t.id !== theatreDoc.deletedId && t._id !== theatreDoc.deletedId));
+          return;
+        }
+        if (theatreDoc.id || theatreDoc._id) {
+          const docId = theatreDoc.id || theatreDoc._id;
+          setTheatresList(prev => {
+            const exists = prev.some(t => t.id === docId || t._id === docId);
+            if (exists) {
+              return prev.map(t => (t.id === docId || t._id === docId) ? { ...t, ...theatreDoc } : t);
+            }
+            return [theatreDoc, ...prev];
+          });
+        } else {
+          fetchTheatres();
+        }
+      };
+
+      socket.on('THEATRE_UPDATED', handleTheatreUpdate);
+      socket.on('THEATRES_UPDATED', handleTheatreUpdate);
+      socket.on('THEATRE_DELETED', (data) => {
+        const idToDelete = data?.id || data?.deletedId;
+        if (idToDelete) {
+          setTheatresList(prev => prev.filter(t => t.id !== idToDelete && t._id !== idToDelete));
+        } else {
+          fetchTheatres();
+        }
+      });
+      socket.on('THEATRES_DELETED', (data) => {
+        const idToDelete = data?.id || data?.deletedId;
+        if (idToDelete) {
+          setTheatresList(prev => prev.filter(t => t.id !== idToDelete && t._id !== idToDelete));
+        } else {
+          fetchTheatres();
+        }
+      });
+      socket.on('GLOBAL_ADMIN_UPDATE', () => fetchTheatres());
+    } catch (e) {}
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
   }, []);
 
   // Handle clicking outside of search dropdown
@@ -110,10 +122,14 @@ export const Theatres = ({ onSelectTheatre }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const citiesList = ['All', ...new Set(theatresList.map(t => t.city))];
+  const GUJARAT_PRIMARY_CITIES = ['Surat', 'Ahmedabad', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Gandhinagar', 'Jamnagar'];
+  const dynamicCities = theatresList.map(t => t.city).filter(Boolean);
+  const citiesList = ['All', ...new Set([...dynamicCities, ...GUJARAT_PRIMARY_CITIES])];
 
   const filteredTheatres = theatresList.filter(t => {
-    const matchesCity = !selectedCity || selectedCity === 'All' || t.city === selectedCity || (activeCityFilter !== 'All' && t.city === activeCityFilter);
+    const matchesCity = activeCityFilter === 'All' 
+      ? true 
+      : (t.city || '').trim().toLowerCase() === activeCityFilter.trim().toLowerCase();
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q || 
                           t.name?.toLowerCase().includes(q) || 
@@ -377,10 +393,20 @@ export const Theatres = ({ onSelectTheatre }) => {
         </div>
 
         {filteredTheatres.length === 0 && (
-          <div className="text-center py-16 bg-[#DBCEA5] rounded-3xl border border-[#c5ba92] p-6 max-w-lg mx-auto text-slate-900 shadow-md">
-            <PlaySquare className="w-10 h-10 text-[#D90000] mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 mb-1">No active shows in {selectedCity || 'this city'} currently</h3>
-            <p className="text-xs text-slate-700">No active shows in {selectedCity || 'this city'} currently. Switch city to explore more.</p>
+          <div className="text-center py-16 bg-[#DBCEA5] rounded-3xl border border-[#c5ba92] p-8 max-w-lg mx-auto text-slate-900 shadow-md space-y-4">
+            <PlaySquare className="w-12 h-12 text-[#D90000] mx-auto mb-2" />
+            <h3 className="text-lg font-bold text-slate-900">No multiplexes found in {activeCityFilter !== 'All' ? activeCityFilter : (selectedCity || 'this filter')}</h3>
+            <p className="text-xs text-slate-700">Currently no active cinemas registered under this filter. You can explore all Gujarat multiplexes or clear your search query.</p>
+            <button
+              onClick={() => {
+                setActiveCityFilter('All');
+                setSearchQuery('');
+              }}
+              className="px-6 py-2.5 rounded-full bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
+            >
+              <span>View All Gujarat Multiplexes ({theatresList.length})</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
       </div>

@@ -1,14 +1,141 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Theater, Calendar, MapPin, Ticket, Search, Filter, Sparkles, Globe, X, RefreshCw, MoreVertical, SlidersHorizontal, Check, ArrowRight } from 'lucide-react';
+import { io } from 'socket.io-client';
 import API, { API_BASE } from '../services/api';
 import { PlayBookingModal } from '../components/PlayBookingModal';
 import { useAuth } from '../context/AuthContext';
 
+const getSocketBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+  return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : '';
+};
+const SOCKET_BASE = getSocketBaseUrl();
+
+const DEFAULT_GUJARAT_PLAYS = [
+  {
+    id: 'pl_gujjubhai_ni_golmaal_surat',
+    title: 'Gujjubhai Ni Golmaal',
+    language: 'Gujarati',
+    category: 'Comedy Drama',
+    badge: '🔥 HOT SELLER',
+    venue: 'Sanjeev Kumar Auditorium, Hazira Road, Adajan Gam, Pal, Surat - 394510',
+    city: 'Surat',
+    date: '14 NOV 2026',
+    time: '08:30 PM',
+    price: 500,
+    totalCapacity: 1150,
+    availableSeats: 1150,
+    image: 'https://image.tmdb.org/t/p/w780/sTDcx4mcrHPdUQ5IX11PJyd0ksw.jpg',
+    description: 'The iconic Gujjubhai franchise returns with an uproarious laugh riot. When an everyday Gujarati patriarch finds himself tangled in an accidental mix-up involving real estate confusion and meddling relatives, chaos ensues in true comedic fashion. Starring Siddharth Randeria and an ensemble Gujarati stage cast.'
+  },
+  {
+    id: 'pl_mughal_e_azam_surat',
+    title: 'Mughal-e-Azam: The Musical',
+    language: 'Hindi',
+    category: 'Historical Drama',
+    badge: '🔥 HOT SELLER',
+    venue: 'Pandit Dindayal Upadhyay Indoor Stadium, Athwalines, Surat - 395007',
+    city: 'Surat',
+    date: '28 DEC 2026',
+    time: '07:00 PM',
+    price: 1200,
+    totalCapacity: 2200,
+    availableSeats: 2200,
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJWaBwwHfB6prGstRVgBkCjqOFkA_m45bQt1XYLUPN2g&s=10',
+    description: 'Feroz Abbas Khan’s Broadway-style tribute to K. Asif’s timeless cinematic classic. Experience the tragic saga of Prince Salim and courtesan Anarkali told through live Kathak performances, soul-stirring classical music, exquisite Manish Malhotra period costumes, and grand theatrical set designs.'
+  },
+  {
+    id: 'pl_kashino_dikro_ahmedabad',
+    title: 'Kashi No Dikro: Live Gujarati Play',
+    language: 'Gujarati',
+    category: 'Classic Drama',
+    badge: 'SUPERHIT',
+    venue: 'Tagore Memorial Hall, Paldi, Ahmedabad - 380007',
+    city: 'Ahmedabad',
+    date: '20 NOV 2026',
+    time: '08:00 PM',
+    price: 450,
+    totalCapacity: 1250,
+    availableSeats: 980,
+    image: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80',
+    description: 'A celebrated Gujarati literary masterpiece brought to life on stage, exploring profound familial bonds, sacrifice, and human resilience in rural Gujarat.'
+  },
+  {
+    id: 'pl_sakharam_binder_ahmedabad',
+    title: 'Sakharam Binder: Theatrical Adaptation',
+    language: 'Hindi',
+    category: 'Psychological Thriller',
+    badge: 'MUST WATCH',
+    venue: 'Natrani Amphitheatre, Usmanpura, Ahmedabad - 380013',
+    city: 'Ahmedabad',
+    date: '05 DEC 2026',
+    time: '07:30 PM',
+    price: 600,
+    totalCapacity: 600,
+    availableSeats: 420,
+    image: 'https://images.unsplash.com/photo-1469488865564-c2de10f69f96?auto=format&fit=crop&w=800&q=80',
+    description: 'Vijay Tendulkar’s hard-hitting dramatic masterpiece delving into complex interpersonal dynamics and society\'s hidden hypocrisies.'
+  },
+  {
+    id: 'pl_vadodara_sayaji_play',
+    title: 'Vadodara Sanskriti Natak Special',
+    language: 'Gujarati',
+    category: 'Drama',
+    badge: 'POPULAR',
+    venue: 'Sir Sayajirao Gaekwad Auditorium, Fatehgunj, Vadodara - 390002',
+    city: 'Vadodara',
+    date: '15 DEC 2026',
+    time: '07:00 PM',
+    price: 400,
+    totalCapacity: 1200,
+    availableSeats: 850,
+    image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80',
+    description: 'An emotional family drama highlighting traditional values, modern relationships, and artistic theatrical design.'
+  },
+  {
+    id: 'pl_rajkot_hasya_rangbhoomi',
+    title: 'Kathiyawadi Hasya Rangbhoomi',
+    language: 'Gujarati',
+    category: 'Comedy',
+    badge: 'HOUSEFULL',
+    venue: 'Hemu Gadhvi Hall, Tagore Road, Rajkot - 360001',
+    city: 'Rajkot',
+    date: '18 DEC 2026',
+    time: '08:30 PM',
+    price: 350,
+    totalCapacity: 1000,
+    availableSeats: 670,
+    image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80',
+    description: 'A hilarious social satire play bringing authentic Kathiyawadi humor, quick-witted punchlines, and stellar stage performances.'
+  },
+  {
+    id: 'pl_bhavnagar_lok_sahitya',
+    title: 'Bhavnagar Lok Sahitya & Drama Night',
+    language: 'Gujarati',
+    category: 'Cultural',
+    badge: 'CLASSIC',
+    venue: 'Yashwantrai Parmar Hall, Subhashnagar, Bhavnagar - 364001',
+    city: 'Bhavnagar',
+    date: '24 DEC 2026',
+    time: '08:00 PM',
+    price: 350,
+    totalCapacity: 800,
+    availableSeats: 540,
+    image: 'https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=800&q=80',
+    description: 'A poignant theatrical production celebrating historic folklore, classical Gujarati stagecraft, and soulful folk music.'
+  }
+];
+
 export const Plays = () => {
   const { selectedCity } = useAuth();
-  const [playsList, setPlaysList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [playsList, setPlaysList] = useState(DEFAULT_GUJARAT_PLAYS);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeCity, setActiveCity] = useState('All');
   const [activeLanguage, setActiveLanguage] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -20,100 +147,74 @@ export const Plays = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const fetchPlays = async () => {
-    setLoading(true);
     try {
-      const res = await API.get('/plays');
-      setPlaysList(res.data);
+      const res = await API.get('/plays', { params: { t: Date.now() } });
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setPlaysList(res.data);
+      }
     } catch (err) {
-      setPlaysList([
-        {
-          id: 'pl_gujjubhai_ni_golmaal_surat',
-          title: 'Gujjubhai Ni Golmaal',
-          language: 'Gujarati',
-          category: 'Comedy Drama',
-          badge: '🔥 HOT SELLER',
-          venue: 'Sanjeev Kumar Auditorium, Hazira Road, Adajan Gam, Pal, Surat - 394510',
-          city: 'Surat',
-          date: '14 NOV 2026',
-          time: '08:30 PM',
-          price: 500,
-          totalCapacity: 1150,
-          availableSeats: 1150,
-          image: 'https://image.tmdb.org/t/p/w780/sTDcx4mcrHPdUQ5IX11PJyd0ksw.jpg',
-          description: 'The iconic Gujjubhai franchise returns with an uproarious laugh riot. When an everyday Gujarati patriarch finds himself tangled in an accidental mix-up involving real estate confusion and meddling relatives, chaos ensues in true comedic fashion. Starring Siddharth Randeria and an ensemble Gujarati stage cast.'
-        },
-        {
-          id: 'pl_mughal_e_azam_surat',
-          title: 'Mughal-e-Azam: The Musical',
-          language: 'Hindi',
-          category: 'Historical Drama',
-          badge: '🔥 HOT SELLER',
-          venue: 'Pandit Dindayal Upadhyay Indoor Stadium, Athwalines, Surat - 395007',
-          city: 'Surat',
-          date: '28 DEC 2026',
-          time: '07:00 PM',
-          price: 1200,
-          totalCapacity: 2200,
-          availableSeats: 2200,
-          image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJWaBwwHfB6prGstRVgBkCjqOFkA_m45bQt1XYLUPN2g&s=10',
-          description: 'Feroz Abbas Khan’s Broadway-style tribute to K. Asif’s timeless cinematic classic. Experience the tragic saga of Prince Salim and courtesan Anarkali told through live Kathak performances, soul-stirring classical music, exquisite Manish Malhotra period costumes, and grand theatrical set designs.'
-        },
-        {
-          id: 'pl_rajkot_1',
-          title: 'Kathiyawadi Hasya Rangbhoomi',
-          language: 'Gujarati',
-          category: 'Comedy',
-          badge: 'SUPERHIT',
-          venue: 'Hemu Gadhvi Hall, Rajkot',
-          city: 'Rajkot',
-          date: '08 MAR 2027',
-          time: '08:30 PM',
-          price: 450,
-          totalCapacity: 1000,
-          availableSeats: 290,
-          image: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80',
-          description: 'A hilarious social satire play bringing authentic Kathiyawadi humor and stellar stage performances.'
-        },
-        {
-          id: 'pl_vadodara_1',
-          title: 'Vadodara Sanskriti Natak Special',
-          language: 'Gujarati',
-          category: 'Drama',
-          badge: 'MUST WATCH',
-          venue: 'Sir Sayajirao Gaekwad Auditorium, Vadodara',
-          city: 'Vadodara',
-          date: '15 MAR 2027',
-          time: '07:00 PM',
-          price: 500,
-          totalCapacity: 1200,
-          availableSeats: 410,
-          image: 'https://images.unsplash.com/photo-1469488865564-c2de10f69f96?auto=format&fit=crop&w=800&q=80',
-          description: 'An emotional family drama highlighting traditional values, modern relationships, and artistic theatrical design.'
-        },
-        {
-          id: 'pl_bhavnagar_1',
-          title: 'Bhavnagar Lok Sahitya & Drama Night',
-          language: 'Gujarati',
-          category: 'Cultural',
-          badge: 'CLASSIC',
-          venue: 'Yashwantrai Parmar Hall, Bhavnagar',
-          city: 'Bhavnagar',
-          date: '22 MAR 2027',
-          time: '08:00 PM',
-          price: 350,
-          totalCapacity: 800,
-          availableSeats: 220,
-          image: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80',
-          description: 'A poignant theatrical production celebrating historic folklore and classical Gujarati stagecraft.'
-        }
-      ]);
-    } finally {
-      setLoading(false);
+      console.warn('⚠️ Fallback using default plays:', err.message);
     }
   };
 
   useEffect(() => {
     fetchPlays();
+
+    let socket = null;
+    try {
+      socket = io(SOCKET_BASE, {
+        transports: ['polling', 'websocket'],
+        autoConnect: true,
+        reconnectionAttempts: 5,
+        timeout: 5000
+      });
+      socket.on('connect_error', () => {});
+
+      const handlePlayUpdate = (updatedPlay) => {
+        if (!updatedPlay) {
+          fetchPlays();
+          return;
+        }
+        if (updatedPlay.deletedId) {
+          setPlaysList(prev => prev.filter(p => p.id !== updatedPlay.deletedId && p._id !== updatedPlay.deletedId));
+          return;
+        }
+        if (updatedPlay.id || updatedPlay._id) {
+          const docId = updatedPlay.id || updatedPlay._id;
+          setPlaysList(prev => {
+            const exists = prev.some(p => p.id === docId || p._id === docId);
+            if (exists) return prev.map(p => (p.id === docId || p._id === docId) ? { ...p, ...updatedPlay } : p);
+            return [updatedPlay, ...prev];
+          });
+        } else {
+          fetchPlays();
+        }
+      };
+
+      socket.on('PLAY_UPDATED', handlePlayUpdate);
+      socket.on('PLAYS_UPDATED', handlePlayUpdate);
+      socket.on('PLAY_DELETED', (data) => {
+        const idToDelete = data?.id || data?.deletedId;
+        if (idToDelete) {
+          setPlaysList(prev => prev.filter(p => p.id !== idToDelete && p._id !== idToDelete));
+        } else {
+          fetchPlays();
+        }
+      });
+      socket.on('PLAYS_DELETED', (data) => {
+        const idToDelete = data?.id || data?.deletedId;
+        if (idToDelete) {
+          setPlaysList(prev => prev.filter(p => p.id !== idToDelete && p._id !== idToDelete));
+        } else {
+          fetchPlays();
+        }
+      });
+      socket.on('GLOBAL_ADMIN_UPDATE', () => fetchPlays());
+    } catch (e) {}
+
+    return () => {
+      if (socket) socket.disconnect();
+    };
   }, []);
 
   // Handle clicking outside of search dropdown
@@ -127,17 +228,24 @@ export const Plays = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const GUJARAT_PLAY_CITIES = ['Surat', 'Ahmedabad', 'Vadodara', 'Rajkot', 'Bhavnagar'];
+  const dynamicPlayCities = playsList.map(p => p.city).filter(Boolean);
+  const citiesList = ['All', ...new Set([...dynamicPlayCities, ...GUJARAT_PLAY_CITIES])];
+
   const languages = ['All', 'Gujarati', 'Hindi', 'English', 'Marathi'];
-  const categories = ['All', 'Comedy Drama', 'Musical Drama', 'Historical', 'Thriller'];
+  const categories = ['All', 'Comedy Drama', 'Classic Drama', 'Historical Drama', 'Psychological Thriller', 'Cultural'];
 
   const handleResetFilters = () => {
+    setActiveCity('All');
     setActiveLanguage('All');
     setActiveCategory('All');
     setSearchQuery('');
   };
 
   const filteredPlays = playsList.filter(pl => {
-    const matchesCity = !selectedCity || selectedCity === 'All' || pl.city === selectedCity || pl.city === 'All' || (Array.isArray(pl.cities) && pl.cities.includes(selectedCity));
+    const matchesCity = activeCity === 'All' 
+      ? true 
+      : (pl.city || '').trim().toLowerCase() === activeCity.trim().toLowerCase();
     const matchesLang = activeLanguage === 'All' || pl.language?.toLowerCase() === activeLanguage.toLowerCase();
     const matchesCat = activeCategory === 'All' || (pl.category && pl.category.toLowerCase().includes(activeCategory.toLowerCase()));
     
@@ -145,6 +253,7 @@ export const Plays = () => {
     const matchesSearch = !q || 
                           pl.title?.toLowerCase().includes(q) || 
                           pl.venue?.toLowerCase().includes(q) ||
+                          pl.city?.toLowerCase().includes(q) ||
                           pl.language?.toLowerCase().includes(q) ||
                           pl.description?.toLowerCase().includes(q) ||
                           (pl.category && pl.category.toLowerCase().includes(q));
@@ -281,6 +390,29 @@ export const Plays = () => {
           {/* Desktop Filter Rows */}
           <div className="hidden md:block space-y-4 pt-3 border-t border-[#c5ba92]">
             
+            {/* City Selection */}
+            <div>
+              <div className="text-[11px] font-black text-[#1A1A1A] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#D90000]" />
+                <span>CITY LOCATION</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {citiesList.map(city => (
+                  <button
+                    key={city}
+                    onClick={() => setActiveCity(city)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                      activeCity === city
+                        ? 'bg-[#D90000] text-white shadow-md font-black scale-105'
+                        : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
+                    }`}
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Language Selection */}
             <div>
               <div className="text-[11px] font-black text-[#1A1A1A] uppercase tracking-widest mb-2 flex items-center gap-1.5">
@@ -354,6 +486,25 @@ export const Plays = () => {
                 </div>
 
                 <div className="space-y-6">
+                  {/* City Selection */}
+                  <div>
+                    <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Select City</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {citiesList.map(city => (
+                        <button
+                          key={city}
+                          onClick={() => setActiveCity(city)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            activeCity === city
+                              ? 'bg-[#D90000] text-white shadow-md'
+                              : 'bg-white border border-slate-300 text-slate-800'
+                          }`}
+                        >
+                          {city}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   {/* Language Selection */}
                   <div>
                     <h4 className="text-xs font-bold text-[#D90000] uppercase tracking-widest mb-2.5">Play Language</h4>
@@ -481,10 +632,17 @@ export const Plays = () => {
         </div>
 
         {filteredPlays.length === 0 && (
-          <div className="text-center py-16 bg-[#DBCEA5] rounded-3xl border border-[#c5ba92] p-6 max-w-lg mx-auto text-slate-900 shadow-md">
-            <Theater className="w-10 h-10 text-[#D90000] mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-900 mb-1">No active shows in {selectedCity || 'this city'} currently</h3>
-            <p className="text-xs text-slate-700">No active shows in {selectedCity || 'this city'} currently. Switch city to explore more.</p>
+          <div className="text-center py-16 bg-[#DBCEA5] rounded-3xl border border-[#c5ba92] p-8 max-w-lg mx-auto text-slate-900 shadow-md space-y-4">
+            <Theater className="w-12 h-12 text-[#D90000] mx-auto mb-2" />
+            <h3 className="text-lg font-bold text-slate-900">No stage plays found in {activeCity !== 'All' ? activeCity : (selectedCity || 'this filter')}</h3>
+            <p className="text-xs text-slate-700">Currently no active stage plays scheduled under this filter. You can explore all Gujarat stage productions or reset your filters.</p>
+            <button
+              onClick={handleResetFilters}
+              className="px-6 py-2.5 rounded-full bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
+            >
+              <span>Explore All Gujarat Stage Plays ({playsList.length})</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
       </div>

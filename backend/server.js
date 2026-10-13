@@ -39,6 +39,41 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 let db = null;
 let mongoClient = null;
 
+// Auto-seed MongoDB Atlas or Local database from JSON data files if empty
+async function autoSeedDatabase() {
+  if (!db) return;
+  const collectionsToSeed = [
+    'theatres',
+    'events',
+    'plays',
+    'movies',
+    'activities',
+    'offers',
+    'offer_banners',
+    'feature-chips',
+    'upcoming-movies'
+  ];
+
+  for (const collName of collectionsToSeed) {
+    try {
+      const coll = db.collection(collName);
+      const count = await coll.countDocuments();
+      if (count === 0) {
+        const filePath = path.join(__dirname, 'data', `${collName}.json`);
+        if (fs.existsSync(filePath)) {
+          const items = JSON.parse(fs.readFileSync(filePath, 'utf8')) || [];
+          if (Array.isArray(items) && items.length > 0) {
+            await coll.insertMany(items.map(item => ({ ...item })));
+            console.log(`🌱 [AutoSeed] Seeded ${items.length} records into MongoDB collection: '${collName}'`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`⚠️ [AutoSeed] Note for ${collName}:`, e.message);
+    }
+  }
+}
+
 // Connect to MongoDB Atlas or Local MongoDB
 async function connectDB() {
   try {
@@ -60,6 +95,7 @@ async function connectDB() {
     }
 
     console.log(`✅ MongoDB Connected Successfully (${uriToUse.includes('.mongodb.net') ? 'Atlas' : 'Local'}, Database: ${db.databaseName})`);
+    await autoSeedDatabase();
   } catch (err) {
     try {
       mongoClient = new MongoClient('mongodb://127.0.0.1:27017', {
@@ -69,6 +105,7 @@ async function connectDB() {
       await mongoClient.connect();
       db = mongoClient.db(DB_NAME);
       console.log(`✅ Fallback Local MongoDB Connected Successfully (Database: ${db.databaseName})`);
+      await autoSeedDatabase();
     } catch (locErr) {
       console.error(`❌ MongoDB direct connection failed: ${err.message}. Fallback JSON storage active for offline development.`);
       db = null;
@@ -112,10 +149,27 @@ const DataStore = {
     if (coll) {
       try {
         const results = await coll.find(filter).toArray();
-        return results.map(r => {
-          const { _id, ...rest } = r;
-          return { id: r.id || (_id ? _id.toString() : undefined), ...rest };
-        });
+        if (results.length > 0) {
+          return results.map(r => {
+            const { _id, ...rest } = r;
+            return { id: r.id || (_id ? _id.toString() : undefined), ...rest };
+          });
+        }
+        // Fallback auto-seed from JSON if collection is empty
+        if (Object.keys(filter).length === 0) {
+          const filePath = path.join(__dirname, 'data', `${collName}.json`);
+          if (fs.existsSync(filePath)) {
+            const items = JSON.parse(fs.readFileSync(filePath, 'utf8')) || [];
+            if (Array.isArray(items) && items.length > 0) {
+              try {
+                await coll.insertMany(items.map(item => ({ ...item })));
+                console.log(`🌱 [DataStore] Seeded ${items.length} items to '${collName}'`);
+              } catch (_) {}
+              return items;
+            }
+          }
+        }
+        return [];
       } catch (e) {
         console.error(`MongoDB find error on ${collName}:`, e.message);
       }
@@ -826,6 +880,8 @@ app.post(['/api/offers/banners', '/api/admin/offers/banners'], async (req, res) 
   const doc = { id: req.body.id || `ban_${Date.now()}`, ...req.body };
   await DataStore.insertOne('offer_banners', doc);
   io.emit('OFFER_BANNERS_UPDATED', doc);
+  io.emit('OFFER_BANNER_UPDATED', doc);
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'OFFER_BANNERS', doc });
   res.status(201).json({ success: true, ...doc, banner: doc });
 });
 
@@ -834,6 +890,9 @@ app.put(['/api/offers/banners/:id', '/api/admin/offers/banners/:id'], async (req
   await DataStore.updateOne('offer_banners', { id: targetId }, req.body);
   const updated = await DataStore.findOne('offer_banners', { id: targetId });
   const finalDoc = updated || { id: targetId, ...req.body };
+  io.emit('OFFER_BANNERS_UPDATED', finalDoc);
+  io.emit('OFFER_BANNER_UPDATED', finalDoc);
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'OFFER_BANNERS', doc: finalDoc });
   res.json({ success: true, ...finalDoc, banner: finalDoc });
 });
 
@@ -841,6 +900,9 @@ app.delete(['/api/offers/banners/:id', '/api/admin/offers/banners/:id'], async (
   const targetId = req.params.id;
   await DataStore.deleteOne('offer_banners', { id: targetId });
   io.emit('OFFER_BANNERS_UPDATED', { deletedId: targetId });
+  io.emit('OFFER_BANNER_UPDATED', { deletedId: targetId });
+  io.emit('OFFER_BANNER_DELETED', { id: targetId, deletedId: targetId });
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'OFFER_BANNERS_DELETED', deletedId: targetId });
   res.json({ success: true, message: 'Banner deleted' });
 });
 
@@ -858,6 +920,8 @@ app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
   const doc = { id: req.body.id || `mov_${Date.now()}`, ...req.body };
   await DataStore.insertOne('movies', doc);
   io.emit('MOVIES_UPDATED', doc);
+  io.emit('MOVIE_UPDATED', doc);
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'MOVIES', doc });
   res.status(201).json({ success: true, movie: doc });
 });
 
@@ -865,14 +929,21 @@ app.put(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   const mId = decodeURIComponent(req.params.id);
   await DataStore.updateOne('movies', { id: mId }, req.body);
   const updated = await DataStore.findOne('movies', { id: mId });
-  io.emit('MOVIES_UPDATED', updated);
-  res.json({ success: true, movie: updated || { id: mId, ...req.body } });
+  const finalDoc = updated || { id: mId, ...req.body };
+  io.emit('MOVIES_UPDATED', finalDoc);
+  io.emit('MOVIE_UPDATED', finalDoc);
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'MOVIES', doc: finalDoc });
+  res.json({ success: true, movie: finalDoc });
 });
 
 app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
   const mId = decodeURIComponent(req.params.id);
   await DataStore.deleteOne('movies', { id: mId });
   io.emit('MOVIES_UPDATED', { deletedId: mId });
+  io.emit('MOVIE_UPDATED', { deletedId: mId });
+  io.emit('MOVIE_DELETED', { id: mId, deletedId: mId });
+  io.emit('MOVIES_DELETED', { id: mId, deletedId: mId });
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'MOVIES_DELETED', deletedId: mId });
   res.json({ success: true, message: 'Movie deleted permanently from MongoDB' });
 });
 
@@ -1215,6 +1286,8 @@ app.post(['/api/theatres', '/api/admin/theatres', '/api/theaters'], async (req, 
   const doc = { id: req.body.id || `th_${Date.now()}`, ...req.body };
   await DataStore.insertOne('theatres', doc);
   io.emit('THEATRES_UPDATED', doc);
+  io.emit('THEATRE_UPDATED', doc);
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'THEATRES', doc });
   res.status(201).json({ success: true, theatre: doc });
 });
 
@@ -1222,14 +1295,21 @@ app.put(['/api/theatres/:id', '/api/admin/theatres/:id', '/api/theaters/:id'], a
   const thId = req.params.id;
   await DataStore.updateOne('theatres', { id: thId }, req.body);
   const updated = await DataStore.findOne('theatres', { id: thId });
-  io.emit('THEATRES_UPDATED', updated);
-  res.json({ success: true, theatre: updated || { id: thId, ...req.body } });
+  const finalDoc = updated || { id: thId, ...req.body };
+  io.emit('THEATRES_UPDATED', finalDoc);
+  io.emit('THEATRE_UPDATED', finalDoc);
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'THEATRES', doc: finalDoc });
+  res.json({ success: true, theatre: finalDoc });
 });
 
 app.delete(['/api/theatres/:id', '/api/admin/theatres/:id', '/api/theaters/:id'], async (req, res) => {
   const targetId = req.params.id;
   await DataStore.deleteOne('theatres', { id: targetId });
   io.emit('THEATRES_UPDATED', { deletedId: targetId });
+  io.emit('THEATRE_UPDATED', { deletedId: targetId });
+  io.emit('THEATRE_DELETED', { id: targetId, deletedId: targetId });
+  io.emit('THEATRES_DELETED', { id: targetId, deletedId: targetId });
+  io.emit('GLOBAL_ADMIN_UPDATE', { type: 'THEATRES_DELETED', deletedId: targetId });
   res.json({ success: true, message: 'Theatre permanently deleted from MongoDB' });
 });
 
@@ -1670,6 +1750,11 @@ app.post([
 
 ['offers', 'events', 'plays', 'activities', 'hero-slides', 'feature-chips', 'upcoming-movies', 'upcoming_movies'].forEach(entity => {
   const storeName = entity === 'upcoming_movies' ? 'upcoming-movies' : entity;
+  const upperPlural = storeName.replace('-', '_').toUpperCase(); // EVENTS, PLAYS, OFFERS, ACTIVITIES
+  const singular = storeName.endsWith('ies') 
+    ? storeName.slice(0, -3) + 'y' 
+    : (storeName.endsWith('s') ? storeName.slice(0, -1) : storeName);
+  const upperSingular = singular.replace('-', '_').toUpperCase(); // EVENT, PLAY, OFFER, ACTIVITY
 
   app.get([`/api/${entity}`, `/api/admin/${entity}`], async (req, res) => {
     const data = await DataStore.find(storeName);
@@ -1679,8 +1764,9 @@ app.post([
   app.post([`/api/${entity}`, `/api/admin/${entity}`], async (req, res) => {
     const doc = { id: req.body.id || `${storeName.slice(0, 3)}_${Date.now()}`, ...req.body };
     await DataStore.insertOne(storeName, doc);
-    io.emit(`${storeName.replace('-', '_').toUpperCase()}_UPDATED`, doc);
-    const singular = storeName.endsWith('ies') ? storeName.slice(0, -3) + 'y' : storeName.slice(0, -1);
+    io.emit(`${upperPlural}_UPDATED`, doc);
+    io.emit(`${upperSingular}_UPDATED`, doc);
+    io.emit('GLOBAL_ADMIN_UPDATE', { type: upperPlural, doc });
     res.status(201).json({ success: true, ...doc, data: doc, [storeName]: doc, [singular]: doc, [storeName.slice(0, -1)]: doc });
   });
 
@@ -1689,15 +1775,20 @@ app.post([
     await DataStore.updateOne(storeName, { id: targetId }, req.body);
     const updated = await DataStore.findOne(storeName, { id: targetId });
     const finalDoc = updated || { id: targetId, ...req.body };
-    io.emit(`${storeName.replace('-', '_').toUpperCase()}_UPDATED`, finalDoc);
-    const singular = storeName.endsWith('ies') ? storeName.slice(0, -3) + 'y' : storeName.slice(0, -1);
+    io.emit(`${upperPlural}_UPDATED`, finalDoc);
+    io.emit(`${upperSingular}_UPDATED`, finalDoc);
+    io.emit('GLOBAL_ADMIN_UPDATE', { type: upperPlural, doc: finalDoc });
     res.json({ success: true, ...finalDoc, data: finalDoc, [storeName]: finalDoc, [singular]: finalDoc, [storeName.slice(0, -1)]: finalDoc });
   });
 
   app.delete([`/api/${entity}/:id`, `/api/admin/${entity}/:id`], async (req, res) => {
     const targetId = req.params.id;
     await DataStore.deleteOne(storeName, { id: targetId });
-    io.emit(`${storeName.replace('-', '_').toUpperCase()}_UPDATED`, { deletedId: targetId });
+    io.emit(`${upperPlural}_UPDATED`, { deletedId: targetId });
+    io.emit(`${upperSingular}_UPDATED`, { deletedId: targetId });
+    io.emit(`${upperPlural}_DELETED`, { id: targetId, deletedId: targetId });
+    io.emit(`${upperSingular}_DELETED`, { id: targetId, deletedId: targetId });
+    io.emit('GLOBAL_ADMIN_UPDATE', { type: `${upperPlural}_DELETED`, deletedId: targetId });
     res.json({ success: true, message: `${storeName} item deleted` });
   });
 });
@@ -1709,7 +1800,11 @@ app.post('/api/admin/events/add-slot', async (req, res) => {
     const slots = Array.isArray(event.slots) ? [...event.slots] : [];
     slots.push({ id: `slot_${Date.now()}`, slotTime, slotDate, price: Number(price) || 500 });
     await DataStore.updateOne('events', { id: eventId }, { slots });
-    return res.json({ success: true, event: { ...event, slots } });
+    const updatedEvent = { ...event, slots };
+    io.emit('EVENTS_UPDATED', updatedEvent);
+    io.emit('EVENT_UPDATED', updatedEvent);
+    io.emit('GLOBAL_ADMIN_UPDATE', { type: 'EVENTS', doc: updatedEvent });
+    return res.json({ success: true, event: updatedEvent });
   }
   res.json({ success: true, message: 'Slot added to event' });
 });

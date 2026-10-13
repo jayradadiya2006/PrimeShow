@@ -1451,18 +1451,29 @@ export const BookingProvider = ({ children }) => {
       });
 
       cmsSocket.on('THEATRE_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('THEATRES_UPDATED', () => fetchAllGlobalData());
       cmsSocket.on('THEATRE_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('THEATRES_DELETED', () => fetchAllGlobalData());
       cmsSocket.on('SHOW_UPDATED', () => fetchAllGlobalData());
       cmsSocket.on('SHOW_DELETED', () => fetchAllGlobalData());
       cmsSocket.on('EVENT_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('EVENTS_UPDATED', () => fetchAllGlobalData());
       cmsSocket.on('EVENT_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('EVENTS_DELETED', () => fetchAllGlobalData());
       cmsSocket.on('PLAY_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('PLAYS_UPDATED', () => fetchAllGlobalData());
       cmsSocket.on('PLAY_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('PLAYS_DELETED', () => fetchAllGlobalData());
       cmsSocket.on('ACTIVITY_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('ACTIVITIES_UPDATED', () => fetchAllGlobalData());
       cmsSocket.on('ACTIVITY_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('ACTIVITIES_DELETED', () => fetchAllGlobalData());
       cmsSocket.on('OFFER_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('OFFERS_UPDATED', () => fetchAllGlobalData());
       cmsSocket.on('OFFER_DELETED', () => fetchAllGlobalData());
+      cmsSocket.on('OFFERS_DELETED', () => fetchAllGlobalData());
       cmsSocket.on('OFFER_BANNERS_UPDATED', () => fetchAllGlobalData());
+      cmsSocket.on('GLOBAL_ADMIN_UPDATE', () => fetchAllGlobalData());
 
       cmsSocket.on('FEATURE_CHIPS_UPDATED', (chips) => {
         console.log('⚡ [BookingContext] Real-time FEATURE_CHIPS_UPDATED received:', chips);

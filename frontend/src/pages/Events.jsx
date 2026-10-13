@@ -5,11 +5,193 @@ import { EventBookingModal } from '../components/EventBookingModal';
 import { useAuth } from '../context/AuthContext';
 import API, { API_BASE } from '../services/api';
 
+const getSocketBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+  return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : '';
+};
+const SOCKET_BASE = getSocketBaseUrl();
+
+const DEFAULT_GUJARAT_EVENTS = [
+  {
+    id: "ev_surat_garba",
+    title: "Garba Nights: Rangilo Gujarat",
+    category: "Live Concert",
+    badge: "SELLING FAST",
+    languages: ["Gujarati", "Hindi"],
+    city: "Surat",
+    venue: "SIECC Convention Centre, Sarsana, Surat",
+    date: "2026-10-24",
+    time: "07:00 PM",
+    price: 799,
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80",
+    description: "A festive Gujarati garba night with live singers, traditional music and a massive dance floor."
+  },
+  {
+    id: "ev_ahmedabad_indie",
+    title: "Ahmedabad Indie Music Festival",
+    category: "Music Concert",
+    badge: "LIVE",
+    languages: ["Hindi", "English", "Gujarati"],
+    city: "Ahmedabad",
+    venue: "EKA Club, Kankaria, Ahmedabad",
+    date: "2026-11-07",
+    time: "06:30 PM",
+    price: 1299,
+    image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=800&q=80",
+    description: "An evening of indie music, emerging artists, food stalls and live performances."
+  },
+  {
+    id: "ev_rajkot_rock",
+    title: "Rajkot Rock & Rhythm Live",
+    category: "Live Concert",
+    badge: "NEW",
+    languages: ["Gujarati", "Hindi"],
+    city: "Rajkot",
+    venue: "Race Course Ground, Rajkot",
+    date: "2026-11-14",
+    time: "07:00 PM",
+    price: 599,
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80",
+    description: "A high-energy regional music event featuring live bands and popular Gujarati tracks."
+  },
+  {
+    id: "ev_vadodara_beats",
+    title: "Vadodara Cultural Beats",
+    category: "Live Concert",
+    badge: "POPULAR",
+    languages: ["Gujarati", "Hindi"],
+    city: "Vadodara",
+    venue: "Navlakhi Ground, Vadodara",
+    date: "2026-10-31",
+    time: "06:00 PM",
+    price: 499,
+    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+    description: "A family-friendly evening showcasing folk dance, music and regional performances."
+  },
+  {
+    id: "ev_gandhinagar_comedy",
+    title: "Gandhinagar Comedy Night",
+    category: "Standup Comedy",
+    badge: "LIVE",
+    languages: ["Gujarati", "Hindi"],
+    city: "Gandhinagar",
+    venue: "Mahatma Mandir, Gandhinagar",
+    date: "2026-11-21",
+    time: "07:30 PM",
+    price: 399,
+    image: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80",
+    description: "A stand-up comedy evening with observational humour and Gujarati crowd interaction."
+  },
+  {
+    id: "ev_bhavnagar_folk",
+    title: "Bhavnagar Folk Music Evening",
+    category: "Music Concert",
+    badge: "NEW",
+    languages: ["Gujarati"],
+    city: "Bhavnagar",
+    venue: "Town Hall, Bhavnagar",
+    date: "2026-11-28",
+    time: "06:30 PM",
+    price: 299,
+    image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=800&q=80",
+    description: "An intimate folk music programme celebrating Gujarati melodies and traditional instruments."
+  },
+  {
+    id: "ev_jamnagar_fest",
+    title: "Jamnagar Dance & Music Fest",
+    category: "Live Concert",
+    badge: "SELLING FAST",
+    languages: ["Gujarati", "Hindi"],
+    city: "Jamnagar",
+    venue: "Darbargadh Grounds, Jamnagar",
+    date: "2026-12-05",
+    time: "06:00 PM",
+    price: 449,
+    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+    description: "A lively regional festival with dance performances, music and local food vendors."
+  },
+  {
+    id: "ev_anand_youth",
+    title: "Anand Youth Live Sessions",
+    category: "Music Concert",
+    badge: "LIVE",
+    languages: ["Gujarati", "Hindi", "English"],
+    city: "Anand",
+    venue: "Shastri Maidan, Anand",
+    date: "2026-12-12",
+    time: "06:30 PM",
+    price: 349,
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80",
+    description: "College youth music fest featuring live rock and fusion tracks."
+  },
+  {
+    id: "ev_junagadh_heritage",
+    title: "Girnar Heritage Musical Night",
+    category: "Music Concert",
+    badge: "POPULAR",
+    languages: ["Gujarati"],
+    city: "Junagadh",
+    venue: "Bahauddin College Grounds, Junagadh",
+    date: "2026-12-19",
+    time: "07:00 PM",
+    price: 399,
+    image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80",
+    description: "Sufi and Santvani musical night under the stars in the historic town of Junagadh."
+  },
+  {
+    id: "ev_navsari_art",
+    title: "South Gujarat Art & Cultural Expo",
+    category: "Expo",
+    badge: "NEW",
+    languages: ["Gujarati", "English"],
+    city: "Navsari",
+    venue: "Lunsikui Ground, Navsari",
+    date: "2026-12-26",
+    time: "10:00 AM",
+    price: 199,
+    image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80",
+    description: "Exhibition displaying handlooms, handicrafts, live pottery, and organic regional goods."
+  },
+  {
+    id: "ev_morbi_ceramic",
+    title: "Morbi Rock & Beats Concert",
+    category: "Live Concert",
+    badge: "SELLING FAST",
+    languages: ["Hindi", "Gujarati"],
+    city: "Morbi",
+    venue: "Circuit House Grounds, Morbi",
+    date: "2027-01-02",
+    time: "07:30 PM",
+    price: 499,
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80",
+    description: "Electric live performance featuring powerhouse percussionists and live synthesizers."
+  },
+  {
+    id: "ev_surat_standup",
+    title: "Surat Laugh Riot: Live Standup",
+    category: "Standup Comedy",
+    badge: "HOT SELLER",
+    languages: ["Gujarati", "Hindi"],
+    city: "Surat",
+    venue: "Sanjeev Kumar Auditorium, Pal, Surat",
+    date: "2027-01-09",
+    time: "08:00 PM",
+    price: 599,
+    image: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80",
+    description: "90 minutes of nonstop laughter by Gujarat’s top viral stand-up comedians."
+  }
+];
+
 export const Events = ({ onSelectEvent, onBookEvent }) => {
   const { selectedCity } = useAuth();
-  const [eventsList, setEventsList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [eventsList, setEventsList] = useState(DEFAULT_GUJARAT_EVENTS);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeCity, setActiveCity] = useState('All');
   const [activeCategory, setActiveCategory] = useState('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -20,33 +202,17 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const fetchEvents = async () => {
-    setLoading(true);
-    let isCancelled = false;
-
-    // Safety Timeout: Never keep user stuck on infinite loading spinner
-    const timer = setTimeout(() => {
-      if (!isCancelled) setLoading(false);
-    }, 6000);
-
     try {
       const res = await API.get('/events', {
-        params: { city: selectedCity || 'Surat', t: Date.now() }
+        params: { t: Date.now() }
       });
-      if (!isCancelled) {
-        if (res.data && Array.isArray(res.data)) {
-          setEventsList(res.data);
-        } else if (res.data && Array.isArray(res.data?.events)) {
-          setEventsList(res.data.events);
-        } else {
-          setEventsList([]);
-        }
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setEventsList(res.data);
+      } else if (res.data && Array.isArray(res.data?.events) && res.data.events.length > 0) {
+        setEventsList(res.data.events);
       }
     } catch (err) {
-      console.warn('⚠️ Error fetching live events from Local MongoDB:', err.message);
-      if (!isCancelled) setEventsList([]);
-    } finally {
-      clearTimeout(timer);
-      if (!isCancelled) setLoading(false);
+      console.warn('⚠️ Error fetching live events:', err.message);
     }
   };
 
@@ -54,52 +220,71 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
     fetchEvents();
 
     let socket = null;
-    const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    if (isLocal) {
-      try {
-        socket = io('http://localhost:5000', {
-          transports: ['polling', 'websocket'],
-          autoConnect: false,
-          reconnection: false
-        });
-        socket.on('connect_error', () => {});
-      } catch (e) {}
-    }
-
-    if (socket) {
+    try {
+      socket = io(SOCKET_BASE, {
+        transports: ['polling', 'websocket'],
+        autoConnect: true,
+        reconnectionAttempts: 5,
+        timeout: 5000
+      });
       socket.on('connect_error', () => {});
-      socket.on('EVENT_UPDATED', (updatedEvent) => {
-        if (updatedEvent && updatedEvent.id) {
+
+      const handleEventUpdate = (updatedEvent) => {
+        if (!updatedEvent) {
+          fetchEvents();
+          return;
+        }
+        if (updatedEvent.deletedId) {
+          setEventsList(prev => prev.filter(e => e.id !== updatedEvent.deletedId && e._id !== updatedEvent.deletedId));
+          return;
+        }
+        if (updatedEvent.id || updatedEvent._id) {
+          const docId = updatedEvent.id || updatedEvent._id;
           setEventsList(prev => {
-            const exists = prev.some(e => e.id === updatedEvent.id);
-            if (exists) return prev.map(e => e.id === updatedEvent.id ? { ...e, ...updatedEvent } : e);
+            const exists = prev.some(e => e.id === docId || e._id === docId);
+            if (exists) return prev.map(e => (e.id === docId || e._id === docId) ? { ...e, ...updatedEvent } : e);
             return [updatedEvent, ...prev];
           });
         } else {
           fetchEvents();
         }
-      });
+      };
+
+      socket.on('EVENT_UPDATED', handleEventUpdate);
+      socket.on('EVENTS_UPDATED', handleEventUpdate);
       socket.on('EVENT_DELETED', (data) => {
-        if (data && data.id) {
-          setEventsList(prev => prev.filter(e => e.id !== data.id));
+        const idToDelete = data?.id || data?.deletedId;
+        if (idToDelete) {
+          setEventsList(prev => prev.filter(e => e.id !== idToDelete && e._id !== idToDelete));
         } else {
           fetchEvents();
         }
       });
-    }
+      socket.on('EVENTS_DELETED', (data) => {
+        const idToDelete = data?.id || data?.deletedId;
+        if (idToDelete) {
+          setEventsList(prev => prev.filter(e => e.id !== idToDelete && e._id !== idToDelete));
+        } else {
+          fetchEvents();
+        }
+      });
+      socket.on('GLOBAL_ADMIN_UPDATE', () => fetchEvents());
+    } catch (e) {}
 
     return () => {
       if (socket) socket.disconnect();
     };
-  }, [selectedCity]);
+  }, []);
 
-  const categories = ['All', 'Live Concert', 'Standup Comedy', 'Music Concert', 'Expo', 'Workshop', 'Sports', 'Festival', 'Exhibition'];
+  const citiesList = ['All', 'Surat', 'Ahmedabad', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Gandhinagar', 'Jamnagar', 'Anand', 'Junagadh', 'Navsari', 'Morbi'];
+  const categories = ['All', 'Live Concert', 'Music Concert', 'Standup Comedy', 'Cultural Event', 'Expo', 'Workshop', 'Sports', 'Festival'];
 
   const filteredEvents = eventsList.filter(ev => {
-    const matchesCity = !selectedCity || selectedCity === 'All' || 
-                        (ev.city || '').trim().toLowerCase() === selectedCity.trim().toLowerCase() || 
-                        ev.city === 'All';
-    const matchesCat = activeCategory === 'All' || ev.category === activeCategory;
+    const matchesCity = activeCity === 'All' 
+      ? true 
+      : (ev.city || '').trim().toLowerCase() === activeCity.trim().toLowerCase();
+    const matchesCat = activeCategory === 'All' || 
+                       (ev.category || '').toLowerCase().includes(activeCategory.toLowerCase());
     const q = searchQuery.toLowerCase().trim();
     const matchesSearch = !q || 
                           ev.title?.toLowerCase().includes(q) || 
@@ -221,6 +406,27 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
           </div>
         </div>
 
+        {/* City Filter Pills */}
+        <div className="flex overflow-x-auto gap-2 pb-2 mb-3 text-xs font-semibold scrollbar-none items-center">
+          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 font-bold shrink-0 text-[11px] border border-slate-200">
+            <MapPin className="w-3.5 h-3.5 text-[#D90000]" />
+            <span>City:</span>
+          </div>
+          {citiesList.map(city => (
+            <button
+              key={city}
+              onClick={() => setActiveCity(city)}
+              className={`px-3.5 py-1.5 rounded-full transition-all cursor-pointer shrink-0 text-xs ${
+                activeCity === city
+                  ? 'bg-[#D90000] text-white font-extrabold shadow-md scale-105'
+                  : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300'
+              }`}
+            >
+              {city}
+            </button>
+          ))}
+        </div>
+
         {/* Desktop Category Filter Pills */}
         <div className="hidden md:flex overflow-x-auto gap-2 pb-4 mb-8 text-xs font-semibold scrollbar-none">
           {categories.map(cat => (
@@ -229,8 +435,8 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-full transition-all cursor-pointer shrink-0 ${
                 activeCategory === cat
-                  ? 'bg-[#D90000] text-white font-extrabold shadow-md scale-105'
-                  : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white border border-slate-700'
+                  ? 'bg-[#2B2B2B] text-white font-extrabold shadow-md scale-105 border border-slate-900'
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300'
               }`}
             >
               {cat}
@@ -244,11 +450,11 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
             <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)}></div>
 
             <div className="relative w-5/6 max-w-xs h-full bg-[#DBCEA5] border-l border-[#c5ba92] p-5 shadow-2xl flex flex-col justify-between overflow-y-auto z-[160] animate-slide-left text-[#1A1A1A]">
-              <div>
-                <div className="flex items-center justify-between pb-4 border-b border-[#c5ba92] mb-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#c5ba92]">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-5 h-5 text-[#D90000]" />
-                    <span className="text-sm font-black uppercase tracking-wider text-[#1A1A1A]">Event Category</span>
+                    <span className="text-sm font-black uppercase tracking-wider text-[#1A1A1A]">Filters</span>
                   </div>
                   <button
                     onClick={() => setIsMobileFilterOpen(false)}
@@ -259,20 +465,38 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
                   </button>
                 </div>
 
-                <div className="space-y-3">
-                  <h4 className="text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2.5">Select Category</h4>
-                  <div className="grid grid-cols-1 gap-2">
+                {/* City Selection */}
+                <div>
+                  <h4 className="text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2">City</h4>
+                  <div className="grid grid-cols-2 gap-1.5 max-h-36 overflow-y-auto p-1">
+                    {citiesList.map(city => (
+                      <button
+                        key={city}
+                        onClick={() => setActiveCity(city)}
+                        className={`p-2 rounded-xl text-xs font-bold transition-all text-left ${
+                          activeCity === city
+                            ? 'bg-[#D90000] text-white'
+                            : 'bg-white text-slate-800 border border-slate-300'
+                        }`}
+                      >
+                        {city}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Category Selection */}
+                <div>
+                  <h4 className="text-xs font-black text-[#1A1A1A] uppercase tracking-widest mb-2">Category</h4>
+                  <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto p-1">
                     {categories.map(cat => (
                       <button
                         key={cat}
-                        onClick={() => {
-                          setActiveCategory(cat);
-                          setIsMobileFilterOpen(false);
-                        }}
-                        className={`w-full text-left p-3 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
+                        onClick={() => setActiveCategory(cat)}
+                        className={`w-full text-left p-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
                           activeCategory === cat
-                            ? 'bg-[#D90000] text-white shadow-md'
-                            : 'bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white'
+                            ? 'bg-[#2B2B2B] text-white shadow-md'
+                            : 'bg-white text-slate-800 border border-slate-300'
                         }`}
                       >
                         <span>{cat}</span>
@@ -283,12 +507,12 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-[#c5ba92] mb-6">
+              <div className="pt-4 border-t border-[#c5ba92]">
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
                   className="w-full py-3 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-lg cursor-pointer"
                 >
-                  Apply Category ({filteredEvents.length} Events)
+                  Apply Filters ({filteredEvents.length} Events)
                 </button>
               </div>
             </div>
@@ -320,7 +544,7 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
                 >
                   <div className="sm:w-2/5 relative aspect-[4/3] sm:aspect-auto overflow-hidden">
                     <img
-                      src={evt.image || evt.poster || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80'}
+                      src={evt.image || evt.thumbnailImageUrl || evt.poster || evt.backdropBannerUrl || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80'}
                       alt={evt.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -390,19 +614,21 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
         )}
 
         {!loading && filteredEvents.length === 0 && (
-          <div className="text-center py-16 bg-[#DBCEA5] rounded-3xl border border-[#c5ba92] p-6 max-w-lg mx-auto space-y-3 text-slate-900 shadow-md">
-            <Sparkles className="w-10 h-10 text-[#D90000] mx-auto" />
-            <h3 className="text-base font-bold text-slate-900 mb-1">No active events matching "{activeCategory !== 'All' ? activeCategory : (selectedCity || 'this city')}"</h3>
-            <p className="text-xs text-slate-700">No specific events found for this filter. Switch city or clear filters to explore live concerts and shows.</p>
+          <div className="text-center py-16 bg-[#DBCEA5] rounded-3xl border border-[#c5ba92] p-8 max-w-lg mx-auto space-y-4 text-slate-900 shadow-md">
+            <Sparkles className="w-12 h-12 text-[#D90000] mx-auto" />
+            <h3 className="text-lg font-bold text-slate-900 mb-1">No active events in {activeCity !== 'All' ? activeCity : 'this selection'}</h3>
+            <p className="text-xs text-slate-700">No events matched the chosen city or category filter. You can explore all live events and concerts across Gujarat.</p>
             <button
               onClick={() => {
+                setActiveCity('All');
                 setActiveCategory('All');
                 setSearchQuery('');
                 fetchEvents();
               }}
-              className="mt-2 px-6 py-2.5 rounded-full bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-lg transition cursor-pointer"
+              className="mt-2 px-6 py-2.5 rounded-full bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-lg transition cursor-pointer inline-flex items-center gap-2"
             >
-              Explore All Live Events & Concerts
+              <span>Explore All Live Events & Concerts ({eventsList.length})</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         )}

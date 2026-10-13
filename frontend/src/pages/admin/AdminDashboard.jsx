@@ -79,6 +79,86 @@ const DEFAULT_FALLBACK_PLAYS = [
     availableSeats: 2200,
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJWaBwwHfB6prGstRVgBkCjqOFkA_m45bQt1XYLUPN2g&s=10",
     description: "Feroz Abbas Khan’s Broadway-style tribute to K. Asif’s timeless cinematic classic."
+  },
+  {
+    id: "pl_kashino_dikro_ahmedabad",
+    title: "Kashi No Dikro: Live Gujarati Play",
+    language: "Gujarati",
+    category: "Classic Drama",
+    badge: "SUPERHIT",
+    venue: "Tagore Memorial Hall, Paldi, Ahmedabad - 380007",
+    city: "Ahmedabad",
+    date: "20 NOV 2026",
+    time: "08:00 PM",
+    price: 450,
+    totalCapacity: 1250,
+    availableSeats: 980,
+    image: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80",
+    description: "A celebrated Gujarati literary masterpiece brought to life on stage."
+  },
+  {
+    id: "pl_sakharam_binder_ahmedabad",
+    title: "Sakharam Binder: Theatrical Adaptation",
+    language: "Hindi",
+    category: "Psychological Thriller",
+    badge: "MUST WATCH",
+    venue: "Natrani Amphitheatre, Usmanpura, Ahmedabad - 380013",
+    city: "Ahmedabad",
+    date: "05 DEC 2026",
+    time: "07:30 PM",
+    price: 600,
+    totalCapacity: 600,
+    availableSeats: 420,
+    image: "https://images.unsplash.com/photo-1469488865564-c2de10f69f96?auto=format&fit=crop&w=800&q=80",
+    description: "Vijay Tendulkar’s hard-hitting dramatic masterpiece delving into complex interpersonal dynamics."
+  },
+  {
+    id: "pl_vadodara_sayaji_play",
+    title: "Vadodara Sanskriti Natak Special",
+    language: "Gujarati",
+    category: "Drama",
+    badge: "POPULAR",
+    venue: "Sir Sayajirao Gaekwad Auditorium, Fatehgunj, Vadodara - 390002",
+    city: "Vadodara",
+    date: "15 DEC 2026",
+    time: "07:00 PM",
+    price: 400,
+    totalCapacity: 1200,
+    availableSeats: 850,
+    image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80",
+    description: "An emotional family drama highlighting traditional values, modern relationships, and artistic theatrical design."
+  },
+  {
+    id: "pl_rajkot_hasya_rangbhoomi",
+    title: "Kathiyawadi Hasya Rangbhoomi",
+    language: "Gujarati",
+    category: "Comedy",
+    badge: "HOUSEFULL",
+    venue: "Hemu Gadhvi Hall, Tagore Road, Rajkot - 360001",
+    city: "Rajkot",
+    date: "18 DEC 2026",
+    time: "08:30 PM",
+    price: 350,
+    totalCapacity: 1000,
+    availableSeats: 670,
+    image: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80",
+    description: "A hilarious social satire play bringing authentic Kathiyawadi humor and stellar stage performances."
+  },
+  {
+    id: "pl_bhavnagar_lok_sahitya",
+    title: "Bhavnagar Lok Sahitya & Drama Night",
+    language: "Gujarati",
+    category: "Cultural",
+    badge: "CLASSIC",
+    venue: "Yashwantrai Parmar Hall, Subhashnagar, Bhavnagar - 364001",
+    city: "Bhavnagar",
+    date: "24 DEC 2026",
+    time: "08:00 PM",
+    price: 350,
+    totalCapacity: 800,
+    availableSeats: 540,
+    image: "https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=800&q=80",
+    description: "A poignant theatrical production celebrating historic folklore and classical Gujarati stagecraft."
   }
 ];
 
@@ -1509,6 +1589,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
       setTimeout(() => setActionSuccess(''), 6000);
     });
 
+    socket.on('GLOBAL_ADMIN_UPDATE', () => fetchAdminData());
+    socket.on('THEATRES_UPDATED', () => fetchAdminData());
+    socket.on('EVENTS_UPDATED', () => fetchAdminData());
+    socket.on('PLAYS_UPDATED', () => fetchAdminData());
+
     return () => {
       socket.off('NEW_USER_BOOKING');
       socket.off('BOOKING_CREATED');
@@ -1516,6 +1601,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
       socket.off('USER_LOGGED_OUT');
       socket.off('NEW_USER_REGISTERED');
       socket.off('NEW_SUPPORT_MESSAGE');
+      socket.off('GLOBAL_ADMIN_UPDATE');
+      socket.off('THEATRES_UPDATED');
+      socket.off('EVENTS_UPDATED');
+      socket.off('PLAYS_UPDATED');
     };
   }, [socket, activeTab, userCurrentPage, userSearchQuery]);
 
