@@ -154,7 +154,7 @@
     "totalSeats": 1100,
     "image": "https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=1200&q=80",
     "logo": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=300&q=80",
-    "locationLink": "https://maps.app.goo.gl/3FcUCvP35DzWyubg6",
+    "locationLink": "https://maps.google.com/?q=Rajhans%20Multiplex%20-%20AR%20Mall%20Surat",
     "screens": [
       {
         "id": "th_surat_rajhans_ar_mall_sc_1",
@@ -1293,6 +1293,197 @@
         "format": "VIP Recliner",
         "price": 500,
         "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_jamnagar_inox_crystal",
+    "name": "INOX Multiplex - Crystal Mall",
+    "city": "Jamnagar",
+    "state": "Gujarat",
+    "address": "3rd Floor, Crystal Mall, Khambhalia Highway, Jamnagar, Gujarat 361006",
+    "facilities": [
+      "IMAX 3D",
+      "Dolby Atmos 7.1",
+      "VIP Recliner",
+      "Gourmet Food",
+      "Valet Parking"
+    ],
+    "screensCount": 4,
+    "totalSeats": 750,
+    "image": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?q=Crystal+Mall+Jamnagar",
+    "screens": [
+      {
+        "id": "th_jamnagar_inox_crystal_sc_1",
+        "name": "Audi 1 - IMAX Laser",
+        "totalSeats": 160,
+        "rows": 10,
+        "cols": 16
+      },
+      {
+        "id": "th_jamnagar_inox_crystal_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_jamnagar_inox_crystal_sh_1",
+        "screenId": "th_jamnagar_inox_crystal_sc_1",
+        "time": "10:00 AM",
+        "format": "IMAX 3D",
+        "price": 250,
+        "availableSeats": 130
+      },
+      {
+        "id": "th_jamnagar_inox_crystal_sh_2",
+        "screenId": "th_jamnagar_inox_crystal_sc_1",
+        "time": "01:30 PM",
+        "format": "IMAX 3D",
+        "price": 300,
+        "availableSeats": 105
+      },
+      {
+        "id": "th_jamnagar_inox_crystal_sh_3",
+        "screenId": "th_jamnagar_inox_crystal_sc_2",
+        "time": "06:15 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 80
+      },
+      {
+        "id": "th_jamnagar_inox_crystal_sh_4",
+        "screenId": "th_jamnagar_inox_crystal_sc_2",
+        "time": "09:45 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 90
+      }
+    ]
+  },
+  {
+    "id": "th_jamnagar_rajhans_cinemas",
+    "name": "Rajhans Cinemas - Jamnagar",
+    "city": "Jamnagar",
+    "state": "Gujarat",
+    "address": "Amber Cinema Road, Opp. City Station, Jamnagar, Gujarat 361001",
+    "facilities": [
+      "Dolby 7.1",
+      "Executive Rocker Seats",
+      "Cafeteria",
+      "Parking"
+    ],
+    "screensCount": 3,
+    "totalSeats": 600,
+    "image": "https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?q=Amber+Cinema+Jamnagar",
+    "screens": [
+      {
+        "id": "th_jamnagar_rajhans_cinemas_sc_1",
+        "name": "Audi 1 - Dolby Sound",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_jamnagar_rajhans_cinemas_sh_1",
+        "screenId": "th_jamnagar_rajhans_cinemas_sc_1",
+        "time": "11:00 AM",
+        "format": "Dolby Atmos",
+        "price": 220,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_jamnagar_rajhans_cinemas_sh_2",
+        "screenId": "th_jamnagar_rajhans_cinemas_sc_1",
+        "time": "02:30 PM",
+        "format": "Dolby Atmos",
+        "price": 260,
+        "availableSeats": 90
+      },
+      {
+        "id": "th_jamnagar_rajhans_cinemas_sh_3",
+        "screenId": "th_jamnagar_rajhans_cinemas_sc_1",
+        "time": "07:00 PM",
+        "format": "Executive Rocker",
+        "price": 350,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_jamnagar_rajhans_cinemas_sh_4",
+        "screenId": "th_jamnagar_rajhans_cinemas_sc_1",
+        "time": "10:15 PM",
+        "format": "Executive Rocker",
+        "price": 400,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_gandhinagar_pvr_infocity",
+    "name": "PVR Cinemas - InfoCity",
+    "city": "Gandhinagar",
+    "state": "Gujarat",
+    "address": "SuperMall, InfoCity, Airport Gandhinagar Highway, Gandhinagar, Gujarat 382007",
+    "facilities": [
+      "4DX",
+      "Dolby Atmos",
+      "VIP Recliner",
+      "Snack Bar"
+    ],
+    "screensCount": 4,
+    "totalSeats": 800,
+    "image": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?q=Infocity+Gandhinagar",
+    "screens": [
+      {
+        "id": "th_gandhinagar_pvr_infocity_sc_1",
+        "name": "Audi 1 - 4DX Laser",
+        "totalSeats": 160,
+        "rows": 10,
+        "cols": 16
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_gandhinagar_pvr_infocity_sh_1",
+        "screenId": "th_gandhinagar_pvr_infocity_sc_1",
+        "time": "10:15 AM",
+        "format": "4DX 3D",
+        "price": 350,
+        "availableSeats": 110
+      },
+      {
+        "id": "th_gandhinagar_pvr_infocity_sh_2",
+        "screenId": "th_gandhinagar_pvr_infocity_sc_1",
+        "time": "01:45 PM",
+        "format": "4DX 3D",
+        "price": 400,
+        "availableSeats": 85
+      },
+      {
+        "id": "th_gandhinagar_pvr_infocity_sh_3",
+        "screenId": "th_gandhinagar_pvr_infocity_sc_1",
+        "time": "06:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 60
+      },
+      {
+        "id": "th_gandhinagar_pvr_infocity_sh_4",
+        "screenId": "th_gandhinagar_pvr_infocity_sc_1",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 550,
+        "availableSeats": 75
       }
     ]
   }

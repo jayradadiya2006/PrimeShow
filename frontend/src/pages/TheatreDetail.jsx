@@ -7,6 +7,7 @@ import API, { API_BASE } from '../services/api';
 import { useBooking } from '../context/BookingContext';
 import { PrivateTheatreModal } from '../components/PrivateTheatreModal';
 import { TheatreMapModal } from '../components/TheatreMapModal';
+import { getSafeImageUrl, SAFE_IMAGE_FALLBACK } from '../utils/imageStorage';
 
 export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) => {
   const { moviesList } = useBooking();
@@ -225,8 +226,12 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
         <div className="relative rounded-3xl overflow-hidden bg-[#DBCEA5] border border-[#c5ba92] shadow-md mb-8 text-slate-900">
           <div className="relative h-64 sm:h-80 w-full overflow-hidden">
             <img
-              src={theatre.image || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80"}
+              src={getSafeImageUrl(theatre.image, "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80")}
               alt={theatre.name}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80";
+              }}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#DBCEA5] via-[#DBCEA5]/40 to-transparent"></div>
@@ -235,8 +240,12 @@ export const TheatreDetail = ({ theatreId, onBackToTheatres, onBookShowSlot }) =
           <div className="p-6 sm:p-8 -mt-24 relative z-10 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
             <div className="flex items-center gap-5">
               <img
-                src={theatre.logo || "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=150&q=80"}
+                src={getSafeImageUrl(theatre.logo, "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=150&q=80")}
                 alt={theatre.name}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=150&q=80";
+                }}
                 className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-slate-300 shadow-xl shrink-0"
               />
               <div>

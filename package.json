@@ -3,14 +3,26 @@
   "version": "1.0.0",
   "private": true,
   "description": "PrimeShow Full-Stack Cinema Ticket Booking Platform (MERN Stack)",
+  "main": "backend/server.js",
   "scripts": {
+    "start": "node backend/server.js",
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend && node -e \"require('fs').cpSync('frontend/dist', 'dist', {recursive: true})\"",
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
-    "build": "npm install --prefix frontend && npm run build --prefix frontend && node -e \"require('fs').cpSync('frontend/dist', 'dist', {recursive: true})\"",
     "server": "node backend/server.js",
     "client": "npm run dev --prefix frontend",
     "dev": "npx concurrently \"npm run server\" \"npm run client\""
   },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongodb": "^7.6.0",
+    "socket.io": "^4.8.3"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

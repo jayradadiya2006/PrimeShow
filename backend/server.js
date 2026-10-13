@@ -36,6 +36,27 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Health check and root ping endpoint for Render & browser validation
+app.get(['/', '/health', '/api/health'], (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    service: 'PrimeShow Real-time API Backend',
+    database: db ? 'connected' : 'file-datastore-active',
+    port: PORT,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Image sanitization helper to prevent Google Maps share links from breaking <img> elements
+const sanitizeMediaUrl = (url, fallback = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80') => {
+  if (!url || typeof url !== 'string') return fallback;
+  const s = url.trim().toLowerCase();
+  if (s.includes('maps.app.goo.gl') || s.includes('google.com/maps') || s.includes('goo.gl/maps')) {
+    return fallback;
+  }
+  return url;
+};
+
 let db = null;
 let mongoClient = null;
 
@@ -57,14 +78,31 @@ async function autoSeedDatabase() {
   for (const collName of collectionsToSeed) {
     try {
       const coll = db.collection(collName);
-      const count = await coll.countDocuments();
-      if (count === 0) {
-        const filePath = path.join(__dirname, 'data', `${collName}.json`);
-        if (fs.existsSync(filePath)) {
-          const items = JSON.parse(fs.readFileSync(filePath, 'utf8')) || [];
-          if (Array.isArray(items) && items.length > 0) {
-            await coll.insertMany(items.map(item => ({ ...item })));
+      const filePath = path.join(__dirname, 'data', `${collName}.json`);
+      if (fs.existsSync(filePath)) {
+        const items = JSON.parse(fs.readFileSync(filePath, 'utf8')) || [];
+        if (Array.isArray(items) && items.length > 0) {
+          const count = await coll.countDocuments();
+          if (count === 0) {
+            await coll.insertMany(items.map(item => ({
+              ...item,
+              image: sanitizeMediaUrl(item.image),
+              logo: sanitizeMediaUrl(item.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
+            })));
             console.log(`🌱 [AutoSeed] Seeded ${items.length} records into MongoDB collection: '${collName}'`);
+          } else {
+            for (const item of items) {
+              const query = item.id ? { id: item.id } : { name: item.name };
+              const exists = await coll.findOne(query);
+              if (!exists) {
+                await coll.insertOne({
+                  ...item,
+                  image: sanitizeMediaUrl(item.image),
+                  logo: sanitizeMediaUrl(item.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
+                });
+                console.log(`🌱 [AutoSeed] Added missing item '${item.name || item.title || item.id}' to collection '${collName}'`);
+              }
+            }
           }
         }
       }
@@ -1279,11 +1317,21 @@ app.get(['/api/theatres/:thId/movies/:movId/showtimes', '/api/theaters/:thId/mov
 // Theatres CRUD
 app.get(['/api/theatres', '/api/admin/theatres', '/api/theaters'], async (req, res) => {
   const data = await DataStore.find('theatres');
-  res.json(data);
+  const sanitized = (Array.isArray(data) ? data : []).map(th => ({
+    ...th,
+    image: sanitizeMediaUrl(th.image),
+    logo: sanitizeMediaUrl(th.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
+  }));
+  res.json(sanitized);
 });
 
 app.post(['/api/theatres', '/api/admin/theatres', '/api/theaters'], async (req, res) => {
-  const doc = { id: req.body.id || `th_${Date.now()}`, ...req.body };
+  const doc = {
+    id: req.body.id || `th_${Date.now()}`,
+    ...req.body,
+    image: sanitizeMediaUrl(req.body.image),
+    logo: sanitizeMediaUrl(req.body.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
+  };
   await DataStore.insertOne('theatres', doc);
   io.emit('THEATRES_UPDATED', doc);
   io.emit('THEATRE_UPDATED', doc);
@@ -1293,9 +1341,12 @@ app.post(['/api/theatres', '/api/admin/theatres', '/api/theaters'], async (req, 
 
 app.put(['/api/theatres/:id', '/api/admin/theatres/:id', '/api/theaters/:id'], async (req, res) => {
   const thId = req.params.id;
-  await DataStore.updateOne('theatres', { id: thId }, req.body);
+  const updateData = { ...req.body };
+  if (updateData.image) updateData.image = sanitizeMediaUrl(updateData.image);
+  if (updateData.logo) updateData.logo = sanitizeMediaUrl(updateData.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80');
+  await DataStore.updateOne('theatres', { id: thId }, updateData);
   const updated = await DataStore.findOne('theatres', { id: thId });
-  const finalDoc = updated || { id: thId, ...req.body };
+  const finalDoc = updated || { id: thId, ...updateData };
   io.emit('THEATRES_UPDATED', finalDoc);
   io.emit('THEATRE_UPDATED', finalDoc);
   io.emit('GLOBAL_ADMIN_UPDATE', { type: 'THEATRES', doc: finalDoc });
@@ -2010,6 +2061,6 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`🚀 PrimeShow Node.js REST API & Socket.io Backend running on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 PrimeShow Node.js REST API & Socket.io Backend running on port ${PORT}`);
 });

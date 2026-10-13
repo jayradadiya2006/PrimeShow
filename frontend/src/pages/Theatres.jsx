@@ -5,6 +5,7 @@ import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 import { TheatreMapModal } from '../components/TheatreMapModal';
+import { getSafeImageUrl, SAFE_IMAGE_FALLBACK } from '../utils/imageStorage';
 
 const getSocketBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
@@ -205,8 +206,12 @@ export const Theatres = ({ onSelectTheatre }) => {
                       >
                         <div className="flex items-center gap-3">
                           <img
-                            src={theatre.image}
+                            src={getSafeImageUrl(theatre.image)}
                             alt={theatre.name}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+                            }}
                             className="w-10 h-10 rounded-lg object-cover shrink-0 shadow-md"
                           />
                           <div>
@@ -326,8 +331,12 @@ export const Theatres = ({ onSelectTheatre }) => {
               <div>
                 <div className="relative aspect-[16/9] overflow-hidden">
                   <img
-                    src={theatre.image}
+                    src={getSafeImageUrl(theatre.image)}
                     alt={theatre.name}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>

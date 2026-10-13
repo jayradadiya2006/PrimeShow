@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // 1. Live Render Base API URL Configuration
-const rawApiBase = import.meta.env.VITE_API_BASE_URL || 'https://primeshow-api.onrender.com/api';
+const rawApiBase = import.meta.env.VITE_API_BASE_URL || 'https://primeshow-d72h.onrender.com/api';
 
 // Remove trailing slashes and normalize /api prefix
 const cleanBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '');

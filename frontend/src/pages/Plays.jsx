@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import API, { API_BASE } from '../services/api';
 import { PlayBookingModal } from '../components/PlayBookingModal';
 import { useAuth } from '../context/AuthContext';
+import { getSafeImageUrl, SAFE_IMAGE_FALLBACK } from '../utils/imageStorage';
 
 const getSocketBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
@@ -351,8 +352,12 @@ export const Plays = () => {
                       >
                         <div className="flex items-center gap-3">
                           <img
-                            src={play.image}
+                            src={getSafeImageUrl(play.image)}
                             alt={play.title}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+                            }}
                             className="w-10 h-10 rounded-lg object-cover shrink-0 shadow-md"
                           />
                           <div>
@@ -576,8 +581,12 @@ export const Plays = () => {
             >
               <div className="sm:w-2/5 relative aspect-[4/3] sm:aspect-auto overflow-hidden">
                 <img
-                  src={play.image}
+                  src={getSafeImageUrl(play.image)}
                   alt={play.title}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#D90000] text-white text-[10px] font-extrabold shadow-md">

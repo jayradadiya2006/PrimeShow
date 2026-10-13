@@ -114,7 +114,7 @@ const theatresData = [
     totalSeats: 1100,
     image: 'https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=1200&q=80',
     logo: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=300&q=80',
-    locationLink: 'https://maps.app.goo.gl/3FcUCvP35DzWyubg6'
+    locationLink: 'https://maps.google.com/?q=Rajhans+Multiplex+AR+Mall+Surat'
   },
   {
     id: 'th_surat_rajhans_pal',

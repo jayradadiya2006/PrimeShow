@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, Clock, Calendar, Film, Play, Sparkles, MapPin, ChevronRight, CheckCircle2, Send, MessageSquare, User, Video, Shield, Award, AlertCircle, ArrowLeft, ChevronDown, ChevronUp, Ticket } from 'lucide-react';
 import { CastCarousel } from '../components/CastCarousel';
 import { TheatreMapModal } from '../components/TheatreMapModal';
+import { getSafeImageUrl, SAFE_IMAGE_FALLBACK } from '../utils/imageStorage';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 import { API } from '../services/api';
@@ -152,7 +153,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
 
       setIsScheduleLoading(true);
       try {
-        const cityParam = (selectedCityFilter && selectedCityFilter !== 'All') ? selectedCityFilter : (selectedCity || 'All');
+        const cityParam = selectedCityFilter || selectedCity || 'All';
         const dateParam = currentDateSelection;
 
         const res = await API.get(`/movies/${encodeURIComponent(targetMovieId)}/schedules?city=${encodeURIComponent(cityParam)}&date=${encodeURIComponent(dateParam)}`);
@@ -197,13 +198,34 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
     );
   }
 
-  // Dynamic Theatre & Showtimes Retrieval based STRICTLY on live Local MongoDB API response
+  // Dynamic Theatre & Showtimes Retrieval based on live Local MongoDB API response with seamless Gujarat fallback
   const getTheatresForCurrentDate = () => {
-    if (Array.isArray(liveSchedules)) {
+    if (Array.isArray(liveSchedules) && liveSchedules.length > 0) {
       return liveSchedules;
     }
     if (movie && movie.schedules && Array.isArray(movie.schedules[currentDateSelection]) && movie.schedules[currentDateSelection].length > 0) {
       return movie.schedules[currentDateSelection];
+    }
+    // Reliable Gujarat multiplex fallback using theatresList from BookingContext
+    if (Array.isArray(theatresList) && theatresList.length > 0) {
+      const activeCity = selectedCityFilter || selectedCity || 'All';
+      const cityMatches = (activeCity && activeCity !== 'All')
+        ? theatresList.filter(t => t && t.city && t.city.trim().toLowerCase() === activeCity.trim().toLowerCase())
+        : theatresList;
+      const ths = cityMatches.length > 0 ? cityMatches : theatresList.slice(0, 4);
+      return ths.map(t => ({
+        id: t.id,
+        name: t.name,
+        city: t.city || 'Surat',
+        address: t.address || `${t.city || 'Surat'} Multiplex`,
+        facilities: Array.isArray(t.facilities) ? t.facilities : ['IMAX 3D', 'Dolby Atmos', 'VIP Recliner'],
+        shows: Array.isArray(t.shows) && t.shows.length > 0 ? t.shows : [
+          { id: `${t.id}_sh_1`, time: '10:30 AM', format: 'Dolby Atmos', price: 250 },
+          { id: `${t.id}_sh_2`, time: '01:45 PM', format: 'Dolby Atmos', price: 280 },
+          { id: `${t.id}_sh_3`, time: '06:30 PM', format: 'VIP Recliner', price: 420 },
+          { id: `${t.id}_sh_4`, time: '09:45 PM', format: 'VIP Recliner', price: 480 }
+        ]
+      }));
     }
     return [];
   };
@@ -302,8 +324,12 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
           {/* Layer 1: Ambient Glow / Blurred Fill Background */}
           <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
             <img
-              src={movie.banner || movie.poster}
+              src={getSafeImageUrl(movie.banner || movie.poster)}
               alt=""
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+              }}
               className="w-full h-full object-cover blur-3xl scale-125 opacity-50 brightness-50"
             />
           </div>
@@ -311,8 +337,12 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
           {/* Layer 2: Main Foreground Visual Backdrop Image with Focal Alignment (Center 20% / Top Focus) */}
           <div className="absolute inset-0 w-full h-full flex items-center justify-center z-5 pointer-events-none">
             <img
-              src={movie.banner || movie.poster}
+              src={getSafeImageUrl(movie.banner || movie.poster)}
               alt={`${movie.title} Background Banner`}
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+              }}
               className="w-full h-full object-cover opacity-60 transition-all duration-700"
               style={{ objectPosition: movie.backdropPosition || movie.imagePosition || 'center 20%' }}
             />
@@ -334,8 +364,12 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
             {/* Movie Poster & Repositioned Watch Trailer CTA Button Beside Poster */}
             <div className="flex flex-col items-start gap-2 shrink-0">
               <img
-                src={movie.poster}
+                src={getSafeImageUrl(movie.poster)}
                 alt={`${movie.title} Poster`}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+                }}
                 className="w-28 sm:w-44 aspect-[2/3] rounded-2xl sm:rounded-3xl object-cover border-2 border-white/20 shadow-2xl shrink-0"
               />
 

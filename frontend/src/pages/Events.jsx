@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { EventBookingModal } from '../components/EventBookingModal';
 import { useAuth } from '../context/AuthContext';
 import API, { API_BASE } from '../services/api';
+import { getSafeImageUrl } from '../utils/imageStorage';
 
 const getSocketBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
@@ -374,8 +375,12 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
                       >
                         <div className="flex items-center gap-3">
                           <img
-                            src={evt.image || evt.poster || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80'}
+                            src={getSafeImageUrl(evt.image || evt.poster, 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80')}
                             alt={evt.title}
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80';
+                            }}
                             className="w-10 h-10 rounded-lg object-cover shrink-0 shadow-md"
                           />
                           <div>
@@ -544,8 +549,12 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
                 >
                   <div className="sm:w-2/5 relative aspect-[4/3] sm:aspect-auto overflow-hidden">
                     <img
-                      src={evt.image || evt.thumbnailImageUrl || evt.poster || evt.backdropBannerUrl || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80'}
+                      src={getSafeImageUrl(evt.image || evt.thumbnailImageUrl || evt.poster || evt.backdropBannerUrl, 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80')}
                       alt={evt.title}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80';
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#D90000] text-white text-[10px] font-extrabold shadow-md uppercase">

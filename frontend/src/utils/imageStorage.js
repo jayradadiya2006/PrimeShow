@@ -212,3 +212,19 @@ export const safeLocalStorageGet = (key, defaultValue = null) => {
     return defaultValue;
   }
 };
+
+export const SAFE_IMAGE_FALLBACK = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80';
+
+/**
+ * Validates and sanitizes image URLs, preventing Google Maps or invalid share links
+ * from being loaded into <img> elements and causing ERR_CONNECTION_TIMED_OUT.
+ */
+export const getSafeImageUrl = (src, fallback = SAFE_IMAGE_FALLBACK) => {
+  if (!src || typeof src !== 'string') return fallback;
+  const s = src.trim().toLowerCase();
+  if (s.includes('maps.app.goo.gl') || s.includes('google.com/maps') || s.includes('goo.gl/maps')) {
+    return fallback;
+  }
+  return src;
+};
+
