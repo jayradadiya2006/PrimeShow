@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send, CheckCircle2, Bot, Sparkles, User } from 'lucide-react';
+import { MessageSquare, X, Send, CheckCircle2, Bot, Sparkles, User, Trash2 } from 'lucide-react';
 import { useAuth, socket } from '../context/AuthContext';
 
 export const SupportChatWidget = () => {
-  const { user, supportMessages, sendMessageToSupport } = useAuth();
+  const { user, supportMessages, sendMessageToSupport, clearAllSupportMessages } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [subject, setSubject] = useState('Cinema Booking Assistance');
   const [message, setMessage] = useState('');
@@ -84,12 +84,29 @@ export const SupportChatWidget = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              {userMessages.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to clear your live support chat history?')) {
+                      clearAllSupportMessages();
+                    }
+                  }}
+                  title="Clear Chat History"
+                  className="p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-[#DBCEA5] hover:text-white transition-colors cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Messages Stream */}

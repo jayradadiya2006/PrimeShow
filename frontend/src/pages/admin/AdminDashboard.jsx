@@ -11,6 +11,7 @@ import { useBooking } from '../../context/BookingContext';
 import { AdminTabErrorBoundary } from '../../components/AdminErrorBoundary';
 import { GUJARAT_CITIES } from '../../constants/cities';
 import { compressImage } from '../../utils/imageStorage';
+import { DEFAULT_GUJARAT_EVENTS } from '../Events';
 
 const DEFAULT_FALLBACK_OFFERS = [
   {
@@ -209,7 +210,7 @@ const DEFAULT_FALLBACK_ACTIVITIES = [
 
 export const AdminDashboard = ({ onReturnHome }) => {
   const { 
-    user, login, adminLogin, logout, token, loading, authLoading: globalAuthLoading, supportMessages, replyToSupportMessage, 
+    user, login, adminLogin, logout, token, loading, authLoading: globalAuthLoading, supportMessages, replyToSupportMessage, clearAllSupportMessages, deleteSupportMessage,
     broadcastNotification, updateNotification, deleteNotification, notifications, socket 
   } = useAuth();
 
@@ -459,9 +460,15 @@ export const AdminDashboard = ({ onReturnHome }) => {
     banner: '',
     trailerUrl: '',
     director: '',
-    status: 'Now Showing'
+    status: 'Now Showing',
+    cast: []
   });
   const [editingMovieId, setEditingMovieId] = useState(null);
+
+  // Movie Form Cast State (for adding cast members directly in Add / Edit Movie form)
+  const [formCastName, setFormCastName] = useState('');
+  const [formCastRole, setFormCastRole] = useState('');
+  const [formCastPhoto, setFormCastPhoto] = useState('');
 
   // Show & Date Schedule Manager State
   const [schedMovieId, setSchedMovieId] = useState('mov_1');
@@ -964,7 +971,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
   });
 
   // Event CRUD & Showtime Slot Manager State
-  const [eventsList, setEventsList] = useState([]);
+  const [eventsList, setEventsList] = useState(DEFAULT_GUJARAT_EVENTS);
   const [eventForm, setEventForm] = useState({
     title: '',
     category: 'Live Concert',
@@ -1199,8 +1206,13 @@ export const AdminDashboard = ({ onReturnHome }) => {
       if (thRes.status === 'fulfilled' && Array.isArray(thRes.value.data) && thRes.value.data.length > 0) {
         setTheatresList(thRes.value.data);
       }
-      if (evRes.status === 'fulfilled' && Array.isArray(evRes.value.data) && evRes.value.data.length > 0) {
-        setEventsList(evRes.value.data);
+      if (evRes.status === 'fulfilled') {
+        const evData = Array.isArray(evRes.value.data)
+          ? evRes.value.data
+          : (Array.isArray(evRes.value.data?.events) ? evRes.value.data.events : (Array.isArray(evRes.value.data?.data) ? evRes.value.data.data : []));
+        if (evData.length > 0) {
+          setEventsList(evData);
+        }
       }
       if (plRes.status === 'fulfilled' && Array.isArray(plRes.value.data) && plRes.value.data.length > 0) {
         setPlaysList(plRes.value.data);
@@ -1589,9 +1601,35 @@ export const AdminDashboard = ({ onReturnHome }) => {
       setTimeout(() => setActionSuccess(''), 6000);
     });
 
+    const handleEventsSocketUpdate = (data) => {
+      if (!data) {
+        fetchAdminData();
+        return;
+      }
+      if (data.deletedId) {
+        setEventsList(prev => prev.filter(e => e.id !== data.deletedId && e._id !== data.deletedId));
+        return;
+      }
+      const docId = data.id || data._id;
+      if (docId) {
+        setEventsList(prev => {
+          const exists = prev.some(e => e.id === docId || e._id === docId);
+          if (exists) return prev.map(e => (e.id === docId || e._id === docId) ? { ...e, ...data } : e);
+          return [data, ...prev];
+        });
+      } else {
+        fetchAdminData();
+      }
+    };
+
     socket.on('GLOBAL_ADMIN_UPDATE', () => fetchAdminData());
     socket.on('THEATRES_UPDATED', () => fetchAdminData());
-    socket.on('EVENTS_UPDATED', () => fetchAdminData());
+    socket.on('EVENTS_UPDATED', handleEventsSocketUpdate);
+    socket.on('EVENT_UPDATED', handleEventsSocketUpdate);
+    socket.on('EVENT_DELETED', (data) => {
+      const idToDelete = data?.id || data?.deletedId;
+      if (idToDelete) setEventsList(prev => prev.filter(e => e.id !== idToDelete && e._id !== idToDelete));
+    });
     socket.on('PLAYS_UPDATED', () => fetchAdminData());
 
     return () => {
@@ -1604,6 +1642,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
       socket.off('GLOBAL_ADMIN_UPDATE');
       socket.off('THEATRES_UPDATED');
       socket.off('EVENTS_UPDATED');
+      socket.off('EVENT_UPDATED');
+      socket.off('EVENT_DELETED');
       socket.off('PLAYS_UPDATED');
     };
   }, [socket, activeTab, userCurrentPage, userSearchQuery]);
@@ -1636,7 +1676,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
       formats: typeof movieForm.formats === 'string' ? movieForm.formats.split(',').map(s => s.trim()) : (movieForm.formats || ['IMAX 3D', 'Dolby Atmos']),
       status: movieForm.status || 'Now Showing',
       city: movieForm.city || 'All',
-      cities: movieForm.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
+      cities: movieForm.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru'],
+      cast: Array.isArray(movieForm.cast) ? movieForm.cast : []
     };
 
     try {
@@ -1655,8 +1696,11 @@ export const AdminDashboard = ({ onReturnHome }) => {
       setMovieForm({
         title: '', synopsis: '', duration: '2h 30m', rating: 9.0, parentalRating: 'UA',
         releaseDate: '2026-12-18', genres: 'Sci-Fi, Action', languages: 'English, Hindi',
-        formats: 'IMAX 3D, Dolby Atmos', poster: '', banner: '', backdropPosition: 'center 20%', trailerUrl: '', director: '', status: 'Now Showing'
+        formats: 'IMAX 3D, Dolby Atmos', poster: '', banner: '', backdropPosition: 'center 20%', trailerUrl: '', director: '', status: 'Now Showing', cast: []
       });
+      setFormCastName('');
+      setFormCastRole('');
+      setFormCastPhoto('');
       setEditingMovieId(null);
     } catch (err) {
       console.error('❌ Error saving movie to Local MongoDB:', err);
@@ -1682,7 +1726,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
       backdropPosition: movie.backdropPosition || movie.imagePosition || 'center 20%',
       trailerUrl: movie.trailerUrl || movie.youtubeUrl || '',
       director: movie.director || '',
-      status: movie.status || 'Now Showing'
+      status: movie.status || 'Now Showing',
+      cast: Array.isArray(movie.cast) ? movie.cast : []
     });
   };
 
@@ -1699,15 +1744,16 @@ export const AdminDashboard = ({ onReturnHome }) => {
   // Cast Management CRUD (Real-Time Backend Persistence to Local MongoDB)
   const handleAddCastMember = async (e) => {
     e.preventDefault();
-    if (!castName || !castMovieId) {
+    const effectiveMovieId = castMovieId || (Array.isArray(moviesList) && moviesList.length > 0 ? (moviesList[0].id || moviesList[0]._id || moviesList[0].title) : '');
+    if (!castName || !effectiveMovieId) {
       setActionSuccess('Please select a movie and enter cast actor name');
       setTimeout(() => setActionSuccess(''), 3000);
       return;
     }
 
     const payload = {
-      selectedMovieId: castMovieId,
-      movieId: castMovieId,
+      selectedMovieId: effectiveMovieId,
+      movieId: effectiveMovieId,
       actorName: castName.trim(),
       name: castName.trim(),
       roleName: (castRole || 'Lead Role').trim(),
@@ -1723,7 +1769,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
       if (updatedMovie) {
         setMoviesList(prev => prev.map(m =>
-          (m.id === castMovieId || m._id === castMovieId || m.title === castMovieId || (m.title && m.title.toLowerCase() === String(castMovieId).toLowerCase()))
+          (m.id === effectiveMovieId || m._id === effectiveMovieId || m.title === effectiveMovieId || (m.title && m.title.toLowerCase() === String(effectiveMovieId).toLowerCase()))
             ? updatedMovie
             : m
         ));
@@ -2388,13 +2434,19 @@ export const AdminDashboard = ({ onReturnHome }) => {
         } catch (e1) {
           res = await API.post('/admin/events', { ...payload, id: editingEventId });
         }
-        const updated = res.data?.event || res.data;
-        setEventsList(prev => prev.map(ev => (ev.id === editingEventId || ev._id === editingEventId) ? updated : ev));
+        const updated = res.data?.event || res.data?.data || res.data;
+        const targetId = editingEventId;
+        setEventsList(prev => prev.map(ev => (ev.id === targetId || ev._id === targetId) ? { ...ev, ...updated } : ev));
         setActionSuccess(`Event "${eventForm.title}" updated & saved to Local MongoDB!`);
       } else {
         const res = await API.post('/admin/events', payload);
-        const created = res.data?.event || res.data;
-        setEventsList(prev => [created, ...prev]);
+        const created = res.data?.event || res.data?.data || res.data;
+        const createdDoc = { ...payload, ...created };
+        setEventsList(prev => {
+          const docId = createdDoc.id || createdDoc._id;
+          const filtered = prev.filter(ev => ev.id !== docId && ev._id !== docId);
+          return [createdDoc, ...filtered];
+        });
         setActionSuccess(`New Event "${eventForm.title}" created & saved to Local MongoDB!`);
       }
 
@@ -2506,7 +2558,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
         await API.delete(`/events/${id}`);
       } catch (e2) {}
     }
-    setEventsList(eventsList.filter(ev => ev.id !== id));
+    setEventsList(prev => prev.filter(ev => ev.id !== id && ev._id !== id));
     setActionSuccess('Event permanently deleted from Local MongoDB!');
     setTimeout(() => setActionSuccess(''), 3000);
   };
@@ -4643,6 +4695,97 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <textarea rows={3} value={movieForm.synopsis} onChange={e => setMovieForm({...movieForm, synopsis: e.target.value})} className="w-full p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]"></textarea>
               </div>
 
+              {/* Embedded Movie Cast Members */}
+              <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-slate-300 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-black text-[#2C1A0E]">
+                    👥 Movie Cast & Crew Members ({(movieForm.cast || []).length})
+                  </label>
+                  <span className="text-[11px] text-slate-600 font-semibold">Add actors for this movie</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Actor Name (e.g. Cillian Murphy)"
+                    value={formCastName}
+                    onChange={e => setFormCastName(e.target.value)}
+                    className="p-2.5 rounded-xl bg-[#F8F9FA] border border-slate-300 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#D90000]"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Role / Character (e.g. J. Robert Oppenheimer)"
+                    value={formCastRole}
+                    onChange={e => setFormCastRole(e.target.value)}
+                    className="p-2.5 rounded-xl bg-[#F8F9FA] border border-slate-300 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#D90000]"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Photo URL (optional)"
+                      value={formCastPhoto}
+                      onChange={e => setFormCastPhoto(e.target.value)}
+                      className="flex-1 p-2.5 rounded-xl bg-[#F8F9FA] border border-slate-300 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#D90000]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!formCastName.trim()) return;
+                        const newCastItem = {
+                          id: `c_${Date.now()}`,
+                          name: formCastName.trim(),
+                          actorName: formCastName.trim(),
+                          role: (formCastRole || 'Cast').trim(),
+                          roleName: (formCastRole || 'Cast').trim(),
+                          character: (formCastRole || 'Cast').trim(),
+                          photo: formCastPhoto.trim() || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+                          photoUrl: formCastPhoto.trim() || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80'
+                        };
+                        setMovieForm(prev => ({
+                          ...prev,
+                          cast: [...(prev.cast || []), newCastItem]
+                        }));
+                        setFormCastName('');
+                        setFormCastRole('');
+                        setFormCastPhoto('');
+                      }}
+                      className="px-3 py-2 rounded-xl bg-[#2C5745] hover:bg-emerald-800 text-white text-xs font-black cursor-pointer shadow-sm shrink-0"
+                    >
+                      + Add Cast
+                    </button>
+                  </div>
+                </div>
+
+                {/* Added Cast Chips */}
+                {Array.isArray(movieForm.cast) && movieForm.cast.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
+                    {movieForm.cast.map((c, cIdx) => (
+                      <div key={c.id || cIdx} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#DBCEA5]/50 border border-[#c5ba92] text-xs font-bold text-[#1A1A1A]">
+                        <img
+                          src={c.photo || c.photoUrl || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80'}
+                          alt={c.name}
+                          className="w-6 h-6 rounded-full object-cover border border-slate-400"
+                        />
+                        <span>{c.name || c.actorName}</span>
+                        <span className="text-slate-600 text-[10px]">({c.role || c.character || 'Cast'})</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMovieForm(prev => ({
+                              ...prev,
+                              cast: prev.cast.filter((_, idx) => idx !== cIdx)
+                            }));
+                          }}
+                          className="text-red-600 hover:text-red-800 ml-1 font-black cursor-pointer text-sm"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-3">
                 <button type="submit" className="px-6 py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer shadow-md">
                   {editingMovieId ? 'Update Movie & Sync Live' : 'Add Movie & Sync Live'}
@@ -4659,7 +4802,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
             <div className="bg-[#DBCEA5] p-6 rounded-3xl border border-[#c5ba92] space-y-4 shadow-md text-[#1A1A1A]">
               <h3 className="text-base font-black font-sans text-[#1A1A1A]">Cast & Crew Management Module</h3>
               <form onSubmit={handleAddCastMember} className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <select value={castMovieId} onChange={e => setCastMovieId(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]">
+                <select value={castMovieId || (Array.isArray(moviesList) && moviesList.length > 0 ? (moviesList[0].id || moviesList[0]._id || moviesList[0].title) : '')} onChange={e => setCastMovieId(e.target.value)} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold focus:outline-none focus:border-[#D90000]">
                   {(Array.isArray(moviesList) ? moviesList : []).map(m => (
                     <option key={m.id || m._id || m.title} value={m.id || m._id || m.title}>
                       {m.title}
@@ -5674,19 +5817,55 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
         {/* Tab 5: WhatsApp-Style Live Support Chat Desk */}
         {activeTab === 'support' && (
-          <div className="space-y-4 text-[#1A1A1A]">
-            <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">WhatsApp Live Support Desk</h1>
+          <div className="space-y-6 text-[#1A1A1A]">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-black font-sans text-[#1A1A1A]">WhatsApp Live Support Desk</h1>
+                <p className="text-xs text-slate-700 font-semibold mt-1">Real-time bi-directional customer chat stream synced with Local MongoDB</p>
+              </div>
+
+              {(supportMessages || []).length > 0 && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (window.confirm('⚠️ Are you sure you want to permanently delete all live support chat messages? This cannot be undone.')) {
+                      await clearAllSupportMessages();
+                      setActionSuccess('All live chat messages cleared permanently!');
+                      setTimeout(() => setActionSuccess(''), 4000);
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-[#D90000] hover:bg-red-700 text-white font-black text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Clear All Chat History</span>
+                </button>
+              )}
+            </div>
 
             {([...(supportMessages || [])].sort((a, b) => new Date(a.createdAt || a.timestamp || 0) - new Date(b.createdAt || b.timestamp || 0))).map(msg => (
               <div key={msg.id} className="bg-[#DBCEA5] p-5 rounded-3xl border border-[#c5ba92] space-y-3 shadow-md text-[#1A1A1A]">
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs font-black text-[#1A1A1A]">{msg.userName} ({msg.userEmail})</span>
-                    <div className="text-[10px] text-slate-700 font-bold">{msg.subject} • {msg.createdAt}</div>
+                    <div className="text-[10px] text-slate-700 font-bold">{msg.subject} • {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : 'Recent'}</div>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-black ${msg.status === 'replied' ? 'bg-[#2C5745]/20 text-[#2C5745]' : 'bg-[#D90000]/20 text-[#D90000]'}`}>
-                    {msg.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2.5 py-0.5 rounded text-[10px] font-black ${msg.status === 'replied' || msg.status === 'REPLIED' ? 'bg-[#2C5745]/20 text-[#2C5745]' : 'bg-[#D90000]/20 text-[#D90000]'}`}>
+                      {msg.status || 'Pending'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await deleteSupportMessage(msg.id);
+                        setActionSuccess('Support message deleted!');
+                        setTimeout(() => setActionSuccess(''), 3000);
+                      }}
+                      title="Delete this message"
+                      className="p-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="p-3 rounded-2xl bg-[#FFFFFF] border border-slate-300 text-xs text-[#1A1A1A] font-bold shadow-sm">
@@ -5709,7 +5888,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
                     />
                     <button
                       onClick={() => handleReplySubmit(msg.id)}
-                      className="px-4 py-2 rounded-xl bg-[#2C5745] hover:bg-emerald-800 text-white font-black text-xs flex items-center gap-1 shadow-sm"
+                      className="px-4 py-2 rounded-xl bg-[#2C5745] hover:bg-emerald-800 text-white font-black text-xs flex items-center gap-1 shadow-sm cursor-pointer"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>Send Reply</span>
@@ -5718,6 +5897,14 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 )}
               </div>
             ))}
+
+            {(supportMessages || []).length === 0 && (
+              <div className="p-12 rounded-3xl bg-[#DBCEA5] border border-[#c5ba92] text-center space-y-2 shadow-md">
+                <MessageSquare className="w-8 h-8 text-[#2C1A0E] mx-auto opacity-40" />
+                <h3 className="text-sm font-black text-[#1A1A1A]">No Live Support Messages</h3>
+                <p className="text-xs text-slate-700 font-semibold">Live chat stream is clean. Incoming messages from customer chat will appear here in real-time.</p>
+              </div>
+            )}
           </div>
         )}
 

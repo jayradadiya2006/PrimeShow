@@ -16,7 +16,7 @@ const getSocketBaseUrl = () => {
 };
 const SOCKET_BASE = getSocketBaseUrl();
 
-const DEFAULT_GUJARAT_EVENTS = [
+export const DEFAULT_GUJARAT_EVENTS = [
   {
     id: "ev_surat_garba",
     title: "Garba Nights: Rangilo Gujarat",

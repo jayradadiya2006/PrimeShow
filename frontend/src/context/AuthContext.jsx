@@ -30,14 +30,15 @@ const createSafeSocket = () => {
 
   const baseUrl = customUrl
     ? customUrl.replace(/\/+$/, '').replace(/\/api$/, '')
-    : 'http://localhost:5000';
+    : (isLocal ? 'http://localhost:8000' : '');
 
   const instance = io(baseUrl, {
-    transports: ['polling', 'websocket'],
-    autoConnect: false,
-    reconnection: false,
-    reconnectionAttempts: 0,
-    timeout: 3000
+    transports: ['websocket', 'polling'],
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    timeout: 5000
   });
 
   instance.on('connect_error', () => {});
@@ -379,8 +380,25 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+    const handleSupportMessagesCleared = () => {
+      console.log('⚡ [Socket.io]: Real-time SUPPORT_MESSAGES_CLEARED received');
+      setSupportMessages([]);
+      try {
+        localStorage.removeItem('primeshow_support_messages');
+      } catch (_) {}
+    };
+
+    const handleSupportMessageDeleted = (data) => {
+      console.log('⚡ [Socket.io]: Real-time SUPPORT_MESSAGE_DELETED received:', data);
+      if (data?.id) {
+        setSupportMessages(prev => prev.filter(m => m.id !== data.id));
+      }
+    };
+
     socket.on('NEW_SUPPORT_MESSAGE', handleNewSupportMessage);
     socket.on('SUPPORT_MESSAGE_REPLIED', handleSupportMessageReplied);
+    socket.on('SUPPORT_MESSAGES_CLEARED', handleSupportMessagesCleared);
+    socket.on('SUPPORT_MESSAGE_DELETED', handleSupportMessageDeleted);
     socket.on('receive_message', (msg) => {
       console.log('⚡ [Socket.io]: Real-time receive_message event:', msg);
       if (msg && msg.reply) {
@@ -431,6 +449,8 @@ export const AuthProvider = ({ children }) => {
       socket.off('NOTIFICATION_BROADCAST');
       socket.off('NEW_SUPPORT_MESSAGE');
       socket.off('SUPPORT_MESSAGE_REPLIED');
+      socket.off('SUPPORT_MESSAGES_CLEARED');
+      socket.off('SUPPORT_MESSAGE_DELETED');
       socket.off('receive_message');
       if (eventSource) eventSource.close();
     };
@@ -975,6 +995,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const clearAllSupportMessages = async () => {
+    try {
+      await apiClient.delete('/support/messages');
+    } catch (e) {
+      console.warn('API delete support messages note:', e.message);
+    }
+    setSupportMessages([]);
+    try {
+      localStorage.removeItem('primeshow_support_messages');
+    } catch (_) {}
+    try {
+      socket.emit('clear_support_messages');
+    } catch (_) {}
+    return { success: true };
+  };
+
+  const deleteSupportMessage = async (msgId) => {
+    try {
+      await apiClient.delete(`/support/messages/${encodeURIComponent(msgId)}`);
+    } catch (e) {
+      console.warn('API delete support message note:', e.message);
+    }
+    setSupportMessages(prev => prev.filter(m => m.id !== msgId));
+    return { success: true };
+  };
+
   return (
     <AuthContext.Provider value={{
       user: user ? { ...user, wishlist } : null,
@@ -999,6 +1045,8 @@ export const AuthProvider = ({ children }) => {
       supportMessages,
       sendMessageToSupport,
       replyToSupportMessage,
+      clearAllSupportMessages,
+      deleteSupportMessage,
       notifications,
       broadcastNotification,
       updateNotification,

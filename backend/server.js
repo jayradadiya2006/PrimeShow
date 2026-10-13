@@ -986,28 +986,88 @@ app.delete(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
 });
 
 // Movie Cast Management
-app.post('/api/admin/movies/cast', async (req, res) => {
-  const { movieId, targetMovieId, name, role, character, photo } = req.body;
-  const mId = movieId || targetMovieId;
-  const movie = await DataStore.findOne('movies', { id: mId });
-  if (movie) {
-    const castList = Array.isArray(movie.cast) ? movie.cast : [];
-    const newCast = { id: `c_${Date.now()}`, name, role: role || character, character: character || role, photo };
-    castList.push(newCast);
-    await DataStore.updateOne('movies', { id: mId }, { cast: castList });
-    return res.json({ success: true, movie: { ...movie, cast: castList } });
+app.post(['/api/admin/movies/cast', '/api/movies/cast'], async (req, res) => {
+  const { movieId, targetMovieId, selectedMovieId, name, actorName, role, roleName, character, photo, photoUrl } = req.body;
+  const mId = String(movieId || targetMovieId || selectedMovieId || '').trim();
+  const cName = String(name || actorName || '').trim();
+  const cRole = String(role || roleName || character || 'Cast').trim();
+  const cPhoto = photo || photoUrl || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80';
+
+  if (!mId || !cName) {
+    return res.status(400).json({ success: false, message: 'Movie ID and cast name are required' });
   }
-  res.json({ success: true, message: 'Cast added' });
+
+  let movie = await DataStore.findOne('movies', { id: mId });
+  if (!movie) {
+    const allMovies = await DataStore.find('movies');
+    movie = allMovies.find(m => m.id === mId || m._id === mId || String(m.title).toLowerCase() === mId.toLowerCase());
+  }
+
+  if (movie) {
+    const castList = Array.isArray(movie.cast) ? [...movie.cast] : [];
+    const existingIndex = castList.findIndex(c => 
+      (c.name && c.name.toLowerCase() === cName.toLowerCase()) || 
+      (c.actorName && c.actorName.toLowerCase() === cName.toLowerCase())
+    );
+
+    const newCastMember = {
+      id: existingIndex !== -1 ? castList[existingIndex].id : `c_${Date.now()}`,
+      name: cName,
+      actorName: cName,
+      role: cRole,
+      roleName: cRole,
+      character: cRole,
+      photo: cPhoto,
+      photoUrl: cPhoto
+    };
+
+    if (existingIndex !== -1) {
+      castList[existingIndex] = { ...castList[existingIndex], ...newCastMember };
+    } else {
+      castList.push(newCastMember);
+    }
+
+    await DataStore.updateOne('movies', { id: movie.id }, { cast: castList });
+    const updatedMovie = { ...movie, cast: castList };
+
+    io.emit('MOVIE_UPDATED', updatedMovie);
+    io.emit('MOVIES_UPDATED', updatedMovie);
+    io.emit('GLOBAL_ADMIN_UPDATE', { type: 'MOVIES', doc: updatedMovie });
+
+    return res.json({ success: true, movie: updatedMovie });
+  }
+
+  res.status(404).json({ success: false, message: 'Target movie not found' });
 });
 
-app.delete('/api/movies/:movieId/cast/:castId', async (req, res) => {
+app.delete(['/api/movies/:movieId/cast/:castId', '/api/admin/movies/:movieId/cast/:castId'], async (req, res) => {
   const { movieId, castId } = req.params;
-  const movie = await DataStore.findOne('movies', { id: movieId });
-  if (movie && Array.isArray(movie.cast)) {
-    const updatedCast = movie.cast.filter(c => c.id !== castId);
-    await DataStore.updateOne('movies', { id: movieId }, { cast: updatedCast });
-    return res.json({ success: true, movie: { ...movie, cast: updatedCast } });
+  const decodedMovieId = decodeURIComponent(movieId);
+  const decodedCastId = decodeURIComponent(castId);
+
+  let movie = await DataStore.findOne('movies', { id: decodedMovieId });
+  if (!movie) {
+    const allMovies = await DataStore.find('movies');
+    movie = allMovies.find(m => m.id === decodedMovieId || m._id === decodedMovieId || String(m.title).toLowerCase() === decodedMovieId.toLowerCase());
   }
+
+  if (movie && Array.isArray(movie.cast)) {
+    const updatedCast = movie.cast.filter(c => 
+      c.id !== decodedCastId && 
+      c._id !== decodedCastId && 
+      c.name !== decodedCastId && 
+      c.actorName !== decodedCastId
+    );
+    await DataStore.updateOne('movies', { id: movie.id }, { cast: updatedCast });
+    const updatedMovie = { ...movie, cast: updatedCast };
+
+    io.emit('MOVIE_UPDATED', updatedMovie);
+    io.emit('MOVIES_UPDATED', updatedMovie);
+    io.emit('GLOBAL_ADMIN_UPDATE', { type: 'MOVIES', doc: updatedMovie });
+
+    return res.json({ success: true, movie: updatedMovie });
+  }
+
   res.json({ success: true, message: 'Cast removed' });
 });
 
@@ -1981,6 +2041,7 @@ app.post('/api/support/messages', async (req, res) => {
   const doc = { id: `msg_${Date.now()}`, ...req.body, createdAt: new Date().toISOString() };
   await DataStore.insertOne('support_messages', doc);
   io.emit('NEW_SUPPORT_MESSAGE', doc);
+  io.emit('receive_message', doc);
   res.status(201).json(doc);
 });
 
@@ -1994,9 +2055,43 @@ app.post('/api/support/messages/:id/reply', async (req, res) => {
     await DataStore.updateOne('support_messages', { id: msgId }, { replies, status: 'REPLIED' });
     const updated = { ...msg, replies, status: 'REPLIED' };
     io.emit('SUPPORT_REPLY_ADDED', updated);
+    io.emit('SUPPORT_MESSAGE_REPLIED', updated);
     return res.json({ success: true, message: updated });
   }
   res.json({ success: true, message: 'Reply sent' });
+});
+
+// Clear all live support chat messages
+app.delete(['/api/support/messages', '/api/admin/support/messages', '/api/admin/support/messages/clear'], async (req, res) => {
+  try {
+    const coll = DataStore.getCollection('support_messages');
+    if (coll) {
+      await coll.deleteMany({});
+    }
+    const dataDir = path.join(__dirname, 'data');
+    const filePath = path.join(dataDir, 'support_messages.json');
+    if (fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, JSON.stringify([], null, 2));
+    }
+    io.emit('SUPPORT_MESSAGES_CLEARED');
+    res.json({ success: true, message: 'All live support chat messages deleted successfully' });
+  } catch (err) {
+    console.error('Error clearing support messages:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Delete specific support message
+app.delete(['/api/support/messages/:id', '/api/admin/support/messages/:id'], async (req, res) => {
+  try {
+    const msgId = req.params.id;
+    await DataStore.deleteOne('support_messages', { id: msgId });
+    io.emit('SUPPORT_MESSAGE_DELETED', { id: msgId });
+    res.json({ success: true, message: 'Support message deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting support message:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Coupons Verification Endpoint
@@ -2054,6 +2149,53 @@ io.on('connection', (socket) => {
   
   socket.on('JOIN_USER_ROOM', (userId) => {
     if (userId) socket.join(`user_${userId}`);
+  });
+
+  socket.on('JOIN_ADMIN_ROOM', () => {
+    socket.join('admin_room');
+  });
+
+  socket.on('send_message', async (data) => {
+    if (!data) return;
+    try {
+      if (data.msgId && data.replyText) {
+        // Reply to existing message
+        let msg = await DataStore.findOne('support_messages', { id: data.msgId });
+        if (msg) {
+          const replies = Array.isArray(msg.replies) ? [...msg.replies] : [];
+          replies.push({ id: `r_${Date.now()}`, text: data.replyText, sender: data.sender || 'Support', createdAt: new Date().toISOString() });
+          await DataStore.updateOne('support_messages', { id: data.msgId }, { replies, status: 'REPLIED' });
+          const updated = { ...msg, replies, status: 'REPLIED' };
+          io.emit('SUPPORT_REPLY_ADDED', updated);
+          io.emit('SUPPORT_MESSAGE_REPLIED', updated);
+        }
+      } else {
+        // New incoming live message
+        const doc = { id: data.id || `msg_${Date.now()}`, ...data, createdAt: data.createdAt || new Date().toISOString() };
+        await DataStore.insertOne('support_messages', doc);
+        io.emit('NEW_SUPPORT_MESSAGE', doc);
+        io.emit('receive_message', doc);
+      }
+    } catch (e) {
+      console.error('Socket send_message error:', e.message);
+    }
+  });
+
+  socket.on('clear_support_messages', async () => {
+    try {
+      const coll = DataStore.getCollection('support_messages');
+      if (coll) {
+        await coll.deleteMany({});
+      }
+      const dataDir = path.join(__dirname, 'data');
+      const filePath = path.join(dataDir, 'support_messages.json');
+      if (fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, JSON.stringify([], null, 2));
+      }
+      io.emit('SUPPORT_MESSAGES_CLEARED');
+    } catch (e) {
+      console.error('Socket clear_support_messages error:', e.message);
+    }
   });
 
   socket.on('disconnect', () => {
