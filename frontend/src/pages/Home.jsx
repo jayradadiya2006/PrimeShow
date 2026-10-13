@@ -47,10 +47,10 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
         <div className="w-full">
           <div className="flex flex-row flex-nowrap items-center gap-2.5 sm:gap-4 overflow-x-auto scrollbar-none no-scrollbar py-1 w-full max-w-full">
             {(featureStripsList && featureStripsList.length > 0 ? featureStripsList : [
-              { id: 'feat_1', title: 'Instant UPI Pass', subtitle: 'Instant QR generation', icon: 'Zap', color: 'amber', badge: 'INSTANT' },
-              { id: 'feat_2', title: 'Private Cinema Screen', subtitle: 'Book full lounge', icon: 'Film', color: 'purple', badge: 'LUXURY' },
-              { id: 'feat_3', title: 'Promo Vouchers', subtitle: 'Flat 50% discount', icon: 'Gift', color: 'emerald', badge: 'OFFER' },
-              { id: 'feat_4', title: 'Expert VIP Concierge', subtitle: 'Lounge & gourmet dining', icon: 'Sparkles', color: 'cyan', badge: 'VIP' }
+              { id: 'feat_1', title: 'Instant UPI Ticket Pass', subtitle: 'Scan QR Code for instant pass generation', icon: 'Zap', color: 'amber', badge: 'INSTANT' },
+              { id: 'feat_2', title: 'Private Cinema Screen', subtitle: 'Book full theatre lounge for private birthday parties', icon: 'Film', color: 'purple', badge: 'LUXURY' },
+              { id: 'feat_3', title: 'Exclusive Promo Vouchers', subtitle: 'Flat 50% discount on IMAX 3D recliners using PRIMESHOW50', icon: 'Zap', color: 'emerald', badge: 'OFFER' },
+              { id: 'feat_4', title: 'Expert VIP Concierge', subtitle: 'Dedicated lounge assistance & gourmet dining booking', icon: 'Sparkles', color: 'cyan', badge: 'VIP' }
             ]).map((feat) => {
               const IconComp = getIconComponent(feat.icon);
               return (

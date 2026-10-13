@@ -42,24 +42,37 @@ let mongoClient = null;
 // Connect to MongoDB Atlas or Local MongoDB
 async function connectDB() {
   try {
-    const isAtlas = MONGO_URI.includes('mongodb+srv://') || MONGO_URI.includes('.mongodb.net');
-    mongoClient = new MongoClient(MONGO_URI, {
-      connectTimeoutMS: 10000,
-      serverSelectionTimeoutMS: 10000
+    let uriToUse = MONGO_URI;
+    if (MONGO_URI.includes('<YOUR_ATLAS_PASSWORD>')) {
+      uriToUse = 'mongodb://127.0.0.1:27017/primeshow';
+    }
+    mongoClient = new MongoClient(uriToUse, {
+      connectTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 5000
     });
     await mongoClient.connect();
 
-    if (MONGO_URI.includes('.mongodb.net/') && MONGO_URI.split('.mongodb.net/')[1]?.split('?')[0]) {
-      const uriDbName = MONGO_URI.split('.mongodb.net/')[1].split('?')[0];
+    if (uriToUse.includes('.mongodb.net/') && uriToUse.split('.mongodb.net/')[1]?.split('?')[0]) {
+      const uriDbName = uriToUse.split('.mongodb.net/')[1].split('?')[0];
       db = mongoClient.db(uriDbName || DB_NAME);
     } else {
       db = mongoClient.db(DB_NAME);
     }
 
-    console.log(`✅ MongoDB Atlas Connected Successfully (Database: ${db.databaseName})`);
+    console.log(`✅ MongoDB Connected Successfully (${uriToUse.includes('.mongodb.net') ? 'Atlas' : 'Local'}, Database: ${db.databaseName})`);
   } catch (err) {
-    console.error(`❌ MongoDB direct connection failed: ${err.message}. Fallback JSON storage active for offline development.`);
-    db = null;
+    try {
+      mongoClient = new MongoClient('mongodb://127.0.0.1:27017', {
+        connectTimeoutMS: 3000,
+        serverSelectionTimeoutMS: 3000
+      });
+      await mongoClient.connect();
+      db = mongoClient.db(DB_NAME);
+      console.log(`✅ Fallback Local MongoDB Connected Successfully (Database: ${db.databaseName})`);
+    } catch (locErr) {
+      console.error(`❌ MongoDB direct connection failed: ${err.message}. Fallback JSON storage active for offline development.`);
+      db = null;
+    }
   }
 }
 connectDB();
@@ -1072,6 +1085,32 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
   if (city && city !== 'All') {
     const cityFiltered = schedulesList.filter(t => t.city && t.city.trim().toLowerCase() === city.trim().toLowerCase());
     if (cityFiltered.length > 0) schedulesList = cityFiltered;
+  }
+
+  // Fallback to City Theatres or Gujarat Theatres if no explicit date schedule configured
+  if (schedulesList.length === 0 && allTheatres.length > 0) {
+    const targetCityTheatres = (city && city !== 'All') 
+      ? allTheatres.filter(t => t.city && t.city.trim().toLowerCase() === city.trim().toLowerCase())
+      : (movie.city ? allTheatres.filter(t => t.city && t.city.trim().toLowerCase() === movie.city.trim().toLowerCase()) : allTheatres);
+    
+    const thsToUse = targetCityTheatres.length > 0 ? targetCityTheatres : allTheatres.slice(0, 4);
+    thsToUse.forEach(t => {
+      const rawFac = t.facilities;
+      const cleanFac = Array.isArray(rawFac) ? rawFac : (typeof rawFac === 'string' ? rawFac.split(',').map(s => s.trim()).filter(Boolean) : ['IMAX 3D', 'VIP Recliners']);
+      schedulesList.push({
+        id: t.id,
+        name: t.name,
+        city: t.city || 'Surat',
+        address: t.address || `${t.city || 'Surat'} Multiplex`,
+        facilities: cleanFac,
+        shows: [
+          { id: `${t.id}_sh_1`, time: '10:30 AM', showTime: '10:30 AM', format: 'Dolby Atmos', price: 250, screen: 'Audi 1', screenId: `${t.id}_${movie.id}_${targetDate}_10:30 AM` },
+          { id: `${t.id}_sh_2`, time: '02:00 PM', showTime: '02:00 PM', format: 'Dolby Atmos', price: 300, screen: 'Audi 1', screenId: `${t.id}_${movie.id}_${targetDate}_02:00 PM` },
+          { id: `${t.id}_sh_3`, time: '06:30 PM', showTime: '06:30 PM', format: 'VIP Recliner', price: 450, screen: 'Audi 2', screenId: `${t.id}_${movie.id}_${targetDate}_06:30 PM` },
+          { id: `${t.id}_sh_4`, time: '09:45 PM', showTime: '09:45 PM', format: 'VIP Recliner', price: 500, screen: 'Audi 2', screenId: `${t.id}_${movie.id}_${targetDate}_09:45 PM` }
+        ]
+      });
+    });
   }
 
   res.json({

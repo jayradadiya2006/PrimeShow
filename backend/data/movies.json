@@ -1,0 +1,255 @@
+[
+  {
+    "id": "mov_drishyam_conclusion",
+    "title": "Drishyam: The Conclusion",
+    "tagline": "The Ultimate Salgaonkar Family Truth Unfolds",
+    "synopsis": "Vijay Salgaonkar’s past resurfaces when new evidence threatens to expose his secret, putting his family and carefully protected truth at risk in a climactic game of wits.",
+    "director": "Abhishek Pathak",
+    "producer": "Kumar Mangat Pathak; Abhishek Pathak",
+    "duration": "2h 45m",
+    "rating": 9,
+    "votesCount": 38200,
+    "parentalRating": "UA",
+    "releaseDate": "2026-10-02",
+    "genres": [
+      "Thriller",
+      "Crime",
+      "Drama"
+    ],
+    "languages": [
+      "Hindi"
+    ],
+    "formats": [
+      "2D",
+      "Dolby Atmos"
+    ],
+    "city": "Surat",
+    "targetCity": "Surat",
+    "poster": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80",
+    "banner": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1920&q=80",
+    "trailerUrl": "https://www.youtube.com/watch?v=fneuVQ7uO_w",
+    "status": "Now Showing",
+    "featured": true
+  },
+  {
+    "id": "mov_prem_keetanu",
+    "title": "Prem Keetanu",
+    "tagline": "A Viral Love Story of Mismatched Hearts",
+    "synopsis": "A refreshing romantic comedy featuring Veer Pahariya, Aafiya Sayed, and Aparshakti Khurana as two young souls discover that the biggest infection in the world is love.",
+    "director": "Apoorv Singh Karki",
+    "producer": "Gaurav Verma",
+    "duration": "2h 18m",
+    "rating": 9.9,
+    "votesCount": 29400,
+    "parentalRating": "UA 16+",
+    "releaseDate": "2026-10-02",
+    "genres": [
+      "Romance",
+      "Comedy"
+    ],
+    "languages": [
+      "Hindi"
+    ],
+    "formats": [
+      "2D"
+    ],
+    "city": "Surat",
+    "targetCity": "Surat",
+    "poster": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+    "banner": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1920&q=80",
+    "trailerUrl": "https://www.youtube.com/watch?v=KVnheWaLUXs",
+    "status": "Now Showing",
+    "featured": true
+  },
+  {
+    "id": "mov_the_vvaan",
+    "title": "The Vvaan: Force of the Forrest",
+    "tagline": "Ancient Spirits of Vandevi Awaken",
+    "synopsis": "Rishi returns to his ancestral village to sell inherited land, awakening folklore surrounding Vandevi and a forbidden forest with supernatural forces.",
+    "director": "Deepak Kumar Mishra",
+    "producer": "Shobha Kapoor, Ektaa R Kapoor, Arunabh Kumar",
+    "duration": "2h 35m",
+    "rating": 8.5,
+    "votesCount": 19800,
+    "parentalRating": "UA 16+",
+    "releaseDate": "2026-09-25",
+    "genres": [
+      "Action",
+      "Adventure",
+      "Fantasy",
+      "Mystery",
+      "Thriller"
+    ],
+    "languages": [
+      "Hindi"
+    ],
+    "formats": [
+      "2D",
+      "Dolby Atmos"
+    ],
+    "city": "Surat",
+    "targetCity": "Surat",
+    "poster": "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=800&q=80",
+    "banner": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80",
+    "trailerUrl": "https://www.youtube.com/watch?v=fneuVQ7uO_w",
+    "status": "Now Showing",
+    "featured": false
+  },
+  {
+    "id": "mov_the_paradise",
+    "title": "The Paradise",
+    "tagline": "Raw Power Struggles in the Slums of Secunderabad",
+    "synopsis": "\"The Paradise\" is an intense period action-drama film set up in a slum of Secunderabad, navigating power politics, survival, and brotherhood.",
+    "director": "Srikanth Odela",
+    "producer": "Sudhakar Cherukuri",
+    "duration": "2h 42m",
+    "rating": 7.4,
+    "votesCount": 15600,
+    "parentalRating": "A",
+    "releaseDate": "2026-09-24",
+    "genres": [
+      "Action",
+      "Adventure",
+      "Drama"
+    ],
+    "languages": [
+      "Hindi",
+      "Telugu"
+    ],
+    "formats": [
+      "2D"
+    ],
+    "city": "Surat",
+    "targetCity": "Surat",
+    "poster": "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
+    "banner": "https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=1920&q=80",
+    "trailerUrl": "https://youtu.be/namFQ8wFdIA",
+    "status": "Now Showing",
+    "featured": false
+  },
+  {
+    "id": "mov_mirzapur_the_movie",
+    "title": "Mirzapur: The Movie",
+    "tagline": "King of Mirzapur: The Grand Theatrical War",
+    "synopsis": "A high-octane crime-action story based on the iconic Mirzapur franchise. The violent throne of Purvanchal is contested once more on the silver screen.",
+    "director": "Gurmmeet Singh",
+    "producer": "Ritesh Sidhwani, Farhan Akhtar",
+    "duration": "2h 50m",
+    "rating": 9.1,
+    "votesCount": 52100,
+    "parentalRating": "A",
+    "releaseDate": "2026-09-04",
+    "genres": [
+      "Crime",
+      "Action",
+      "Thriller"
+    ],
+    "languages": [
+      "Hindi"
+    ],
+    "formats": [
+      "2D",
+      "Dolby Atmos"
+    ],
+    "city": "Surat",
+    "targetCity": "Surat",
+    "poster": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80",
+    "banner": "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1920&q=80",
+    "trailerUrl": "https://www.youtube.com/watch?v=fneuVQ7uO_w",
+    "status": "Now Showing",
+    "featured": true
+  },
+  {
+    "id": "mov_hanuman_ansh",
+    "title": "Hanuman Ansh",
+    "tagline": "The Spiritual Legacy of Neem Karoli Baba",
+    "synopsis": "The film chronicles Lakshminarayan’s spiritual journey and the divine experiences that lead to his becoming the globally revered mystic Neem Karoli Baba.",
+    "director": "Vishal Chaturvedi",
+    "producer": "Anupriya Nagar, Namrata G Singh, Piyush Thakur",
+    "duration": "2h 20m",
+    "rating": 9.6,
+    "votesCount": 31200,
+    "parentalRating": "U",
+    "releaseDate": "2026-08-07",
+    "genres": [
+      "Biography",
+      "Devotional",
+      "Drama"
+    ],
+    "languages": [
+      "Hindi"
+    ],
+    "formats": [
+      "2D"
+    ],
+    "city": "Surat",
+    "targetCity": "Surat",
+    "poster": "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=800&q=80",
+    "banner": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1920&q=80",
+    "trailerUrl": "https://www.youtube.com/watch?v=fneuVQ7uO_w",
+    "status": "Now Showing",
+    "featured": true
+  },
+  {
+    "id": "mov_doraemon_castle",
+    "title": "Doraemon: Castle of the Undersea Devil",
+    "tagline": "Deep Sea Adventures Beyond Imagination",
+    "synopsis": "Nobita, Doraemon, and friends embark on an undersea adventure in the deep oceanic realms of the Bermuda Triangle to face a mechanical menace.",
+    "director": "Tetsuo Yajima",
+    "producer": "Shin-Ei Animation",
+    "duration": "1h 45m",
+    "rating": 9,
+    "votesCount": 22800,
+    "parentalRating": "U",
+    "releaseDate": "2026-10-02",
+    "genres": [
+      "Animation",
+      "Family",
+      "Adventure",
+      "Comedy"
+    ],
+    "languages": [
+      "Hindi"
+    ],
+    "formats": [
+      "2D"
+    ],
+    "city": "Surat",
+    "targetCity": "Surat",
+    "poster": "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80",
+    "banner": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80",
+    "trailerUrl": "https://www.youtube.com/watch?v=KVnheWaLUXs",
+    "status": "Now Showing",
+    "featured": false
+  },
+  {
+    "id": "mov_mitrata_gujarati",
+    "title": "Mitrata",
+    "tagline": "Dosti, Pagalpanti & Gujju Swag",
+    "synopsis": "A heartfelt Gujarati drama-comedy featuring Viraj Ghelani, Deep Vaidya, Vishal Parekh, and Vishwaa Joshi celebrating friendship, dreams, and family ties.",
+    "director": "Oneel Karnik",
+    "producer": "Parthiv Gohil, Manasi Parekh",
+    "duration": "2h 25m",
+    "rating": 9.5,
+    "votesCount": 27500,
+    "parentalRating": "UA",
+    "releaseDate": "2026-09-25",
+    "genres": [
+      "Drama",
+      "Comedy"
+    ],
+    "languages": [
+      "Gujarati"
+    ],
+    "formats": [
+      "2D"
+    ],
+    "city": "Surat",
+    "targetCity": "Surat",
+    "poster": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80",
+    "banner": "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1920&q=80",
+    "trailerUrl": "https://www.youtube.com/watch?v=fneuVQ7uO_w",
+    "status": "Now Showing",
+    "featured": true
+  }
+]

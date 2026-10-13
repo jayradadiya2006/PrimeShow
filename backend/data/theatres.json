@@ -1,0 +1,1299 @@
+[
+  {
+    "id": "th_surat_inox_vr",
+    "name": "INOX, VR Mall",
+    "city": "Surat",
+    "state": "Gujarat",
+    "address": "3rd Floor, VR Surat Mall, Dumas Road, Magdalla, Surat, Gujarat 395007",
+    "facilities": [
+      "IMAX",
+      "Dolby Atmos",
+      "VIP Recliners",
+      "Food Court",
+      "Wheelchair Accessible",
+      "Valet Parking"
+    ],
+    "screensCount": 6,
+    "totalSeats": 900,
+    "image": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=11969252147070215358",
+    "screens": [
+      {
+        "id": "th_surat_inox_vr_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_surat_inox_vr_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_surat_inox_vr_sh_1",
+        "screenId": "th_surat_inox_vr_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_surat_inox_vr_sh_2",
+        "screenId": "th_surat_inox_vr_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_surat_inox_vr_sh_3",
+        "screenId": "th_surat_inox_vr_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_surat_inox_vr_sh_4",
+        "screenId": "th_surat_inox_vr_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_surat_pvr_rahul_raj",
+    "name": "PVR, Rahul Raj Mall",
+    "city": "Surat",
+    "state": "Gujarat",
+    "address": "3rd Floor, Rahul Raj Mall, Opp. Goverdhan Haveli, Dumas Road, Piplod, Surat, Gujarat 395007",
+    "facilities": [
+      "4K Laser Projection",
+      "Dolby 7.1",
+      "Recliner Seats",
+      "Parking",
+      "Cafeteria"
+    ],
+    "screensCount": 8,
+    "totalSeats": 1400,
+    "image": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=4763180887078352650",
+    "screens": [
+      {
+        "id": "th_surat_pvr_rahul_raj_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_surat_pvr_rahul_raj_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_surat_pvr_rahul_raj_sh_1",
+        "screenId": "th_surat_pvr_rahul_raj_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_surat_pvr_rahul_raj_sh_2",
+        "screenId": "th_surat_pvr_rahul_raj_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_surat_pvr_rahul_raj_sh_3",
+        "screenId": "th_surat_pvr_rahul_raj_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_surat_pvr_rahul_raj_sh_4",
+        "screenId": "th_surat_pvr_rahul_raj_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_surat_rajhans_ar_mall",
+    "name": "Rajhans Multiplex - AR Mall",
+    "city": "Surat",
+    "state": "Gujarat",
+    "address": "Fl 7, AR mall, Rajhans Multiplex, Mota Varachha, Surat, Gujarat 394105",
+    "facilities": [
+      "RealD 3D",
+      "Dolby Atmos",
+      "Gourmet Food",
+      "Luxury Rocker Seats"
+    ],
+    "screensCount": 5,
+    "totalSeats": 1100,
+    "image": "https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.app.goo.gl/3FcUCvP35DzWyubg6",
+    "screens": [
+      {
+        "id": "th_surat_rajhans_ar_mall_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_surat_rajhans_ar_mall_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_surat_rajhans_ar_mall_sh_1",
+        "screenId": "th_surat_rajhans_ar_mall_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_surat_rajhans_ar_mall_sh_2",
+        "screenId": "th_surat_rajhans_ar_mall_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_surat_rajhans_ar_mall_sh_3",
+        "screenId": "th_surat_rajhans_ar_mall_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_surat_rajhans_ar_mall_sh_4",
+        "screenId": "th_surat_rajhans_ar_mall_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_surat_rajhans_pal",
+    "name": "Rajhans Cinemas, Pal",
+    "city": "Surat",
+    "state": "Gujarat",
+    "address": "Rajhans Multiplex, Hazira Road, Opp. Navyug College, Pal, Adajan Gam, Surat, Gujarat 394510",
+    "facilities": [
+      "Dolby Atmos",
+      "3D Screens",
+      "Executive Seating",
+      "Food Lounge"
+    ],
+    "screensCount": 4,
+    "totalSeats": 950,
+    "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6vgih7YxqrDcQXozRqvu4VSpU_YiALbLT5Hc92sz_Tg&s=10",
+    "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCBDGyLPGiQQn4V5aohNWkDL4682UZ6X4sE5jTD6gmug&s=10",
+    "locationLink": "https://maps.google.com/?cid=18305607599940007495",
+    "screens": [
+      {
+        "id": "th_surat_rajhans_pal_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_surat_rajhans_pal_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_surat_rajhans_pal_sh_1",
+        "screenId": "th_surat_rajhans_pal_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_surat_rajhans_pal_sh_2",
+        "screenId": "th_surat_rajhans_pal_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_surat_rajhans_pal_sh_3",
+        "screenId": "th_surat_rajhans_pal_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_surat_rajhans_pal_sh_4",
+        "screenId": "th_surat_rajhans_pal_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_surat_valentine",
+    "name": "Valentine Multiplex",
+    "city": "Surat",
+    "state": "Gujarat",
+    "address": "Dumas Road, Piplod, Near Valentine Mall, Surat, Gujarat 395007",
+    "facilities": [
+      "Dolby Digital",
+      "Push-back Seats",
+      "Food Court",
+      "Game Zone"
+    ],
+    "screensCount": 4,
+    "totalSeats": 840,
+    "image": "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=15926719119619078652",
+    "screens": [
+      {
+        "id": "th_surat_valentine_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_surat_valentine_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_surat_valentine_sh_1",
+        "screenId": "th_surat_valentine_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_surat_valentine_sh_2",
+        "screenId": "th_surat_valentine_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_surat_valentine_sh_3",
+        "screenId": "th_surat_valentine_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_surat_valentine_sh_4",
+        "screenId": "th_surat_valentine_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_ahmedabad_pvr_acropolis",
+    "name": "PVR, Acropolis Mall",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "address": "3rd Floor, Acropolis Mall, Thaltej Cross Road, SG Highway, Thaltej, Ahmedabad, Gujarat 380059",
+    "facilities": [
+      "PVR Gold Class",
+      "IMAX",
+      "Dolby Atmos",
+      "Recliners",
+      "Valet Parking"
+    ],
+    "screensCount": 6,
+    "totalSeats": 1420,
+    "image": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=2902605600566376891",
+    "screens": [
+      {
+        "id": "th_ahmedabad_pvr_acropolis_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_ahmedabad_pvr_acropolis_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_ahmedabad_pvr_acropolis_sh_1",
+        "screenId": "th_ahmedabad_pvr_acropolis_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_ahmedabad_pvr_acropolis_sh_2",
+        "screenId": "th_ahmedabad_pvr_acropolis_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_ahmedabad_pvr_acropolis_sh_3",
+        "screenId": "th_ahmedabad_pvr_acropolis_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_ahmedabad_pvr_acropolis_sh_4",
+        "screenId": "th_ahmedabad_pvr_acropolis_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_ahmedabad_cinepolis_nexus",
+    "name": "Cinepolis, Nexus Ahmedabad One Mall",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "address": "4th Floor, Nexus Ahmedabad One Mall, Near Vastrapur Lake, Vastrapur, Ahmedabad, Gujarat 380054",
+    "facilities": [
+      "4DX",
+      "RealD 3D",
+      "Dolby Atmos",
+      "VIP Club",
+      "Gourmet Dining"
+    ],
+    "screensCount": 7,
+    "totalSeats": 1580,
+    "image": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=11501586836441489551",
+    "screens": [
+      {
+        "id": "th_ahmedabad_cinepolis_nexus_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_ahmedabad_cinepolis_nexus_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_ahmedabad_cinepolis_nexus_sh_1",
+        "screenId": "th_ahmedabad_cinepolis_nexus_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_ahmedabad_cinepolis_nexus_sh_2",
+        "screenId": "th_ahmedabad_cinepolis_nexus_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_ahmedabad_cinepolis_nexus_sh_3",
+        "screenId": "th_ahmedabad_cinepolis_nexus_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_ahmedabad_cinepolis_nexus_sh_4",
+        "screenId": "th_ahmedabad_cinepolis_nexus_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_vadodara_cinepolis_inorbit",
+    "name": "Cinepolis, Inorbit Mall",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "address": "2nd Floor, Inorbit Mall, Alembic Road, Subhanpura, Vadodara, Gujarat 390023",
+    "facilities": [
+      "Dolby Atmos",
+      "3D Projection",
+      "Recliner Lounges",
+      "Food & Beverages"
+    ],
+    "screensCount": 6,
+    "totalSeats": 1280,
+    "image": "https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=5668436399448718293",
+    "screens": [
+      {
+        "id": "th_vadodara_cinepolis_inorbit_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_vadodara_cinepolis_inorbit_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_vadodara_cinepolis_inorbit_sh_1",
+        "screenId": "th_vadodara_cinepolis_inorbit_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_vadodara_cinepolis_inorbit_sh_2",
+        "screenId": "th_vadodara_cinepolis_inorbit_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_vadodara_cinepolis_inorbit_sh_3",
+        "screenId": "th_vadodara_cinepolis_inorbit_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_vadodara_cinepolis_inorbit_sh_4",
+        "screenId": "th_vadodara_cinepolis_inorbit_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_vadodara_pvr_transcube",
+    "name": "PVR, Transcube Plaza Mall",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "address": "3rd Floor, Central Bus Terminal, Ved Transcube Plaza, Sayajiganj, Vadodara, Gujarat 390007",
+    "facilities": [
+      "4K Projection",
+      "Dolby 7.1",
+      "Push-back Seating",
+      "Wheelchair Access"
+    ],
+    "screensCount": 7,
+    "totalSeats": 1450,
+    "image": "https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=2082923779900837823",
+    "screens": [
+      {
+        "id": "th_vadodara_pvr_transcube_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_vadodara_pvr_transcube_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_vadodara_pvr_transcube_sh_1",
+        "screenId": "th_vadodara_pvr_transcube_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_vadodara_pvr_transcube_sh_2",
+        "screenId": "th_vadodara_pvr_transcube_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_vadodara_pvr_transcube_sh_3",
+        "screenId": "th_vadodara_pvr_transcube_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_vadodara_pvr_transcube_sh_4",
+        "screenId": "th_vadodara_pvr_transcube_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_rajkot_inox_crystal",
+    "name": "INOX, R World Crystal Mall",
+    "city": "Rajkot",
+    "state": "Gujarat",
+    "address": "3rd Floor, Crystal Mall, Kalawad Road, Opp. Rani Tower, Rajkot, Gujarat 360005",
+    "facilities": [
+      "Insignia Lounge",
+      "Dolby Atmos",
+      "RealD 3D",
+      "Recliner Seats"
+    ],
+    "screensCount": 4,
+    "totalSeats": 980,
+    "image": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=12648712391283120191",
+    "screens": [
+      {
+        "id": "th_rajkot_inox_crystal_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_rajkot_inox_crystal_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_rajkot_inox_crystal_sh_1",
+        "screenId": "th_rajkot_inox_crystal_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_rajkot_inox_crystal_sh_2",
+        "screenId": "th_rajkot_inox_crystal_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_rajkot_inox_crystal_sh_3",
+        "screenId": "th_rajkot_inox_crystal_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_rajkot_inox_crystal_sh_4",
+        "screenId": "th_rajkot_inox_crystal_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_rajkot_cosmoplex",
+    "name": "Cosmoplex Cinema",
+    "city": "Rajkot",
+    "state": "Gujarat",
+    "address": "Kalawad Road, Near Mota Mava, Rajkot, Gujarat 360005",
+    "facilities": [
+      "Dolby Atmos",
+      "3D Digital",
+      "Food Court",
+      "Parking Facility"
+    ],
+    "screensCount": 5,
+    "totalSeats": 1120,
+    "image": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=8912301842918239012",
+    "screens": [
+      {
+        "id": "th_rajkot_cosmoplex_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_rajkot_cosmoplex_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_rajkot_cosmoplex_sh_1",
+        "screenId": "th_rajkot_cosmoplex_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_rajkot_cosmoplex_sh_2",
+        "screenId": "th_rajkot_cosmoplex_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_rajkot_cosmoplex_sh_3",
+        "screenId": "th_rajkot_cosmoplex_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_rajkot_cosmoplex_sh_4",
+        "screenId": "th_rajkot_cosmoplex_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_valsad_rajhans",
+    "name": "Rajhans Cinemas, Valsad",
+    "city": "Valsad",
+    "state": "Gujarat",
+    "address": "Dharampur Road, Near Abrama, Valsad, Gujarat 396001",
+    "facilities": [
+      "2K Digital Projection",
+      "Dolby 7.1 Surround",
+      "Snack Counter",
+      "AC Waiting Area"
+    ],
+    "screensCount": 3,
+    "totalSeats": 650,
+    "image": "https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=16239102830192830192",
+    "screens": [
+      {
+        "id": "th_valsad_rajhans_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_valsad_rajhans_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_valsad_rajhans_sh_1",
+        "screenId": "th_valsad_rajhans_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_valsad_rajhans_sh_2",
+        "screenId": "th_valsad_rajhans_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_valsad_rajhans_sh_3",
+        "screenId": "th_valsad_rajhans_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_valsad_rajhans_sh_4",
+        "screenId": "th_valsad_rajhans_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_valsad_pvr_jalaram",
+    "name": "PVR, Jalaram Plaza",
+    "city": "Valsad",
+    "state": "Gujarat",
+    "address": "Near Tithal Road Cross, Station Area, Valsad, Gujarat 396001",
+    "facilities": [
+      "Dolby Atmos",
+      "Executive Recliner Seating",
+      "Cafeteria"
+    ],
+    "screensCount": 3,
+    "totalSeats": 590,
+    "image": "https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=14298102938192038102",
+    "screens": [
+      {
+        "id": "th_valsad_pvr_jalaram_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_valsad_pvr_jalaram_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_valsad_pvr_jalaram_sh_1",
+        "screenId": "th_valsad_pvr_jalaram_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_valsad_pvr_jalaram_sh_2",
+        "screenId": "th_valsad_pvr_jalaram_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_valsad_pvr_jalaram_sh_3",
+        "screenId": "th_valsad_pvr_jalaram_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_valsad_pvr_jalaram_sh_4",
+        "screenId": "th_valsad_pvr_jalaram_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_anand_inox_maruti",
+    "name": "INOX, Maruti Solaris Mall",
+    "city": "Anand",
+    "state": "Gujarat",
+    "address": "Maruti Solaris Mall, Anand - Vidyanagar Road, Anand, Gujarat 388001",
+    "facilities": [
+      "Dolby Atmos",
+      "3D Screens",
+      "Gourmet Food Court",
+      "Lift & Parking"
+    ],
+    "screensCount": 4,
+    "totalSeats": 860,
+    "image": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=10928301928301928301",
+    "screens": [
+      {
+        "id": "th_anand_inox_maruti_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_anand_inox_maruti_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_anand_inox_maruti_sh_1",
+        "screenId": "th_anand_inox_maruti_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_anand_inox_maruti_sh_2",
+        "screenId": "th_anand_inox_maruti_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_anand_inox_maruti_sh_3",
+        "screenId": "th_anand_inox_maruti_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_anand_inox_maruti_sh_4",
+        "screenId": "th_anand_inox_maruti_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_anand_city_pulse",
+    "name": "City Pulse Cinemas, Anand",
+    "city": "Anand",
+    "state": "Gujarat",
+    "address": "Near Borsad Crossroads, Anand Town, Anand, Gujarat 388001",
+    "facilities": [
+      "Dolby Digital",
+      "Push-back Seats",
+      "Snack Kiosks",
+      "Parking"
+    ],
+    "screensCount": 3,
+    "totalSeats": 620,
+    "image": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=13098192830192831092",
+    "screens": [
+      {
+        "id": "th_anand_city_pulse_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_anand_city_pulse_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_anand_city_pulse_sh_1",
+        "screenId": "th_anand_city_pulse_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_anand_city_pulse_sh_2",
+        "screenId": "th_anand_city_pulse_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_anand_city_pulse_sh_3",
+        "screenId": "th_anand_city_pulse_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_anand_city_pulse_sh_4",
+        "screenId": "th_anand_city_pulse_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_bharuch_inox_shalimar",
+    "name": "INOX, Shalimar Fort Mall",
+    "city": "Bharuch",
+    "state": "Gujarat",
+    "address": "Shalimar Fort Mall, Bholav, Bharuch, Gujarat 392002",
+    "facilities": [
+      "Dolby Atmos",
+      "3D",
+      "VIP Recliners",
+      "Food Kiosk",
+      "Escalators"
+    ],
+    "screensCount": 4,
+    "totalSeats": 810,
+    "image": "https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=17892019283019283019",
+    "screens": [
+      {
+        "id": "th_bharuch_inox_shalimar_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_bharuch_inox_shalimar_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_bharuch_inox_shalimar_sh_1",
+        "screenId": "th_bharuch_inox_shalimar_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_bharuch_inox_shalimar_sh_2",
+        "screenId": "th_bharuch_inox_shalimar_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_bharuch_inox_shalimar_sh_3",
+        "screenId": "th_bharuch_inox_shalimar_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_bharuch_inox_shalimar_sh_4",
+        "screenId": "th_bharuch_inox_shalimar_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_bharuch_rajhans",
+    "name": "Rajhans Cinemas, Bharuch",
+    "city": "Bharuch",
+    "state": "Gujarat",
+    "address": "Near Zadeshwar Road, Bholav, Bharuch, Gujarat 392011",
+    "facilities": [
+      "2K Projection",
+      "Dolby Surround",
+      "Pushback Seating",
+      "Canteen"
+    ],
+    "screensCount": 3,
+    "totalSeats": 690,
+    "image": "https://images.unsplash.com/photo-1595769816263-9b910be24d5f?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=15829102938102938190",
+    "screens": [
+      {
+        "id": "th_bharuch_rajhans_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_bharuch_rajhans_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_bharuch_rajhans_sh_1",
+        "screenId": "th_bharuch_rajhans_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_bharuch_rajhans_sh_2",
+        "screenId": "th_bharuch_rajhans_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_bharuch_rajhans_sh_3",
+        "screenId": "th_bharuch_rajhans_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_bharuch_rajhans_sh_4",
+        "screenId": "th_bharuch_rajhans_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_bhavnagar_pvr_victoria",
+    "name": "PVR, Victoria Park Mall",
+    "city": "Bhavnagar",
+    "state": "Gujarat",
+    "address": "Near Victoria Park Road, Kalanala, Bhavnagar, Gujarat 364002",
+    "facilities": [
+      "4K Laser Projection",
+      "Dolby Atmos",
+      "Recliners",
+      "Food Court"
+    ],
+    "screensCount": 4,
+    "totalSeats": 790,
+    "image": "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=19827391029381029381",
+    "screens": [
+      {
+        "id": "th_bhavnagar_pvr_victoria_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_bhavnagar_pvr_victoria_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_bhavnagar_pvr_victoria_sh_1",
+        "screenId": "th_bhavnagar_pvr_victoria_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_bhavnagar_pvr_victoria_sh_2",
+        "screenId": "th_bhavnagar_pvr_victoria_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_bhavnagar_pvr_victoria_sh_3",
+        "screenId": "th_bhavnagar_pvr_victoria_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_bhavnagar_pvr_victoria_sh_4",
+        "screenId": "th_bhavnagar_pvr_victoria_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  },
+  {
+    "id": "th_bhavnagar_top3",
+    "name": "Top3 Cinemas",
+    "city": "Bhavnagar",
+    "state": "Gujarat",
+    "address": "Waghavadi Road, Near Hill Drive, Bhavnagar, Gujarat 364001",
+    "facilities": [
+      "Dolby 7.1",
+      "3D Glasses Provided",
+      "Cafeteria",
+      "Parking"
+    ],
+    "screensCount": 3,
+    "totalSeats": 580,
+    "image": "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1200&q=80",
+    "logo": "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=300&q=80",
+    "locationLink": "https://maps.google.com/?cid=14981920381029381923",
+    "screens": [
+      {
+        "id": "th_bhavnagar_top3_sc_1",
+        "name": "Audi 1 - Laser Atmos",
+        "totalSeats": 150,
+        "rows": 10,
+        "cols": 15
+      },
+      {
+        "id": "th_bhavnagar_top3_sc_2",
+        "name": "Audi 2 - VIP Recliner",
+        "totalSeats": 100,
+        "rows": 8,
+        "cols": 12
+      }
+    ],
+    "shows": [
+      {
+        "id": "th_bhavnagar_top3_sh_1",
+        "screenId": "th_bhavnagar_top3_sc_1",
+        "time": "10:00 AM",
+        "format": "Dolby Atmos",
+        "price": 250,
+        "availableSeats": 120
+      },
+      {
+        "id": "th_bhavnagar_top3_sh_2",
+        "screenId": "th_bhavnagar_top3_sc_1",
+        "time": "01:30 PM",
+        "format": "Dolby Atmos",
+        "price": 300,
+        "availableSeats": 95
+      },
+      {
+        "id": "th_bhavnagar_top3_sh_3",
+        "screenId": "th_bhavnagar_top3_sc_2",
+        "time": "06:00 PM",
+        "format": "VIP Recliner",
+        "price": 450,
+        "availableSeats": 70
+      },
+      {
+        "id": "th_bhavnagar_top3_sh_4",
+        "screenId": "th_bhavnagar_top3_sc_2",
+        "time": "09:30 PM",
+        "format": "VIP Recliner",
+        "price": 500,
+        "availableSeats": 85
+      }
+    ]
+  }
+]
