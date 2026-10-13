@@ -351,11 +351,35 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
-    socket.on('NOTIFICATION_BROADCAST', (notif) => {
+    const handleNotificationCreated = (notif) => {
       if (notif) {
-        setNotifications(prev => [notif, ...prev]);
+        setNotifications(prev => {
+          const docId = notif.id || notif.notification_id;
+          const exists = prev.some(n => n.id === docId || n.notification_id === docId);
+          if (exists) return prev.map(n => (n.id === docId || n.notification_id === docId) ? { ...n, ...notif } : n);
+          return [notif, ...prev];
+        });
       }
-    });
+    };
+
+    const handleNotificationUpdated = (updated) => {
+      if (updated) {
+        const docId = updated.id || updated.notification_id;
+        setNotifications(prev => prev.map(n => (n.id === docId || n.notification_id === docId) ? { ...n, ...updated } : n));
+      }
+    };
+
+    const handleNotificationDeleted = (data) => {
+      const idToDelete = data?.id || data?.deletedId;
+      if (idToDelete) {
+        setNotifications(prev => prev.filter(n => n.id !== idToDelete && n.notification_id !== idToDelete));
+      }
+    };
+
+    socket.on('NOTIFICATION_BROADCAST', handleNotificationCreated);
+    socket.on('NOTIFICATION_CREATED', handleNotificationCreated);
+    socket.on('NOTIFICATION_UPDATED', handleNotificationUpdated);
+    socket.on('NOTIFICATION_DELETED', handleNotificationDeleted);
 
     // 2b. Live Support Chat Real-Time Socket Listeners (NEW_SUPPORT_MESSAGE, SUPPORT_MESSAGE_REPLIED, receive_message)
     const handleNewSupportMessage = (msg) => {
@@ -447,6 +471,9 @@ export const AuthProvider = ({ children }) => {
       socket.off('GLOBAL_STATE_UPDATED');
       socket.off('client_content_sync');
       socket.off('NOTIFICATION_BROADCAST');
+      socket.off('NOTIFICATION_CREATED');
+      socket.off('NOTIFICATION_UPDATED');
+      socket.off('NOTIFICATION_DELETED');
       socket.off('NEW_SUPPORT_MESSAGE');
       socket.off('SUPPORT_MESSAGE_REPLIED');
       socket.off('SUPPORT_MESSAGES_CLEARED');

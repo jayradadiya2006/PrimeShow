@@ -4,7 +4,7 @@ const http = require('http');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -227,6 +227,27 @@ const DataStore = {
   },
 
   findOne: async (collName, filter = {}) => {
+    const coll = DataStore.getCollection(collName);
+    if (coll) {
+      try {
+        let mongoFilter = { ...filter };
+        if (filter.id) {
+          mongoFilter = {
+            $or: [
+              { id: filter.id },
+              ...(ObjectId.isValid(filter.id) ? [{ _id: new ObjectId(filter.id) }] : [])
+            ]
+          };
+        }
+        const doc = await coll.findOne(mongoFilter);
+        if (doc) {
+          const { _id, ...rest } = doc;
+          return { id: doc.id || (_id ? _id.toString() : undefined), ...rest };
+        }
+      } catch (e) {
+        console.error(`MongoDB findOne error on ${collName}:`, e.message);
+      }
+    }
     const results = await DataStore.find(collName, filter);
     return results.length > 0 ? results[0] : null;
   },
@@ -235,7 +256,16 @@ const DataStore = {
     const coll = DataStore.getCollection(collName);
     if (coll) {
       try {
-        await coll.updateOne(filter, { $set: updateObj }, { upsert: true });
+        let mongoFilter = { ...filter };
+        if (filter.id) {
+          mongoFilter = {
+            $or: [
+              { id: filter.id },
+              ...(ObjectId.isValid(filter.id) ? [{ _id: new ObjectId(filter.id) }] : [])
+            ]
+          };
+        }
+        await coll.updateOne(mongoFilter, { $set: updateObj });
       } catch (e) {
         console.error(`MongoDB updateOne error on ${collName}:`, e.message);
       }
@@ -247,7 +277,7 @@ const DataStore = {
         let items = JSON.parse(fs.readFileSync(filePath, 'utf8')) || [];
         let matched = false;
         items = items.map(item => {
-          const isMatch = Object.keys(filter).every(k => String(item[k]) === String(filter[k]));
+          const isMatch = Object.keys(filter).every(k => String(item[k]) === String(filter[k]) || (k === 'id' && (String(item._id) === String(filter.id) || String(item.id) === String(filter.id))));
           if (isMatch) {
             matched = true;
             return { ...item, ...updateObj };
@@ -265,7 +295,16 @@ const DataStore = {
     const coll = DataStore.getCollection(collName);
     if (coll) {
       try {
-        await coll.deleteOne(filter);
+        let mongoFilter = { ...filter };
+        if (filter.id) {
+          mongoFilter = {
+            $or: [
+              { id: filter.id },
+              ...(ObjectId.isValid(filter.id) ? [{ _id: new ObjectId(filter.id) }] : [])
+            ]
+          };
+        }
+        await coll.deleteOne(mongoFilter);
       } catch (e) {
         console.error(`MongoDB deleteOne error on ${collName}:`, e.message);
       }
@@ -275,7 +314,7 @@ const DataStore = {
     if (fs.existsSync(filePath)) {
       try {
         let items = JSON.parse(fs.readFileSync(filePath, 'utf8')) || [];
-        items = items.filter(item => !Object.keys(filter).every(k => String(item[k]) === String(filter[k])));
+        items = items.filter(item => !Object.keys(filter).every(k => String(item[k]) === String(filter[k]) || (k === 'id' && (String(item._id) === String(filter.id) || String(item.id) === String(filter.id)))));
         fs.writeFileSync(filePath, JSON.stringify(items, null, 2));
       } catch (e) {}
     }
@@ -1993,6 +2032,7 @@ app.post([
 
   await DataStore.insertOne('notifications', notifDoc);
   io.emit('NOTIFICATION_CREATED', notifDoc);
+  io.emit('NOTIFICATION_BROADCAST', notifDoc);
 
   res.status(201).json({
     status: true,
@@ -2027,7 +2067,7 @@ app.delete(['/api/notifications/:id', '/api/admin/notifications/:id'], async (re
   const notifId = req.params.id;
   await DataStore.deleteOne('notifications', { id: notifId });
   await DataStore.deleteOne('notifications', { notification_id: notifId });
-  io.emit('NOTIFICATION_DELETED', { id: notifId });
+  io.emit('NOTIFICATION_DELETED', { id: notifId, deletedId: notifId });
   res.json({ status: true, success: true, message: 'Notification deleted successfully' });
 });
 

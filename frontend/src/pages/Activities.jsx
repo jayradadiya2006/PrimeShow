@@ -5,7 +5,7 @@ import { ActivityBookingModal } from '../components/ActivityBookingModal';
 import { useAuth } from '../context/AuthContext';
 
 export const Activities = () => {
-  const { selectedCity } = useAuth();
+  const { selectedCity, socket } = useAuth();
   const [activitiesList, setActivitiesList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,7 +88,47 @@ export const Activities = () => {
 
   useEffect(() => {
     fetchActivities();
-  }, []);
+    if (!socket) return;
+
+    const handleActivityUpdate = (updated) => {
+      if (!updated) {
+        fetchActivities();
+        return;
+      }
+      if (updated.deletedId) {
+        setActivitiesList(prev => prev.filter(a => a.id !== updated.deletedId && a._id !== updated.deletedId));
+        return;
+      }
+      const docId = updated.id || updated._id;
+      if (docId) {
+        setActivitiesList(prev => {
+          const exists = prev.some(a => a.id === docId || a._id === docId);
+          if (exists) return prev.map(a => (a.id === docId || a._id === docId) ? { ...a, ...updated } : a);
+          return [updated, ...prev];
+        });
+      } else {
+        fetchActivities();
+      }
+    };
+
+    socket.on('ACTIVITY_UPDATED', handleActivityUpdate);
+    socket.on('ACTIVITIES_UPDATED', handleActivityUpdate);
+    socket.on('ACTIVITY_DELETED', (data) => {
+      const idToDelete = data?.id || data?.deletedId;
+      if (idToDelete) setActivitiesList(prev => prev.filter(a => a.id !== idToDelete && a._id !== idToDelete));
+    });
+    socket.on('ACTIVITIES_DELETED', (data) => {
+      const idToDelete = data?.id || data?.deletedId;
+      if (idToDelete) setActivitiesList(prev => prev.filter(a => a.id !== idToDelete && a._id !== idToDelete));
+    });
+
+    return () => {
+      socket.off('ACTIVITY_UPDATED', handleActivityUpdate);
+      socket.off('ACTIVITIES_UPDATED', handleActivityUpdate);
+      socket.off('ACTIVITY_DELETED');
+      socket.off('ACTIVITIES_DELETED');
+    };
+  }, [socket]);
 
   // Handle clicking outside of search dropdown
   useEffect(() => {
