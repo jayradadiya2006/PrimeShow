@@ -1058,10 +1058,27 @@ app.delete(['/api/offers/banners/:id', '/api/admin/offers/banners/:id'], async (
 // MOVIES & SHOWTIMES ENDPOINTS
 // --------------------------------------------------------------------------
 
+// Helper to prevent bloated base64 in cast from slowing down movie catalog queries
+const sanitizeMoviePayload = (m) => {
+  if (!m) return m;
+  let cleanCast = m.cast;
+  if (Array.isArray(m.cast)) {
+    cleanCast = m.cast.map(c => {
+      if (!c) return c;
+      let photo = c.photo || c.photoUrl || c.image;
+      if (typeof photo === 'string' && photo.length > 50000) {
+        photo = 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80';
+      }
+      return { ...c, photo, photoUrl: photo, image: photo };
+    });
+  }
+  return { ...m, cast: cleanCast };
+};
+
 // Movies CRUD
 app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
   const data = await DataStore.find('movies');
-  res.json(data);
+  res.json((data || []).map(sanitizeMoviePayload));
 });
 
 app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
@@ -1071,7 +1088,7 @@ app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
     const all = await DataStore.find('movies');
     doc = all.find(m => String(m.id || m._id) === mId || (m.title && m.title.toLowerCase() === mId.toLowerCase()));
   }
-  if (doc) return res.json(doc);
+  if (doc) return res.json(sanitizeMoviePayload(doc));
   res.status(404).json({ error: 'Movie not found' });
 });
 

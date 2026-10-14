@@ -4839,12 +4839,17 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 <div className="sm:col-span-4 flex items-center gap-3">
                   <label className="px-4 py-2.5 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shadow-sm">
                     Upload Photo File
-                    <input type="file" accept="image/*" onChange={(e) => {
+                    <input type="file" accept="image/*" onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => setCastPhoto(reader.result);
-                        reader.readAsDataURL(file);
+                        try {
+                          const compressed = await compressImage(file, 300, 0.72);
+                          setCastPhoto(compressed);
+                        } catch (_) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setCastPhoto(reader.result);
+                          reader.readAsDataURL(file);
+                        }
                       }
                     }} className="hidden" />
                   </label>
