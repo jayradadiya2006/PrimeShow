@@ -4,14 +4,14 @@ import { io } from 'socket.io-client';
 import API, { API_BASE } from '../services/api';
 import { PlayBookingModal } from '../components/PlayBookingModal';
 import { useAuth } from '../context/AuthContext';
-import { getSafeImageUrl, SAFE_IMAGE_FALLBACK } from '../utils/imageStorage';
+import { getSafeImageUrl, SAFE_IMAGE_FALLBACK, safeLocalStorageSet, safeLocalStorageGet } from '../utils/imageStorage';
 
 const getSocketBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
   }
   return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:5000'
+    ? 'http://localhost:8000'
     : '';
 };
 const SOCKET_BASE = getSocketBaseUrl();
@@ -133,7 +133,11 @@ const DEFAULT_GUJARAT_PLAYS = [
 
 export const Plays = () => {
   const { selectedCity } = useAuth();
-  const [playsList, setPlaysList] = useState(DEFAULT_GUJARAT_PLAYS);
+  const [playsList, setPlaysList] = useState(() => {
+    const saved = safeLocalStorageGet('primeshow_plays_v1', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+    return DEFAULT_GUJARAT_PLAYS;
+  });
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCity, setActiveCity] = useState('All');
@@ -147,11 +151,18 @@ export const Plays = () => {
   const [selectedPlay, setSelectedPlay] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (playsList && playsList.length > 0) {
+      safeLocalStorageSet('primeshow_plays_v1', playsList);
+    }
+  }, [playsList]);
+
   const fetchPlays = async () => {
     try {
       const res = await API.get('/plays', { params: { t: Date.now() } });
       if (Array.isArray(res.data) && res.data.length > 0) {
         setPlaysList(res.data);
+        safeLocalStorageSet('primeshow_plays_v1', res.data);
       }
     } catch (err) {
       console.warn('⚠️ Fallback using default plays:', err.message);

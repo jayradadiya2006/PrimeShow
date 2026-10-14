@@ -4,14 +4,14 @@ import { io } from 'socket.io-client';
 import { EventBookingModal } from '../components/EventBookingModal';
 import { useAuth } from '../context/AuthContext';
 import API, { API_BASE } from '../services/api';
-import { getSafeImageUrl } from '../utils/imageStorage';
+import { getSafeImageUrl, safeLocalStorageSet, safeLocalStorageGet } from '../utils/imageStorage';
 
 const getSocketBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
   }
   return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:5000'
+    ? 'http://localhost:8000'
     : '';
 };
 const SOCKET_BASE = getSocketBaseUrl();
@@ -189,7 +189,11 @@ export const DEFAULT_GUJARAT_EVENTS = [
 
 export const Events = ({ onSelectEvent, onBookEvent }) => {
   const { selectedCity } = useAuth();
-  const [eventsList, setEventsList] = useState(DEFAULT_GUJARAT_EVENTS);
+  const [eventsList, setEventsList] = useState(() => {
+    const saved = safeLocalStorageGet('primeshow_events_v1', null);
+    if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+    return DEFAULT_GUJARAT_EVENTS;
+  });
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCity, setActiveCity] = useState('All');
@@ -202,6 +206,12 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (eventsList && eventsList.length > 0) {
+      safeLocalStorageSet('primeshow_events_v1', eventsList);
+    }
+  }, [eventsList]);
+
   const fetchEvents = async () => {
     try {
       const res = await API.get('/events', {
@@ -209,8 +219,10 @@ export const Events = ({ onSelectEvent, onBookEvent }) => {
       });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setEventsList(res.data);
+        safeLocalStorageSet('primeshow_events_v1', res.data);
       } else if (res.data && Array.isArray(res.data?.events) && res.data.events.length > 0) {
         setEventsList(res.data.events);
+        safeLocalStorageSet('primeshow_events_v1', res.data.events);
       }
     } catch (err) {
       console.warn('⚠️ Error fetching live events:', err.message);

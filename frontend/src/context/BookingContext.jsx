@@ -10,7 +10,7 @@ const getSocketBaseUrl = () => {
     return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '').replace(/\/api$/, '');
   }
   return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:5000'
+    ? 'http://localhost:8000'
     : '';
 };
 const SOCKET_BASE = getSocketBaseUrl();
@@ -1425,30 +1425,51 @@ export const BookingProvider = ({ children }) => {
       });
       cmsSocket.on('connect_error', () => {});
 
-      cmsSocket.on('MOVIE_UPDATED', (movie) => {
-        console.log('⚡ [BookingContext] Real-time MOVIE_UPDATED received:', movie);
-        if (movie && movie.id) {
+      const handleLiveMovieUpdate = (movie) => {
+        if (!movie) {
+          fetchMovies();
+          return;
+        }
+        if (movie.deletedId) {
           setMoviesList(prev => {
-            const exists = prev.some(m => m.id === movie.id);
-            if (exists) {
-              return prev.map(m => m.id === movie.id ? { ...m, ...movie } : m);
-            } else {
-              return [movie, ...prev];
-            }
+            const updated = prev.filter(m => m.id !== movie.deletedId && m._id !== movie.deletedId);
+            safeLocalStorageSet('primeshow_movies_v1', updated);
+            return updated;
+          });
+          return;
+        }
+        if (movie.id || movie._id) {
+          const docId = movie.id || movie._id;
+          setMoviesList(prev => {
+            const exists = prev.some(m => m.id === docId || m._id === docId);
+            const updated = exists
+              ? prev.map(m => (m.id === docId || m._id === docId) ? { ...m, ...movie } : m)
+              : [movie, ...prev];
+            safeLocalStorageSet('primeshow_movies_v1', updated);
+            return updated;
           });
         } else {
           fetchMovies();
         }
-      });
+      };
 
-      cmsSocket.on('MOVIE_DELETED', (data) => {
-        console.log('⚡ [BookingContext] Real-time MOVIE_DELETED received:', data);
-        if (data && data.id) {
-          setMoviesList(prev => prev.filter(m => m.id !== data.id));
+      const handleLiveMovieDelete = (data) => {
+        const idToDelete = data?.id || data?.deletedId;
+        if (idToDelete) {
+          setMoviesList(prev => {
+            const updated = prev.filter(m => m.id !== idToDelete && m._id !== idToDelete);
+            safeLocalStorageSet('primeshow_movies_v1', updated);
+            return updated;
+          });
         } else {
           fetchMovies();
         }
-      });
+      };
+
+      cmsSocket.on('MOVIE_UPDATED', handleLiveMovieUpdate);
+      cmsSocket.on('MOVIES_UPDATED', handleLiveMovieUpdate);
+      cmsSocket.on('MOVIE_DELETED', handleLiveMovieDelete);
+      cmsSocket.on('MOVIES_DELETED', handleLiveMovieDelete);
 
       cmsSocket.on('THEATRE_UPDATED', () => fetchAllGlobalData());
       cmsSocket.on('THEATRES_UPDATED', () => fetchAllGlobalData());

@@ -15,13 +15,15 @@ const getApiBase = () => {
     }
   }
 
-  // Use explicit environment variable if valid and not the old dead URL
-  if (envUrl && envUrl.trim() && !envUrl.includes('primeshow-api.onrender.com')) {
+  // Use explicit environment variable if valid and not an unreachable Render URL
+  if (envUrl && envUrl.trim() && !envUrl.includes('primeshow-api.onrender.com') && !envUrl.includes('primeshow-d72h.onrender.com')) {
     const clean = envUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
     return clean ? `${clean}/api` : '/api';
   }
 
-  return 'https://primeshow-d72h.onrender.com/api';
+  return typeof window !== 'undefined' && window.location.origin
+    ? `${window.location.origin}/api`
+    : 'http://localhost:8000/api';
 };
 
 const API_BASE = getApiBase();

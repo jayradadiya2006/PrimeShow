@@ -150,7 +150,17 @@ async function connectDB() {
     }
   }
 }
-connectDB();
+let dbPromise = connectDB();
+
+// Ensure MongoDB connection is established before servicing any API requests
+app.use(async (req, res, next) => {
+  if (!db && dbPromise) {
+    try {
+      await dbPromise;
+    } catch (_) {}
+  }
+  next();
+});
 
 // DataStore Engine supporting MongoDB as primary with JSON file fallback
 const DataStore = {
@@ -993,6 +1003,17 @@ app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
   res.json(data);
 });
 
+app.get(['/api/movies/:id', '/api/admin/movies/:id'], async (req, res) => {
+  const mId = decodeURIComponent(req.params.id);
+  let doc = await DataStore.findOne('movies', { id: mId });
+  if (!doc) {
+    const all = await DataStore.find('movies');
+    doc = all.find(m => String(m.id || m._id) === mId || (m.title && m.title.toLowerCase() === mId.toLowerCase()));
+  }
+  if (doc) return res.json(doc);
+  res.status(404).json({ error: 'Movie not found' });
+});
+
 app.post(['/api/movies', '/api/admin/movies'], async (req, res) => {
   const doc = { id: req.body.id || `mov_${Date.now()}`, ...req.body };
   await DataStore.insertOne('movies', doc);
@@ -1152,6 +1173,7 @@ app.post('/api/admin/movies/add-date', async (req, res) => {
     await DataStore.updateOne('movies', { id: movie.id }, { showDates: dates });
     const updatedMovie = { ...movie, showDates: dates };
     io.emit('MOVIES_UPDATED', updatedMovie);
+    io.emit('MOVIE_UPDATED', updatedMovie);
     return res.json({ success: true, message: `Date ${dStr} added to MongoDB`, movie: updatedMovie });
   }
 
@@ -1193,6 +1215,7 @@ app.post('/api/admin/movies/schedule', async (req, res) => {
       await DataStore.updateOne('movies', { id: movie.id }, { schedules, showDates });
       const updatedMovie = { ...movie, schedules, showDates };
       io.emit('MOVIES_UPDATED', updatedMovie);
+      io.emit('MOVIE_UPDATED', updatedMovie);
       return res.json({ success: true, message: 'Show slot saved in MongoDB', movie: updatedMovie });
     } else if (action === 'DELETE_DATE' && dStr) {
       delete schedules[dStr];
@@ -1200,6 +1223,7 @@ app.post('/api/admin/movies/schedule', async (req, res) => {
       await DataStore.updateOne('movies', { id: movie.id }, { schedules, showDates });
       const updatedMovie = { ...movie, schedules, showDates };
       io.emit('MOVIES_UPDATED', updatedMovie);
+      io.emit('MOVIE_UPDATED', updatedMovie);
       return res.json({ success: true, message: `Date ${dStr} deleted from MongoDB`, movie: updatedMovie });
     }
   }
@@ -1422,6 +1446,23 @@ app.get(['/api/theatres', '/api/admin/theatres', '/api/theaters'], async (req, r
     logo: sanitizeMediaUrl(th.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
   }));
   res.json(sanitized);
+});
+
+app.get(['/api/theatres/:id', '/api/admin/theatres/:id', '/api/theaters/:id', '/api/admin/theaters/:id'], async (req, res) => {
+  const thId = decodeURIComponent(req.params.id);
+  let doc = await DataStore.findOne('theatres', { id: thId });
+  if (!doc) {
+    const all = await DataStore.find('theatres');
+    doc = all.find(t => String(t.id || t._id) === thId || (t.name && t.name.toLowerCase() === thId.toLowerCase()));
+  }
+  if (doc) {
+    return res.json({
+      ...doc,
+      image: sanitizeMediaUrl(doc.image),
+      logo: sanitizeMediaUrl(doc.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
+    });
+  }
+  res.status(404).json({ error: 'Theatre not found' });
 });
 
 app.post(['/api/theatres', '/api/admin/theatres', '/api/theaters'], async (req, res) => {
@@ -1909,6 +1950,17 @@ app.post([
   app.get([`/api/${entity}`, `/api/admin/${entity}`], async (req, res) => {
     const data = await DataStore.find(storeName);
     res.json(data);
+  });
+
+  app.get([`/api/${entity}/:id`, `/api/admin/${entity}/:id`], async (req, res) => {
+    const targetId = decodeURIComponent(req.params.id);
+    let doc = await DataStore.findOne(storeName, { id: targetId });
+    if (!doc) {
+      const all = await DataStore.find(storeName);
+      doc = all.find(item => String(item.id || item._id) === targetId || (item.title && item.title.toLowerCase() === targetId.toLowerCase()) || (item.name && item.name.toLowerCase() === targetId.toLowerCase()));
+    }
+    if (doc) return res.json(doc);
+    res.status(404).json({ error: `${singular} not found` });
   });
 
   app.post([`/api/${entity}`, `/api/admin/${entity}`], async (req, res) => {
