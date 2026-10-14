@@ -595,12 +595,39 @@ export const BookingProvider = ({ children }) => {
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setMoviesList(prev => {
           const serverMovies = res.data;
+
+          // Smart merge: Preserve local custom uploaded posters/banners if server returns stock Unsplash fallback
+          const mergedServerMovies = serverMovies.map(s => {
+            const local = (prev || []).find(p => p && (p.id === s.id || p._id === s.id || (p.title && s.title && p.title.toLowerCase().trim() === s.title.toLowerCase().trim())));
+            if (!local) return s;
+
+            const isLocalPosterCustom = local.poster && (local.poster.startsWith('data:image') || !local.poster.includes('images.unsplash.com'));
+            const isServerPosterDefault = !s.poster || s.poster.includes('images.unsplash.com');
+
+            const poster = (isLocalPosterCustom && isServerPosterDefault) ? local.poster : (s.poster || local.poster);
+            const banner = (local.banner && isServerPosterDefault) ? local.banner : (s.banner || local.banner);
+
+            return {
+              ...s,
+              ...local,
+              ...s,
+              poster,
+              posterUrl: poster,
+              image: poster,
+              banner,
+              bannerUrl: banner,
+              backdrop: banner
+            };
+          });
+
+          // Keep movies that only exist locally (e.g. freshly created movies)
           const localOnly = (prev || []).filter(p => 
             p && p.id && !serverMovies.some(s => s.id === p.id || s._id === p.id || (s.title && p.title && s.title.toLowerCase().trim() === p.title.toLowerCase().trim()))
           );
-          const merged = [...localOnly, ...serverMovies];
-          safeLocalStorageSet('primeshow_movies_v1', merged);
-          return merged;
+
+          const finalMerged = [...localOnly, ...mergedServerMovies];
+          safeLocalStorageSet('primeshow_movies_v1', finalMerged);
+          return finalMerged;
         });
       }
     } catch (err) {
@@ -1110,6 +1137,15 @@ export const BookingProvider = ({ children }) => {
       return updated;
     });
 
+    // Real-time broadcast across all tabs and open windows immediately (0ms)
+    try {
+      if (typeof window !== 'undefined' && window.BroadcastChannel) {
+        const bc = new window.BroadcastChannel('primeshow_cms_sync');
+        bc.postMessage({ type: 'MOVIE_UPDATED', movie: moviePayload });
+        bc.close();
+      }
+    } catch (_) {}
+
     try {
       const res = await API.post('/movies', moviePayload);
       const data = res.data;
@@ -1131,11 +1167,27 @@ export const BookingProvider = ({ children }) => {
   };
 
   const updateMovieInGlobalStore = async (movieId, updatedFields) => {
+    let poster = updatedFields.poster || updatedFields.posterUrl || updatedFields.image;
+    let banner = updatedFields.banner || updatedFields.bannerUrl || updatedFields.backdrop;
+
+    if (typeof poster === 'string' && poster.startsWith('data:image') && poster.length > 80000) {
+      try { poster = await compressImage(poster, 800, 0.72); } catch (_) {}
+    }
+    if (typeof banner === 'string' && banner.startsWith('data:image') && banner.length > 80000) {
+      try { banner = await compressImage(banner, 1200, 0.72); } catch (_) {}
+    }
+
+    const payload = {
+      ...updatedFields,
+      ...(poster ? { poster, posterUrl: poster, image: poster } : {}),
+      ...(banner ? { banner, bannerUrl: banner, backdrop: banner } : {})
+    };
+
     let updatedMovieObj = null;
     setMoviesList(prev => {
       const updated = prev.map(m => {
-        if (m.id === movieId || m._id === movieId) {
-          updatedMovieObj = { ...m, ...updatedFields };
+        if (m.id === movieId || m._id === movieId || (m.title && payload.title && m.title.toLowerCase().trim() === payload.title.toLowerCase().trim())) {
+          updatedMovieObj = { ...m, ...payload };
           return updatedMovieObj;
         }
         return m;
@@ -1144,8 +1196,17 @@ export const BookingProvider = ({ children }) => {
       return updated;
     });
 
+    // Real-time broadcast across all tabs and open windows immediately (0ms)
     try {
-      const res = await API.put(`/movies/${encodeURIComponent(movieId)}`, updatedFields);
+      if (typeof window !== 'undefined' && window.BroadcastChannel) {
+        const bc = new window.BroadcastChannel('primeshow_cms_sync');
+        bc.postMessage({ type: 'MOVIE_UPDATED', movie: updatedMovieObj || payload });
+        bc.close();
+      }
+    } catch (_) {}
+
+    try {
+      const res = await API.put(`/movies/${encodeURIComponent(movieId)}`, payload);
       const data = res.data;
       const savedMovie = data.movie || data;
       if (data && (data.success || data.id || data._id || savedMovie.id)) {
@@ -1154,7 +1215,7 @@ export const BookingProvider = ({ children }) => {
     } catch (err) {
       console.warn('⚠️ Server API offline, movie updated in persistent local store:', err.message);
     }
-    return { success: true, movie: updatedMovieObj || updatedFields, offline: true };
+    return { success: true, movie: updatedMovieObj || payload, offline: true };
   };
 
   const deleteMovieFromGlobalStore = async (movieId) => {
@@ -1163,6 +1224,16 @@ export const BookingProvider = ({ children }) => {
       safeLocalStorageSet('primeshow_movies_v1', filtered);
       return filtered;
     });
+
+    // Real-time broadcast across all tabs and open windows immediately (0ms)
+    try {
+      if (typeof window !== 'undefined' && window.BroadcastChannel) {
+        const bc = new window.BroadcastChannel('primeshow_cms_sync');
+        bc.postMessage({ type: 'MOVIE_DELETED', deletedId: movieId });
+        bc.close();
+      }
+    } catch (_) {}
+
     try {
       await API.delete(`/movies/${encodeURIComponent(movieId)}`);
     } catch (err) {
@@ -1503,6 +1574,22 @@ export const BookingProvider = ({ children }) => {
         }
       };
 
+      // Cross-Tab & Cross-Window Instant Real-Time Sync via BroadcastChannel (0ms delay)
+      let cmsChannel = null;
+      if (typeof window !== 'undefined' && window.BroadcastChannel) {
+        try {
+          cmsChannel = new window.BroadcastChannel('primeshow_cms_sync');
+          cmsChannel.onmessage = (event) => {
+            const { type, movie, deletedId } = event.data || {};
+            if (type === 'MOVIE_UPDATED' && movie) {
+              handleLiveMovieUpdate(movie);
+            } else if (type === 'MOVIE_DELETED') {
+              handleLiveMovieDelete({ deletedId });
+            }
+          };
+        } catch (_) {}
+      }
+
       cmsSocket.on('MOVIE_UPDATED', handleLiveMovieUpdate);
       cmsSocket.on('MOVIES_UPDATED', handleLiveMovieUpdate);
       cmsSocket.on('MOVIE_DELETED', handleLiveMovieDelete);
@@ -1587,6 +1674,7 @@ export const BookingProvider = ({ children }) => {
 
     return () => {
       if (cmsSocket) cmsSocket.disconnect();
+      if (cmsChannel) cmsChannel.close();
     };
   }, []);
 

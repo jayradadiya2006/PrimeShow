@@ -61,9 +61,12 @@ const sanitizeMediaUrl = (url, fallback = 'https://images.unsplash.com/photo-148
 let db = null;
 let mongoClient = null;
 
-// Auto-seed MongoDB Atlas or Local database from JSON data files if empty
+let hasAutoSeeded = false;
+
+// Fast Auto-seed MongoDB Atlas or Local database from JSON data files if empty
 async function autoSeedDatabase() {
-  if (!db) return;
+  if (!db || hasAutoSeeded) return;
+  hasAutoSeeded = true;
   const collectionsToSeed = [
     'theatres',
     'events',
@@ -79,32 +82,19 @@ async function autoSeedDatabase() {
   for (const collName of collectionsToSeed) {
     try {
       const coll = db.collection(collName);
+      const count = await coll.estimatedDocumentCount();
+      if (count > 0) continue; // Already populated, skip immediately
+
       const filePath = path.join(__dirname, 'data', `${collName}.json`);
       if (fs.existsSync(filePath)) {
         const items = JSON.parse(fs.readFileSync(filePath, 'utf8')) || [];
         if (Array.isArray(items) && items.length > 0) {
-          const count = await coll.countDocuments();
-          if (count === 0) {
-            await coll.insertMany(items.map(item => ({
-              ...item,
-              image: sanitizeMediaUrl(item.image),
-              logo: sanitizeMediaUrl(item.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
-            })));
-            console.log(`🌱 [AutoSeed] Seeded ${items.length} records into MongoDB collection: '${collName}'`);
-          } else {
-            for (const item of items) {
-              const query = item.id ? { id: item.id } : { name: item.name };
-              const exists = await coll.findOne(query);
-              if (!exists) {
-                await coll.insertOne({
-                  ...item,
-                  image: sanitizeMediaUrl(item.image),
-                  logo: sanitizeMediaUrl(item.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
-                });
-                console.log(`🌱 [AutoSeed] Added missing item '${item.name || item.title || item.id}' to collection '${collName}'`);
-              }
-            }
-          }
+          await coll.insertMany(items.map(item => ({
+            ...item,
+            image: sanitizeMediaUrl(item.image),
+            logo: sanitizeMediaUrl(item.logo, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=300&q=80')
+          })));
+          console.log(`🌱 [AutoSeed] Seeded ${items.length} records into '${collName}'`);
         }
       }
     } catch (e) {
@@ -135,8 +125,9 @@ async function connectDB() {
     }
 
     mongoClient = new MongoClient(uriToUse, {
-      connectTimeoutMS: 3000,
-      serverSelectionTimeoutMS: 3000
+      connectTimeoutMS: 4000,
+      serverSelectionTimeoutMS: 4000,
+      maxPoolSize: 10
     });
     await mongoClient.connect();
 
@@ -148,7 +139,8 @@ async function connectDB() {
     }
 
     console.log(`✅ MongoDB Connected Successfully (${uriToUse.includes('.mongodb.net') ? 'Atlas' : 'Local'}, Database: ${db.databaseName})`);
-    await autoSeedDatabase();
+    // Seed asynchronously without blocking API request lifecycle
+    autoSeedDatabase().catch(err => console.warn('AutoSeed warning:', err.message));
   } catch (err) {
     if (isServerless) {
       console.warn(`⚡ [Serverless]: MongoDB connection bypassed: ${err.message}. File datastore active.`);
@@ -290,12 +282,17 @@ const DataStore = {
       try {
         let mongoFilter = { ...filter };
         if (filter.id) {
-          mongoFilter = {
-            $or: [
-              { id: filter.id },
-              ...(ObjectId.isValid(filter.id) ? [{ _id: new ObjectId(filter.id) }] : [])
-            ]
-          };
+          const conditions = [
+            { id: filter.id },
+            { id: String(filter.id) }
+          ];
+          if (typeof filter.id === 'string' && ObjectId.isValid(filter.id) && filter.id.length === 24) {
+            try { conditions.push({ _id: new ObjectId(filter.id) }); } catch (_) {}
+          }
+          if (updateObj && updateObj.title) {
+            conditions.push({ title: updateObj.title });
+          }
+          mongoFilter = { $or: conditions };
         }
         await coll.updateOne(mongoFilter, { $set: updateObj });
       } catch (e) {
@@ -760,102 +757,144 @@ app.get('/api/admin/overview', async (req, res) => {
 });
 
 // Admin Financial Stats
+// Helper for safe Date parsing from MongoDB Atlas documents
+const safeDateToIsoDate = (val) => {
+  if (!val) return '';
+  if (val instanceof Date) {
+    try { return val.toISOString().split('T')[0]; } catch (_) { return ''; }
+  }
+  if (typeof val === 'string') {
+    return val.split('T')[0];
+  }
+  try {
+    return new Date(val).toISOString().split('T')[0];
+  } catch (_) {
+    return '';
+  }
+};
+
+// Admin Financial Stats
 app.get('/api/admin/financial-stats', async (req, res) => {
-  const bookings = await DataStore.find('bookings');
-  
-  let totalRevenue = 0;
-  let totalTickets = 0;
-  let totalConfirmedBookings = 0;
-  let todayRevenue = 0;
-  let todayBookings = 0;
+  try {
+    const bookings = await DataStore.find('bookings');
+    let totalRevenue = 0;
+    let totalTickets = 0;
+    let totalConfirmedBookings = 0;
+    let todayRevenue = 0;
+    let todayBookings = 0;
 
-  const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
 
-  const categoryBreakdown = { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 };
-  const categoryRevenue = { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 };
+    const categoryBreakdown = { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 };
+    const categoryRevenue = { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 };
 
-  bookings.forEach(b => {
-    const status = (b.status || 'CONFIRMED').toUpperCase();
-    if (status !== 'CANCELLED') {
-      const amt = Number(b.totalAmount || b.price || 0);
-      const tickets = Number(b.seatsBookedCount || b.ticketCount || (Array.isArray(b.seats) ? b.seats.length : 1));
-      
-      totalRevenue += amt;
-      totalTickets += tickets;
-      totalConfirmedBookings += 1;
+    (bookings || []).forEach(b => {
+      const status = (b.status || 'CONFIRMED').toUpperCase();
+      if (status !== 'CANCELLED') {
+        const amt = Number(b.totalAmount || b.price || 0);
+        const tickets = Number(b.seatsBookedCount || b.ticketCount || (Array.isArray(b.seats) ? b.seats.length : 1));
+        
+        totalRevenue += amt;
+        totalTickets += tickets;
+        totalConfirmedBookings += 1;
 
-      const createdDate = (b.createdAt || b.bookingDate || '').split('T')[0] || (b.showDate || '');
-      if (createdDate === todayStr) {
-        todayRevenue += amt;
-        todayBookings += 1;
+        const createdDate = safeDateToIsoDate(b.createdAt || b.bookingDate || b.showDate);
+        if (createdDate === todayStr) {
+          todayRevenue += amt;
+          todayBookings += 1;
+        }
+
+        const cat = b.category || b.bookingType || 'Movie';
+        const key = (cat.toLowerCase().includes('event')) ? 'Event' :
+                    (cat.toLowerCase().includes('play')) ? 'Play' :
+                    (cat.toLowerCase().includes('act')) ? 'Activity' :
+                    (cat.toLowerCase().includes('theatre') || cat.toLowerCase().includes('private')) ? 'PrivateTheatre' : 'Movie';
+
+        categoryBreakdown[key] = (categoryBreakdown[key] || 0) + 1;
+        categoryRevenue[key] = (categoryRevenue[key] || 0) + amt;
       }
+    });
 
-      const cat = b.category || b.bookingType || 'Movie';
-      const key = (cat.toLowerCase().includes('event')) ? 'Event' :
-                  (cat.toLowerCase().includes('play')) ? 'Play' :
-                  (cat.toLowerCase().includes('act')) ? 'Activity' :
-                  (cat.toLowerCase().includes('theatre') || cat.toLowerCase().includes('private')) ? 'PrivateTheatre' : 'Movie';
-
-      categoryBreakdown[key] = (categoryBreakdown[key] || 0) + 1;
-      categoryRevenue[key] = (categoryRevenue[key] || 0) + amt;
-    }
-  });
-
-  res.json({
-    success: true,
-    financials: {
-      totalRevenue,
-      totalTickets,
-      totalConfirmedBookings,
-      todayRevenue,
-      todayBookings,
-      categoryBreakdown,
-      categoryRevenue,
-      rolling7Days: []
-    }
-  });
+    res.json({
+      success: true,
+      financials: {
+        totalRevenue,
+        totalTickets,
+        totalConfirmedBookings,
+        todayRevenue,
+        todayBookings,
+        categoryBreakdown,
+        categoryRevenue,
+        rolling7Days: []
+      }
+    });
+  } catch (err) {
+    console.error('Financial stats error:', err.message);
+    res.json({
+      success: true,
+      financials: {
+        totalRevenue: 0,
+        totalTickets: 0,
+        totalConfirmedBookings: 0,
+        todayRevenue: 0,
+        todayBookings: 0,
+        categoryBreakdown: { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 },
+        categoryRevenue: { Movie: 0, Event: 0, Play: 0, Activity: 0, PrivateTheatre: 0 },
+        rolling7Days: []
+      }
+    });
+  }
 });
 
 // Admin Analytics Charts
 app.get('/api/admin/analytics/charts', async (req, res) => {
-  const range = req.query.range || '7days';
-  const daysCount = range === '30days' ? 30 : (range === '90days' ? 90 : 7);
-  const bookings = await DataStore.find('bookings');
+  try {
+    const range = req.query.range || '7days';
+    const daysCount = range === '30days' ? 30 : (range === '90days' ? 90 : 7);
+    const bookings = await DataStore.find('bookings');
 
-  const dataPoints = [];
-  const now = new Date();
+    const dataPoints = [];
+    const now = new Date();
 
-  for (let i = daysCount - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    const labelStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    for (let i = daysCount - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const labelStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-    let dayRevenue = 0;
-    let dayBookingsCount = 0;
+      let dayRevenue = 0;
+      let dayBookingsCount = 0;
 
-    bookings.forEach(b => {
-      const createdDate = (b.createdAt || b.bookingDate || b.showDate || '').split('T')[0];
-      if (createdDate === dateStr && (b.status || 'CONFIRMED').toUpperCase() !== 'CANCELLED') {
-        dayRevenue += Number(b.totalAmount || b.price || 0);
-        dayBookingsCount += 1;
-      }
+      (bookings || []).forEach(b => {
+        const createdDate = safeDateToIsoDate(b.createdAt || b.bookingDate || b.showDate);
+        if (createdDate === dateStr && (b.status || 'CONFIRMED').toUpperCase() !== 'CANCELLED') {
+          dayRevenue += Number(b.totalAmount || b.price || 0);
+          dayBookingsCount += 1;
+        }
+      });
+
+      dataPoints.push({
+        date: dateStr,
+        label: labelStr,
+        revenue: dayRevenue,
+        bookings: dayBookingsCount,
+        count: dayBookingsCount
+      });
+    }
+
+    res.json({
+      success: true,
+      range,
+      dataPoints
     });
-
-    dataPoints.push({
-      date: dateStr,
-      label: labelStr,
-      revenue: dayRevenue,
-      bookings: dayBookingsCount,
-      count: dayBookingsCount
+  } catch (err) {
+    console.error('Analytics charts error:', err.message);
+    res.json({
+      success: true,
+      range: req.query.range || '7days',
+      dataPoints: []
     });
   }
-
-  res.json({
-    success: true,
-    range,
-    dataPoints
-  });
 });
 
 // Admin Analytics Top Movies

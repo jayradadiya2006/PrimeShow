@@ -31,7 +31,7 @@ const API_BASE = getApiBase();
 // 2. Axios Instance
 const API = axios.create({
   baseURL: API_BASE,
-  timeout: 8000,
+  timeout: 15000,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
