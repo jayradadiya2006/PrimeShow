@@ -2243,6 +2243,17 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 PrimeShow Node.js REST API & Socket.io Backend running on port ${PORT}`);
-});
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const isDirectRun = require.main === module || (require.main && require.main.filename && require.main.filename.endsWith('server.js'));
+
+if (!isServerless && isDirectRun) {
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 PrimeShow Node.js REST API & Socket.io Backend running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
+module.exports.server = server;
+module.exports.io = io;
+
+
