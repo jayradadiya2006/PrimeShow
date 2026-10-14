@@ -324,7 +324,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
           {/* Layer 1: Ambient Glow / Blurred Fill Background */}
           <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
             <img
-              src={getSafeImageUrl(movie.banner || movie.poster)}
+              src={getSafeImageUrl(movie.banner || movie.bannerUrl || movie.backdrop || movie.poster || movie.posterUrl || movie.image)}
               alt=""
               onError={(e) => {
                 e.currentTarget.onerror = null;
@@ -337,7 +337,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
           {/* Layer 2: Main Foreground Visual Backdrop Image with Focal Alignment (Center 20% / Top Focus) */}
           <div className="absolute inset-0 w-full h-full flex items-center justify-center z-5 pointer-events-none">
             <img
-              src={getSafeImageUrl(movie.banner || movie.poster)}
+              src={getSafeImageUrl(movie.banner || movie.bannerUrl || movie.backdrop || movie.poster || movie.posterUrl || movie.image)}
               alt={`${movie.title} Background Banner`}
               onError={(e) => {
                 e.currentTarget.onerror = null;
@@ -364,7 +364,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
             {/* Movie Poster & Repositioned Watch Trailer CTA Button Beside Poster */}
             <div className="flex flex-col items-start gap-2 shrink-0">
               <img
-                src={getSafeImageUrl(movie.poster)}
+                src={getSafeImageUrl(movie.poster || movie.posterUrl || movie.image || movie.banner || SAFE_IMAGE_FALLBACK)}
                 alt={`${movie.title} Poster`}
                 onError={(e) => {
                   e.currentTarget.onerror = null;

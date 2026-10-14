@@ -93,7 +93,7 @@ export const deleteImageFromIDB = async (key) => {
  * Downscales images to max width (default 1920px) and compresses to JPEG (quality 0.75)
  * Keeps uploaded file sizes well under 250KB.
  */
-export const compressImage = (fileOrDataUrl, maxWidth = 1920, quality = 0.75) => {
+export const compressImage = (fileOrDataUrl, maxWidth = 800, quality = 0.7) => {
   return new Promise((resolve) => {
     if (!fileOrDataUrl) return resolve('');
 
@@ -149,7 +149,7 @@ export const compressImage = (fileOrDataUrl, maxWidth = 1920, quality = 0.75) =>
 
 /**
  * Safe LocalStorage setItem Wrapper
- * Protects against QuotaExceededError and automatically delegates large Base64 images to IndexedDB.
+ * Protects against QuotaExceededError and prevents data loss.
  */
 export const safeLocalStorageSet = (key, value) => {
   try {
@@ -157,7 +157,7 @@ export const safeLocalStorageSet = (key, value) => {
     localStorage.setItem(key, stringified);
     return { success: true };
   } catch (err) {
-    console.warn(`⚠️ LocalStorage quota error on key "${key}":`, err.message);
+    console.warn(`⚠️ LocalStorage quota warning on key "${key}":`, err.message);
 
     const isQuotaError = err.name === 'QuotaExceededError' || 
                          err.name === 'NS_ERROR_DOM_QUOTA_REACHED' || 
@@ -165,32 +165,23 @@ export const safeLocalStorageSet = (key, value) => {
 
     if (isQuotaError && Array.isArray(value)) {
       try {
-        // Strip heavy base64 strings before saving metadata to localStorage
         const sanitized = value.map(item => {
+          if (!item || typeof item !== 'object') return item;
           const newItem = { ...item };
           const imgKey = `img_${newItem.id || Date.now()}`;
 
-          if (typeof newItem.banner === 'string' && newItem.banner.startsWith('data:image')) {
-            saveImageToIDB(imgKey, newItem.banner);
-            newItem.banner = `idb:${imgKey}`;
-          }
-          if (typeof newItem.imageUrl === 'string' && newItem.imageUrl.startsWith('data:image')) {
-            saveImageToIDB(imgKey, newItem.imageUrl);
-            newItem.imageUrl = `idb:${imgKey}`;
-          }
-          if (typeof newItem.backdrop === 'string' && newItem.backdrop.startsWith('data:image')) {
-            saveImageToIDB(imgKey, newItem.backdrop);
-            newItem.backdrop = `idb:${imgKey}`;
-          }
+          ['banner', 'bannerUrl', 'backdrop', 'imageUrl', 'poster', 'posterUrl', 'image'].forEach(prop => {
+            if (typeof newItem[prop] === 'string' && newItem[prop].startsWith('data:image') && newItem[prop].length > 150000) {
+              saveImageToIDB(`${imgKey}_${prop}`, newItem[prop]);
+            }
+          });
           return newItem;
         });
 
         localStorage.setItem(key, JSON.stringify(sanitized));
         return { success: true, sanitized: true };
       } catch (innerErr) {
-        console.error('❌ Failed to save even after sanitizing localStorage:', innerErr);
-        // Clear corrupted key safely so React never crashes
-        try { localStorage.removeItem(key); } catch (e) {}
+        console.error('❌ Failed to save after quota error:', innerErr.message);
       }
     }
     return { success: false, error: err.message };
@@ -199,7 +190,7 @@ export const safeLocalStorageSet = (key, value) => {
 
 /**
  * Safe LocalStorage getItem Wrapper
- * Resolves IndexedDB references (`idb:...`) if present in stored slides.
+ * Safely parses and returns stored data without crashing.
  */
 export const safeLocalStorageGet = (key, defaultValue = null) => {
   try {
@@ -208,7 +199,6 @@ export const safeLocalStorageGet = (key, defaultValue = null) => {
     return JSON.parse(saved);
   } catch (err) {
     console.warn(`⚠️ Error reading key "${key}" from localStorage:`, err.message);
-    try { localStorage.removeItem(key); } catch (e) {}
     return defaultValue;
   }
 };
@@ -223,6 +213,9 @@ export const getSafeImageUrl = (src, fallback = SAFE_IMAGE_FALLBACK) => {
   if (!src || typeof src !== 'string') return fallback;
   const s = src.trim().toLowerCase();
   if (s.includes('maps.app.goo.gl') || s.includes('google.com/maps') || s.includes('goo.gl/maps')) {
+    return fallback;
+  }
+  if (src.startsWith('idb:')) {
     return fallback;
   }
   return src;

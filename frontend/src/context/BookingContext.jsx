@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import API, { API_BASE } from '../services/api';
-import { safeLocalStorageSet, safeLocalStorageGet, getImageFromIDB } from '../utils/imageStorage';
+import { safeLocalStorageSet, safeLocalStorageGet, getImageFromIDB, compressImage } from '../utils/imageStorage';
 
 const BookingContext = createContext();
 
@@ -593,7 +593,15 @@ export const BookingProvider = ({ children }) => {
     try {
       const res = await API.get('/movies');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setMoviesList(res.data);
+        setMoviesList(prev => {
+          const serverMovies = res.data;
+          const localOnly = (prev || []).filter(p => 
+            p && p.id && !serverMovies.some(s => s.id === p.id || s._id === p.id || (s.title && p.title && s.title.toLowerCase().trim() === p.title.toLowerCase().trim()))
+          );
+          const merged = [...localOnly, ...serverMovies];
+          safeLocalStorageSet('primeshow_movies_v1', merged);
+          return merged;
+        });
       }
     } catch (err) {
       console.warn('⚠️ Error fetching movies from server API (Using Offline Cache):', err.message);
@@ -1055,6 +1063,17 @@ export const BookingProvider = ({ children }) => {
   };
 
   const addMovieToGlobalStore = async (newMovieData) => {
+    let poster = newMovieData.poster || newMovieData.posterUrl || newMovieData.image || '';
+    let banner = newMovieData.banner || newMovieData.bannerUrl || newMovieData.backdrop || '';
+
+    // If poster or banner is heavy uncompressed base64, compress down to fit safely in MongoDB and localStorage
+    if (typeof poster === 'string' && poster.startsWith('data:image') && poster.length > 80000) {
+      try { poster = await compressImage(poster, 800, 0.72); } catch (_) {}
+    }
+    if (typeof banner === 'string' && banner.startsWith('data:image') && banner.length > 80000) {
+      try { banner = await compressImage(banner, 1200, 0.72); } catch (_) {}
+    }
+
     const moviePayload = {
       id: newMovieData.id || `mov_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       ...newMovieData,
@@ -1068,8 +1087,12 @@ export const BookingProvider = ({ children }) => {
       genres: Array.isArray(newMovieData.genres) ? newMovieData.genres : (newMovieData.genres ? String(newMovieData.genres).split(',').map(s=>s.trim()) : ['Action']),
       languages: Array.isArray(newMovieData.languages) ? newMovieData.languages : (newMovieData.languages ? String(newMovieData.languages).split(',').map(s=>s.trim()) : ['English', 'Hindi']),
       formats: Array.isArray(newMovieData.formats) ? newMovieData.formats : (newMovieData.formats ? String(newMovieData.formats).split(',').map(s=>s.trim()) : ['IMAX 3D', 'Dolby Atmos']),
-      poster: newMovieData.poster || newMovieData.posterUrl || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
-      banner: newMovieData.banner || newMovieData.bannerUrl || newMovieData.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      poster: poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      posterUrl: poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      image: poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      banner: banner || poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      bannerUrl: banner || poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      backdrop: banner || poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
       trailerUrl: newMovieData.trailerUrl || newMovieData.youtubeUrl || 'https://www.youtube.com/watch?v=d9MyW72ELq0',
       director: newMovieData.director || 'Famous Director',
       producer: newMovieData.producer || 'PrimeShow Studios',
@@ -1078,10 +1101,14 @@ export const BookingProvider = ({ children }) => {
       status: newMovieData.status || 'Now Showing',
       featured: newMovieData.featured !== undefined ? newMovieData.featured : true,
       city: newMovieData.city || 'All',
-      cities: newMovieData.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru']
+      cities: ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Vadodara', 'Rajkot', 'Valsad', 'Anand', 'Bharuch', 'Bhavnagar', 'Delhi', 'Bengaluru']
     };
 
-    setMoviesList(prev => [moviePayload, ...prev.filter(m => m.id !== moviePayload.id)]);
+    setMoviesList(prev => {
+      const updated = [moviePayload, ...prev.filter(m => m.id !== moviePayload.id)];
+      safeLocalStorageSet('primeshow_movies_v1', updated);
+      return updated;
+    });
 
     try {
       const res = await API.post('/movies', moviePayload);
@@ -1091,25 +1118,31 @@ export const BookingProvider = ({ children }) => {
       if (data && (data.success || data.id || data._id || savedMovie.id || savedMovie._id)) {
         setMoviesList(prev => {
           const filtered = prev.filter(m => m.id !== savedMovie.id && m._id !== savedMovie._id);
-          return [savedMovie, ...filtered];
+          const finalMovies = [savedMovie, ...filtered];
+          safeLocalStorageSet('primeshow_movies_v1', finalMovies);
+          return finalMovies;
         });
         return { success: true, movie: savedMovie };
       }
     } catch (err) {
-      console.warn('⚠️ Server API offline, movie saved to offline local store:', err.message);
+      console.warn('⚠️ Server API offline, movie saved to persistent local store:', err.message);
     }
     return { success: true, movie: moviePayload, offline: true };
   };
 
   const updateMovieInGlobalStore = async (movieId, updatedFields) => {
     let updatedMovieObj = null;
-    setMoviesList(prev => prev.map(m => {
-      if (m.id === movieId || m._id === movieId) {
-        updatedMovieObj = { ...m, ...updatedFields };
-        return updatedMovieObj;
-      }
-      return m;
-    }));
+    setMoviesList(prev => {
+      const updated = prev.map(m => {
+        if (m.id === movieId || m._id === movieId) {
+          updatedMovieObj = { ...m, ...updatedFields };
+          return updatedMovieObj;
+        }
+        return m;
+      });
+      safeLocalStorageSet('primeshow_movies_v1', updated);
+      return updated;
+    });
 
     try {
       const res = await API.put(`/movies/${encodeURIComponent(movieId)}`, updatedFields);
@@ -1119,17 +1152,21 @@ export const BookingProvider = ({ children }) => {
         return { success: true, movie: savedMovie };
       }
     } catch (err) {
-      console.warn('⚠️ Server API offline, movie updated in offline local store:', err.message);
+      console.warn('⚠️ Server API offline, movie updated in persistent local store:', err.message);
     }
     return { success: true, movie: updatedMovieObj || updatedFields, offline: true };
   };
 
   const deleteMovieFromGlobalStore = async (movieId) => {
-    setMoviesList(prev => prev.filter(m => m.id !== movieId && m._id !== movieId && m.title !== movieId));
+    setMoviesList(prev => {
+      const filtered = prev.filter(m => m.id !== movieId && m._id !== movieId && m.title !== movieId);
+      safeLocalStorageSet('primeshow_movies_v1', filtered);
+      return filtered;
+    });
     try {
       await API.delete(`/movies/${encodeURIComponent(movieId)}`);
     } catch (err) {
-      console.warn('⚠️ Server API offline, movie deleted from offline local store:', err.message);
+      console.warn('⚠️ Server API offline, movie deleted from persistent local store:', err.message);
     }
     return { success: true, offline: true };
   };

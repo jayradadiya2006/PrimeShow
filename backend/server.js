@@ -16,6 +16,7 @@ const io = new Server(server, {
   }
 });
 
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const PORT = process.env.PORT || 8000;
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
 const DB_NAME = process.env.MONGO_DB_NAME || 'primeshow';
@@ -114,14 +115,28 @@ async function autoSeedDatabase() {
 
 // Connect to MongoDB Atlas or Local MongoDB
 async function connectDB() {
+  const isAtlasUri = Boolean(MONGO_URI && (MONGO_URI.includes('.mongodb.net') || MONGO_URI.startsWith('mongodb+srv://')) && !MONGO_URI.includes('<YOUR_ATLAS_PASSWORD>'));
+
+  // In serverless cloud environment (e.g. Vercel), if no valid remote Atlas URI is provided, do NOT attempt localhost 127.0.0.1
+  if (isServerless && !isAtlasUri) {
+    console.log('⚡ [Serverless]: No remote MongoDB Atlas URI configured. File datastore active in serverless mode.');
+    db = null;
+    return;
+  }
+
   try {
     let uriToUse = MONGO_URI;
-    if (MONGO_URI.includes('<YOUR_ATLAS_PASSWORD>')) {
+    if (MONGO_URI.includes('<YOUR_ATLAS_PASSWORD>') || !MONGO_URI) {
+      if (isServerless) {
+        db = null;
+        return;
+      }
       uriToUse = 'mongodb://127.0.0.1:27017/primeshow';
     }
+
     mongoClient = new MongoClient(uriToUse, {
-      connectTimeoutMS: 5000,
-      serverSelectionTimeoutMS: 5000
+      connectTimeoutMS: 3000,
+      serverSelectionTimeoutMS: 3000
     });
     await mongoClient.connect();
 
@@ -135,10 +150,15 @@ async function connectDB() {
     console.log(`✅ MongoDB Connected Successfully (${uriToUse.includes('.mongodb.net') ? 'Atlas' : 'Local'}, Database: ${db.databaseName})`);
     await autoSeedDatabase();
   } catch (err) {
+    if (isServerless) {
+      console.warn(`⚡ [Serverless]: MongoDB connection bypassed: ${err.message}. File datastore active.`);
+      db = null;
+      return;
+    }
     try {
       mongoClient = new MongoClient('mongodb://127.0.0.1:27017', {
-        connectTimeoutMS: 3000,
-        serverSelectionTimeoutMS: 3000
+        connectTimeoutMS: 2000,
+        serverSelectionTimeoutMS: 2000
       });
       await mongoClient.connect();
       db = mongoClient.db(DB_NAME);
@@ -174,7 +194,6 @@ const DataStore = {
     if (coll) {
       try {
         await coll.insertOne({ ...doc });
-        return doc;
       } catch (e) {
         console.error(`MongoDB insert error on ${collName}:`, e.message);
       }
@@ -187,8 +206,11 @@ const DataStore = {
     if (fs.existsSync(filePath)) {
       try { items = JSON.parse(fs.readFileSync(filePath, 'utf8')) || []; } catch (e) {}
     }
-    items.push(doc);
-    fs.writeFileSync(filePath, JSON.stringify(items, null, 2));
+    const filtered = items.filter(i => i.id !== doc.id && (!doc._id || i._id !== doc._id));
+    filtered.unshift(doc);
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(filtered, null, 2));
+    } catch (_) {}
     return doc;
   },
 
@@ -2295,7 +2317,6 @@ io.on('connection', (socket) => {
   });
 });
 
-const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const isDirectRun = require.main === module || (require.main && require.main.filename && require.main.filename.endsWith('server.js'));
 
 if (!isServerless && isDirectRun) {

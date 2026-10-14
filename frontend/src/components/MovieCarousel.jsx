@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Star, Ticket, Play, Sparkles, Clock, Globe, ShieldCheck, Pause } from 'lucide-react';
 import { useBooking } from '../context/BookingContext';
+import { getSafeImageUrl, SAFE_IMAGE_FALLBACK } from '../utils/imageStorage';
 
 export const MovieCarousel = ({ onBookNow, onSelectMovie }) => {
   const { moviesList, heroSlidesList } = useBooking();
@@ -109,8 +110,12 @@ export const MovieCarousel = ({ onBookNow, onSelectMovie }) => {
         <div className="absolute inset-0 transition-opacity duration-700">
           <img
             key={currentMovie.id || currentIndex}
-            src={currentMovie.banner || currentMovie.poster}
+            src={getSafeImageUrl(currentMovie.banner || currentMovie.bannerUrl || currentMovie.backdrop || currentMovie.poster || currentMovie.posterUrl || currentMovie.image || SAFE_IMAGE_FALLBACK)}
             alt={currentMovie.title}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+            }}
             className="w-full h-full object-cover transition-all duration-700 ease-out transform scale-105 group-hover:scale-100 animate-fade-in"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/75 to-transparent"></div>

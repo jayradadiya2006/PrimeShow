@@ -1665,8 +1665,10 @@ export const AdminDashboard = ({ onReturnHome }) => {
       description: movieForm.synopsis || '',
       poster: movieForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
       posterUrl: movieForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
+      image: movieForm.poster || 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80',
       banner: movieForm.banner || movieForm.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
       bannerUrl: movieForm.banner || movieForm.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+      backdrop: movieForm.banner || movieForm.poster || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
       backdropPosition: movieForm.backdropPosition || movieForm.imagePosition || 'center 20%',
       imagePosition: movieForm.backdropPosition || movieForm.imagePosition || 'center 20%',
       trailerUrl: movieForm.trailerUrl || '',
@@ -1676,7 +1678,7 @@ export const AdminDashboard = ({ onReturnHome }) => {
       formats: typeof movieForm.formats === 'string' ? movieForm.formats.split(',').map(s => s.trim()) : (movieForm.formats || ['IMAX 3D', 'Dolby Atmos']),
       status: movieForm.status || 'Now Showing',
       city: movieForm.city || 'All',
-      cities: movieForm.cities || ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Delhi', 'Bengaluru'],
+      cities: ['All', 'Surat', 'Mumbai', 'Ahmedabad', 'Vadodara', 'Rajkot', 'Valsad', 'Anand', 'Bharuch', 'Bhavnagar', 'Delhi', 'Bengaluru'],
       cast: Array.isArray(movieForm.cast) ? movieForm.cast : []
     };
 
@@ -4639,16 +4641,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 {/* 1. Movie Thumbnail Poster */}
                 <div className="space-y-1">
                   <label className="block text-xs font-black text-[#2C1A0E]">1. Movie Thumbnail Poster (Small Detail Poster)</label>
-                  <div className="flex gap-2">
-                    <input type="text" value={movieForm.poster || ''} onChange={e => setMovieForm({...movieForm, poster: e.target.value})} className="flex-1 p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" placeholder="Poster Image URL (https://...)" />
+                  <div className="flex items-center gap-2">
+                    {movieForm.poster && (
+                      <div className="relative shrink-0 group">
+                        <img src={movieForm.poster} alt="Poster Preview" className="w-10 h-12 object-cover rounded-lg border-2 border-[#D90000] shadow-sm" />
+                        <button type="button" onClick={() => setMovieForm({ ...movieForm, poster: '', posterUrl: '', image: '' })} className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] shadow font-black cursor-pointer">✕</button>
+                      </div>
+                    )}
+                    <input type="text" value={movieForm.poster || ''} onChange={e => setMovieForm({...movieForm, poster: e.target.value, posterUrl: e.target.value, image: e.target.value})} className="flex-1 p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" placeholder="Poster Image URL (https://...)" />
                     <label className="px-3 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1 shadow-sm">
                       <span>Upload</span>
-                      <input type="file" accept="image/*" onChange={(e) => {
+                      <input type="file" accept="image/*" onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => setMovieForm({...movieForm, poster: reader.result});
-                          reader.readAsDataURL(file);
+                          try {
+                            const compressed = await compressImage(file, 800, 0.72);
+                            setMovieForm(prev => ({ ...prev, poster: compressed, posterUrl: compressed, image: compressed }));
+                          } catch (_) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setMovieForm(prev => ({ ...prev, poster: reader.result, posterUrl: reader.result, image: reader.result }));
+                            reader.readAsDataURL(file);
+                          }
                         }
                       }} className="hidden" />
                     </label>
@@ -4658,16 +4671,27 @@ export const AdminDashboard = ({ onReturnHome }) => {
                 {/* 2. Main Background Banner */}
                 <div className="space-y-1">
                   <label className="block text-xs font-black text-[#2C1A0E]">2. Main Background Banner (Backdrop Image)</label>
-                  <div className="flex gap-2">
-                    <input type="text" value={movieForm.banner || ''} onChange={e => setMovieForm({...movieForm, banner: e.target.value})} className="flex-1 p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" placeholder="Banner/Backdrop URL (https://...)" />
+                  <div className="flex items-center gap-2">
+                    {movieForm.banner && (
+                      <div className="relative shrink-0 group">
+                        <img src={movieForm.banner} alt="Banner Preview" className="w-16 h-12 object-cover rounded-lg border-2 border-[#D90000] shadow-sm" />
+                        <button type="button" onClick={() => setMovieForm({ ...movieForm, banner: '', bannerUrl: '', backdrop: '' })} className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white rounded-full flex items-center justify-center text-[10px] shadow font-black cursor-pointer">✕</button>
+                      </div>
+                    )}
+                    <input type="text" value={movieForm.banner || ''} onChange={e => setMovieForm({...movieForm, banner: e.target.value, bannerUrl: e.target.value, backdrop: e.target.value})} className="flex-1 p-3 rounded-xl bg-[#FFFFFF] border border-slate-400 text-xs text-[#1A1A1A] font-bold placeholder:text-slate-500 focus:outline-none focus:border-[#D90000]" placeholder="Banner/Backdrop URL (https://...)" />
                     <label className="px-3 py-3 rounded-xl bg-[#2B2B2B] hover:bg-[#4A4A4A] text-white text-xs font-bold cursor-pointer shrink-0 flex items-center gap-1 shadow-sm">
                       <span>Upload</span>
-                      <input type="file" accept="image/*" onChange={(e) => {
+                      <input type="file" accept="image/*" onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => setMovieForm({...movieForm, banner: reader.result});
-                          reader.readAsDataURL(file);
+                          try {
+                            const compressed = await compressImage(file, 1200, 0.72);
+                            setMovieForm(prev => ({ ...prev, banner: compressed, bannerUrl: compressed, backdrop: compressed }));
+                          } catch (_) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => setMovieForm(prev => ({ ...prev, banner: reader.result, bannerUrl: reader.result, backdrop: reader.result }));
+                            reader.readAsDataURL(file);
+                          }
                         }
                       }} className="hidden" />
                     </label>

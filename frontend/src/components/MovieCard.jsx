@@ -1,10 +1,12 @@
 import React from 'react';
 import { Star, Heart, Clock, Ticket } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getSafeImageUrl, SAFE_IMAGE_FALLBACK } from '../utils/imageStorage';
 
 export const MovieCard = ({ movie, onSelect, onBookNow }) => {
   const { user, toggleWishlist } = useAuth();
   const isWishlisted = user?.wishlist?.includes(movie.id);
+  const moviePosterSrc = getSafeImageUrl(movie.poster || movie.posterUrl || movie.image || movie.banner || SAFE_IMAGE_FALLBACK);
 
   return (
     <div 
@@ -14,8 +16,12 @@ export const MovieCard = ({ movie, onSelect, onBookNow }) => {
       {/* Poster Image Container */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#D7D3BF] shrink-0">
         <img
-          src={movie.poster}
+          src={moviePosterSrc}
           alt={movie.title}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = SAFE_IMAGE_FALLBACK;
+          }}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
           loading="lazy"
         />
