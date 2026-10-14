@@ -105,7 +105,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-sans">
-      <div className="relative w-full max-w-2xl glass-modal rounded-3xl border border-white/15 shadow-2xl overflow-hidden text-white flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-2xl bg-[#0E1017] rounded-3xl border border-white/15 shadow-2xl overflow-hidden text-white flex flex-col max-h-[92vh]">
         
         {/* Header */}
         <div className="p-6 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-transparent">
@@ -140,12 +140,12 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
           {/* STEP 1: SUMMARY */}
           {step === 'summary' && (
             <div className="space-y-6">
-              <div className="p-5 rounded-2xl glass-panel border border-amber-400/30 space-y-3">
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-amber-400/30 space-y-3">
                 <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Selected Multiplex</span>
                     <h3 className="text-lg font-bold text-white">{theatre.name}</h3>
-                    <p className="text-xs text-white/60">{theatre.address}</p>
+                    <p className="text-xs text-white/70">{theatre.address}</p>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold">
                     Private Hall
@@ -154,19 +154,19 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
                   <div>
-                    <span className="text-white/40 block text-[10px]">Movie</span>
+                    <span className="text-white/50 block text-[10px]">Movie</span>
                     <span className="font-bold text-white">{show.movieTitle}</span>
                   </div>
                   <div>
-                    <span className="text-white/40 block text-[10px]">Format & Screen</span>
+                    <span className="text-white/50 block text-[10px]">Format & Screen</span>
                     <span className="font-bold text-emerald-400">{show.format} • {show.screenName}</span>
                   </div>
                   <div>
-                    <span className="text-white/40 block text-[10px]">Date & Time Slot</span>
+                    <span className="text-white/50 block text-[10px]">Date & Time Slot</span>
                     <span className="font-bold text-amber-300">{dateLabel} • {show.time}</span>
                   </div>
                   <div>
-                    <span className="text-white/40 block text-[10px]">Total Screen Seats</span>
+                    <span className="text-white/50 block text-[10px]">Total Screen Seats</span>
                     <span className="font-bold text-white">{theatre.totalSeats || 120} VIP Recliners</span>
                   </div>
                 </div>
@@ -178,22 +178,22 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                   <Shield className="w-5 h-5 text-amber-400 shrink-0" />
                   <div>
                     <div className="font-bold text-white">100% Private Screen Lock</div>
-                    <div className="text-[10px] text-white/50">Zero outside public entrance permitted</div>
+                    <div className="text-[10px] text-white/60">Zero outside public entrance permitted</div>
                   </div>
                 </div>
                 <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
                   <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
                   <div>
                     <div className="font-bold text-white">Dedicated In-Seat Butler</div>
-                    <div className="text-[10px] text-white/50">Complimentary welcome drinks & popcorn</div>
+                    <div className="text-[10px] text-white/60">Complimentary welcome drinks & popcorn</div>
                   </div>
                 </div>
               </div>
 
               {/* Total Pricing Calculation */}
-              <div className="p-4 rounded-2xl glass-panel border border-white/10 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-white/60">Total Private Screen Package Rate</div>
+                  <div className="text-xs text-white/70">Total Private Screen Package Rate</div>
                   <div className="text-2xl font-bold font-serif text-amber-300">₹{privatePrice.toLocaleString('en-IN')}</div>
                 </div>
                 <button
@@ -220,7 +220,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                   className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
                     paymentMethod === 'upi' || paymentMethod === 'qr'
                       ? 'bg-amber-500 text-black border-amber-400 shadow-md'
-                      : 'glass-panel text-white/60 hover:text-white border-white/10'
+                      : 'bg-white/10 text-white/90 hover:text-white border-white/15 hover:bg-white/20'
                   }`}
                 >
                   <QrCode className="w-4 h-4" />
@@ -232,7 +232,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                   className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
                     paymentMethod === 'netbanking'
                       ? 'bg-amber-500 text-black border-amber-400 shadow-md'
-                      : 'glass-panel text-white/60 hover:text-white border-white/10'
+                      : 'bg-white/10 text-white/90 hover:text-white border-white/15 hover:bg-white/20'
                   }`}
                 >
                   <Building2 className="w-4 h-4" />
@@ -244,7 +244,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                   className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
                     paymentMethod === 'card'
                       ? 'bg-amber-500 text-black border-amber-400 shadow-md'
-                      : 'glass-panel text-white/60 hover:text-white border-white/10'
+                      : 'bg-white/10 text-white/90 hover:text-white border-white/15 hover:bg-white/20'
                   }`}
                 >
                   <CreditCard className="w-4 h-4" />
@@ -256,7 +256,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                   className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
                     paymentMethod === 'wallet'
                       ? 'bg-amber-500 text-black border-amber-400 shadow-md'
-                      : 'glass-panel text-white/60 hover:text-white border-white/10'
+                      : 'bg-white/10 text-white/90 hover:text-white border-white/15 hover:bg-white/20'
                   }`}
                 >
                   <Wallet className="w-4 h-4" />
@@ -266,7 +266,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
 
               {/* DYNAMIC UPI QR CODE & PAYEE DETAILS */}
               {(paymentMethod === 'upi' || paymentMethod === 'qr') && (
-                <div className="p-5 rounded-2xl glass-panel border-2 border-amber-400/40 space-y-4 animate-fade-in bg-gradient-to-b from-[#0e0f18] to-[#07080d]">
+                <div className="p-5 rounded-2xl bg-[#0a0b12] border-2 border-amber-400/40 space-y-4 animate-fade-in shadow-xl">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                     {/* Inline SVG QR Code Renderer */}
                     <div className="bg-white p-3 rounded-2xl shadow-2xl shrink-0 border-2 border-amber-400/60 flex flex-col items-center">
@@ -282,7 +282,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                     {/* Payee Info & Manual Copy Box */}
                     <div className="flex-1 space-y-3 text-left w-full">
                       <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                        <span className="text-[10px] text-white/40 uppercase tracking-widest block font-bold">Payee Beneficiary Name</span>
+                        <span className="text-[10px] text-white/50 uppercase tracking-widest block font-bold">Payee Beneficiary Name</span>
                         <div className="text-sm font-bold text-white flex items-center gap-2">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                           <span>{payeeName}</span>
@@ -291,7 +291,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
 
                       <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between gap-2">
                         <div>
-                          <span className="text-[10px] text-amber-300/80 uppercase tracking-widest block font-bold">Official Payee UPI ID</span>
+                          <span className="text-[10px] text-amber-300 uppercase tracking-widest block font-bold">Official Payee UPI ID</span>
                           <span className="text-xs font-mono font-bold text-amber-300">{payeeUpiId}</span>
                         </div>
                         <button
@@ -305,12 +305,12 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-white/70 mb-1">Enter your VPA ID for UPI push notification:</label>
+                        <label className="block text-[11px] font-bold text-white/80 mb-1">Enter your VPA ID for UPI push notification:</label>
                         <input
                           type="text"
                           value={upiId}
                           onChange={(e) => setUpiId(e.target.value)}
-                          className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-mono"
+                          className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                           placeholder="username@upi"
                         />
                       </div>
@@ -321,12 +321,12 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
 
               {/* NET BANKING */}
               {paymentMethod === 'netbanking' && (
-                <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 text-xs animate-fade-in">
+                <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
                   <label className="block text-xs font-bold text-white mb-1">Select Bank</label>
                   <select
                     value={selectedBank}
                     onChange={(e) => setSelectedBank(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#141624] border border-white/20 text-xs text-white focus:border-amber-400 focus:outline-none"
                   >
                     <option value="HDFC Bank">HDFC Bank</option>
                     <option value="ICICI Bank">ICICI Bank</option>
@@ -339,14 +339,14 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
 
               {/* CREDIT / DEBIT CARD */}
               {paymentMethod === 'card' && (
-                <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 text-xs animate-fade-in">
+                <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
                   <div>
                     <label className="block text-[11px] font-bold text-white mb-1">Card Number</label>
                     <input
                       type="text"
                       value={cardNumber}
                       onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-mono"
+                      className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -356,7 +356,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                         type="text"
                         value={cardExp}
                         onChange={(e) => setCardExp(e.target.value)}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-mono"
+                        className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                       />
                     </div>
                     <div>
@@ -365,7 +365,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
                         type="password"
                         value={cardCvv}
                         onChange={(e) => setCardCvv(e.target.value)}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-mono"
+                        className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -374,12 +374,12 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
 
               {/* WALLETS */}
               {paymentMethod === 'wallet' && (
-                <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 text-xs animate-fade-in">
+                <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
                   <label className="block text-xs font-bold text-white mb-1">Select Wallet</label>
                   <select
                     value={selectedWallet}
                     onChange={(e) => setSelectedWallet(e.target.value)}
-                    className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                    className="w-full p-3 rounded-xl bg-[#141624] border border-white/20 text-xs text-white focus:border-amber-400 focus:outline-none"
                   >
                     <option value="Paytm Wallet">Paytm Wallet</option>
                     <option value="Amazon Pay">Amazon Pay Balance</option>
@@ -392,7 +392,7 @@ export const PrivateTheatreModal = ({ isOpen, onClose, theatre, show, selectedDa
               <div className="flex items-center justify-between pt-2">
                 <button
                   onClick={() => setStep('summary')}
-                  className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 hover:text-white"
+                  className="px-4 py-2.5 rounded-xl bg-white/10 border border-white/15 text-xs text-white/90 hover:text-white hover:bg-white/20 cursor-pointer"
                 >
                   ← Back to Summary
                 </button>

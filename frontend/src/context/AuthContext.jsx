@@ -11,6 +11,7 @@ import {
 
 import API, { apiClient, API_BASE } from '../services/api';
 import { io } from 'socket.io-client';
+import { compressImage } from '../utils/imageStorage';
 
 const createSafeSocket = () => {
   const customUrl = import.meta.env.VITE_API_BASE_URL;
@@ -849,20 +850,32 @@ export const AuthProvider = ({ children }) => {
 
   // Update & Persist User Profile Fields across Database, Firebase & LocalStorage
   const updateUserProfile = async (updatedFields) => {
-    const avatarUrl = updatedFields.avatar || updatedFields.profilePicture;
+    let cleanFields = { ...updatedFields };
+    let avatarUrl = cleanFields.avatar || cleanFields.profilePicture;
+
+    if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.startsWith('data:image')) {
+      try {
+        avatarUrl = await compressImage(avatarUrl, 300, 0.7);
+        cleanFields.avatar = avatarUrl;
+        cleanFields.profilePicture = avatarUrl;
+      } catch (_) {}
+    }
+
     let updatedUserObj = null;
 
     setUser(prevUser => {
       const finalAvatar = avatarUrl || prevUser?.profilePicture || prevUser?.avatar || 'https://api.dicebear.com/7.x/lorelei/svg?seed=Alexander&backgroundColor=0f172a';
       updatedUserObj = { 
         ...(prevUser || {}), 
-        ...updatedFields,
+        ...cleanFields,
         avatar: finalAvatar,
         profilePicture: finalAvatar
       };
       try {
         localStorage.setItem('primeshow_user', JSON.stringify(updatedUserObj));
-      } catch (e) {}
+      } catch (e) {
+        console.warn('LocalStorage save failed:', e);
+      }
       return updatedUserObj;
     });
 

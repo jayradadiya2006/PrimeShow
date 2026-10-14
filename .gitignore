@@ -24,6 +24,7 @@ yarn-debug.log*
 yarn-error.log*
 logs/
 *.log
+backend/data/
 
 # Editor & OS files
 .DS_Store

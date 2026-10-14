@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { jsPDF } from 'jspdf';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
+import { compressImage } from '../utils/imageStorage';
 
 export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   const { 
@@ -144,8 +145,8 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
     setTimeout(() => setSavedMsg(''), 4000);
   };
 
-  // Direct Gallery File Upload Handler
-  const handleFileUploadFromGallery = (e) => {
+  // Direct Gallery File Upload Handler with Canvas Downscaling & Compression
+  const handleFileUploadFromGallery = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -154,11 +155,17 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      handleSaveAvatar(reader.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file, 400, 0.75);
+      handleSaveAvatar(compressed);
+    } catch (err) {
+      console.warn('Avatar compression fallback:', err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        handleSaveAvatar(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSendSupportMessage = async (e) => {

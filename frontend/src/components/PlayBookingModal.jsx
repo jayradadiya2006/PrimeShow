@@ -158,7 +158,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center pt-20 sm:pt-24 pb-8 px-4 bg-black/90 backdrop-blur-2xl animate-fade-in font-sans overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-[#0b0c16] rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl text-white max-h-[85vh] overflow-y-auto my-auto">
+      <div className="relative w-full max-w-2xl bg-[#0E1017] rounded-3xl p-6 sm:p-8 border border-white/15 shadow-2xl text-white max-h-[85vh] overflow-y-auto my-auto">
         
         {/* Close Button */}
         <button
@@ -183,7 +183,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                 </span>
               </div>
               <h2 className="text-2xl font-bold font-serif text-white">{activePlay.title}</h2>
-              <p className="text-xs text-white/60 flex items-center gap-2 mt-1">
+              <p className="text-xs text-white/70 flex items-center gap-2 mt-1">
                 <MapPin className="w-3.5 h-3.5 text-amber-400" />
                 <span>{activePlay.venue}</span>
                 <span>•</span>
@@ -193,7 +193,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
             </div>
 
             {/* Ticket Quantity Selector */}
-            <div className="p-4 rounded-2xl glass-panel border border-white/10 space-y-3">
+            <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3">
               <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider">
                 Select Number of Tickets
               </label>
@@ -205,7 +205,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                     className={`w-11 h-11 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
                       ticketCount === qty
                         ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
-                        : 'glass-panel text-white/70 hover:text-white border-white/10'
+                        : 'bg-white/10 text-white/90 hover:text-white hover:bg-white/20 border-white/15'
                     }`}
                   >
                     {qty}
@@ -215,18 +215,18 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
             </div>
 
             {/* Real-Time Price Breakdown */}
-            <div className="glass-panel p-4 rounded-2xl border border-white/10 space-y-2 text-xs">
-              <div className="flex justify-between text-white/70">
+            <div className="bg-white/[0.04] p-4 rounded-2xl border border-white/10 space-y-2 text-xs">
+              <div className="flex justify-between text-slate-300">
                 <span>Tickets ({ticketCount} @ ₹{pricePerTicket.toLocaleString('en-IN')}/ticket)</span>
-                <span>₹{basePrice.toLocaleString('en-IN')}</span>
+                <span className="text-white font-semibold">₹{basePrice.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-white/70">
+              <div className="flex justify-between text-slate-300">
                 <span>Convenience Fee (8%)</span>
-                <span>₹{convenienceFee.toLocaleString('en-IN')}</span>
+                <span className="text-white font-semibold">₹{convenienceFee.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-white/70">
+              <div className="flex justify-between text-slate-300">
                 <span>GST & Taxes (5%)</span>
-                <span>₹{tax.toLocaleString('en-IN')}</span>
+                <span className="text-white font-semibold">₹{tax.toLocaleString('en-IN')}</span>
               </div>
               <div className="border-t border-white/10 pt-2 flex justify-between text-base font-bold text-white">
                 <span>Grand Total Amount</span>
@@ -266,7 +266,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                     className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       isActive
                         ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/25'
-                        : 'glass-panel text-white/60 hover:text-white border-white/10 hover:bg-white/10'
+                        : 'bg-white/10 text-white/90 hover:text-white border-white/15 hover:bg-white/20'
                     }`}
                   >
                     <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-amber-400'}`} />
@@ -278,7 +278,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
 
             {/* DYNAMIC UPI QR CODE & PAYEE DETAILS */}
             {paymentMethod === 'UPI' && (
-              <div className="p-5 rounded-2xl glass-panel border-2 border-amber-400/40 space-y-4 animate-fade-in bg-gradient-to-b from-[#0e0f18] to-[#07080d]">
+              <div className="p-5 rounded-2xl bg-[#0a0b12] border-2 border-amber-400/40 space-y-4 animate-fade-in shadow-xl">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                   
                   {/* Inline SVG QR Code Renderer with Error Correction Level H */}
@@ -298,7 +298,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                   {/* Payee Info & Manual Copy Box */}
                   <div className="flex-1 space-y-3 text-left w-full">
                     <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                      <span className="text-[10px] text-white/40 uppercase tracking-widest block font-bold">Payee Beneficiary Name</span>
+                      <span className="text-[10px] text-white/50 uppercase tracking-widest block font-bold">Payee Beneficiary Name</span>
                       <div className="text-sm font-bold text-white flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                         <span>{payeeName}</span>
@@ -307,7 +307,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
 
                     <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between gap-2">
                       <div>
-                        <span className="text-[10px] text-amber-300/80 uppercase tracking-widest block font-bold">Official Payee UPI ID</span>
+                        <span className="text-[10px] text-amber-300 uppercase tracking-widest block font-bold">Official Payee UPI ID</span>
                         <span className="text-xs font-mono font-bold text-amber-300">{payeeUpiId}</span>
                       </div>
                       <button
@@ -321,12 +321,12 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-white/70 mb-1">Enter VPA ID for UPI push notification:</label>
+                      <label className="block text-[11px] font-bold text-white/80 mb-1">Enter VPA ID for UPI push notification:</label>
                       <input
                         type="text"
                         value={upiVpa}
                         onChange={(e) => setUpiVpa(e.target.value)}
-                        className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-mono"
+                        className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                         placeholder="username@upi"
                       />
                     </div>
@@ -337,12 +337,12 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
 
             {/* NET BANKING */}
             {paymentMethod === 'NetBanking' && (
-              <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 text-xs animate-fade-in">
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
                 <label className="block text-xs font-bold text-white mb-1">Select Bank</label>
                 <select
                   value={selectedBank}
                   onChange={(e) => setSelectedBank(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  className="w-full p-3 rounded-xl bg-[#141624] border border-white/20 text-xs text-white focus:border-amber-400 focus:outline-none"
                 >
                   <option value="HDFC Bank">HDFC Bank</option>
                   <option value="ICICI Bank">ICICI Bank</option>
@@ -355,14 +355,14 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
 
             {/* CREDIT / DEBIT CARD */}
             {paymentMethod === 'Card' && (
-              <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 text-xs animate-fade-in">
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
                 <div>
                   <label className="block text-[11px] font-bold text-white mb-1">Cardholder Full Name</label>
                   <input
                     type="text"
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value)}
-                    className="w-full p-2.5 rounded-xl glass-input text-xs text-white"
+                    className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -371,7 +371,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                     type="text"
                     value={cardNumber}
                     onChange={(e) => setCardNumber(e.target.value)}
-                    className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-mono"
+                    className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -381,7 +381,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                       type="text"
                       value={cardExp}
                       onChange={(e) => setCardExp(e.target.value)}
-                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-mono"
+                      className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                     />
                   </div>
                   <div>
@@ -390,7 +390,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                       type="password"
                       value={cardCvv}
                       onChange={(e) => setCardCvv(e.target.value)}
-                      className="w-full p-2.5 rounded-xl glass-input text-xs text-white font-mono"
+                      className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -399,12 +399,12 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
 
             {/* WALLETS */}
             {paymentMethod === 'Wallet' && (
-              <div className="p-5 rounded-2xl glass-panel border border-white/10 space-y-3 text-xs animate-fade-in">
+              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
                 <label className="block text-xs font-bold text-white mb-1">Select Wallet</label>
                 <select
                   value={selectedWallet}
                   onChange={(e) => setSelectedWallet(e.target.value)}
-                  className="w-full p-3 rounded-xl glass-input text-xs text-white bg-[#0c0d14]"
+                  className="w-full p-3 rounded-xl bg-[#141624] border border-white/20 text-xs text-white focus:border-amber-400 focus:outline-none"
                 >
                   <option value="Paytm Wallet">Paytm Wallet</option>
                   <option value="Amazon Pay">Amazon Pay Balance</option>
@@ -417,7 +417,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => setStep('summary')}
-                className="px-4 py-2.5 rounded-xl glass-panel text-xs text-white/70 hover:text-white cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-white/10 border border-white/15 text-xs text-white/90 hover:text-white hover:bg-white/20 cursor-pointer"
               >
                 ← Back to Selection
               </button>
