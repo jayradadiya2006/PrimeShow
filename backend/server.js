@@ -2142,45 +2142,59 @@ app.post([
 ], async (req, res) => {
   const bookingId = req.body.id || req.body.bookingId || `bk_${Date.now()}_${Math.floor(Math.random() * 9000 + 1000)}`;
   const thId = String(req.body.theatreId || 'th_1').trim();
-  const movId = String(req.body.movieId || 'mov_1').trim();
+  const movId = String(req.body.movieId || req.body.activityId || req.body.eventId || req.body.playId || 'mov_1').trim();
   const sDate = String(req.body.showDate || req.body.date || new Date().toISOString().split('T')[0]).trim();
-  const sTime = String(req.body.showTime || req.body.time || '10:00 AM').trim();
+  const sTime = String(req.body.showTime || req.body.time || req.body.timeSlot || '10:00 AM').trim();
   const sCity = String(req.body.city || req.body.theatreCity || 'Surat').trim();
 
-  const showKey = req.body.showId || req.body.isolatedLayoutKey || req.body.screenId || `${thId}_${movId}_${sDate}_${sTime}`;
-  const requestedSeats = Array.isArray(req.body.seats) ? req.body.seats : [req.body.seats || 'C4'];
+  const isSpecialty = req.path.includes('/events') || 
+                      req.path.includes('/plays') || 
+                      req.path.includes('/activities') || 
+                      req.path.includes('/activity') || 
+                      req.path.includes('/private-theatre') ||
+                      (req.body.bookingType && req.body.bookingType !== 'movie') ||
+                      (req.body.category && !['movie', 'cinema'].includes(req.body.category.toLowerCase()));
 
-  const layout = await DataStore.findOne('screen_layouts', { screenId: showKey }) ||
-    await DataStore.findOne('screen_layouts', { screenId: `${sCity}_${showKey}` }) ||
-    await DataStore.findOne('screen_layouts', { screenId: `${thId}_${movId}_${sDate}_${sTime}` });
+  const requestedSeats = Array.isArray(req.body.seats) 
+    ? req.body.seats 
+    : [req.body.seats || (isSpecialty ? `${req.body.ticketCount || 1} Pass(es)` : 'C4')];
 
-  if (layout) {
-    const adminBlocked = layout.blockedSeats || [];
-    const customStats = layout.customStatuses || {};
-    const conflictSeat = requestedSeats.find(s => adminBlocked.includes(s) || customStats[s] === 'BLOCKED' || customStats[s] === 'ADMIN_BLOCKED');
-    if (conflictSeat) {
+  const showKey = req.body.showId || req.body.isolatedLayoutKey || req.body.screenId || (isSpecialty ? `${movId}_${sDate}_${sTime}` : `${thId}_${movId}_${sDate}_${sTime}`);
+
+  if (!isSpecialty) {
+    const layout = await DataStore.findOne('screen_layouts', { screenId: showKey }) ||
+      await DataStore.findOne('screen_layouts', { screenId: `${sCity}_${showKey}` }) ||
+      await DataStore.findOne('screen_layouts', { screenId: `${thId}_${movId}_${sDate}_${sTime}` });
+
+    if (layout) {
+      const adminBlocked = layout.blockedSeats || [];
+      const customStats = layout.customStatuses || {};
+      const conflictSeat = requestedSeats.find(s => adminBlocked.includes(s) || customStats[s] === 'BLOCKED' || customStats[s] === 'ADMIN_BLOCKED');
+      if (conflictSeat) {
+        return res.status(400).json({
+          success: false,
+          error: `Seat ${conflictSeat} is blocked by Admin and cannot be booked.`
+        });
+      }
+    }
+
+    const existingBookings = await DataStore.find('bookings');
+    const alreadyBookedSeat = requestedSeats.find(s => {
+      return existingBookings.some(b => {
+        if ((b.status || 'CONFIRMED').toUpperCase() === 'CANCELLED') return false;
+        if (b.bookingType && b.bookingType !== 'movie') return false;
+        const isSameShow = (b.showId === showKey || b.screenId === showKey || b.isolatedLayoutKey === showKey) ||
+          (b.theatreId === thId && b.movieId === movId && b.showDate === sDate && (b.showTime === sTime || b.time === sTime));
+        return isSameShow && Array.isArray(b.seats) && b.seats.includes(s);
+      });
+    });
+
+    if (alreadyBookedSeat) {
       return res.status(400).json({
         success: false,
-        error: `Seat ${conflictSeat} is blocked by Admin and cannot be booked.`
+        error: `Seat ${alreadyBookedSeat} is already booked by another user.`
       });
     }
-  }
-
-  const existingBookings = await DataStore.find('bookings');
-  const alreadyBookedSeat = requestedSeats.find(s => {
-    return existingBookings.some(b => {
-      if ((b.status || 'CONFIRMED').toUpperCase() === 'CANCELLED') return false;
-      const isSameShow = (b.showId === showKey || b.screenId === showKey || b.isolatedLayoutKey === showKey) ||
-        (b.theatreId === thId && b.movieId === movId && b.showDate === sDate && (b.showTime === sTime || b.time === sTime));
-      return isSameShow && Array.isArray(b.seats) && b.seats.includes(s);
-    });
-  });
-
-  if (alreadyBookedSeat) {
-    return res.status(400).json({
-      success: false,
-      error: `Seat ${alreadyBookedSeat} is already booked by another user.`
-    });
   }
 
   const bookingDoc = {
@@ -2190,25 +2204,25 @@ app.post([
     userEmail: String(req.body.userEmail || 'guest@example.com'),
     userName: String(req.body.userName || 'VIP Guest'),
     movieId: movId,
-    movieTitle: req.body.movieTitle || req.body.title || 'Cinema Ticket',
-    title: req.body.title || req.body.movieTitle || 'Cinema Ticket',
-    poster: req.body.poster || req.body.posterUrl || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80',
+    movieTitle: req.body.movieTitle || req.body.title || req.body.activityTitle || req.body.eventTitle || req.body.playTitle || 'PrimeShow Pass',
+    title: req.body.title || req.body.movieTitle || req.body.activityTitle || req.body.eventTitle || req.body.playTitle || 'PrimeShow Pass',
+    poster: req.body.poster || req.body.posterUrl || req.body.image || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80',
     theatreId: thId,
-    theatreName: req.body.theatreName || req.body.venue || 'PrimeShow Multiplex',
-    venue: req.body.venue || req.body.theatreName || 'PrimeShow Multiplex',
+    theatreName: req.body.theatreName || req.body.venue || 'PrimeShow Arena',
+    venue: req.body.venue || req.body.theatreName || 'PrimeShow Arena',
     city: sCity,
-    screenName: req.body.screenName || 'Screen 1',
+    screenName: req.body.screenName || (isSpecialty ? 'VIP Pass Arena' : 'Screen 1'),
     showId: showKey,
     screenId: showKey,
     isolatedLayoutKey: showKey,
     seats: requestedSeats,
-    seatsBookedCount: requestedSeats.length,
-    ticketCount: requestedSeats.length,
-    tier: req.body.tier || 'Recliner',
+    seatsBookedCount: req.body.ticketCount || requestedSeats.length,
+    ticketCount: req.body.ticketCount || requestedSeats.length,
+    tier: req.body.tier || (isSpecialty ? (req.body.category || 'Official Pass') : 'Recliner'),
     totalAmount: Number(req.body.totalAmount || req.body.price || 450),
     paymentMethod: req.body.paymentMethod || 'UPI (Instant)',
-    category: req.body.category || 'Movie',
-    bookingType: req.body.bookingType || 'movie',
+    category: req.body.category || (isSpecialty ? 'Activity' : 'Movie'),
+    bookingType: req.body.bookingType || (isSpecialty ? 'activity' : 'movie'),
     showDate: sDate,
     showTime: sTime,
     status: 'CONFIRMED',

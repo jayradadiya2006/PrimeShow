@@ -906,6 +906,30 @@ export const BookingProvider = ({ children }) => {
     localStorage.setItem('primeshow_my_bookings_v2', JSON.stringify(myBookings));
   }, [myBookings]);
 
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (!e.key || e.key === 'primeshow_my_bookings_v2') {
+        try {
+          const raw = localStorage.getItem('primeshow_my_bookings_v2');
+          if (raw) {
+            setMyBookings(JSON.parse(raw));
+          }
+        } catch (err) {}
+      }
+    };
+    const handleCustomBooking = (e) => {
+      if (e.detail && e.detail.id) {
+        setMyBookings(prev => [e.detail, ...(Array.isArray(prev) ? prev.filter(b => b && b.id !== e.detail.id) : [])]);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('primeshow_booking_saved', handleCustomBooking);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('primeshow_booking_saved', handleCustomBooking);
+    };
+  }, []);
+
   // Global Tracked Booked Seats Map
   const [showBookedSeatsMap, setShowBookedSeatsMap] = useState({
     sh_101: ['C4', 'C5', 'D6', 'D7'],

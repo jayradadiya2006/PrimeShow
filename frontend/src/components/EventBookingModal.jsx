@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { jsPDF } from 'jspdf';
+import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { VerifiedTicketModal } from './VerifiedTicketModal';
 
@@ -58,36 +59,74 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
     }, 800);
 
     setTimeout(() => {
-      const bookingData = {
-        id: `ev_bk_${Math.floor(100000 + Math.random() * 900000)}`,
-        eventId: event.id,
-        eventTitle: event.title,
-        category: event.category || 'Live Concert',
-        venue: event.venue,
-        date: event.date,
-        time: event.time,
-        ticketCount,
-        pricePerTicket,
-        basePrice,
-        convenienceFee,
-        tax,
-        totalAmount: grandTotal,
-        paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` : 
-                       paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` : 
-                       paymentMethod === 'Card' ? 'Credit / Debit Card' : `Wallet (${selectedWallet})`,
-        transactionId: `TXN-EV-${Math.floor(100000 + Math.random() * 900000)}`,
-        userEmail: user?.email || 'guest@primeshow.com',
-        userName: user?.name || 'VIP Guest',
-        bookingDate: new Date().toISOString()
-      };
+      try {
+        const bookingData = {
+          id: `ev_bk_${Math.floor(100000 + Math.random() * 900000)}`,
+          eventId: event.id,
+          eventTitle: event.title,
+          movieTitle: event.title,
+          category: event.category || 'Live Concert',
+          venue: event.venue,
+          theatreName: event.venue,
+          screenName: 'Concert Ground',
+          date: event.date,
+          showDate: event.date,
+          time: event.time,
+          showTime: event.time,
+          ticketCount,
+          seats: [`${ticketCount} Pass(es)`],
+          pricePerTicket,
+          basePrice,
+          convenienceFee,
+          tax,
+          totalAmount: grandTotal,
+          paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` : 
+                         paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` : 
+                         paymentMethod === 'Card' ? 'Credit / Debit Card' : `Wallet (${selectedWallet})`,
+          transactionId: `TXN-EV-${Math.floor(100000 + Math.random() * 900000)}`,
+          userEmail: user?.email || 'guest@primeshow.com',
+          userName: user?.name || 'VIP Guest',
+          bookingDate: new Date().toISOString(),
+          bookingType: 'event',
+          status: 'CONFIRMED'
+        };
 
-      setConfirmedBooking(bookingData);
-      setIsProcessing(false);
-      setVerificationStep('');
-      setStep('confirmation');
+        // Persist to localStorage
+        try {
+          const raw = localStorage.getItem('primeshow_my_bookings_v2');
+          const list = raw ? JSON.parse(raw) : [];
+          const updated = [bookingData, ...list.filter(b => b.id !== bookingData.id)];
+          localStorage.setItem('primeshow_my_bookings_v2', JSON.stringify(updated));
+          window.dispatchEvent(new Event('storage'));
+          window.dispatchEvent(new CustomEvent('primeshow_booking_saved', { detail: bookingData }));
+        } catch (e) {
+          console.warn('LocalStorage save notice:', e);
+        }
 
-      if (onBookingSuccess) {
-        onBookingSuccess(bookingData);
+        // Post to backend API
+        try {
+          API.post('/events/book', bookingData).catch(err => {
+            console.warn('Backend event booking sync notice:', err?.message || err);
+          });
+        } catch (e) {}
+
+        setConfirmedBooking(bookingData);
+        setIsProcessing(false);
+        setVerificationStep('');
+        setStep('confirmation');
+
+        if (onBookingSuccess) {
+          try {
+            onBookingSuccess(bookingData);
+          } catch (e) {
+            console.warn('onBookingSuccess notice:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Event payment error:', err);
+        setIsProcessing(false);
+        setVerificationStep('');
+        alert('Could not complete event booking. Please try again.');
       }
     }, 1800);
   };

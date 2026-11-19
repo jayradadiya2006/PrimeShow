@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { 
   X, CheckCircle2, Ticket, QrCode, CreditCard, Building2, Wallet, 
-  Copy, Check, ShieldCheck, Printer, Share2, Sparkles, AlertTriangle 
+  Copy, Check, ShieldCheck, Printer, Share2, Sparkles, AlertTriangle, Download 
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { jsPDF } from 'jspdf';
+import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { VerifiedTicketModal } from './VerifiedTicketModal';
 
@@ -52,35 +53,72 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, onBookingSucce
     setStep('verifying');
 
     setTimeout(() => {
-      const bookingData = {
-        id: `act_bk_${Math.floor(100000 + Math.random() * 900000)}`,
-        activityId: activity.id,
-        activityTitle: activity.title,
-        category: activity.category || 'Recreation',
-        venue: activity.location || 'Surat Adventure Arena',
-        timeSlot: selectedSlot,
-        ticketCount,
-        pricePerPerson,
-        basePrice,
-        convenienceFee,
-        tax,
-        totalAmount: grandTotal,
-        paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` : 
-                       paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` : 
-                       paymentMethod === 'Cards' ? 'Credit / Debit Card' : `Wallet (${selectedWallet})`,
-        transactionId: `TXN-ACT-${Math.floor(100000 + Math.random() * 900000)}`,
-        userEmail: user?.email || 'guest@primeshow.com',
-        userName: user?.name || 'VIP Guest',
-        bookingDate: new Date().toISOString()
-      };
+      try {
+        const bookingData = {
+          id: `act_bk_${Math.floor(100000 + Math.random() * 900000)}`,
+          activityId: activity.id,
+          activityTitle: activity.title,
+          movieTitle: activity.title,
+          category: activity.category || 'Recreation',
+          venue: activity.location || 'Surat Adventure Arena',
+          theatreName: activity.location || 'Surat Adventure Arena',
+          screenName: 'Adventure Arena',
+          timeSlot: selectedSlot,
+          showTime: selectedSlot,
+          showDate: new Date().toISOString().split('T')[0],
+          seats: [`${ticketCount} Pass(es)`],
+          ticketCount,
+          pricePerPerson,
+          basePrice,
+          convenienceFee,
+          tax,
+          totalAmount: grandTotal,
+          paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` : 
+                         paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` : 
+                         paymentMethod === 'Cards' ? 'Credit / Debit Card' : `Wallet (${selectedWallet})`,
+          transactionId: `TXN-ACT-${Math.floor(100000 + Math.random() * 900000)}`,
+          userEmail: user?.email || 'guest@primeshow.com',
+          userName: user?.name || 'VIP Guest',
+          bookingDate: new Date().toISOString(),
+          bookingType: 'activity',
+          status: 'CONFIRMED'
+        };
 
-      setConfirmedBooking(bookingData);
-      setStep('pass');
+        // Save to localStorage so My Bookings & QR code lookup work immediately
+        try {
+          const raw = localStorage.getItem('primeshow_my_bookings_v2');
+          const list = raw ? JSON.parse(raw) : [];
+          const updated = [bookingData, ...list.filter(b => b.id !== bookingData.id)];
+          localStorage.setItem('primeshow_my_bookings_v2', JSON.stringify(updated));
+          window.dispatchEvent(new Event('storage'));
+          window.dispatchEvent(new CustomEvent('primeshow_booking_saved', { detail: bookingData }));
+        } catch (e) {
+          console.warn('LocalStorage save notice:', e);
+        }
 
-      if (onBookingSuccess) {
-        onBookingSuccess(bookingData);
+        // Asynchronously post to backend
+        try {
+          API.post('/activities/book', bookingData).catch(err => {
+            console.warn('Backend sync notice (offline fallback active):', err?.message || err);
+          });
+        } catch (e) {}
+
+        setConfirmedBooking(bookingData);
+        setStep('pass');
+
+        if (onBookingSuccess) {
+          try {
+            onBookingSuccess(bookingData);
+          } catch (e) {
+            console.warn('onBookingSuccess callback notice:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Payment processing error:', err);
+        setStep('payment');
+        alert('Could not complete payment verification. Please try again.');
       }
-    }, 1800);
+    }, 1500);
   };
 
   const handleDownloadPDF = () => {

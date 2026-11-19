@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { jsPDF } from 'jspdf';
+import API from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { VerifiedTicketModal } from './VerifiedTicketModal';
 
@@ -58,37 +59,75 @@ export const PlayBookingModal = ({ isOpen, onClose, play, onBookingSuccess }) =>
     }, 800);
 
     setTimeout(() => {
-      const bookingData = {
-        id: `pl_bk_${Math.floor(100000 + Math.random() * 900000)}`,
-        playId: play.id,
-        playTitle: play.title,
-        category: play.category || 'Theater Drama',
-        language: play.language || 'Gujarati',
-        venue: play.venue,
-        date: play.date,
-        time: play.time,
-        ticketCount,
-        pricePerTicket,
-        basePrice,
-        convenienceFee,
-        tax,
-        totalAmount: grandTotal,
-        paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` : 
-                       paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` : 
-                       paymentMethod === 'Card' ? 'Credit / Debit Card' : `Wallet (${selectedWallet})`,
-        transactionId: `TXN-PLAY-${Math.floor(100000 + Math.random() * 900000)}`,
-        userEmail: user?.email || 'guest@primeshow.com',
-        userName: user?.name || 'VIP Guest',
-        bookingDate: new Date().toISOString()
-      };
+      try {
+        const bookingData = {
+          id: `pl_bk_${Math.floor(100000 + Math.random() * 900000)}`,
+          playId: play.id,
+          playTitle: play.title,
+          movieTitle: play.title,
+          category: play.category || 'Theater Drama',
+          language: play.language || 'Gujarati',
+          venue: play.venue,
+          theatreName: play.venue,
+          screenName: 'Drama Auditorium',
+          date: play.date,
+          showDate: play.date,
+          time: play.time,
+          showTime: play.time,
+          ticketCount,
+          seats: [`${ticketCount} Pass(es)`],
+          pricePerTicket,
+          basePrice,
+          convenienceFee,
+          tax,
+          totalAmount: grandTotal,
+          paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` : 
+                         paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` : 
+                         paymentMethod === 'Card' ? 'Credit / Debit Card' : `Wallet (${selectedWallet})`,
+          transactionId: `TXN-PLAY-${Math.floor(100000 + Math.random() * 900000)}`,
+          userEmail: user?.email || 'guest@primeshow.com',
+          userName: user?.name || 'VIP Guest',
+          bookingDate: new Date().toISOString(),
+          bookingType: 'play',
+          status: 'CONFIRMED'
+        };
 
-      setConfirmedBooking(bookingData);
-      setIsProcessing(false);
-      setVerificationStep('');
-      setStep('confirmation');
+        // Persist to localStorage
+        try {
+          const raw = localStorage.getItem('primeshow_my_bookings_v2');
+          const list = raw ? JSON.parse(raw) : [];
+          const updated = [bookingData, ...list.filter(b => b.id !== bookingData.id)];
+          localStorage.setItem('primeshow_my_bookings_v2', JSON.stringify(updated));
+          window.dispatchEvent(new Event('storage'));
+          window.dispatchEvent(new CustomEvent('primeshow_booking_saved', { detail: bookingData }));
+        } catch (e) {
+          console.warn('LocalStorage save notice:', e);
+        }
 
-      if (onBookingSuccess) {
-        onBookingSuccess(bookingData);
+        // Post to backend API
+        try {
+          API.post('/plays/book', bookingData).catch(err => {
+            console.warn('Backend play booking sync notice:', err?.message || err);
+          });
+        } catch (e) {}
+
+        setConfirmedBooking(bookingData);
+        setIsProcessing(false);
+        setVerificationStep('');
+        setStep('confirmation');
+
+        if (onBookingSuccess) {
+          try {
+            onBookingSuccess(bookingData);
+          } catch (e) {
+            console.warn('onBookingSuccess notice:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Play payment error:', err);
+        setIsProcessing(false);
+        setVerificationStep('');
+        alert('Could not complete play booking. Please try again.');
       }
     }, 1800);
   };
