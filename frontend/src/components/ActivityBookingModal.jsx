@@ -1,569 +1,563 @@
 import React, { useState } from 'react';
 import { 
   X, CheckCircle2, Ticket, QrCode, CreditCard, Building2, Wallet, 
-  Download, Printer, Share2, Copy, Sparkles, ShieldCheck, Clock, MapPin, Check
+  Copy, Check, ShieldCheck, Printer, Share2, Sparkles, AlertTriangle 
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import jsPDF from 'jspdf';
-import API, { API_BASE } from '../services/api';
+import { jsPDF } from 'jspdf';
 import { useAuth } from '../context/AuthContext';
-import { useBooking } from '../context/BookingContext';
+import { VerifiedTicketModal } from './VerifiedTicketModal';
 
-export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, onBookingSuccess, onSuccess }) => {
+export const ActivityBookingModal = ({ isOpen, onClose, activity, onBookingSuccess }) => {
   const { user } = useAuth();
-  const { setMyBookings } = useBooking();
-  
-  const activeActivity = activity || activityItem;
-  const handleSuccessCallback = onBookingSuccess || onSuccess;
 
-  // State
   const [step, setStep] = useState('config'); // 'config' | 'payment' | 'verifying' | 'pass'
-  const [passCount, setPassCount] = useState(1);
-  const [activePaymentTab, setActivePaymentTab] = useState('upi'); // 'upi' | 'netbanking' | 'card' | 'wallet'
-  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [ticketCount, setTicketCount] = useState(2);
+  const [selectedSlot, setSelectedSlot] = useState(activity?.timeSlots?.[0] || '10:00 AM - 01:00 PM');
+  const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI' | 'Cards' | 'NetBanking' | 'Wallets'
+
+  // Payment Form Fields
+  const [upiVpa, setUpiVpa] = useState('user@okaxis');
+  const [selectedBank, setSelectedBank] = useState('HDFC Bank');
+  const [selectedWallet, setSelectedWallet] = useState('Paytm Wallet');
+  const [cardNumber, setCardNumber] = useState('4532 8921 7739 1092');
+  const [cardExp, setCardExp] = useState('08/29');
+  const [cardCvv, setCardCvv] = useState('892');
+
+  const [isCopiedUpi, setIsCopiedUpi] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isQrPassOpen, setIsQrPassOpen] = useState(false);
 
-  if (!isOpen || !activeActivity) return null;
+  if (!isOpen || !activity) return null;
 
-  // Payee & Dynamic UPI Details
-  const payeeName = 'Jay Hiralal Radadiya';
-  const payeeUpiId = 'jay.radadiya@ptaxis';
-  
-  // Dynamic Pricing Calculation
-  const basePrice = Number(activeActivity.price || 999);
-  const totalBasePrice = basePrice * passCount;
-  const convenienceFee = Math.round(totalBasePrice * 0.08); // 8% fee
-  const gstTax = Math.round(totalBasePrice * 0.05); // 5% GST
-  const grandTotal = totalBasePrice + convenienceFee + gstTax;
+  // Real-Time Pricing
+  const pricePerPerson = Number(activity.price || 499);
+  const basePrice = ticketCount * pricePerPerson;
+  const convenienceFee = Math.round(basePrice * 0.08);
+  const tax = Math.round(basePrice * 0.05);
+  const grandTotal = basePrice + convenienceFee + tax;
 
-  // Standard UPI URI format
-  const dynamicUpiUri = `upi://pay?pa=${payeeUpiId}&pn=${encodeURIComponent(payeeName)}&am=${grandTotal}&cu=INR`;
+  // Payee & Dynamic UPI Schema
+  const payeeName = 'PrimeShow Official Cinema Pass';
+  const payeeUpiId = 'pay@primeshow';
+  const upiSchemaUrl = `upi://pay?pa=${payeeUpiId}&pn=${encodeURIComponent(payeeName)}&am=${grandTotal}&cu=INR`;
 
-  const handleCopyUpi = () => {
+  const handleCopyUpiId = () => {
     navigator.clipboard.writeText(payeeUpiId);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2500);
+    setIsCopiedUpi(true);
+    setTimeout(() => setIsCopiedUpi(false), 2500);
   };
 
-  const handleConfirmPayment = async () => {
-    setIsProcessing(true);
+  const handleProcessPayment = () => {
     setStep('verifying');
 
-    try {
-      // Simulate real-time banking verification network delay
-      await new Promise(r => setTimeout(r, 2200));
-
-      const payload = {
-        activityId: activeActivity.id,
-        title: activeActivity.title,
-        activityTitle: activeActivity.title,
-        category: activeActivity.category || 'Water Park',
-        location: activeActivity.location || 'Surat',
-        city: activeActivity.city || 'Surat',
-        validity: activeActivity.validity || 'Full Day Pass (10:00 AM - 07:00 PM)',
-        timings: activeActivity.validity || 'Full Day Pass (10:00 AM - 07:00 PM)',
-        passRate: Number(activeActivity.price || 1299),
-        price: Number(activeActivity.price || 1299),
-        ticketCount: passCount,
-        quantity: passCount,
+    setTimeout(() => {
+      const bookingData = {
+        id: `act_bk_${Math.floor(100000 + Math.random() * 900000)}`,
+        activityId: activity.id,
+        activityTitle: activity.title,
+        category: activity.category || 'Recreation',
+        venue: activity.location || 'Surat Adventure Arena',
+        timeSlot: selectedSlot,
+        ticketCount,
+        pricePerPerson,
+        basePrice,
+        convenienceFee,
+        tax,
         totalAmount: grandTotal,
-        totalPrice: grandTotal,
-        userId: user?.id || user?._id || 'usr_guest',
+        paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` : 
+                       paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` : 
+                       paymentMethod === 'Cards' ? 'Credit / Debit Card' : `Wallet (${selectedWallet})`,
+        transactionId: `TXN-ACT-${Math.floor(100000 + Math.random() * 900000)}`,
         userEmail: user?.email || 'guest@primeshow.com',
         userName: user?.name || 'VIP Guest',
-        paymentMethod: activePaymentTab === 'upi' ? 'UPI (Jay Hiralal Radadiya)' :
-                       activePaymentTab === 'netbanking' ? 'Net Banking (HDFC/ICICI)' :
-                       activePaymentTab === 'card' ? 'Credit/Debit Card' : 'Digital Wallet',
+        bookingDate: new Date().toISOString()
       };
 
-      let response;
-      try {
-        response = await API.post('/bookings/activity', payload);
-      } catch (errPost) {
-        response = await API.post('/activities/book', payload);
-      }
-
-      setConfirmedBooking(response.data);
-      if (setMyBookings) {
-        setMyBookings(prev => [response.data, ...(Array.isArray(prev) ? prev : [])]);
-      }
+      setConfirmedBooking(bookingData);
       setStep('pass');
-      if (handleSuccessCallback) handleSuccessCallback(response.data);
-    } catch (err) {
-      alert(err.response?.data?.error || 'Payment process failed. Please try again.');
-      setStep('payment');
-    } finally {
-      setIsProcessing(false);
-    }
+
+      if (onBookingSuccess) {
+        onBookingSuccess(bookingData);
+      }
+    }, 1800);
   };
 
-  // Generate downloadable PDF Entry Pass
   const handleDownloadPDF = () => {
     if (!confirmedBooking) return;
-
     const doc = new jsPDF();
-
-    // Background gradient header
-    doc.setFillColor(15, 23, 42); // Dark slate
+    doc.setFillColor(255, 253, 247);
     doc.rect(0, 0, 210, 297, 'F');
-
-    doc.setFillColor(245, 158, 11); // Amber badge header
-    doc.rect(15, 15, 180, 24, 'F');
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.text('PRIMESHOW - VIP ACTIVITY ADVENTURE PASS', 105, 31, { align: 'center' });
-
-    // Pass details container
-    doc.setFillColor(30, 41, 59);
-    doc.rect(15, 45, 180, 215, 'F');
-
+    
+    doc.setFillColor(217, 0, 0);
+    doc.rect(0, 0, 210, 36, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.text(confirmedBooking.activityTitle, 25, 62);
+    doc.setFont('sans', 'bold');
+    doc.setFontSize(20);
+    doc.text('PrimeShow Activity Entry Pass', 105, 22, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('OFFICIAL DIGITAL ADVENTURE & ACTIVITY PASS', 105, 30, { align: 'center' });
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(16);
+    doc.text(confirmedBooking.activityTitle, 20, 52);
 
     doc.setFontSize(11);
-    doc.setTextColor(245, 158, 11);
-    doc.text(`Category: ${confirmedBooking.category}`, 25, 72);
+    doc.setFont('sans', 'normal');
+    doc.text(`Location: ${confirmedBooking.venue}`, 20, 65);
+    doc.text(`Time Slot: ${confirmedBooking.timeSlot}`, 20, 77);
+    doc.text(`Passes Issued: ${confirmedBooking.ticketCount} Participant(s)`, 20, 89);
+    doc.text(`Pass ID: ${confirmedBooking.id}`, 20, 101);
+    doc.text(`Transaction ID: ${confirmedBooking.transactionId}`, 20, 113);
+    doc.text(`Total Amount Paid: INR ${confirmedBooking.totalAmount}`, 20, 125);
 
-    doc.setFontSize(10);
-    doc.setTextColor(203, 213, 225);
-    doc.text(`Pass Booking ID: ${confirmedBooking.id}`, 25, 85);
-    doc.text(`Transaction Ref: ${confirmedBooking.transactionId}`, 25, 93);
-    doc.text(`Location / Venue: ${confirmedBooking.location}`, 25, 101);
-    doc.text(`Validity Period: ${confirmedBooking.validity}`, 25, 109);
-    doc.text(`Total Passes Issued: ${confirmedBooking.ticketCount} Entry Pass(es)`, 25, 117);
-    doc.text(`Grand Amount Paid: INR Rs.${confirmedBooking.totalAmount.toLocaleString('en-IN')}`, 25, 125);
-    doc.text(`Payee Beneficiary: ${payeeName} (${payeeUpiId})`, 25, 133);
-
-    // Benefits list section
-    doc.setDrawColor(245, 158, 11);
-    doc.line(25, 143, 185, 143);
-
-    doc.setFontSize(12);
-    doc.setTextColor(245, 158, 11);
-    doc.text('INCLUDED PASS BENEFITS:', 25, 153);
-
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    let yPos = 163;
-    (confirmedBooking.benefits || []).forEach((b) => {
-      doc.text(`- ${b}`, 30, yPos);
-      yPos += 8;
-    });
-
-    // Verification footer box
-    doc.setFillColor(15, 23, 42);
-    doc.rect(25, 215, 160, 35, 'F');
-
-    doc.setFontSize(10);
-    doc.setTextColor(34, 197, 94); // Emerald text
-    doc.text('PASS STATUS: VERIFIED & CONFIRMED', 105, 227, { align: 'center' });
-    doc.setTextColor(148, 163, 184);
-    doc.setFontSize(9);
-    doc.text('Present this digital PDF pass or QR at venue gate for instant access.', 105, 237, { align: 'center' });
-
-    doc.save(`PrimeShow_Activity_Pass_${confirmedBooking.id}.pdf`);
+    doc.save(`PrimeShow_${confirmedBooking.activityTitle.replace(/\s+/g, '_')}_Pass.pdf`);
   };
 
-  const handlePrintPass = () => {
-    window.print();
-  };
+  const handlePrint = () => { window.print(); };
 
-  const handleSharePass = () => {
+  const handleShare = () => {
     if (navigator.share && confirmedBooking) {
       navigator.share({
-        title: `PrimeShow Pass - ${confirmedBooking.activityTitle}`,
-        text: `I just booked ${confirmedBooking.ticketCount} Pass(es) for ${confirmedBooking.activityTitle} on PrimeShow! Pass ID: ${confirmedBooking.id}`,
-        url: window.location.href
+        title: `PrimeShow Activity Pass: ${confirmedBooking.activityTitle}`,
+        text: `I just reserved ${confirmedBooking.ticketCount} passes for ${confirmedBooking.activityTitle}!`,
+        url: `${window.location.origin}/?ticketId=${confirmedBooking.id}`
       }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(`PrimeShow Activity Pass: ${confirmedBooking?.id} for ${confirmedBooking?.activityTitle}`);
-      alert('Pass booking details copied to clipboard!');
+      navigator.clipboard.writeText(`${window.location.origin}/?ticketId=${confirmedBooking?.id}`);
+      alert('Pass booking link copied to clipboard!');
     }
   };
 
+  const ticketPassUrl = confirmedBooking ? (
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/?ticketId=${confirmedBooking.id}`
+      : `https://prime-show-tau.vercel.app/?ticketId=${confirmedBooking.id}`
+  ) : upiSchemaUrl;
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-16 sm:pt-20 pb-4 px-3 bg-black/85 backdrop-blur-xl animate-fade-in font-sans overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-[#0b0c16] rounded-2xl sm:rounded-3xl border border-white/15 shadow-2xl overflow-hidden flex flex-col max-h-[80vh] my-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in font-sans overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#FFFDF7] rounded-3xl border-2 border-[#D90000] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] my-auto animate-scale-up text-slate-900">
         
-        {/* Compact Sticky Header Bar */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0b0c16]/95 backdrop-blur-md shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
-              <Ticket className="w-3.5 h-3.5" />
+        {/* Header Bar */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#c5ba92] bg-[#DBCEA5] shrink-0 text-slate-900 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#D90000] flex items-center justify-center text-white shadow-xs">
+              <Ticket className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="text-sm font-black font-sans text-white">Activity Pass Checkout</h3>
-              <p className="text-[10px] text-amber-300">PrimeShow Adventure & Theme Park Pass</p>
+              <h3 className="text-base font-black font-sans text-slate-900">Activity Pass Checkout</h3>
+              <p className="text-[11px] text-[#D90000] font-bold">PrimeShow Adventure & Theme Park Pass</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 shadow-lg transition-all cursor-pointer flex items-center justify-center group"
+            className="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 hover:text-black shadow-xs transition-all cursor-pointer"
             title="Close Modal"
             aria-label="Close Modal"
           >
-            <X className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Scrollable Content Body */}
-        <div className="overflow-y-auto flex-1">
+        <div className="overflow-y-auto flex-1 p-5 space-y-5 text-slate-900">
+          
           {/* STEP 1: Pass Configuration & Quantity Selection */}
           {step === 'config' && (
-          <div className="p-4 space-y-3.5">
-            {/* Activity Card Banner */}
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-              <img
-                src={activeActivity.image}
-                alt={activeActivity.title}
-                className="w-16 h-16 rounded-lg object-cover border border-amber-400/40 shrink-0"
-              />
-              <div className="space-y-0.5 min-w-0">
-                <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[9px] font-bold uppercase inline-block">
-                  {activeActivity.category}
-                </span>
-                <h4 className="text-sm font-bold text-white leading-tight truncate">{activeActivity.title}</h4>
-                <p className="text-[11px] text-white/60 flex items-center gap-1 pt-0.5 truncate">
-                  <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
-                  <span className="truncate">{activeActivity.location}</span>
-                </p>
-                <p className="text-[11px] text-white/60 flex items-center gap-1 truncate">
-                  <Clock className="w-3 h-3 text-amber-400 shrink-0" />
-                  <span className="truncate">{activeActivity.validity}</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Pass Benefits List */}
-            {activeActivity.benefits && activeActivity.benefits.length > 0 && (
-              <div className="space-y-1.5">
-                <h5 className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Included Benefits:
-                </h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                  {activeActivity.benefits.map((b, idx) => (
-                    <div key={idx} className="flex items-center gap-1.5 p-1.5 rounded-lg bg-white/5 text-[11px] text-white/90 border border-white/5">
-                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span className="truncate">{b}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Quantity Selector */}
-            <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-white block">Number of Passes</span>
-                <span className="text-[10px] text-white/50">Max 10 passes per checkout</span>
-              </div>
-
-              <div className="flex items-center gap-2.5 bg-black/40 p-1 rounded-lg border border-white/10">
-                <button
-                  onClick={() => setPassCount(Math.max(1, passCount - 1))}
-                  className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer text-xs"
-                >
-                  -
-                </button>
-                <span className="text-sm font-bold text-amber-400 w-5 text-center">{passCount}</span>
-                <button
-                  onClick={() => setPassCount(Math.min(10, passCount + 1))}
-                  className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-white font-bold transition-all cursor-pointer text-xs"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* Compact Price Breakdown */}
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/20 space-y-1.5 text-[11px]">
-              <div className="flex justify-between text-white/70">
-                <span>Pass Price ({passCount} x ₹{basePrice})</span>
-                <span>₹{totalBasePrice.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between text-white/70">
-                <span>Convenience Fee (8%)</span>
-                <span>₹{convenienceFee.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between text-white/70">
-                <span>GST Tax (5%)</span>
-                <span>₹{gstTax.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="border-t border-amber-400/30 pt-1.5 flex justify-between text-xs font-bold text-amber-300">
-                <span>Grand Total</span>
-                <span className="text-sm font-extrabold text-amber-400">₹{grandTotal.toLocaleString('en-IN')}</span>
-              </div>
-            </div>
-
-            {/* Proceed Button */}
-            <button
-              onClick={() => setStep('payment')}
-              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <span>Proceed to Payment (₹{grandTotal.toLocaleString('en-IN')})</span>
-            </button>
-          </div>
-        )}
-
-        {/* STEP 2: Payment Gateway Tabs & Dynamic UPI QR */}
-        {step === 'payment' && (
-          <div className="p-4 space-y-3.5">
-            
-            {/* Payee Info Banner */}
-            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between text-[11px]">
-              <div>
-                <span className="text-[9px] text-amber-300 uppercase font-bold tracking-wider block">Beneficiary Payee</span>
-                <span className="text-xs font-bold text-white">{payeeName}</span>
-                <span className="text-[10px] text-amber-400/80 block font-mono">{payeeUpiId}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-[9px] text-white/50 block">Due Amount</span>
-                <span className="text-base font-black text-amber-400">₹{grandTotal.toLocaleString('en-IN')}</span>
-              </div>
-            </div>
-
-            {/* Payment Options Tabs */}
-            <div className="grid grid-cols-4 gap-1 border-b border-white/10 pb-2 text-[11px] font-bold">
-              <button
-                onClick={() => setActivePaymentTab('upi')}
-                className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                  activePaymentTab === 'upi'
-                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
-                }`}
-              >
-                <QrCode className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">UPI & QR</span>
-              </button>
-
-              <button
-                onClick={() => setActivePaymentTab('netbanking')}
-                className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                  activePaymentTab === 'netbanking'
-                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Banking</span>
-              </button>
-
-              <button
-                onClick={() => setActivePaymentTab('card')}
-                className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                  activePaymentTab === 'card'
-                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
-                }`}
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Cards</span>
-              </button>
-
-              <button
-                onClick={() => setActivePaymentTab('wallet')}
-                className={`py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                  activePaymentTab === 'wallet'
-                    ? 'bg-amber-500 text-black font-bold shadow-md shadow-amber-500/20'
-                    : 'glass-panel text-white/70 hover:text-white'
-                }`}
-              >
-                <Wallet className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Wallets</span>
-              </button>
-            </div>
-
-            {/* Tab 1: Dynamic UPI QR Code */}
-            {activePaymentTab === 'upi' && (
-              <div className="text-center space-y-2.5 py-1">
-                <p className="text-[11px] text-amber-300 font-semibold">
-                  Scan QR with GPay / PhonePe / Paytm to pay <strong className="text-white">₹{grandTotal.toLocaleString('en-IN')}</strong>
-                </p>
-
-                <div className="inline-block p-3 rounded-2xl bg-white shadow-xl border-2 border-amber-400">
-                  <QRCodeSVG
-                    value={dynamicUpiUri}
-                    size={140}
-                    level="H"
-                    includeMargin={true}
+            <div className="space-y-4">
+              {/* Activity Card Banner */}
+              <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-[#DBCEA5] border border-[#c5ba92] text-slate-900 shadow-xs">
+                {activity.image && (
+                  <img 
+                    src={activity.image} 
+                    alt={activity.title} 
+                    className="w-16 h-16 rounded-xl object-cover border border-[#c5ba92] shrink-0 shadow-xs" 
                   />
-                </div>
-
-                <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                  <span className="text-[11px] text-white/70">UPI ID: <strong className="text-amber-400 font-mono">{payeeUpiId}</strong></span>
-                  <button
-                    onClick={handleCopyUpi}
-                    className="p-1 rounded bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
-                    title="Copy UPI ID"
-                  >
-                    {copiedUpi ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 2: Net Banking */}
-            {activePaymentTab === 'netbanking' && (
-              <div className="space-y-2 py-2 text-[11px]">
-                <p className="text-white/70">Select bank for net banking transfer:</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank', 'Kotak Mahindra', 'PNB Bank'].map(bank => (
-                    <button key={bank} className="p-2 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400 text-white font-semibold text-center cursor-pointer">
-                      {bank}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Tab 3: Credit/Debit Cards */}
-            {activePaymentTab === 'card' && (
-              <div className="space-y-2 py-1 text-[11px]">
+                )}
                 <div>
-                  <label className="block text-white/70 mb-0.5">Cardholder Name</label>
-                  <input type="text" placeholder="e.g. Jay Radadiya" className="w-full p-2 rounded-lg glass-input text-white text-[11px]" />
-                </div>
-                <div>
-                  <label className="block text-white/70 mb-0.5">Card Number</label>
-                  <input type="text" placeholder="4532 •••• •••• 8921" className="w-full p-2 rounded-lg glass-input text-white text-[11px]" />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-white/70 mb-0.5">Expiry Date</label>
-                    <input type="text" placeholder="MM/YY" className="w-full p-2 rounded-lg glass-input text-white text-[11px]" />
-                  </div>
-                  <div>
-                    <label className="block text-white/70 mb-0.5">CVV</label>
-                    <input type="password" maxLength={4} placeholder="•••" className="w-full p-2 rounded-lg glass-input text-white text-[11px]" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 4: Wallets */}
-            {activePaymentTab === 'wallet' && (
-              <div className="space-y-2 py-2 text-[11px]">
-                <p className="text-white/70">Select digital wallet:</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {['Paytm Wallet', 'Amazon Pay', 'PhonePe Wallet', 'Mobikwik'].map(w => (
-                    <button key={w} className="p-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400 text-white font-semibold cursor-pointer">
-                      {w}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => setStep('config')}
-                className="w-1/3 py-2.5 rounded-xl glass-panel text-white/70 font-bold text-xs hover:text-white cursor-pointer"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleConfirmPayment}
-                disabled={isProcessing}
-                className="w-2/3 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Complete Payment</span>
-              </button>
-            </div>
-
-          </div>
-        )}
-
-        {/* STEP 3: Banking Verification Loader */}
-        {step === 'verifying' && (
-          <div className="p-8 text-center space-y-3">
-            <div className="w-10 h-10 rounded-full border-4 border-amber-400 border-t-transparent animate-spin mx-auto"></div>
-            <h4 className="text-base font-black font-sans text-white">Verifying Payment...</h4>
-            <p className="text-xs text-amber-300 font-mono">Processing NPCI settlement for ₹{grandTotal.toLocaleString('en-IN')}...</p>
-          </div>
-        )}
-
-        {/* STEP 4: Digital Entry Pass Ticket Output */}
-        {step === 'pass' && confirmedBooking && (
-          <div className="p-4 space-y-3.5">
-            <div className="text-center space-y-0.5">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 mx-auto mb-1">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-black font-sans text-white">Activity Pass Confirmed!</h3>
-              <p className="text-xs text-emerald-400 font-semibold">Pass ID: {confirmedBooking.id}</p>
-            </div>
-
-            {/* Printable Pass Card */}
-            <div id="printable-pass" className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-amber-400/40 shadow-xl space-y-3 relative overflow-hidden">
-              <div className="flex justify-between items-start border-b border-white/10 pb-2">
-                <div>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold uppercase">
-                    {confirmedBooking.category}
+                  <span className="px-2 py-0.5 rounded-full bg-[#D90000] text-white text-[9px] font-black uppercase shadow-xs">
+                    {activity.category || 'Activity'}
                   </span>
-                  <h4 className="text-sm font-bold text-white mt-0.5">{confirmedBooking.activityTitle}</h4>
-                  <p className="text-[11px] text-white/60">{confirmedBooking.location}</p>
-                </div>
-                <div className="p-1.5 bg-white rounded-lg">
-                  <QRCodeSVG value={`PRIMESHOW-PASS-${confirmedBooking.id}`} size={52} level="H" />
+                  <h4 className="font-black font-sans text-base text-slate-900 mt-1">{activity.title}</h4>
+                  <p className="text-xs text-slate-700 font-medium">{activity.location}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div>
-                  <span className="text-white/40 block text-[9px]">Validity</span>
-                  <span className="text-white font-semibold">{confirmedBooking.validity}</span>
+              {/* Time Slot Picker */}
+              {activity.timeSlots && activity.timeSlots.length > 0 && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-900 uppercase tracking-wider block">
+                    Choose Schedule Time Slot
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {activity.timeSlots.map((slot) => (
+                      <button
+                        key={slot}
+                        onClick={() => setSelectedSlot(slot)}
+                        className={`p-2.5 rounded-xl border text-xs font-bold text-left transition-all cursor-pointer shadow-2xs ${
+                          selectedSlot === slot
+                            ? 'bg-[#D90000] text-white border-[#D90000] shadow-sm'
+                            : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-300'
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <span className="text-white/40 block text-[9px]">Passes</span>
-                  <span className="text-amber-400 font-bold">{confirmedBooking.ticketCount} Entry Pass(es)</span>
-                </div>
-                <div>
-                  <span className="text-white/40 block text-[9px]">Paid</span>
-                  <span className="text-emerald-400 font-bold">₹{confirmedBooking.totalAmount.toLocaleString('en-IN')}</span>
-                </div>
-                <div>
-                  <span className="text-white/40 block text-[9px]">Transaction Ref</span>
-                  <span className="text-white/80 font-mono text-[10px]">{confirmedBooking.transactionId}</span>
+              )}
+
+              {/* Participant Quantity Selector */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-300 space-y-2.5 shadow-xs">
+                <label className="text-xs font-black text-[#D90000] uppercase tracking-wider block">
+                  Select Number of Participants
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[1, 2, 3, 4, 5, 6, 8, 10].map((qty) => (
+                    <button
+                      key={qty}
+                      onClick={() => setTicketCount(qty)}
+                      className={`w-10 h-10 rounded-xl border font-black text-xs transition-all cursor-pointer shadow-2xs ${
+                        ticketCount === qty
+                          ? 'bg-[#D90000] text-white border-[#D90000] shadow-md scale-105'
+                          : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-300'
+                      }`}
+                    >
+                      {qty}
+                    </button>
+                  ))}
                 </div>
               </div>
+
+              {/* Price Breakdown */}
+              <div className="p-4 rounded-2xl bg-white border border-slate-300 space-y-2 text-xs text-slate-900 shadow-xs">
+                <div className="flex justify-between text-slate-600">
+                  <span>Entry Passes ({ticketCount} @ ₹{pricePerPerson})</span>
+                  <span className="font-bold text-slate-900">₹{basePrice.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>Convenience Fee (8%)</span>
+                  <span className="font-bold text-slate-900">₹{convenienceFee.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>GST & Platform Tax (5%)</span>
+                  <span className="font-bold text-slate-900">₹{tax.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="border-t border-slate-200 pt-2 flex justify-between items-center text-sm font-black text-slate-900">
+                  <span>Grand Total</span>
+                  <span className="text-2xl font-black font-sans text-[#D90000]">₹{grandTotal.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setStep('payment')}
+                className="w-full py-3.5 sm:py-4 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-black font-sans text-xs sm:text-sm uppercase tracking-wider shadow-md hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer"
+              >
+                Proceed to Secure Payment →
+              </button>
             </div>
+          )}
 
-            {/* Action Buttons: PDF Download, Print & Share */}
-            <div className="grid grid-cols-3 gap-1.5 pt-1">
-              <button
-                onClick={handleDownloadPDF}
-                className="py-2.5 px-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center justify-center gap-1 shadow-md shadow-amber-500/20 cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5" /> PDF
-              </button>
+          {/* STEP 2: Payment Gateway Selection */}
+          {step === 'payment' && (
+            <div className="space-y-4 text-slate-900">
+              <div className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                Select Payment Option
+              </div>
+
+              {/* Gateway Tabs */}
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { id: 'UPI', label: 'UPI & QR', icon: QrCode },
+                  { id: 'Cards', label: 'Cards', icon: CreditCard },
+                  { id: 'NetBanking', label: 'Banking', icon: Building2 },
+                  { id: 'Wallets', label: 'Wallets', icon: Wallet },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = paymentMethod === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setPaymentMethod(tab.id)}
+                      className={`p-2.5 rounded-xl border flex flex-col items-center gap-1 text-[11px] font-bold cursor-pointer transition-all shadow-2xs ${
+                        isActive
+                          ? 'bg-[#D90000] text-white border-[#D90000] shadow-md'
+                          : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-300'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Dynamic UPI QR Code */}
+              {paymentMethod === 'UPI' && (
+                <div className="p-4 rounded-2xl bg-white border border-slate-300 space-y-3 shadow-xs">
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div 
+                      onClick={handleProcessPayment}
+                      className="bg-white p-2 rounded-2xl shadow-md border-2 border-slate-300 hover:border-[#D90000] flex flex-col items-center cursor-pointer hover:scale-105 active:scale-95 transition-all group shrink-0"
+                      title="Click QR to Pay & Issue Pass"
+                    >
+                      <QRCodeSVG
+                        value={upiSchemaUrl}
+                        size={130}
+                        level="H"
+                        includeMargin={true}
+                      />
+                      <span className="text-[9px] font-black text-[#D90000] uppercase tracking-wider mt-1 group-hover:underline">
+                        Click QR to Pay
+                      </span>
+                    </div>
+
+                    <div className="flex-1 space-y-2 text-left w-full">
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-[9px] text-slate-500 uppercase font-bold block">Payee Beneficiary</span>
+                        <span className="text-xs font-bold text-slate-900">{payeeName}</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-[#DBCEA5] border border-[#c5ba92] flex items-center justify-between">
+                        <div>
+                          <span className="text-[9px] text-slate-700 font-bold block">UPI ID</span>
+                          <span className="text-xs font-mono font-bold text-[#D90000]">{payeeUpiId}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleCopyUpiId}
+                          className="px-2.5 py-1 rounded-lg bg-[#D90000] text-white hover:bg-[#b00000] text-[10px] font-bold cursor-pointer"
+                        >
+                          {isCopiedUpi ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+
+                      <input
+                        type="text"
+                        value={upiVpa}
+                        onChange={(e) => setUpiVpa(e.target.value)}
+                        placeholder="username@upi"
+                        className="w-full p-2 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-mono focus:border-[#D90000] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Cards Tab */}
+              {paymentMethod === 'Cards' && (
+                <div className="p-4 rounded-2xl bg-white border border-slate-300 space-y-2.5 text-xs shadow-xs">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-700 block mb-1">Card Number</label>
+                    <input
+                      type="text"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(e.target.value)}
+                      className="w-full p-2 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-mono focus:border-[#D90000] focus:outline-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-1">Expiry</label>
+                      <input
+                        type="text"
+                        value={cardExp}
+                        onChange={(e) => setCardExp(e.target.value)}
+                        className="w-full p-2 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-mono focus:border-[#D90000] focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-700 block mb-1">CVV</label>
+                      <input
+                        type="password"
+                        value={cardCvv}
+                        onChange={(e) => setCardCvv(e.target.value)}
+                        className="w-full p-2 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-mono focus:border-[#D90000] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* NetBanking Tab */}
+              {paymentMethod === 'NetBanking' && (
+                <div className="p-4 rounded-2xl bg-white border border-slate-300 space-y-2 text-xs shadow-xs">
+                  <label className="text-[10px] font-bold text-slate-700 block">Select Financial Partner</label>
+                  <select
+                    value={selectedBank}
+                    onChange={(e) => setSelectedBank(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-bold focus:outline-none"
+                  >
+                    <option value="HDFC Bank">HDFC Bank</option>
+                    <option value="ICICI Bank">ICICI Bank</option>
+                    <option value="State Bank of India">State Bank of India (SBI)</option>
+                    <option value="Axis Bank">Axis Bank</option>
+                    <option value="Kotak Mahindra Bank">Kotak Mahindra Bank</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Wallets Tab */}
+              {paymentMethod === 'Wallets' && (
+                <div className="p-4 rounded-2xl bg-white border border-slate-300 space-y-2 text-xs shadow-xs">
+                  <label className="text-[10px] font-bold text-slate-700 block">Select Digital Wallet</label>
+                  <select
+                    value={selectedWallet}
+                    onChange={(e) => setSelectedWallet(e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-bold focus:outline-none"
+                  >
+                    <option value="Paytm Wallet">Paytm Wallet</option>
+                    <option value="Amazon Pay">Amazon Pay Balance</option>
+                    <option value="PhonePe Wallet">PhonePe Wallet</option>
+                    <option value="LazyPay">LazyPay Pay Later</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  onClick={() => setStep('config')}
+                  className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 hover:bg-slate-100 cursor-pointer shadow-xs"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={handleProcessPayment}
+                  className="px-6 py-3 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold font-sans text-xs shadow-md cursor-pointer transition-all"
+                >
+                  Pay ₹{grandTotal.toLocaleString('en-IN')} & Issue Pass
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Banking Verification Loader */}
+          {step === 'verifying' && (
+            <div className="p-8 text-center space-y-3 text-slate-900">
+              <div className="w-10 h-10 rounded-full border-4 border-[#D90000] border-t-transparent animate-spin mx-auto"></div>
+              <h4 className="text-base font-black font-sans text-slate-900">Verifying Payment...</h4>
+              <p className="text-xs text-[#D90000] font-mono font-bold">Processing NPCI settlement for ₹{grandTotal.toLocaleString('en-IN')}...</p>
+            </div>
+          )}
+
+          {/* STEP 4: Digital Entry Pass Ticket Output */}
+          {step === 'pass' && confirmedBooking && (
+            <div className="space-y-4 text-slate-900">
+              <div className="text-center space-y-0.5">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center text-emerald-700 mx-auto mb-1 shadow-md">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <h3 className="text-xl font-black font-sans text-slate-900">Activity Pass Confirmed!</h3>
+                <p className="text-xs text-[#D90000] font-bold">Pass ID: {confirmedBooking.id}</p>
+              </div>
+
+              {/* Printable Pass Card */}
+              <div className="p-5 rounded-3xl bg-[#DBCEA5] border border-[#c5ba92] shadow-md space-y-3 relative overflow-hidden text-slate-900">
+                <div className="flex justify-between items-start border-b border-[#c5ba92] pb-3">
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[#D90000]">PrimeShow Adventure Pass</span>
+                    <h4 className="text-base font-black font-sans text-slate-900">{confirmedBooking.activityTitle}</h4>
+                    <p className="text-xs text-slate-700 font-medium">{confirmedBooking.venue}</p>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#D90000] text-white text-[10px] font-black shadow-xs">
+                    CONFIRMED
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-600 block font-semibold">Scheduled Slot</span>
+                    <span className="font-black font-sans text-slate-900 text-xs">{confirmedBooking.timeSlot}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-600 block font-semibold">Issued Passes</span>
+                    <span className="font-black font-sans text-[#D90000] text-xs">{confirmedBooking.ticketCount} Participant(s)</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-600 block font-semibold">Payment</span>
+                    <span className="font-bold text-slate-900 text-xs">{confirmedBooking.paymentMethod}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-600 block font-semibold">Total Paid</span>
+                    <span className="font-black font-sans text-emerald-800 text-xs">₹{confirmedBooking.totalAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                {/* Scannable Pass QR Code */}
+                <div className="pt-3 border-t border-[#c5ba92] flex items-center justify-between">
+                  <div 
+                    onClick={() => setIsQrPassOpen(true)}
+                    className="bg-white p-2 rounded-xl border-2 border-slate-300 hover:border-[#D90000] shadow-xs cursor-pointer hover:scale-105 active:scale-95 transition-all group flex flex-col items-center"
+                    title="Click to Select QR / View Pass"
+                  >
+                    <QRCodeSVG value={ticketPassUrl} size={65} level="H" />
+                    <span className="text-[8px] font-black text-[#D90000] mt-0.5 group-hover:underline">Select QR</span>
+                  </div>
+                  <div className="text-right text-[10px] text-slate-700 font-semibold leading-relaxed">
+                    <span className="text-emerald-800 font-bold block">✓ Verified NPCI Settlement</span>
+                    Present this digital QR at entrance.
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={handleDownloadPDF}
+                  className="py-2.5 px-2 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-bold text-xs flex items-center justify-center gap-1 shadow-md cursor-pointer transition-all"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>PDF Pass</span>
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="py-2.5 px-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-bold text-xs flex items-center justify-center gap-1 shadow-xs cursor-pointer transition-colors"
+                >
+                  <Printer className="w-3.5 h-3.5 text-[#D90000]" />
+                  <span>Print</span>
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="py-2.5 px-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-bold text-xs flex items-center justify-center gap-1 shadow-xs cursor-pointer transition-colors"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Share</span>
+                </button>
+              </div>
 
               <button
-                onClick={handlePrintPass}
-                className="py-2.5 px-2 rounded-xl glass-panel text-white hover:bg-white/10 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
+                onClick={onClose}
+                className="w-full py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold transition-all cursor-pointer"
               >
-                <Printer className="w-3.5 h-3.5 text-purple-400" /> Print
-              </button>
-
-              <button
-                onClick={handleSharePass}
-                className="py-2.5 px-2 rounded-xl glass-panel text-white hover:bg-white/10 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <Share2 className="w-3.5 h-3.5 text-emerald-400" /> Share
+                Close Pass
               </button>
             </div>
-
-          </div>
-        )}
+          )}
 
         </div>
       </div>
+
+      {/* Interactive Official Verified QR Pass Modal */}
+      {isQrPassOpen && confirmedBooking && (
+        <VerifiedTicketModal
+          isOpen={isQrPassOpen}
+          onClose={() => setIsQrPassOpen(false)}
+          ticket={{
+            id: confirmedBooking.id,
+            movieTitle: confirmedBooking.activityTitle,
+            theatreName: confirmedBooking.venue,
+            screenName: 'Adventure Arena',
+            showDate: new Date().toISOString().split('T')[0],
+            showTime: confirmedBooking.timeSlot,
+            seats: `${confirmedBooking.ticketCount} Pass(es)`,
+            tier: confirmedBooking.category || 'Activity Pass',
+            totalAmount: confirmedBooking.totalAmount,
+            transactionId: confirmedBooking.transactionId
+          }}
+        />
+      )}
     </div>
   );
 };

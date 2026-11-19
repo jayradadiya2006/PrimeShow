@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { 
   X, CheckCircle2, QrCode, CreditCard, Building2, Wallet, Copy, Check, 
-  Printer, Share2, Download, Sparkles, Calendar, MapPin, Ticket, ArrowRight, ShieldCheck
+  Download, Printer, Share2, Calendar, MapPin, Ticket, ShieldCheck, Sparkles 
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import confetti from 'canvas-confetti';
 import { jsPDF } from 'jspdf';
-import API, { API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { VerifiedTicketModal } from './VerifiedTicketModal';
 
 export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) => {
   const { user } = useAuth();
@@ -16,33 +15,32 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
   const [ticketCount, setTicketCount] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('UPI'); // 'UPI' | 'NetBanking' | 'Card' | 'Wallet'
 
-  // Payee & Dynamic UPI Details
-  const payeeName = 'Jay Hiralal Radadiya';
-  const payeeUpiId = 'jay.radadiya@ptaxis';
-  const [isCopiedUpi, setIsCopiedUpi] = useState(false);
-
-  // Form inputs
-  const [upiVpa, setUpiVpa] = useState('vip.guest@upi');
+  // Form Fields
+  const [upiVpa, setUpiVpa] = useState('user@okaxis');
   const [selectedBank, setSelectedBank] = useState('HDFC Bank');
   const [selectedWallet, setSelectedWallet] = useState('Paytm Wallet');
   const [cardNumber, setCardNumber] = useState('4532 8921 7739 1092');
   const [cardExp, setCardExp] = useState('08/29');
   const [cardCvv, setCardCvv] = useState('892');
-  const [cardName, setCardName] = useState(user?.name || 'Aarav Sharma');
 
+  const [isCopiedUpi, setIsCopiedUpi] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [verificationStep, setVerificationStep] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState(null);
+  const [isQrPassOpen, setIsQrPassOpen] = useState(false);
 
   if (!isOpen || !event) return null;
 
-  // Price calculations
-  const pricePerTicket = Number(event.price || 1500);
-  const basePrice = pricePerTicket * ticketCount;
+  // Real-Time Pricing
+  const pricePerTicket = Number(event.price || 499);
+  const basePrice = ticketCount * pricePerTicket;
   const convenienceFee = Math.round(basePrice * 0.08);
   const tax = Math.round(basePrice * 0.05);
   const grandTotal = basePrice + convenienceFee + tax;
 
+  // Payee & Dynamic UPI URL Schema
+  const payeeName = 'PrimeShow Official Cinema Pass';
+  const payeeUpiId = 'pay@primeshow';
   const upiSchemaUrl = `upi://pay?pa=${payeeUpiId}&pn=${encodeURIComponent(payeeName)}&am=${grandTotal}&cu=INR`;
 
   const handleCopyUpiId = () => {
@@ -51,39 +49,45 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
     setTimeout(() => setIsCopiedUpi(false), 2500);
   };
 
-  const handlePayNow = async () => {
+  const handlePayNow = () => {
     setIsProcessing(true);
-    setVerificationStep('Connecting to Banking Gateway...');
+    setVerificationStep(`Connecting NPCI Payment Gateway for ₹${grandTotal.toLocaleString('en-IN')}...`);
 
     setTimeout(() => {
-      setVerificationStep(`Verifying NPCI UPI Settlement for ₹${grandTotal.toLocaleString('en-IN')}...`);
+      setVerificationStep(`Verifying Instant Settlement with ${paymentMethod}...`);
     }, 800);
 
-    setTimeout(async () => {
-      try {
-        const payload = {
-          eventId: event.id,
-          ticketCount,
-          paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` :
-                         paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` :
-                         paymentMethod === 'Wallet' ? `Wallet (${selectedWallet})` : 'Credit/Debit Card',
-          userEmail: user?.email || 'guest@primeshow.com',
-          userName: user?.name || 'VIP Guest'
-        };
+    setTimeout(() => {
+      const bookingData = {
+        id: `ev_bk_${Math.floor(100000 + Math.random() * 900000)}`,
+        eventId: event.id,
+        eventTitle: event.title,
+        category: event.category || 'Live Concert',
+        venue: event.venue,
+        date: event.date,
+        time: event.time,
+        ticketCount,
+        pricePerTicket,
+        basePrice,
+        convenienceFee,
+        tax,
+        totalAmount: grandTotal,
+        paymentMethod: paymentMethod === 'UPI' ? `Dynamic UPI (${payeeUpiId})` : 
+                       paymentMethod === 'NetBanking' ? `NetBanking (${selectedBank})` : 
+                       paymentMethod === 'Card' ? 'Credit / Debit Card' : `Wallet (${selectedWallet})`,
+        transactionId: `TXN-EV-${Math.floor(100000 + Math.random() * 900000)}`,
+        userEmail: user?.email || 'guest@primeshow.com',
+        userName: user?.name || 'VIP Guest',
+        bookingDate: new Date().toISOString()
+      };
 
-        const res = await API.post('/events/book', payload);
-        setConfirmedBooking(res.data);
-        setIsProcessing(false);
-        setVerificationStep('');
-        setStep('confirmation');
+      setConfirmedBooking(bookingData);
+      setIsProcessing(false);
+      setVerificationStep('');
+      setStep('confirmation');
 
-        confetti({ particleCount: 140, spread: 85, origin: { y: 0.6 } });
-
-        if (onBookingSuccess) onBookingSuccess(res.data);
-      } catch (err) {
-        setIsProcessing(false);
-        setVerificationStep('');
-        alert('Booking verification failed. Please try again.');
+      if (onBookingSuccess) {
+        onBookingSuccess(bookingData);
       }
     }, 1800);
   };
@@ -91,25 +95,31 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
   const handleDownloadPDF = () => {
     if (!confirmedBooking) return;
     const doc = new jsPDF();
-    doc.setFillColor(5, 5, 8);
+    doc.setFillColor(255, 253, 247);
     doc.rect(0, 0, 210, 297, 'F');
-    doc.setTextColor(245, 158, 11);
-    doc.setFont('sans', 'bold');
-    doc.setFontSize(22);
-    doc.text('PrimeShow VIP Event Pass', 20, 30);
     
+    doc.setFillColor(217, 0, 0);
+    doc.rect(0, 0, 210, 36, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(12);
-    doc.text(`Booking ID: ${confirmedBooking.id}`, 20, 50);
-    doc.text(`Transaction ID: ${confirmedBooking.transactionId}`, 20, 65);
-    doc.text(`Event Title: ${confirmedBooking.eventTitle}`, 20, 80);
-    doc.text(`Category: ${confirmedBooking.category}`, 20, 95);
-    doc.text(`Venue: ${confirmedBooking.venue}`, 20, 110);
-    doc.text(`Date & Time: ${confirmedBooking.date} @ ${confirmedBooking.time}`, 20, 125);
-    doc.text(`Tickets Issued: ${confirmedBooking.ticketCount} VIP Entry Pass(es)`, 20, 140);
-    doc.text(`Amount Paid: INR ${confirmedBooking.totalAmount}`, 20, 155);
-    doc.text(`Payee Beneficiary: ${payeeName} (${payeeUpiId})`, 20, 170);
-    
+    doc.setFont('sans', 'bold');
+    doc.setFontSize(20);
+    doc.text('PrimeShow Verified Event Pass', 105, 22, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text('OFFICIAL LIVE EVENT PASS & ENTRY PERMIT', 105, 30, { align: 'center' });
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(16);
+    doc.text(confirmedBooking.eventTitle, 20, 52);
+
+    doc.setFontSize(11);
+    doc.setFont('sans', 'normal');
+    doc.text(`Venue: ${confirmedBooking.venue}`, 20, 65);
+    doc.text(`Date & Showtime: ${confirmedBooking.date} @ ${confirmedBooking.time}`, 20, 77);
+    doc.text(`Tickets Issued: ${confirmedBooking.ticketCount} VIP Entry Pass(es)`, 20, 89);
+    doc.text(`Pass ID: ${confirmedBooking.id}`, 20, 101);
+    doc.text(`Transaction ID: ${confirmedBooking.transactionId}`, 20, 113);
+    doc.text(`Total Amount Paid: INR ${confirmedBooking.totalAmount}`, 20, 125);
+
     doc.save(`PrimeShow_${confirmedBooking.eventTitle.replace(/\s+/g, '_')}_Pass.pdf`);
   };
 
@@ -121,48 +131,55 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
         await navigator.share({
           title: `PrimeShow Event Pass: ${confirmedBooking.eventTitle}`,
           text: `I just booked ${confirmedBooking.ticketCount} tickets for ${confirmedBooking.eventTitle} at ${confirmedBooking.venue}!`,
-          url: window.location.href
+          url: `${window.location.origin}/?ticketId=${confirmedBooking.id}`
         });
       } catch (e) {}
     } else {
+      navigator.clipboard.writeText(`${window.location.origin}/?ticketId=${confirmedBooking?.id}`);
       alert(`Event Pass Copied! Booking ID: ${confirmedBooking?.id}`);
     }
   };
 
+  const ticketPassUrl = confirmedBooking ? (
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/?ticketId=${confirmedBooking.id}`
+      : `https://prime-show-tau.vercel.app/?ticketId=${confirmedBooking.id}`
+  ) : upiSchemaUrl;
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center pt-20 sm:pt-24 pb-6 px-3 sm:px-6 bg-black/90 backdrop-blur-2xl animate-fade-in font-sans overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-[#0E1017] rounded-3xl p-5 sm:p-7 border border-white/15 shadow-2xl text-white max-h-[82vh] overflow-y-auto my-auto scrollbar-thin">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fade-in font-sans overflow-y-auto">
+      <div className="relative w-full max-w-xl bg-[#FFFDF7] rounded-3xl p-5 sm:p-7 border-2 border-[#D90000] shadow-2xl text-slate-900 max-h-[85vh] overflow-y-auto my-auto scrollbar-thin animate-scale-up">
         
         {/* Prominent Exit / Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2.5 rounded-full bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/40 shadow-xl transition-all cursor-pointer z-[220] flex items-center justify-center"
+          className="absolute top-4 right-4 p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-black border border-slate-300 shadow-sm transition-all cursor-pointer z-[220] flex items-center justify-center"
           title="Close Modal"
           aria-label="Close Modal"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 text-slate-800" />
         </button>
 
         {/* STEP 1: SUMMARY & TICKET QUANTITY */}
         {step === 'summary' && (
-          <div className="space-y-6">
-            <div className="border-b border-white/10 pb-4">
-              <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
+          <div className="space-y-5">
+            <div className="border-b border-slate-200 pb-3 pr-10">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#D90000] text-white font-black text-[10px] uppercase shadow-xs">
                 {event.category || 'Live Event'}
               </span>
-              <h2 className="text-2xl font-black font-sans text-white mt-1">{event.title}</h2>
-              <p className="text-xs text-white/70 flex items-center gap-2 mt-1">
-                <MapPin className="w-3.5 h-3.5 text-amber-400" />
+              <h2 className="text-xl sm:text-2xl font-black font-sans text-slate-900 mt-1">{event.title}</h2>
+              <p className="text-xs text-slate-600 font-medium flex items-center gap-2 mt-1">
+                <MapPin className="w-3.5 h-3.5 text-[#D90000]" />
                 <span>{event.venue}</span>
                 <span>•</span>
-                <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                <Calendar className="w-3.5 h-3.5 text-[#D90000]" />
                 <span>{event.date} @ {event.time}</span>
               </p>
             </div>
 
             {/* Ticket Quantity Selector */}
-            <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3">
-              <label className="block text-xs font-bold text-amber-400 uppercase tracking-wider">
+            <div className="p-4 rounded-2xl bg-[#DBCEA5] border border-[#c5ba92] space-y-3 shadow-xs text-slate-900">
+              <label className="block text-xs font-black text-[#D90000] uppercase tracking-wider">
                 Select Number of Tickets
               </label>
               <div className="flex flex-wrap gap-2">
@@ -170,10 +187,10 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
                   <button
                     key={qty}
                     onClick={() => setTicketCount(qty)}
-                    className={`w-11 h-11 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                    className={`w-11 h-11 rounded-xl border font-black text-xs transition-all cursor-pointer shadow-2xs ${
                       ticketCount === qty
-                        ? 'bg-amber-500 text-black border-amber-400 shadow-md shadow-amber-500/20'
-                        : 'bg-white/10 text-white/90 hover:text-white hover:bg-white/20 border-white/15'
+                        ? 'bg-[#D90000] text-white border-[#D90000] shadow-md scale-105'
+                        : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-300'
                     }`}
                   >
                     {qty}
@@ -183,28 +200,28 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
             </div>
 
             {/* Real-Time Price Breakdown */}
-            <div className="bg-white/[0.04] p-4 rounded-2xl border border-white/10 space-y-2 text-xs">
-              <div className="flex justify-between text-slate-300">
+            <div className="bg-white p-4 rounded-2xl border border-slate-300 space-y-2 text-xs text-slate-900 shadow-xs">
+              <div className="flex justify-between text-slate-600">
                 <span>Tickets ({ticketCount} @ ₹{pricePerTicket.toLocaleString('en-IN')}/ticket)</span>
-                <span className="text-white font-semibold">₹{basePrice.toLocaleString('en-IN')}</span>
+                <span className="text-slate-900 font-bold">₹{basePrice.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-slate-300">
+              <div className="flex justify-between text-slate-600">
                 <span>Convenience Fee (8%)</span>
-                <span className="text-white font-semibold">₹{convenienceFee.toLocaleString('en-IN')}</span>
+                <span className="text-slate-900 font-bold">₹{convenienceFee.toLocaleString('en-IN')}</span>
               </div>
-              <div className="flex justify-between text-slate-300">
+              <div className="flex justify-between text-slate-600">
                 <span>GST & Taxes (5%)</span>
-                <span className="text-white font-semibold">₹{tax.toLocaleString('en-IN')}</span>
+                <span className="text-slate-900 font-bold">₹{tax.toLocaleString('en-IN')}</span>
               </div>
-              <div className="border-t border-white/10 pt-2 flex justify-between text-base font-bold text-white">
-                <span>Grand Total Amount</span>
-                <span className="text-amber-400 font-sans text-2xl font-black">₹{grandTotal.toLocaleString('en-IN')}</span>
+              <div className="border-t border-slate-200 pt-2 flex items-center justify-between text-base font-bold text-slate-900">
+                <span className="text-slate-800">Grand Total Amount</span>
+                <span className="text-[#D90000] font-sans text-2xl font-black">₹{grandTotal.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
             <button
               onClick={() => setStep('payment')}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 sm:py-4 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-black font-sans text-xs sm:text-sm uppercase tracking-wider shadow-md hover:brightness-110 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer transition-all"
             >
               <span>Proceed to Secure Payment Gateway →</span>
             </button>
@@ -213,8 +230,8 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
         {/* STEP 2: PAYMENT GATEWAY */}
         {step === 'payment' && (
-          <div className="space-y-6">
-            <div className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+          <div className="space-y-5 text-slate-900">
+            <div className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Select 1 of 4 Payment Options
             </div>
 
@@ -231,13 +248,13 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
                   <button
                     key={m.id}
                     onClick={() => setPaymentMethod(m.id)}
-                    className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    className={`p-3 rounded-2xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
                       isActive
-                        ? 'bg-amber-500 text-black border-amber-400 shadow-lg shadow-amber-500/25'
-                        : 'bg-white/10 text-white/90 hover:text-white border-white/15 hover:bg-white/20'
+                        ? 'bg-[#D90000] text-white border-[#D90000] shadow-md'
+                        : 'bg-white text-slate-800 hover:bg-slate-100 border-slate-300'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-black' : 'text-amber-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#D90000]'}`} />
                     <span>{m.label}</span>
                   </button>
                 );
@@ -246,42 +263,45 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
             {/* DYNAMIC UPI QR CODE & PAYEE DETAILS */}
             {paymentMethod === 'UPI' && (
-              <div className="p-5 rounded-2xl bg-[#0a0b12] border-2 border-amber-400/40 space-y-4 animate-fade-in shadow-xl">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-300 space-y-4 animate-fade-in text-slate-900 shadow-xs">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6">
                   
-                  {/* Inline SVG QR Code Renderer with Error Correction Level H */}
-                  <div className="bg-white p-3 rounded-2xl shadow-2xl shrink-0 border-2 border-amber-400/60 flex flex-col items-center">
+                  {/* Interactive SVG QR Code Renderer */}
+                  <div 
+                    onClick={handlePayNow}
+                    className="bg-white p-2.5 rounded-2xl shadow-md shrink-0 border-2 border-slate-300 hover:border-[#D90000] flex flex-col items-center cursor-pointer hover:scale-105 active:scale-95 transition-all group"
+                    title="Click QR to Pay & Issue VIP Pass"
+                  >
                     <QRCodeSVG
                       value={upiSchemaUrl}
-                      size={170}
+                      size={155}
                       level="H"
                       includeMargin={true}
                     />
-                    <div className="px-3 py-1 bg-amber-500 text-black font-extrabold text-xs rounded-full mt-2">
-                      ₹{grandTotal.toLocaleString('en-IN')}
-                    </div>
-                    <span className="text-[10px] font-bold text-black/70 uppercase tracking-wider mt-1">Scan via Any UPI App</span>
+                    <span className="text-[10px] font-extrabold text-[#D90000] uppercase tracking-wider mt-1.5 flex items-center gap-1 group-hover:underline">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#66DD6A]" /> Click QR to Pay & Get Pass
+                    </span>
                   </div>
 
                   {/* Payee Info & Manual Copy Box */}
-                  <div className="flex-1 space-y-3 text-left w-full">
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                      <span className="text-[10px] text-white/50 uppercase tracking-widest block font-bold">Payee Beneficiary Name</span>
-                      <div className="text-sm font-bold text-white flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span>{payeeName}</span>
+                  <div className="flex-1 space-y-3 text-left w-full max-w-full overflow-hidden">
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-0.5">
+                      <span className="text-[9px] text-slate-500 uppercase tracking-widest block font-bold">Platform Payee Beneficiary</span>
+                      <div className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5 truncate">
+                        <CheckCircle2 className="w-4 h-4 text-[#66DD6A] shrink-0" />
+                        <span className="truncate">{payeeName}</span>
                       </div>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] text-amber-300 uppercase tracking-widest block font-bold">Official Payee UPI ID</span>
-                        <span className="text-xs font-mono font-bold text-amber-300">{payeeUpiId}</span>
+                    <div className="p-3 rounded-2xl bg-[#DBCEA5] border border-[#c5ba92] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 w-full max-w-full overflow-hidden text-slate-900">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[9px] text-slate-700 uppercase tracking-widest block font-bold">Official Payee UPI ID</span>
+                        <span className="text-xs sm:text-sm font-mono font-bold text-[#D90000] truncate block">{payeeUpiId}</span>
                       </div>
                       <button
                         type="button"
                         onClick={handleCopyUpiId}
-                        className="px-3 py-1.5 rounded-lg bg-amber-500 text-black hover:bg-amber-400 font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all shrink-0"
+                        className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-[#D90000] text-white hover:bg-[#b00000] font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0 shadow-xs"
                       >
                         {isCopiedUpi ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{isCopiedUpi ? 'Copied!' : 'Copy UPI ID'}</span>
@@ -289,12 +309,12 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-white/80 mb-1">Enter VPA ID for UPI push notification:</label>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">Enter VPA ID for UPI push notification:</label>
                       <input
                         type="text"
                         value={upiVpa}
                         onChange={(e) => setUpiVpa(e.target.value)}
-                        className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
+                        className="w-full p-2.5 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-mono placeholder:text-slate-400 focus:border-[#D90000] focus:outline-none shadow-inner"
                         placeholder="username@upi"
                       />
                     </div>
@@ -305,14 +325,14 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
             {/* NET BANKING */}
             {paymentMethod === 'NetBanking' && (
-              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
-                <label className="block text-xs font-bold text-white mb-1">Select Bank</label>
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-300 space-y-3 text-xs animate-fade-in text-slate-900 shadow-xs">
+                <label className="block text-xs font-bold text-slate-900 mb-1">Select Net Banking Partner</label>
                 <select
                   value={selectedBank}
                   onChange={(e) => setSelectedBank(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-[#141624] border border-white/20 text-xs text-white focus:border-amber-400 focus:outline-none"
+                  className="w-full p-3 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-semibold focus:outline-none"
                 >
-                  <option value="HDFC Bank">HDFC Bank</option>
+                  <option value="HDFC Bank">HDFC Bank (Instant Transfer)</option>
                   <option value="ICICI Bank">ICICI Bank</option>
                   <option value="State Bank of India">State Bank of India (SBI)</option>
                   <option value="Axis Bank">Axis Bank</option>
@@ -323,42 +343,33 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
             {/* CREDIT / DEBIT CARD */}
             {paymentMethod === 'Card' && (
-              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-300 space-y-3 text-xs animate-fade-in text-slate-900 shadow-xs">
                 <div>
-                  <label className="block text-[11px] font-bold text-white mb-1">Cardholder Full Name</label>
-                  <input
-                    type="text"
-                    value={cardName}
-                    onChange={(e) => setCardName(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-white mb-1">Card Number</label>
+                  <label className="block text-[11px] font-bold text-slate-900 mb-1">Card Number</label>
                   <input
                     type="text"
                     value={cardNumber}
                     onChange={(e) => setCardNumber(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
+                    className="w-full p-2.5 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-mono placeholder:text-slate-400 focus:border-[#D90000] focus:outline-none shadow-inner"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-bold text-white mb-1">Expiry (MM/YY)</label>
+                    <label className="block text-[11px] font-bold text-slate-900 mb-1">Expiry Date</label>
                     <input
                       type="text"
                       value={cardExp}
                       onChange={(e) => setCardExp(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
+                      className="w-full p-2.5 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-mono placeholder:text-slate-400 focus:border-[#D90000] focus:outline-none shadow-inner"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-white mb-1">CVV Code</label>
+                    <label className="block text-[11px] font-bold text-slate-900 mb-1">CVV Code</label>
                     <input
                       type="password"
                       value={cardCvv}
                       onChange={(e) => setCardCvv(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#141624] border border-white/20 text-xs text-white font-mono placeholder:text-white/40 focus:border-amber-400 focus:outline-none"
+                      className="w-full p-2.5 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-mono placeholder:text-slate-400 focus:border-[#D90000] focus:outline-none shadow-inner"
                     />
                   </div>
                 </div>
@@ -367,12 +378,12 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
             {/* WALLETS */}
             {paymentMethod === 'Wallet' && (
-              <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3 text-xs animate-fade-in">
-                <label className="block text-xs font-bold text-white mb-1">Select Wallet</label>
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-300 space-y-3 text-xs animate-fade-in text-slate-900 shadow-xs">
+                <label className="block text-xs font-bold text-slate-900 mb-1">Select Wallet</label>
                 <select
                   value={selectedWallet}
                   onChange={(e) => setSelectedWallet(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-[#141624] border border-white/20 text-xs text-white focus:border-amber-400 focus:outline-none"
+                  className="w-full p-3 rounded-xl bg-white text-slate-900 border border-slate-300 text-xs font-semibold focus:outline-none"
                 >
                   <option value="Paytm Wallet">Paytm Wallet</option>
                   <option value="Amazon Pay">Amazon Pay Balance</option>
@@ -385,7 +396,7 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => setStep('summary')}
-                className="px-4 py-2.5 rounded-xl bg-white/10 border border-white/15 text-xs text-white/90 hover:text-white hover:bg-white/20 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 hover:bg-slate-100 cursor-pointer shadow-xs transition-colors"
               >
                 ← Back to Ticket Selection
               </button>
@@ -393,11 +404,11 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
               <button
                 disabled={isProcessing}
                 onClick={handlePayNow}
-                className="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                className="px-6 py-3.5 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold font-sans text-xs shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-60 transition-all"
               >
                 {isProcessing ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin"></div>
+                    <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
                     <span>{verificationStep || `Verifying Settlement...`}</span>
                   </div>
                 ) : (
@@ -410,55 +421,67 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
         {/* STEP 3: CONFIRMATION & VIP EVENT PASS GENERATOR */}
         {step === 'confirmation' && confirmedBooking && (
-          <div className="space-y-6 text-center animate-fade-in">
-            <div className="inline-flex p-3 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 mb-2">
-              <CheckCircle2 className="w-8 h-8" />
+          <div className="space-y-5 text-center animate-fade-in text-slate-900">
+            <div className="inline-flex p-3 rounded-full bg-emerald-100 border-2 border-emerald-400 text-emerald-800 mb-2 shadow-md">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600" />
             </div>
 
             <div>
-              <h3 className="text-2xl font-black font-sans text-white">VIP Event Pass Issued!</h3>
-              <p className="text-xs text-amber-300">Verified NPCI UPI Settlement for {confirmedBooking.eventTitle}</p>
+              <h3 className="text-2xl font-black font-sans text-slate-900">VIP Event Pass Issued!</h3>
+              <p className="text-xs text-[#D90000] font-bold">Verified NPCI UPI Settlement for {confirmedBooking.eventTitle}</p>
             </div>
 
             {/* Digital Event Pass Card */}
-            <div className="glass-panel p-6 rounded-3xl border-2 border-amber-400/50 text-left relative overflow-hidden shadow-2xl bg-gradient-to-b from-[#12131e] to-[#08090f]">
-              <div className="flex items-center justify-between border-b border-amber-400/30 pb-4 mb-4">
+            <div className="p-6 rounded-3xl bg-[#DBCEA5] border border-[#c5ba92] text-left relative overflow-hidden shadow-md text-slate-900">
+              <div className="flex items-center justify-between border-b border-[#c5ba92] pb-4 mb-4">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">PrimeShow Official VIP Event Pass</span>
-                  <h4 className="text-xl font-bold text-white">{confirmedBooking.eventTitle}</h4>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#D90000]">PrimeShow Official VIP Event Pass</span>
+                  <h4 className="text-xl font-black font-sans text-slate-900">{confirmedBooking.eventTitle}</h4>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-white/50 block">Pass ID</span>
-                  <span className="font-mono text-xs font-bold text-amber-300">{confirmedBooking.id}</span>
+                  <span className="text-[10px] text-slate-600 block font-semibold">Pass ID</span>
+                  <span className="font-mono text-xs font-bold text-[#D90000]">{confirmedBooking.id}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-xs mb-4">
                 <div>
-                  <span className="text-white/40 block text-[10px]">Venue / Location</span>
-                  <span className="font-bold text-white">{confirmedBooking.venue}</span>
+                  <span className="text-slate-600 block text-[10px] font-semibold">Venue / Location</span>
+                  <span className="font-black font-sans text-slate-900 text-sm">{confirmedBooking.venue}</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">Date & Showtime</span>
-                  <span className="font-bold text-amber-300">{confirmedBooking.date} @ {confirmedBooking.time}</span>
+                  <span className="text-slate-600 block text-[10px] font-semibold">Date & Showtime</span>
+                  <span className="font-black font-sans text-[#D90000] text-sm">{confirmedBooking.date} @ {confirmedBooking.time}</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">Issued Tickets</span>
-                  <span className="font-bold text-emerald-400">{confirmedBooking.ticketCount} VIP Entry Ticket(s)</span>
+                  <span className="text-slate-600 block text-[10px] font-semibold">Issued Tickets</span>
+                  <span className="font-black font-sans text-emerald-800 text-sm">{confirmedBooking.ticketCount} VIP Entry Ticket(s)</span>
                 </div>
                 <div>
-                  <span className="text-white/40 block text-[10px]">Payee Beneficiary</span>
-                  <span className="font-bold text-white">{payeeName}</span>
+                  <span className="text-slate-600 block text-[10px] font-semibold">Payee Beneficiary</span>
+                  <span className="font-bold text-slate-900 text-sm">{payeeName}</span>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-                <div className="bg-white p-2 rounded-xl shadow-md">
-                  <QRCodeSVG value={upiSchemaUrl} size={90} level="H" />
+              {/* Scannable / Interactive Pass QR Code */}
+              <div className="pt-4 border-t border-[#c5ba92] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div 
+                  onClick={() => setIsQrPassOpen(true)}
+                  className="bg-white p-2.5 rounded-2xl shadow-md border-2 border-slate-300 hover:border-[#D90000] cursor-pointer hover:scale-105 active:scale-95 transition-all flex flex-col items-center group relative shrink-0"
+                  title="Click / Select QR to View Official Pass"
+                >
+                  <QRCodeSVG value={ticketPassUrl} size={90} level="H" />
+                  <span className="text-[9px] font-black text-[#D90000] mt-1 group-hover:underline flex items-center gap-0.5">
+                    <QrCode className="w-2.5 h-2.5" /> Select QR / View Pass
+                  </span>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-white/50 block">Total Amount Paid</span>
-                  <span className="text-lg font-bold text-emerald-400">₹{confirmedBooking.totalAmount.toLocaleString('en-IN')}</span>
+
+                <div className="text-center sm:text-right">
+                  <span className="text-[10px] text-slate-600 block font-semibold">Total Amount Paid</span>
+                  <span className="text-xl sm:text-2xl font-black font-sans text-[#D90000]">₹{confirmedBooking.totalAmount.toLocaleString('en-IN')}</span>
+                  <span className="text-[10px] text-emerald-800 font-bold block mt-0.5">
+                    ✓ Verified NPCI Settlement • Direct Gate Entry
+                  </span>
                 </div>
               </div>
             </div>
@@ -467,7 +490,7 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
               <button
                 onClick={handleDownloadPDF}
-                className="py-2.5 px-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-3 px-3 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-bold text-xs shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-all"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Pass (PDF)</span>
@@ -475,17 +498,17 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
 
               <button
                 onClick={handlePrint}
-                className="py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-3 px-3 rounded-2xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors"
               >
-                <Printer className="w-4 h-4 text-amber-400" />
+                <Printer className="w-4 h-4 text-[#D90000]" />
                 <span>Print Ticket</span>
               </button>
 
               <button
                 onClick={handleShare}
-                className="py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-3 px-3 rounded-2xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-900 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-xs transition-colors"
               >
-                <Share2 className="w-4 h-4 text-emerald-400" />
+                <Share2 className="w-4 h-4 text-emerald-600" />
                 <span>Share Pass</span>
               </button>
             </div>
@@ -493,7 +516,7 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
             <div className="pt-2">
               <button
                 onClick={onClose}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-black text-xs uppercase tracking-wider shadow-xl shadow-amber-500/20 hover:scale-[1.02] transition-transform cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs uppercase tracking-wider shadow-md hover:brightness-110 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 <X className="w-4 h-4" />
                 <span>Close & Return to Events</span>
@@ -503,6 +526,26 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
         )}
 
       </div>
+
+      {/* Interactive Official Verified QR Pass Modal */}
+      {isQrPassOpen && confirmedBooking && (
+        <VerifiedTicketModal
+          isOpen={isQrPassOpen}
+          onClose={() => setIsQrPassOpen(false)}
+          ticket={{
+            id: confirmedBooking.id,
+            movieTitle: confirmedBooking.eventTitle,
+            theatreName: confirmedBooking.venue,
+            screenName: 'Live Event Arena',
+            showDate: confirmedBooking.date,
+            showTime: confirmedBooking.time,
+            seats: `${confirmedBooking.ticketCount} VIP Entry Ticket(s)`,
+            tier: confirmedBooking.category || 'VIP Entry',
+            totalAmount: confirmedBooking.totalAmount,
+            transactionId: confirmedBooking.transactionId
+          }}
+        />
+      )}
     </div>
   );
 };
