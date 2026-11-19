@@ -242,21 +242,46 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
                   <button onClick={removeCoupon} className="text-red-600 hover:underline text-xs cursor-pointer font-bold shrink-0 ml-2">Remove</button>
                 </div>
               ) : (
-                <form onSubmit={handleApplyCouponSubmit} className="flex flex-row items-center gap-1.5 bg-white border border-slate-300 rounded-2xl p-1.5 focus-within:border-[#D90000] transition-colors w-full max-w-full overflow-hidden shadow-inner">
-                  <input
-                    type="text"
-                    placeholder="Try 'PRIMESHOW50' or 'LUXURY200'"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 min-w-0 bg-transparent px-2.5 py-1 text-[11px] sm:text-xs text-slate-900 uppercase font-bold outline-none placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 truncate"
-                  />
-                  <button
-                    type="submit"
-                    className="px-3.5 sm:px-4 py-1.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-[11px] sm:text-xs cursor-pointer shrink-0 transition-colors shadow-xs"
-                  >
-                    Apply
-                  </button>
-                </form>
+                <div className="space-y-1.5">
+                  <form onSubmit={handleApplyCouponSubmit} className="flex flex-row items-center gap-1.5 bg-white border border-slate-300 rounded-2xl p-1.5 focus-within:border-[#D90000] transition-colors w-full max-w-full overflow-hidden shadow-inner">
+                    <input
+                      type="text"
+                      placeholder="Try 'AXISNEO', 'PRIMESHOW50' or 'LUXURY200'"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="flex-1 min-w-0 bg-transparent px-2.5 py-1 text-[11px] sm:text-xs text-slate-900 uppercase font-bold outline-none placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 truncate"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3.5 sm:px-4 py-1.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-[11px] sm:text-xs cursor-pointer shrink-0 transition-colors shadow-xs"
+                    >
+                      Apply
+                    </button>
+                  </form>
+                  {/* Quick-select coupon pills */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <span className="text-[10px] text-slate-600 font-semibold">Available:</span>
+                    {['AXISNEO', 'PRIMESHOW50', 'LUXURY200', 'HDFCMOVIE25', 'ICICICINEMA'].map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={async () => {
+                          setCouponCode(code);
+                          setCouponStatus({ loading: true });
+                          const res = await applyCoupon(code, basePrice, user?.id);
+                          if (res.success) {
+                            setCouponStatus({ success: true, msg: res.description });
+                          } else {
+                            setCouponStatus({ error: true, msg: res.error });
+                          }
+                        }}
+                        className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-red-50 border border-slate-300 hover:border-red-400 text-[10px] font-mono font-bold text-[#D90000] cursor-pointer transition-all shadow-2xs"
+                      >
+                        {code}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {couponStatus?.error && (

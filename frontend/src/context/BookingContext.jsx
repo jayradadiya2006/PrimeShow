@@ -948,36 +948,110 @@ export const BookingProvider = ({ children }) => {
   };
 
   const applyCoupon = async (code, totalAmount) => {
+    const cleanCode = String(code || '').toUpperCase().trim();
+    const amt = Number(totalAmount || 0);
+
     try {
-      const res = await API.post('/coupons/verify', 
-        { code, amount: totalAmount }
-      );
+      const res = await API.post('/coupons/verify', {
+        code: cleanCode,
+        amount: amt,
+        cartTotal: amt,
+        totalAmount: amt
+      });
       
-      setActiveBooking(prev => ({
-        ...prev,
-        appliedCoupon: res.data.code,
-        discountAmount: res.data.discountAmount
-      }));
+      if (res.data && (res.data.success || res.data.valid)) {
+        const disc = Number(res.data.discountAmount || 0);
+        setActiveBooking(prev => ({
+          ...prev,
+          appliedCoupon: res.data.code || cleanCode,
+          discountAmount: disc
+        }));
 
-      return { success: true, description: res.data.description, discountAmount: res.data.discountAmount };
-    } catch (err) {
-      const cleanCode = code.toUpperCase().trim();
-      if (cleanCode === 'PRIMESHOW50') {
-        const disc = Math.min(Math.round(totalAmount * 0.5), 250);
-        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'PRIMESHOW50', discountAmount: disc }));
-        return { success: true, description: '50% Flat Discount applied!', discountAmount: disc };
-      } else if (cleanCode === 'LUXURY200') {
-        const disc = 200;
-        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'LUXURY200', discountAmount: disc }));
-        return { success: true, description: 'Flat ₹200 Cashback applied!', discountAmount: disc };
-      } else if (cleanCode === 'ADMINVIP') {
-        const disc = 500;
-        setActiveBooking(prev => ({ ...prev, appliedCoupon: 'ADMINVIP', discountAmount: disc }));
-        return { success: true, description: 'VIP Admin ₹500 Pass applied!', discountAmount: disc };
+        return {
+          success: true,
+          code: res.data.code || cleanCode,
+          description: res.data.description || res.data.message || `Promo code ${cleanCode} applied!`,
+          discountAmount: disc
+        };
       }
-
-      return { success: false, error: err.response?.data?.error || 'Invalid or non-eligible coupon code' };
+    } catch (err) {
+      console.warn('⚠️ API Coupon verify failed, evaluating local catalog:', err.message);
     }
+
+    // Local Verification Fallback for all PrimeShow coupons
+    if (cleanCode === 'AXISNEO') {
+      const minVal = 400;
+      if (amt < minVal) {
+        return { success: false, error: `Minimum booking value of ₹${minVal} required for AXISNEO.` };
+      }
+      const disc = Math.min(Math.round(amt * 0.10), 150);
+      setActiveBooking(prev => ({ ...prev, appliedCoupon: 'AXISNEO', discountAmount: disc }));
+      return { success: true, description: 'Axis Bank 10% Instant Discount Applied!', discountAmount: disc };
+    }
+
+    if (cleanCode === 'PRIMESHOW50' || cleanCode === 'WELCOME50' || cleanCode === 'VIP50') {
+      const disc = Math.min(Math.round(amt * 0.5), 250);
+      setActiveBooking(prev => ({ ...prev, appliedCoupon: cleanCode, discountAmount: disc }));
+      return { success: true, description: '50% Flat Promo Discount applied!', discountAmount: disc };
+    }
+
+    if (cleanCode === 'HDFCMOVIE25') {
+      const minVal = 500;
+      if (amt < minVal) {
+        return { success: false, error: `Minimum booking value of ₹${minVal} required for HDFCMOVIE25.` };
+      }
+      const disc = Math.min(Math.round(amt * 0.25), 250);
+      setActiveBooking(prev => ({ ...prev, appliedCoupon: 'HDFCMOVIE25', discountAmount: disc }));
+      return { success: true, description: 'HDFC Bank 25% Instant Discount Applied!', discountAmount: disc };
+    }
+
+    if (cleanCode === 'ICICICINEMA') {
+      const minVal = 500;
+      if (amt < minVal) {
+        return { success: false, error: `Minimum booking value of ₹${minVal} required for ICICICINEMA.` };
+      }
+      const disc = Math.min(300, amt);
+      setActiveBooking(prev => ({ ...prev, appliedCoupon: 'ICICICINEMA', discountAmount: disc }));
+      return { success: true, description: 'ICICI Bank BOGO Ticket Discount Applied!', discountAmount: disc };
+    }
+
+    if (cleanCode === 'SBICARD100') {
+      const minVal = 500;
+      if (amt < minVal) {
+        return { success: false, error: `Minimum booking value of ₹${minVal} required for SBICARD100.` };
+      }
+      const disc = Math.min(100, amt);
+      setActiveBooking(prev => ({ ...prev, appliedCoupon: 'SBICARD100', discountAmount: disc }));
+      return { success: true, description: 'SBI Card ₹100 Flat Discount Applied!', discountAmount: disc };
+    }
+
+    if (cleanCode === 'LUXURY200') {
+      const minVal = 400;
+      if (amt < minVal) {
+        return { success: false, error: `Minimum booking value of ₹${minVal} required for LUXURY200.` };
+      }
+      const disc = Math.min(200, amt);
+      setActiveBooking(prev => ({ ...prev, appliedCoupon: 'LUXURY200', discountAmount: disc }));
+      return { success: true, description: 'Flat ₹200 Cashback applied!', discountAmount: disc };
+    }
+
+    if (cleanCode === 'ADMINVIP') {
+      const minVal = 1000;
+      if (amt < minVal) {
+        return { success: false, error: `Minimum booking value of ₹${minVal} required for ADMINVIP.` };
+      }
+      const disc = Math.min(500, amt);
+      setActiveBooking(prev => ({ ...prev, appliedCoupon: 'ADMINVIP', discountAmount: disc }));
+      return { success: true, description: 'VIP Admin ₹500 Pass applied!', discountAmount: disc };
+    }
+
+    if (cleanCode === 'PRIMESHOW100' || cleanCode === 'FIRST100') {
+      const disc = Math.min(100, amt);
+      setActiveBooking(prev => ({ ...prev, appliedCoupon: cleanCode, discountAmount: disc }));
+      return { success: true, description: '₹100 Flat Promo Discount applied!', discountAmount: disc };
+    }
+
+    return { success: false, error: 'Invalid or non-eligible coupon code. Please try AXISNEO, PRIMESHOW50 or LUXURY200.' };
   };
 
   const removeCoupon = () => {

@@ -2473,32 +2473,179 @@ app.delete(['/api/support/messages/:id', '/api/admin/support/messages/:id'], asy
 
 // Coupons Verification Endpoint
 app.post('/api/coupons/verify', async (req, res) => {
-  const { code, cartTotal } = req.body;
+  const { code, cartTotal, amount, totalAmount } = req.body;
   const cleanCode = String(code || '').toUpperCase().trim();
-  
-  if (cleanCode === 'PRIMESHOW50' || cleanCode === 'WELCOME50' || cleanCode === 'VIP50') {
-    const discount = Math.round((Number(cartTotal || 500) * 0.5));
+  const amt = Number(amount || cartTotal || totalAmount || 500);
+
+  if (!cleanCode) {
+    return res.status(400).json({ success: false, valid: false, error: 'Please enter a coupon code', message: 'Please enter a coupon code' });
+  }
+
+  // 1. Search in MongoDB / DataStore 'offers' collection
+  try {
+    const allOffers = await DataStore.find('offers');
+    const matchedOffer = allOffers.find(o => o && o.code && o.code.toUpperCase().trim() === cleanCode);
+    
+    if (matchedOffer) {
+      const minVal = Number(matchedOffer.minBookingValue || 0);
+      if (minVal > 0 && amt < minVal) {
+        return res.status(400).json({
+          success: false,
+          valid: false,
+          error: `Minimum booking value of ₹${minVal} required for coupon ${cleanCode}.`,
+          message: `Minimum booking value of ₹${minVal} required for coupon ${cleanCode}.`
+        });
+      }
+
+      let discount = 0;
+      const descLower = (matchedOffer.discount || '').toLowerCase();
+      if (descLower.includes('25%')) {
+        discount = Math.min(Math.round(amt * 0.25), Number(matchedOffer.discountValue || 250));
+      } else if (descLower.includes('50%')) {
+        discount = Math.min(Math.round(amt * 0.50), Number(matchedOffer.discountValue || 250));
+      } else if (descLower.includes('10%')) {
+        discount = Math.min(Math.round(amt * 0.10), Number(matchedOffer.discountValue || 150));
+      } else if (matchedOffer.discountValue) {
+        discount = Math.min(Number(matchedOffer.discountValue), amt);
+      } else {
+        discount = Math.min(100, amt);
+      }
+
+      return res.json({
+        success: true,
+        valid: true,
+        code: matchedOffer.code,
+        discountAmount: discount,
+        description: `${matchedOffer.title || cleanCode} Applied (-₹${discount})`,
+        message: `${matchedOffer.title || cleanCode} Applied (-₹${discount})`
+      });
+    }
+  } catch (err) {
+    console.warn('⚠️ Error checking offers collection in MongoDB:', err.message);
+  }
+
+  // 2. Standard Built-in PrimeShow Promo Codes Fallback
+  if (cleanCode === 'AXISNEO') {
+    const minVal = 400;
+    if (amt < minVal) {
+      return res.status(400).json({ success: false, valid: false, error: `Minimum booking value of ₹${minVal} required for AXISNEO.` });
+    }
+    const discount = Math.min(Math.round(amt * 0.10), 150);
     return res.json({
       success: true,
       valid: true,
       code: cleanCode,
       discountAmount: discount,
+      description: 'Axis Bank 10% Instant Discount Applied!',
+      message: 'Axis Bank 10% Instant Discount Applied!'
+    });
+  }
+
+  if (cleanCode === 'PRIMESHOW50' || cleanCode === 'WELCOME50' || cleanCode === 'VIP50') {
+    const discount = Math.min(Math.round(amt * 0.5), 250);
+    return res.json({
+      success: true,
+      valid: true,
+      code: cleanCode,
+      discountAmount: discount,
+      description: '50% Flat Promo Discount Applied!',
       message: '50% Flat Promo Discount Applied!'
     });
   }
 
-  if (cleanCode === 'PRIMESHOW100' || cleanCode === 'FIRST100') {
-    const discount = Math.min(100, Number(cartTotal || 500));
+  if (cleanCode === 'HDFCMOVIE25') {
+    const minVal = 500;
+    if (amt < minVal) {
+      return res.status(400).json({ success: false, valid: false, error: `Minimum booking value of ₹${minVal} required for HDFCMOVIE25.` });
+    }
+    const discount = Math.min(Math.round(amt * 0.25), 250);
     return res.json({
       success: true,
       valid: true,
       code: cleanCode,
       discountAmount: discount,
+      description: 'HDFC Bank 25% Instant Discount Applied!',
+      message: 'HDFC Bank 25% Instant Discount Applied!'
+    });
+  }
+
+  if (cleanCode === 'ICICICINEMA') {
+    const minVal = 500;
+    if (amt < minVal) {
+      return res.status(400).json({ success: false, valid: false, error: `Minimum booking value of ₹${minVal} required for ICICICINEMA.` });
+    }
+    const discount = Math.min(300, amt);
+    return res.json({
+      success: true,
+      valid: true,
+      code: cleanCode,
+      discountAmount: discount,
+      description: 'ICICI Bank BOGO Ticket Discount Applied!',
+      message: 'ICICI Bank BOGO Ticket Discount Applied!'
+    });
+  }
+
+  if (cleanCode === 'SBICARD100') {
+    const minVal = 500;
+    if (amt < minVal) {
+      return res.status(400).json({ success: false, valid: false, error: `Minimum booking value of ₹${minVal} required for SBICARD100.` });
+    }
+    const discount = Math.min(100, amt);
+    return res.json({
+      success: true,
+      valid: true,
+      code: cleanCode,
+      discountAmount: discount,
+      description: 'SBI Card ₹100 Flat Discount Applied!',
+      message: 'SBI Card ₹100 Flat Discount Applied!'
+    });
+  }
+
+  if (cleanCode === 'LUXURY200') {
+    const minVal = 400;
+    if (amt < minVal) {
+      return res.status(400).json({ success: false, valid: false, error: `Minimum booking value of ₹${minVal} required for LUXURY200.` });
+    }
+    const discount = Math.min(200, amt);
+    return res.json({
+      success: true,
+      valid: true,
+      code: cleanCode,
+      discountAmount: discount,
+      description: 'PrimeShow Luxury ₹200 Privilege Applied!',
+      message: 'PrimeShow Luxury ₹200 Privilege Applied!'
+    });
+  }
+
+  if (cleanCode === 'ADMINVIP') {
+    const minVal = 1000;
+    if (amt < minVal) {
+      return res.status(400).json({ success: false, valid: false, error: `Minimum booking value of ₹${minVal} required for ADMINVIP.` });
+    }
+    const discount = Math.min(500, amt);
+    return res.json({
+      success: true,
+      valid: true,
+      code: cleanCode,
+      discountAmount: discount,
+      description: 'VIP Admin ₹500 Privilege Applied!',
+      message: 'VIP Admin ₹500 Privilege Applied!'
+    });
+  }
+
+  if (cleanCode === 'PRIMESHOW100' || cleanCode === 'FIRST100') {
+    const discount = Math.min(100, amt);
+    return res.json({
+      success: true,
+      valid: true,
+      code: cleanCode,
+      discountAmount: discount,
+      description: '₹100 Flat Promo Discount Applied!',
       message: '₹100 Flat Promo Discount Applied!'
     });
   }
 
-  res.status(400).json({ success: false, valid: false, message: 'Invalid or expired promotional code' });
+  res.status(400).json({ success: false, valid: false, error: 'Invalid or non-eligible coupon code', message: 'Invalid or non-eligible coupon code' });
 });
 
 // Fallback 404 Route for express
