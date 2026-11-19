@@ -11,6 +11,7 @@ import { MotionBackground } from './components/MotionBackground';
 import { Home } from './pages/Home';
 import { Movies } from './pages/Movies';
 import { MovieDetail } from './pages/MovieDetail';
+import { SearchResults } from './pages/SearchResults';
 import { SeatBookingModal } from './pages/SeatBookingModal';
 import { CheckoutModal } from './pages/CheckoutModal';
 
@@ -33,6 +34,13 @@ import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 const MainAppContent = () => {
   const { user, selectedCity } = useAuth();
   const { moviesList, theatresList, selectShowForBooking } = useBooking();
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('q') || params.get('search') || '';
+    }
+    return '';
+  });
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
@@ -41,6 +49,7 @@ const MainAppContent = () => {
       if (path.includes('/admin') || search.includes('admin') || hash.includes('admin')) return 'admin';
       if (path.includes('/settings') || search.includes('settings') || hash.includes('settings')) return 'settings';
       if (path.includes('/profile') || search.includes('profile') || hash.includes('profile')) return 'profile-info';
+      if (search.includes('q=') || search.includes('search=') || path.includes('/search')) return 'search';
     }
     return 'home';
   });
@@ -54,7 +63,7 @@ const MainAppContent = () => {
   const [isSeatPickerOpen, setIsSeatPickerOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  // Check URL pathname or query params for Admin, Settings, or Profile routes on initial load or popstate
+  // Check URL pathname or query params for Admin, Settings, Profile, or Search routes
   useEffect(() => {
     const checkUrlRoutes = () => {
       const path = window.location.pathname.toLowerCase();
@@ -66,6 +75,11 @@ const MainAppContent = () => {
         setActiveTab('settings');
       } else if (path.includes('/profile') || search.includes('profile') || hash.includes('profile')) {
         setActiveTab('profile-info');
+      } else if (search.includes('q=') || search.includes('search=') || path.includes('/search')) {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('q') || params.get('search') || '';
+        if (q) setSearchQuery(q);
+        setActiveTab('search');
       }
     };
 
@@ -73,6 +87,17 @@ const MainAppContent = () => {
     window.addEventListener('popstate', checkUrlRoutes);
     return () => window.removeEventListener('popstate', checkUrlRoutes);
   }, []);
+
+  const handleSearchSubmit = (query) => {
+    const clean = (query || '').trim();
+    setSearchQuery(clean);
+    setActiveTab('search');
+    if (typeof window !== 'undefined' && window.history) {
+      const url = clean ? `?q=${encodeURIComponent(clean)}` : window.location.pathname;
+      window.history.pushState(null, '', url);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleSelectMovie = (id) => {
     const validMovie = (Array.isArray(moviesList) && moviesList.length > 0)
@@ -122,11 +147,47 @@ const MainAppContent = () => {
           setActiveTab={setActiveTab}
           onOpenAuth={() => setIsAuthOpen(true)}
           onOpenCityModal={() => setIsCityOpen(true)}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onSearchSubmit={handleSearchSubmit}
+          onSelectMovie={handleSelectMovie}
+          onSelectTheatre={(id) => {
+            setSelectedTheatreId(id);
+            setActiveTab('theatre-detail');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onSelectEvent={(eventId) => {
+            setSelectedEventId(eventId);
+            setActiveTab('event-detail');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
         />
       )}
 
       {/* Main Content Router View */}
       <main className="flex-grow z-10">
+        {activeTab === 'search' && (
+          <GlobalErrorBoundary onReturnHome={() => setActiveTab('home')}>
+            <SearchResults 
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onSelectMovie={handleSelectMovie}
+              onBookNow={handleBookNow}
+              onSelectTheatre={(id) => {
+                setSelectedTheatreId(id);
+                setActiveTab('theatre-detail');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onSelectEvent={(eventId) => {
+                setSelectedEventId(eventId);
+                setActiveTab('event-detail');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              setActiveTab={setActiveTab}
+            />
+          </GlobalErrorBoundary>
+        )}
+
         {activeTab === 'home' && (
           <GlobalErrorBoundary onReturnHome={() => setActiveTab('home')}>
             <Home 

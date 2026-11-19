@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useBooking } from '../context/BookingContext';
+import API from '../services/api';
 import { 
   Search, MapPin, User, LogOut, Ticket, Heart, Award, 
-  Settings, Menu, X, Film, Sparkles, ChevronDown, Gift, Building2, Tag, PlaySquare, Bell, HelpCircle
+  Settings, Menu, X, Film, Sparkles, ChevronDown, Gift, Building2, Tag, PlaySquare, Bell, HelpCircle,
+  Loader2, ChevronRight
 } from 'lucide-react';
 
 // Header Movie Image Thumbnails (Spider-Man No Way Home default + fallback URLs)
@@ -14,13 +17,58 @@ export const HEADER_MOVIE_THUMBNAILS = [
   "https://timesofindia.indiatimes.com/thumb/msid-130320231,width-1280,height-720,resizemode-4/130320231.jpg"
 ];
 
-export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal }) => {
+export const Navbar = ({ 
+  activeTab, 
+  setActiveTab, 
+  onOpenAuth, 
+  onOpenCityModal,
+  searchQuery = '',
+  setSearchQuery,
+  onSearchSubmit,
+  onSelectMovie,
+  onSelectTheatre,
+  onSelectEvent
+}) => {
   const { user, logout, selectedCity, notifications } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { moviesList = [], theatresList = [], upcomingMoviesList = [] } = useBooking();
+  
+  const [internalQuery, setInternalQuery] = useState(searchQuery || '');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [apiSuggestions, setApiSuggestions] = useState([]);
+  const [isSearchingApi, setIsSearchingApi] = useState(false);
+
+  const desktopSearchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+
+  // Sync internal query when parent prop changes
+  useEffect(() => {
+    if (searchQuery !== undefined) {
+      setInternalQuery(searchQuery);
+    }
+  }, [searchQuery]);
+
+  const currentQuery = searchQuery !== undefined ? searchQuery : internalQuery;
+  const updateQuery = (val) => {
+    setInternalQuery(val);
+    if (setSearchQuery) setSearchQuery(val);
+  };
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (desktopSearchRef.current && !desktopSearchRef.current.contains(e.target)) {
+        setIsSearchFocused(false);
+      }
+      if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target) && !e.target.closest('[data-mobile-search-toggle]')) {
+        // Keep mobile search bar open unless user clicks outside of header
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navCategories = [
     { id: 'movies', label: 'Movies', icon: Film },
@@ -33,13 +81,145 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
     { id: 'corporate', label: 'Corporate', icon: Building2 }
   ];
 
-  const searchSuggestions = [
-    { title: 'Avatar: Fire and Ash', category: 'IMAX 3D Movie', id: 'mov_1' },
-    { title: 'Dune: Part Two', category: 'Dolby Atmos Movie', id: 'mov_2' },
-    { title: 'Kalki 2898 AD', category: 'Sci-Fi Blockbuster', id: 'mov_3' },
-    { title: 'PVR Director\'s Cut', category: 'Luxury Multiplex', id: 'th_1' },
-    { title: 'Coldplay Live', category: 'Concert Event', id: 'ev_1' }
-  ].filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  // 1. Instant local suggestions from active context data (0ms latency)
+  const localSuggestions = useMemo(() => {
+    const q = currentQuery.trim().toLowerCase();
+    if (!q) return [];
+    
+    const results = [];
+    
+    // Movies
+    (moviesList || []).forEach(m => {
+      const titleMatch = m.title?.toLowerCase().includes(q);
+      const genreMatch = m.genre?.toLowerCase().includes(q) || (Array.isArray(m.genres) && m.genres.some(g => g.toLowerCase().includes(q)));
+      const langMatch = m.language?.toLowerCase().includes(q) || (Array.isArray(m.languages) && m.languages.some(l => l.toLowerCase().includes(q)));
+      const castMatch = typeof m.cast === 'string' ? m.cast.toLowerCase().includes(q) : Array.isArray(m.cast) && m.cast.some(c => (c.name || c).toLowerCase().includes(q));
+
+      if (titleMatch || genreMatch || langMatch || castMatch) {
+        results.push({
+          id: m.id || m._id,
+          type: 'movie',
+          title: m.title,
+          category: 'Movie',
+          subtitle: `${Array.isArray(m.languages) ? m.languages.join(', ') : (m.language || 'Hindi')} • ${Array.isArray(m.genres) ? m.genres.join(', ') : (m.genre || 'Action')}`,
+          image: m.poster || m.image || m.banner
+        });
+      }
+    });
+
+    // Theatres
+    (theatresList || []).forEach(t => {
+      if (t.name?.toLowerCase().includes(q) || t.city?.toLowerCase().includes(q) || t.address?.toLowerCase().includes(q)) {
+        results.push({
+          id: t.id || t._id,
+          type: 'theatre',
+          title: t.name,
+          category: 'Multiplex',
+          subtitle: `${t.city || 'Cinema'} • ${t.address || t.location || 'Theatre'}`,
+          image: t.image || t.photo || 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=400&q=80'
+        });
+      }
+    });
+
+    // Upcoming Movies
+    (upcomingMoviesList || []).forEach(u => {
+      if (u.title?.toLowerCase().includes(q) || (Array.isArray(u.genres) && u.genres.some(g => g.toLowerCase().includes(q)))) {
+        results.push({
+          id: u.id || u._id,
+          type: 'upcoming',
+          title: u.title,
+          category: 'Upcoming',
+          subtitle: `${u.release || 'Coming Soon'} • ${Array.isArray(u.genres) ? u.genres.join(', ') : 'Blockbuster'}`,
+          image: u.poster || u.image
+        });
+      }
+    });
+
+    return results.slice(0, 8);
+  }, [currentQuery, moviesList, theatresList, upcomingMoviesList]);
+
+  // 2. Debounced API search to fetch fresh/backend entries (events, plays, activities, new movies)
+  useEffect(() => {
+    const q = currentQuery.trim();
+    if (q.length < 2) {
+      setApiSuggestions([]);
+      setIsSearchingApi(false);
+      return;
+    }
+
+    let isCurrent = true;
+    setIsSearchingApi(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await API.get('/search', { params: { q, city: selectedCity } });
+        if (isCurrent && res.data && Array.isArray(res.data.results)) {
+          setApiSuggestions(res.data.results.slice(0, 8));
+        }
+      } catch (_) {
+      } finally {
+        if (isCurrent) setIsSearchingApi(false);
+      }
+    }, 250);
+
+    return () => {
+      isCurrent = false;
+      clearTimeout(timer);
+    };
+  }, [currentQuery, selectedCity]);
+
+  // Combine and deduplicate suggestions
+  const displaySuggestions = useMemo(() => {
+    const map = new Map();
+    localSuggestions.forEach(item => map.set(item.id || item.title, item));
+    apiSuggestions.forEach(item => {
+      if (!map.has(item.id || item.title)) {
+        map.set(item.id || item.title, item);
+      }
+    });
+    return Array.from(map.values()).slice(0, 6);
+  }, [localSuggestions, apiSuggestions]);
+
+  // Form submission handler
+  const handleSearchSubmit = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const clean = currentQuery.trim();
+    if (!clean) return;
+
+    setIsSearchFocused(false);
+    setIsMobileSearchOpen(false);
+
+    if (onSearchSubmit) {
+      onSearchSubmit(clean);
+    } else {
+      setActiveTab('search');
+    }
+  };
+
+  // Clicking an individual suggestion
+  const handleSelectSuggestion = (item) => {
+    setIsSearchFocused(false);
+    setIsMobileSearchOpen(false);
+
+    if (item.type === 'movie') {
+      if (onSelectMovie) onSelectMovie(item.id);
+      else setActiveTab('movies');
+    } else if (item.type === 'theatre') {
+      if (onSelectTheatre) onSelectTheatre(item.id);
+      else setActiveTab('theatres');
+    } else if (item.type === 'event') {
+      if (onSelectEvent) onSelectEvent(item.id);
+      else setActiveTab('events');
+    } else if (item.type === 'play') {
+      setActiveTab('plays');
+    } else if (item.type === 'activity') {
+      setActiveTab('activities');
+    } else if (item.type === 'upcoming') {
+      setActiveTab('movies');
+    } else {
+      handleSearchSubmit();
+    }
+  };
 
   // Close Mobile Drawer & Redirect to Home Page
   const handleCloseDrawerAndRedirectHome = () => {
@@ -86,43 +266,122 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
           </button>
         </div>
 
-        {/* Center: Global Live Predictive Search Bar (Desktop View Intact) */}
-        <div className="relative hidden md:block w-full max-w-md mx-6">
-          <div className="relative flex items-center">
-            <Search className="absolute left-3.5 w-4 h-4 text-slate-700" />
+        {/* Center: Global Live Predictive Search Bar (Desktop View) */}
+        <div ref={desktopSearchRef} className="relative hidden md:block w-full max-w-md mx-6">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
+            <button
+              type="submit"
+              className="absolute left-3.5 text-slate-700 hover:text-[#D90000] transition-colors cursor-pointer flex items-center justify-center"
+              title="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
             <input
               type="text"
               placeholder="Search movies, multiplexes, events, actors..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={currentQuery}
+              onChange={(e) => {
+                updateQuery(e.target.value);
+                setIsSearchFocused(true);
+              }}
               onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              className="w-full pl-10 pr-4 py-2 text-sm rounded-full bg-white border border-slate-400 text-slate-900 font-medium placeholder-slate-600 focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000] focus:outline-none shadow-xs"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setIsSearchFocused(false);
+              }}
+              className="w-full pl-10 pr-20 py-2 text-sm rounded-full bg-white border border-slate-400 text-slate-900 font-medium placeholder-slate-600 focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000] focus:outline-none shadow-xs transition-all"
             />
-          </div>
+            
+            <div className="absolute right-2.5 flex items-center gap-1">
+              {isSearchingApi && (
+                <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin mr-0.5" />
+              )}
+              {currentQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateQuery('');
+                    setIsSearchFocused(false);
+                  }}
+                  className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer mr-0.5"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="px-2.5 py-0.5 rounded-full bg-[#D90000] hover:bg-red-700 text-white text-xs font-black shadow-xs transition-all cursor-pointer"
+                title="Search"
+              >
+                Go
+              </button>
+            </div>
+          </form>
 
           {/* Desktop Search Suggestions Dropdown */}
-          {isSearchFocused && searchQuery.length > 0 && (
-            <div className="absolute left-0 right-0 top-12 bg-white rounded-2xl p-3 border border-slate-300 shadow-2xl z-[100]">
-              <div className="text-[11px] font-bold text-slate-800 px-3 py-1 uppercase tracking-wider">
-                Live Search Suggestions
+          {isSearchFocused && currentQuery.trim().length > 0 && (
+            <div className="absolute left-0 right-0 top-12 bg-white rounded-2xl p-2.5 border border-slate-300 shadow-2xl z-[110] animate-fade-in">
+              <div className="flex items-center justify-between text-[11px] font-extrabold text-slate-800 px-3 py-1 uppercase tracking-wider border-b border-slate-100 mb-1">
+                <span>Live Search Results</span>
+                <span className="text-[10px] text-slate-500 font-normal">Press Enter to view all</span>
               </div>
-              {searchSuggestions.length > 0 ? (
-                searchSuggestions.map((item, idx) => (
+              
+              {displaySuggestions.length > 0 ? (
+                <div className="max-h-72 overflow-y-auto space-y-1">
+                  {displaySuggestions.map((item, idx) => (
+                    <button
+                      key={item.id || idx}
+                      type="button"
+                      onClick={() => handleSelectSuggestion(item)}
+                      className="w-full text-left px-2.5 py-2 rounded-xl hover:bg-slate-100 flex items-center gap-3 group transition-colors cursor-pointer"
+                    >
+                      <div className="w-9 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+                        <img 
+                          src={item.image || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=150&q=80"}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          onError={(e) => {
+                            e.target.src = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=150&q=80";
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#D90000] truncate">
+                            {item.title}
+                          </span>
+                          <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-sm bg-red-50 text-[#D90000] border border-red-200 shrink-0">
+                            {item.category || item.type}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-slate-500 font-medium truncate block">
+                          {item.subtitle}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                  
+                  {/* Footer Action to view all search results */}
                   <button
-                    key={idx}
-                    onClick={() => {
-                      setActiveTab('movies');
-                      setSearchQuery('');
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 flex items-center justify-between group transition-colors cursor-pointer"
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="w-full mt-1.5 pt-2 border-t border-slate-100 text-center py-1.5 text-xs font-black text-[#D90000] hover:bg-red-50 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1"
                   >
-                    <span className="text-sm font-bold text-slate-900 group-hover:text-[#D90000]">{item.title}</span>
-                    <span className="text-xs text-slate-500 font-semibold">{item.category}</span>
+                    <span>View all matching results for "{currentQuery}"</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
-                ))
+                </div>
               ) : (
-                <div className="px-3 py-2 text-xs text-slate-500">No matches found</div>
+                <div className="px-3 py-4 text-center">
+                  <p className="text-xs text-slate-600 font-semibold mb-2">No direct matches found for "{currentQuery}"</p>
+                  <button
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="text-xs font-black text-[#D90000] hover:underline cursor-pointer"
+                  >
+                    Click to search all categories & archives →
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -133,6 +392,7 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
           
           {/* Mobile Search Toggle Icon */}
           <button
+            data-mobile-search-toggle="true"
             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
             className="md:hidden p-2 rounded-full bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 transition-all cursor-pointer"
             title="Search"
@@ -271,44 +531,97 @@ export const Navbar = ({ activeTab, setActiveTab, onOpenAuth, onOpenCityModal })
 
       {/* Expandable Mobile Search Bar (md:hidden) */}
       {isMobileSearchOpen && (
-        <div className="md:hidden glass-panel border-b border-slate-300 dark:border-white/10 px-4 py-3 animate-fade-in relative z-[95]">
-          <div className="relative flex items-center">
-            <Search className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-white/40" />
+        <div ref={mobileSearchRef} className="md:hidden bg-white border-b border-slate-300 px-3 sm:px-4 py-3 animate-fade-in relative z-[95]">
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+            <button
+              type="submit"
+              className="absolute left-3 text-slate-600 hover:text-[#D90000] cursor-pointer"
+              title="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
             <input
               type="text"
               autoFocus
               placeholder="Search movies, theatres, events..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 text-xs rounded-full glass-input text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-white/40"
+              value={currentQuery}
+              onChange={(e) => updateQuery(e.target.value)}
+              className="w-full pl-9 pr-20 py-2 text-xs rounded-full bg-slate-50 border border-slate-300 text-slate-900 placeholder-slate-500 font-semibold focus:border-[#D90000] focus:outline-none"
             />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 text-slate-400">
-                <X className="w-3.5 h-3.5" />
+            <div className="absolute right-2.5 flex items-center gap-1">
+              {isSearchingApi && (
+                <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin mr-0.5" />
+              )}
+              {currentQuery && (
+                <button 
+                  type="button"
+                  onClick={() => updateQuery('')} 
+                  className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="px-2.5 py-0.5 rounded-full bg-[#D90000] text-white text-[11px] font-black cursor-pointer shadow-xs"
+                title="Search"
+              >
+                Go
               </button>
-            )}
-          </div>
+            </div>
+          </form>
 
-          {/* Mobile Search Results */}
-          {searchQuery.length > 0 && (
-            <div className="mt-2 glass-modal rounded-2xl p-2 border border-amber-500/30 max-h-60 overflow-y-auto">
-              {searchSuggestions.length > 0 ? (
-                searchSuggestions.map((item, idx) => (
+          {/* Mobile Search Results Suggestions Dropdown */}
+          {currentQuery.trim().length > 0 && (
+            <div className="mt-2 bg-white rounded-2xl p-2 border border-slate-200 shadow-xl max-h-60 overflow-y-auto">
+              {displaySuggestions.length > 0 ? (
+                <>
+                  {displaySuggestions.map((item, idx) => (
+                    <button
+                      key={item.id || idx}
+                      type="button"
+                      onClick={() => handleSelectSuggestion(item)}
+                      className="w-full text-left px-2.5 py-2 rounded-xl hover:bg-slate-50 flex items-center justify-between text-xs border-b border-slate-100 last:border-0 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <img 
+                          src={item.image || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=150&q=80"}
+                          alt={item.title}
+                          className="w-7 h-9 rounded object-cover shrink-0"
+                          onError={(e) => {
+                            e.target.src = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=150&q=80";
+                          }}
+                        />
+                        <div className="truncate">
+                          <span className="font-bold text-slate-900 block truncate">{item.title}</span>
+                          <span className="text-[10px] text-slate-500 truncate block">{item.subtitle}</span>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-extrabold text-[#D90000] uppercase shrink-0 px-1.5 py-0.5 bg-red-50 rounded">
+                        {item.category || item.type}
+                      </span>
+                    </button>
+                  ))}
                   <button
-                    key={idx}
-                    onClick={() => {
-                      setActiveTab('movies');
-                      setSearchQuery('');
-                      setIsMobileSearchOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 flex items-center justify-between text-xs"
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="w-full mt-1 text-center py-1.5 text-xs font-black text-[#D90000] hover:bg-red-50 rounded-lg cursor-pointer"
                   >
-                    <span className="font-semibold text-slate-900 dark:text-white">{item.title}</span>
-                    <span className="text-[10px] text-amber-500">{item.category}</span>
+                    View all results for "{currentQuery}" →
                   </button>
-                ))
+                </>
               ) : (
-                <div className="px-3 py-2 text-xs text-slate-500 dark:text-white/50">No matches found</div>
+                <div className="px-3 py-3 text-center text-xs text-slate-500">
+                  <p>No direct matches found.</p>
+                  <button
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="text-xs font-black text-[#D90000] underline mt-1 cursor-pointer"
+                  >
+                    Press 'Go' to search all sections →
+                  </button>
+                </div>
               )}
             </div>
           )}

@@ -1524,6 +1524,7 @@ export const BookingProvider = ({ children }) => {
   // Real-Time Socket.io Synchronization across ALL active User Panels & Sessions
   useEffect(() => {
     let cmsSocket = null;
+    let cmsChannel = null;
     try {
       cmsSocket = io(SOCKET_BASE, {
         transports: ['polling', 'websocket'],
@@ -1575,7 +1576,6 @@ export const BookingProvider = ({ children }) => {
       };
 
       // Cross-Tab & Cross-Window Instant Real-Time Sync via BroadcastChannel (0ms delay)
-      let cmsChannel = null;
       if (typeof window !== 'undefined' && window.BroadcastChannel) {
         try {
           cmsChannel = new window.BroadcastChannel('primeshow_cms_sync');

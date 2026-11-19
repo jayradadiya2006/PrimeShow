@@ -1075,6 +1075,207 @@ const sanitizeMoviePayload = (m) => {
   return { ...m, cast: cleanCast };
 };
 
+// --------------------------------------------------------------------------
+// GLOBAL SEARCH API (/api/search & /api/global-search)
+// --------------------------------------------------------------------------
+app.get(['/api/search', '/api/global-search'], async (req, res) => {
+  try {
+    const rawQuery = (req.query.q || req.query.query || req.query.search || '').trim();
+    if (!rawQuery) {
+      return res.json({
+        success: true,
+        query: '',
+        total: 0,
+        results: [],
+        categories: {
+          movies: [],
+          upcoming: [],
+          theatres: [],
+          events: [],
+          plays: [],
+          activities: []
+        }
+      });
+    }
+
+    const q = rawQuery.toLowerCase();
+    const city = (req.query.city || '').toLowerCase().trim();
+
+    const [rawMovies, rawUpcoming, rawTheatres, rawEvents, rawPlays, rawActivities] = await Promise.all([
+      DataStore.find('movies'),
+      DataStore.find('upcoming-movies'),
+      DataStore.find('theatres'),
+      DataStore.find('events'),
+      DataStore.find('plays'),
+      DataStore.find('activities')
+    ]);
+
+    const movies = (rawMovies || []).map(sanitizeMoviePayload);
+    const upcoming = rawUpcoming || [];
+    const theatres = rawTheatres || [];
+    const events = rawEvents || [];
+    const plays = rawPlays || [];
+    const activities = rawActivities || [];
+
+    const matchText = (text) => text && String(text).toLowerCase().includes(q);
+    const matchArray = (arr) => Array.isArray(arr) && arr.some(item => {
+      if (typeof item === 'string') return matchText(item);
+      if (typeof item === 'object' && item !== null) {
+        return matchText(item.name || item.title || item.role);
+      }
+      return false;
+    });
+
+    // 1. Movies
+    const matchedMovies = movies.filter(m => {
+      const inTitle = matchText(m.title);
+      const inGenre = matchText(m.genre) || matchArray(m.genres);
+      const inLang = matchText(m.language) || matchArray(m.languages);
+      const inCast = matchText(m.cast) || matchArray(m.cast);
+      const inDirector = matchText(m.director);
+      const inSynopsis = matchText(m.synopsis) || matchText(m.description) || matchText(m.tagline);
+      const inFormat = matchText(m.format) || matchArray(m.formats);
+      const inCity = matchText(m.city) || matchArray(m.cities);
+      return inTitle || inGenre || inLang || inCast || inDirector || inSynopsis || inFormat || inCity;
+    }).map(m => ({
+      id: m.id || m._id,
+      type: 'movie',
+      category: 'Movie',
+      title: m.title,
+      subtitle: `${Array.isArray(m.languages) ? m.languages.join(', ') : (m.language || 'Hindi')} • ${Array.isArray(m.genres) ? m.genres.join(', ') : (m.genre || 'Action')}`,
+      image: m.poster || m.image || m.banner,
+      rating: m.rating || 9.0,
+      price: m.price || 250,
+      city: m.city || 'Surat',
+      formats: m.formats || ['2D'],
+      raw: m
+    }));
+
+    // 2. Upcoming Movies
+    const matchedUpcoming = upcoming.filter(u => {
+      const inTitle = matchText(u.title);
+      const inGenre = matchArray(u.genres);
+      const inSynopsis = matchText(u.synopsis);
+      return inTitle || inGenre || inSynopsis;
+    }).map(u => ({
+      id: u.id || u._id,
+      type: 'upcoming',
+      category: 'Upcoming Movie',
+      title: u.title,
+      subtitle: `${u.release || u.releaseDateTag || 'Coming Soon'} • ${Array.isArray(u.genres) ? u.genres.join(', ') : 'Blockbuster'}`,
+      image: u.poster || u.image,
+      city: 'All',
+      raw: u
+    }));
+
+    // 3. Theatres / Multiplexes
+    const matchedTheatres = theatres.filter(t => {
+      const inName = matchText(t.name);
+      const inCity = matchText(t.city);
+      const inAddress = matchText(t.address) || matchText(t.location);
+      const inFacilities = matchArray(t.facilities);
+      return inName || inCity || inAddress || inFacilities;
+    }).map(t => ({
+      id: t.id || t._id,
+      type: 'theatre',
+      category: 'Multiplex',
+      title: t.name,
+      subtitle: `${t.city || 'Surat'} • ${t.address || t.location || 'Cinema'}`,
+      image: t.image || t.photo || 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=400&q=80',
+      city: t.city,
+      raw: t
+    }));
+
+    // 4. Live Events
+    const matchedEvents = events.filter(e => {
+      const inTitle = matchText(e.title);
+      const inCat = matchText(e.category);
+      const inCity = matchText(e.city);
+      const inVenue = matchText(e.venue);
+      const inDesc = matchText(e.description);
+      const inLang = matchArray(e.languages);
+      return inTitle || inCat || inCity || inVenue || inDesc || inLang;
+    }).map(e => ({
+      id: e.id || e._id,
+      type: 'event',
+      category: 'Live Event',
+      title: e.title,
+      subtitle: `${e.category || 'Event'} • ${e.venue || e.city || ''}`,
+      image: e.image,
+      city: e.city,
+      price: e.price,
+      raw: e
+    }));
+
+    // 5. Stage Plays
+    const matchedPlays = plays.filter(p => {
+      const inTitle = matchText(p.title);
+      const inCat = matchText(p.category);
+      const inCity = matchText(p.city);
+      const inVenue = matchText(p.venue);
+      const inDesc = matchText(p.description) || matchText(p.synopsis);
+      return inTitle || inCat || inCity || inVenue || inDesc;
+    }).map(p => ({
+      id: p.id || p._id,
+      type: 'play',
+      category: 'Stage Play',
+      title: p.title,
+      subtitle: `${p.category || 'Play'} • ${p.venue || p.city || ''}`,
+      image: p.image,
+      city: p.city,
+      price: p.price,
+      raw: p
+    }));
+
+    // 6. Activities
+    const matchedActivities = activities.filter(a => {
+      const inTitle = matchText(a.title);
+      const inCat = matchText(a.category);
+      const inCity = matchText(a.city);
+      const inVenue = matchText(a.venue);
+      const inDesc = matchText(a.description);
+      return inTitle || inCat || inCity || inVenue || inDesc;
+    }).map(a => ({
+      id: a.id || a._id,
+      type: 'activity',
+      category: 'Activity',
+      title: a.title,
+      subtitle: `${a.category || 'Activity'} • ${a.venue || a.city || ''}`,
+      image: a.image,
+      city: a.city,
+      price: a.price,
+      raw: a
+    }));
+
+    const results = [
+      ...matchedMovies,
+      ...matchedTheatres,
+      ...matchedUpcoming,
+      ...matchedEvents,
+      ...matchedPlays,
+      ...matchedActivities
+    ];
+
+    res.json({
+      success: true,
+      query: rawQuery,
+      total: results.length,
+      results,
+      categories: {
+        movies: matchedMovies,
+        upcoming: matchedUpcoming,
+        theatres: matchedTheatres,
+        events: matchedEvents,
+        plays: matchedPlays,
+        activities: matchedActivities
+      }
+    });
+  } catch (err) {
+    console.error('Error handling /api/search:', err);
+    res.status(500).json({ error: 'Search failed', details: err.message });
+  }
+});
+
 // Movies CRUD
 app.get(['/api/movies', '/api/admin/movies'], async (req, res) => {
   const data = await DataStore.find('movies');
