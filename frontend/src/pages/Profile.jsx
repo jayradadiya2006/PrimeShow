@@ -8,6 +8,7 @@ import { jsPDF } from 'jspdf';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
 import { compressImage } from '../utils/imageStorage';
+import { VerifiedTicketModal } from '../components/VerifiedTicketModal';
 
 export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   const { 
@@ -17,6 +18,7 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
   } = useAuth();
   const { myBookings, moviesList, selectShowForBooking } = useBooking();
   const [activeTab, setActiveTab] = useState(initialTab || 'profile-info');
+  const [selectedBookingForPass, setSelectedBookingForPass] = useState(null);
 
   useEffect(() => {
     if (initialTab) {
@@ -770,8 +772,15 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
                   </div>
 
                   <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-4 md:pt-0 border-slate-200">
-                    <div className="bg-white p-2 rounded-xl border border-slate-300 shadow-xs hidden sm:block">
-                      <QRCodeSVG value={b.qrCodeData || b.id} size={65} />
+                    <div 
+                      onClick={() => setSelectedBookingForPass(b)}
+                      className="bg-white p-2 rounded-xl border-2 border-slate-300 hover:border-[#D90000] shadow-xs hidden sm:flex flex-col items-center cursor-pointer hover:scale-105 active:scale-95 transition-all group"
+                      title="Click / Select QR to View Official Ticket Pass"
+                    >
+                      <QRCodeSVG value={b.qrCodeData || `${typeof window !== 'undefined' ? window.location.origin : 'https://prime-show-tau.vercel.app'}/?ticketId=${b.id}`} size={65} level="H" />
+                      <span className="text-[8px] font-bold text-[#D90000] mt-0.5 group-hover:underline flex items-center gap-0.5">
+                        <QrCode className="w-2.5 h-2.5" /> Select QR
+                      </span>
                     </div>
 
                     <button
@@ -1111,6 +1120,15 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
 
           </div>
         </div>
+      )}
+
+      {/* Verified Ticket Pass Modal on QR Click */}
+      {selectedBookingForPass && (
+        <VerifiedTicketModal
+          isOpen={!!selectedBookingForPass}
+          onClose={() => setSelectedBookingForPass(null)}
+          ticket={selectedBookingForPass}
+        />
       )}
 
     </div>

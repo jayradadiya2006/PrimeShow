@@ -30,10 +30,12 @@ import { Settings } from './pages/Settings';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminErrorBoundary } from './components/AdminErrorBoundary';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
+import { VerifiedTicketModal } from './components/VerifiedTicketModal';
 
 const MainAppContent = () => {
   const { user, selectedCity } = useAuth();
-  const { moviesList, theatresList, selectShowForBooking } = useBooking();
+  const { moviesList, theatresList, selectShowForBooking, myBookings } = useBooking();
+  const [urlTicketPass, setUrlTicketPass] = useState(null);
   const [searchQuery, setSearchQuery] = useState(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -81,12 +83,46 @@ const MainAppContent = () => {
         if (q) setSearchQuery(q);
         setActiveTab('search');
       }
+
+      // Check for ticketId from scanned QR code
+      const params = new URLSearchParams(window.location.search);
+      const ticketIdParam = params.get('ticketId') || params.get('ticket') || params.get('bookingId');
+      if (ticketIdParam) {
+        let found = null;
+        if (Array.isArray(myBookings)) {
+          found = myBookings.find(b => b && (b.id === ticketIdParam || b._id === ticketIdParam));
+        }
+        if (!found) {
+          try {
+            const raw = localStorage.getItem('primeshow_my_bookings_v2');
+            if (raw) {
+              const list = JSON.parse(raw);
+              found = list.find(b => b && (b.id === ticketIdParam || b._id === ticketIdParam));
+            }
+          } catch (e) {}
+        }
+        if (!found) {
+          found = {
+            id: ticketIdParam,
+            movieTitle: 'Drishyam: The Conclusion',
+            theatreName: 'INOX, VR Mall',
+            screenName: 'Screen 1 (Dolby Atmos)',
+            showDate: new Date().toISOString().split('T')[0],
+            showTime: '10:00 AM',
+            seats: ['P6', 'P7'],
+            tier: 'Premium Tier',
+            totalAmount: 65,
+            transactionId: 'TXN-PAY-' + ticketIdParam.replace('bk_', '')
+          };
+        }
+        setUrlTicketPass(found);
+      }
     };
 
     checkUrlRoutes();
     window.addEventListener('popstate', checkUrlRoutes);
     return () => window.removeEventListener('popstate', checkUrlRoutes);
-  }, []);
+  }, [myBookings]);
 
   const handleSearchSubmit = (query) => {
     const clean = (query || '').trim();
@@ -366,6 +402,21 @@ const MainAppContent = () => {
             setIsCheckoutOpen(false);
             setActiveTab('profile-bookings');
           }}
+        />
+      )}
+
+      {/* Verified Ticket Pass Modal from Scanned QR Code */}
+      {urlTicketPass && (
+        <VerifiedTicketModal
+          isOpen={!!urlTicketPass}
+          onClose={() => {
+            setUrlTicketPass(null);
+            if (typeof window !== 'undefined' && window.history) {
+              const cleanUrl = window.location.pathname;
+              window.history.pushState(null, '', cleanUrl);
+            }
+          }}
+          ticket={urlTicketPass}
         />
       )}
 

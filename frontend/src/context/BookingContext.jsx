@@ -1091,10 +1091,11 @@ export const BookingProvider = ({ children }) => {
       city: theatreCity,
       seatsBookedCount: numSeats,
       ticketCount: numSeats,
-      tickets: numSeats,
       bookingDate: new Date().toISOString(),
       status: 'CONFIRMED',
-      qrCodeData: `PRIMESHOW-${bookingId}-${movieTitle.replace(/\s+/g, '')}-${bookingDetails.seats ? bookingDetails.seats.join('') : ''}`
+      qrCodeData: typeof window !== 'undefined'
+        ? `${window.location.origin}/?ticketId=${bookingId}`
+        : `https://prime-show-tau.vercel.app/?ticketId=${bookingId}`
     };
 
     setMyBookings(prev => [newBooking, ...prev]);

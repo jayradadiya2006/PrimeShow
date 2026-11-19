@@ -8,6 +8,7 @@ import confetti from 'canvas-confetti';
 import { jsPDF } from 'jspdf';
 import { useAuth } from '../context/AuthContext';
 import { useBooking } from '../context/BookingContext';
+import { VerifiedTicketModal } from '../components/VerifiedTicketModal';
 
 export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
   const { user } = useAuth();
@@ -33,6 +34,7 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [verificationStep, setVerificationStep] = useState('');
   const [completedTicket, setCompletedTicket] = useState(null);
+  const [isQrPassOpen, setIsQrPassOpen] = useState(false);
 
   if (!isOpen || !activeBooking.movie) return null;
 
@@ -53,6 +55,12 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
 
   // Dynamic Standard UPI URL Schema
   const upiSchemaUrl = `upi://pay?pa=${payeeUpiId}&pn=${encodeURIComponent(payeeName)}&am=${grandTotal}&cu=INR`;
+
+  const ticketPassUrl = completedTicket ? (
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/?ticketId=${completedTicket.id}`
+      : `https://prime-show-tau.vercel.app/?ticketId=${completedTicket.id}`
+  ) : upiSchemaUrl;
 
   const handleCopyUpiId = () => {
     navigator.clipboard.writeText(payeeUpiId);
@@ -354,15 +362,21 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
               {paymentMethod === 'UPI' && (
                 <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-300 space-y-4 animate-fade-in text-slate-900 shadow-xs">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-                    {/* Inline SVG QR Code Renderer */}
-                    <div className="bg-white p-2.5 rounded-2xl shadow-md shrink-0 border border-slate-300 flex flex-col items-center">
+                    {/* Interactive SVG QR Code Renderer */}
+                    <div 
+                      onClick={handlePayNow}
+                      className="bg-white p-2.5 rounded-2xl shadow-md shrink-0 border-2 border-slate-300 hover:border-[#D90000] flex flex-col items-center cursor-pointer hover:scale-105 active:scale-95 transition-all group"
+                      title="Click QR to Pay & Generate Ticket"
+                    >
                       <QRCodeSVG
                         value={upiSchemaUrl}
                         size={150}
                         level="H"
                         includeMargin={true}
                       />
-                      <span className="text-[9px] font-bold text-slate-900 uppercase tracking-wider mt-1">Scan via Any UPI App</span>
+                      <span className="text-[10px] font-extrabold text-[#D90000] uppercase tracking-wider mt-1.5 flex items-center gap-1 group-hover:underline">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#66DD6A]" /> Click QR to Pay & Get Ticket
+                      </span>
                     </div>
 
                     {/* Payee Info & Manual Copy Box */}
@@ -552,14 +566,29 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
                 </div>
               </div>
 
-              {/* Dynamic QR Code */}
-              <div className="flex items-center justify-between pt-4 border-t border-[#c5ba92]">
-                <div className="bg-white p-2 rounded-xl shadow-md border border-slate-300">
-                  <QRCodeSVG value={completedTicket.qrCodeData || upiSchemaUrl} size={90} />
+              {/* Dynamic QR Code with Tap/Select to View Ticket Pass */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[#c5ba92]">
+                <div 
+                  onClick={() => setIsQrPassOpen(true)}
+                  className="bg-white p-2.5 rounded-2xl shadow-md border-2 border-slate-300 hover:border-[#D90000] cursor-pointer hover:scale-105 active:scale-95 transition-all flex flex-col items-center group relative shrink-0"
+                  title="Click / Select QR to View Official Ticket Pass"
+                >
+                  <QRCodeSVG value={ticketPassUrl} size={95} level="H" />
+                  <div className="mt-1 flex items-center gap-1 text-[10px] font-black text-[#D90000] group-hover:underline">
+                    <QrCode className="w-3 h-3 text-[#D90000]" />
+                    <span>Select QR / View Ticket Pass</span>
+                  </div>
+                  <div className="absolute -top-1.5 -right-1.5 bg-[#66DD6A] text-slate-900 rounded-full p-0.5 shadow-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-slate-900" />
+                  </div>
                 </div>
-                <div className="text-right text-[10px] text-slate-700 leading-relaxed font-semibold">
-                  Scan QR code at multiplex entrance <br />
-                  Verified NPCI Settlement • Direct Entry Permitted
+
+                <div className="text-center sm:text-right text-[11px] text-slate-800 leading-relaxed font-semibold">
+                  <div className="flex items-center justify-center sm:justify-end gap-1 text-emerald-800 font-bold mb-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Verified Cinema Pass</span>
+                  </div>
+                  <p>Click / Select QR code to view your official pass, or scan at multiplex gate for direct entry.</p>
                 </div>
               </div>
             </div>
@@ -605,6 +634,15 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
         )}
 
       </div>
+
+      {/* Interactive Official Verified QR Cinema Pass Modal */}
+      {isQrPassOpen && completedTicket && (
+        <VerifiedTicketModal
+          isOpen={isQrPassOpen}
+          onClose={() => setIsQrPassOpen(false)}
+          ticket={completedTicket}
+        />
+      )}
     </div>
   );
 };
