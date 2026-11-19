@@ -507,35 +507,42 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         {activeTab === 'login' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div className="relative">
-              <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+              <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="text"
                 required
                 placeholder="Email Address or Mobile Phone Number"
                 value={loginIdentifier}
                 onChange={(e) => setLoginIdentifier(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#D90000]"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000]/30 shadow-xs"
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+              <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="password"
                 required
                 placeholder="Password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#D90000]"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000]/30 shadow-xs"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+              className="w-full py-3.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Authenticating...' : 'Sign In to Account'}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Authenticating...</span>
+                </>
+              ) : (
+                'Sign In to Account'
+              )}
             </button>
           </form>
         )}
@@ -555,7 +562,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                     <select
                       value={countryCode}
                       onChange={(e) => setCountryCode(e.target.value)}
-                      className="w-full h-full py-3 px-2 rounded-xl bg-white text-xs text-slate-900 border border-slate-300 focus:border-[#D90000] appearance-none cursor-pointer text-center font-bold"
+                      className="w-full h-full py-3 px-2 rounded-xl bg-white text-xs text-slate-900 border border-slate-300 focus:border-[#D90000] appearance-none cursor-pointer text-center font-bold shadow-xs"
                     >
                       <option value="+91" className="bg-white text-slate-900">🇮🇳 +91</option>
                       <option value="+1" className="bg-white text-slate-900">🇺🇸 +1</option>
@@ -566,7 +573,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
 
                   {/* Phone Input with 10-digit validation */}
                   <div className="relative flex-1">
-                    <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                    <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
                     <input
                       type="tel"
                       required
@@ -574,7 +581,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                       placeholder="98765 43210"
                       value={otpPhone}
                       onChange={(e) => setOtpPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 font-mono tracking-wider focus:outline-none focus:border-[#D90000]"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-semibold placeholder-slate-400 font-mono tracking-wider focus:outline-none focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000]/30 shadow-xs"
                     />
                   </div>
                 </div>
@@ -602,13 +609,13 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
               </form>
             ) : (
               <form onSubmit={handleManualVerifySubmit} className="space-y-4 animate-fade-in">
-                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/30 text-center text-xs space-y-1">
-                  <div className="text-white/70">OTP dispatched to <span className="font-bold text-amber-300 font-mono">{countryCode} {otpPhone}</span></div>
+                <div className="p-3 rounded-2xl bg-white/90 border border-slate-300 text-center text-xs space-y-1 shadow-xs">
+                  <div className="text-slate-700 font-medium">OTP dispatched to <span className="font-bold text-[#D90000] font-mono">{countryCode} {otpPhone}</span></div>
                 </div>
 
                 {/* 6-Digit Sleek OTP Input Grid with Auto-Focus & Paste */}
                 <div className="space-y-2">
-                  <label className="block text-[11px] text-center text-white/50 uppercase tracking-widest font-semibold">
+                  <label className="block text-[11px] text-center text-slate-700 uppercase tracking-widest font-extrabold">
                     Enter 6-Digit Code
                   </label>
                   <div className="flex justify-between gap-1.5 sm:gap-2">
@@ -623,8 +630,10 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                         onChange={(e) => handleOtpDigitChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
                         onPaste={handleOtpPaste}
-                        className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-bold font-mono rounded-xl border transition-all glass-input ${
-                          digit ? 'border-amber-400 bg-amber-400/10 text-amber-300 shadow-lg shadow-amber-500/20' : 'border-white/15 text-white'
+                        className={`w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-black font-mono rounded-xl border transition-all ${
+                          digit 
+                            ? 'border-[#D90000] bg-red-50 text-[#D90000] shadow-sm' 
+                            : 'bg-white border-slate-300 text-slate-900 focus:border-[#D90000]'
                         }`}
                       />
                     ))}
@@ -634,13 +643,20 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                 <button
                   type="submit"
                   disabled={loading || otpDigits.join('').length < 6}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                  className="w-full py-3.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Verifying OTP...' : 'Verify OTP & Sign In'}
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Verifying OTP...</span>
+                    </>
+                  ) : (
+                    'Verify OTP & Sign In'
+                  )}
                 </button>
 
                 {/* Resend OTP Timer & Change Phone controls */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-300 text-xs">
                   <button
                     type="button"
                     onClick={() => {
@@ -648,7 +664,7 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                       setOtpDigits(['', '', '', '', '', '']);
                       setErrorMsg('');
                     }}
-                    className="text-white/60 hover:text-white transition-colors cursor-pointer text-[11px]"
+                    className="text-slate-700 hover:text-slate-900 font-semibold transition-colors cursor-pointer text-[11px]"
                   >
                     ← Change Mobile Number
                   </button>
@@ -657,8 +673,8 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
                     type="button"
                     disabled={resendTimer > 0 || loading}
                     onClick={handleSendOtp}
-                    className={`font-semibold transition-colors text-[11px] flex items-center gap-1 cursor-pointer ${
-                      resendTimer > 0 ? 'text-white/40 cursor-not-allowed' : 'text-amber-400 hover:text-amber-300'
+                    className={`font-bold transition-colors text-[11px] flex items-center gap-1 cursor-pointer ${
+                      resendTimer > 0 ? 'text-slate-400 cursor-not-allowed' : 'text-[#D90000] hover:text-[#b00000]'
                     }`}
                   >
                     <RotateCcw className="w-3 h-3" />
@@ -674,86 +690,93 @@ export const AuthModal = ({ isOpen, onClose, onAdminRedirect, onProfileRedirect 
         {activeTab === 'register' && (
           <form onSubmit={handleRegisterSubmit} className="space-y-3">
             <div className="relative">
-              <User className="absolute left-3.5 top-3 w-4 h-4 text-white/40" />
+              <User className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="text"
                 required
                 placeholder="Full Name *"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder-white/40"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000]/30 shadow-xs"
               />
             </div>
 
             <div className="relative">
-              <Mail className="absolute left-3.5 top-3 w-4 h-4 text-white/40" />
+              <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="email"
                 required
                 placeholder="Email Address *"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder-white/40"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000]/30 shadow-xs"
               />
             </div>
 
             <div className="relative">
-              <Phone className="absolute left-3.5 top-3 w-4 h-4 text-white/40" />
+              <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="tel"
                 required
                 placeholder="Phone Number (+91) *"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder-white/40"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000]/30 shadow-xs"
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3.5 top-3 w-4 h-4 text-white/40" />
+              <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="password"
                 required
                 placeholder="Password (min 6 chars) *"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder-white/40"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000]/30 shadow-xs"
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-3.5 top-3 w-4 h-4 text-white/40" />
+              <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-500" />
               <input
                 type="password"
                 required
                 placeholder="Confirm Password *"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-input text-xs text-white placeholder-white/40"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:border-[#D90000] focus:ring-1 focus:ring-[#D90000]/30 shadow-xs"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-black font-bold text-xs shadow-lg shadow-amber-500/25 hover:brightness-110 transition-all cursor-pointer"
+              className="w-full py-3.5 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Creating Account...' : 'Create PrimeShow Account'}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creating Account...</span>
+                </>
+              ) : (
+                'Create PrimeShow Account'
+              )}
             </button>
           </form>
         )}
 
         {/* Primary Social Auth: Firebase Google Sign-In */}
-        <div className="mt-6 pt-4 border-t border-white/10">
-          <div className="text-[10px] text-center text-white/40 uppercase tracking-wider mb-3">Or continue with Google identity</div>
+        <div className="mt-6 pt-4 border-t border-[#c5ba92]">
+          <div className="text-[11px] text-center text-slate-700 font-extrabold uppercase tracking-wider mb-3">Or continue with Google identity</div>
           <button 
             type="button"
             onClick={handleGoogleClick}
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-xs font-semibold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md active:scale-95"
+            className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 text-xs font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs active:scale-95"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 12.5s.7 2.8 1.9 5.2l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"/></svg>
-            <span>{loading ? 'Connecting with Google...' : 'Sign in with Google'}</span>
+            <span className="text-slate-800 font-extrabold">{loading ? 'Connecting with Google...' : 'Sign in with Google'}</span>
           </button>
         </div>
 
