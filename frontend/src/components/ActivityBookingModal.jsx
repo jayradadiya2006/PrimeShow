@@ -196,7 +196,7 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
               <Ticket className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white font-serif">Activity Pass Checkout</h3>
+              <h3 className="text-sm font-black font-sans text-white">Activity Pass Checkout</h3>
               <p className="text-[10px] text-amber-300">PrimeShow Adventure & Theme Park Pass</p>
             </div>
           </div>
@@ -484,7 +484,7 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
         {step === 'verifying' && (
           <div className="p-8 text-center space-y-3">
             <div className="w-10 h-10 rounded-full border-4 border-amber-400 border-t-transparent animate-spin mx-auto"></div>
-            <h4 className="text-base font-bold text-white font-serif">Verifying Payment...</h4>
+            <h4 className="text-base font-black font-sans text-white">Verifying Payment...</h4>
             <p className="text-xs text-amber-300 font-mono">Processing NPCI settlement for ₹{grandTotal.toLocaleString('en-IN')}...</p>
           </div>
         )}
@@ -496,7 +496,7 @@ export const ActivityBookingModal = ({ isOpen, onClose, activity, activityItem, 
               <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400 mx-auto mb-1">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-white font-serif">Activity Pass Confirmed!</h3>
+              <h3 className="text-base font-black font-sans text-white">Activity Pass Confirmed!</h3>
               <p className="text-xs text-emerald-400 font-semibold">Pass ID: {confirmedBooking.id}</p>
             </div>
 

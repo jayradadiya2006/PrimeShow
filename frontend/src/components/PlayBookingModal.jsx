@@ -182,7 +182,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
                   {activePlay.category || 'Drama'}
                 </span>
               </div>
-              <h2 className="text-2xl font-bold font-serif text-white">{activePlay.title}</h2>
+              <h2 className="text-2xl font-black font-sans text-white">{activePlay.title}</h2>
               <p className="text-xs text-white/70 flex items-center gap-2 mt-1">
                 <MapPin className="w-3.5 h-3.5 text-amber-400" />
                 <span>{activePlay.venue}</span>
@@ -448,7 +448,7 @@ export const PlayBookingModal = ({ isOpen, onClose, play, playItem, playlistItem
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold font-serif text-white">Theater Play Ticket Issued!</h3>
+              <h3 className="text-2xl font-black font-sans text-white">Theater Play Ticket Issued!</h3>
               <p className="text-xs text-amber-300">Verified NPCI UPI Settlement for {confirmedBooking.playTitle}</p>
             </div>
 

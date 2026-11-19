@@ -150,7 +150,7 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
               <span className="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase">
                 {event.category || 'Live Event'}
               </span>
-              <h2 className="text-2xl font-bold font-serif text-white mt-1">{event.title}</h2>
+              <h2 className="text-2xl font-black font-sans text-white mt-1">{event.title}</h2>
               <p className="text-xs text-white/70 flex items-center gap-2 mt-1">
                 <MapPin className="w-3.5 h-3.5 text-amber-400" />
                 <span>{event.venue}</span>
@@ -416,7 +416,7 @@ export const EventBookingModal = ({ isOpen, onClose, event, onBookingSuccess }) 
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold font-serif text-white">VIP Event Pass Issued!</h3>
+              <h3 className="text-2xl font-black font-sans text-white">VIP Event Pass Issued!</h3>
               <p className="text-xs text-amber-300">Verified NPCI UPI Settlement for {confirmedBooking.eventTitle}</p>
             </div>
 
