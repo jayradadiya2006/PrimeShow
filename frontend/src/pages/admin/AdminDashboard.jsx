@@ -2745,84 +2745,97 @@ export const AdminDashboard = ({ onReturnHome }) => {
 
   if (!isUserAdmin) {
     return (
-      <div className="min-h-screen bg-[#ECEBDE] text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
+      <div className="min-h-screen bg-[#0B0F17] text-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden selection:bg-[#D90000] selection:text-white">
         {/* Ambient background glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#D90000]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 w-full max-w-md bg-[#D7D3BF] border border-[#C1BAA1] rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+        <div className="relative z-10 w-full max-w-md bg-[#141A26] border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-6">
           {/* Header */}
-          <div className="text-center space-y-3 mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-xl shadow-cyan-500/20 mb-2">
-              <Shield className="w-8 h-8" />
+          <div className="text-center space-y-2 mb-2">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#D90000]/20 border border-[#D90000]/50 text-[#D90000] shadow-xl shadow-red-950/40 mb-2">
+              <Shield className="w-8 h-8 text-[#D90000]" />
             </div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">PrimeShow Admin Portal</h1>
-            <p className="text-xs text-slate-400 font-medium">Restricted Access • Administrator Authentication Required</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">PrimeShow Admin Portal</h1>
+            <p className="text-xs text-slate-300 font-medium">Restricted Access • Administrator Authentication Required</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleAdminAuthSubmit} className="space-y-4">
             {authError && (
-              <div className="p-3.5 rounded-xl bg-red-500/15 border border-red-500/40 text-red-300 text-xs font-bold flex items-center gap-2">
+              <div className="p-3.5 rounded-xl bg-red-950/70 border border-red-700/70 text-red-200 text-xs font-bold flex items-center gap-2 shadow-sm">
                 <Lock className="w-4 h-4 shrink-0 text-red-400" />
                 <span>{authError}</span>
               </div>
             )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Admin Email</label>
-              <input
-                type="email"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@primeshow.com"
-                required
-                className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400 transition"
-              />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-extrabold text-slate-200 uppercase tracking-wider">Admin Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                <input
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  placeholder="admin@primeshow.com"
+                  required
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0B0F17] border border-slate-600 text-white font-semibold text-sm placeholder-slate-500 focus:outline-none focus:border-[#D90000] focus:ring-2 focus:ring-[#D90000]/30 transition-all shadow-inner"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Admin Security Password</label>
-              <input
-                type="password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="w-full px-4 py-3 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-sm focus:outline-none focus:border-cyan-400 transition"
-              />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-extrabold text-slate-200 uppercase tracking-wider">Admin Security Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0B0F17] border border-slate-600 text-white font-semibold text-sm placeholder-slate-500 focus:outline-none focus:border-[#D90000] focus:ring-2 focus:ring-[#D90000]/30 transition-all shadow-inner"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-sm shadow-xl shadow-red-950/50 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer mt-2"
             >
               {authLoading ? (
                 <RefreshCw className="w-4 h-4 animate-spin text-white" />
               ) : (
-                <Shield className="w-4 h-4" />
+                <Shield className="w-4 h-4 text-white" />
               )}
               <span>{authLoading ? 'Verifying Admin Token...' : 'Authenticate & Unlock Panel'}</span>
             </button>
           </form>
 
-          {/* Quick Admin Auth Button */}
-          <div className="mt-6 pt-6 border-t border-slate-800 space-y-3">
+          {/* Quick Admin Auth Button & Exit */}
+          <div className="pt-4 border-t border-slate-700/80 space-y-3">
             <button
               onClick={handleQuickBypassLogin}
               disabled={authLoading}
-              className="w-full py-2.5 px-4 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 border-2 border-amber-400/60 text-amber-300 hover:text-amber-200 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-md"
             >
-              <Zap className="w-3.5 h-3.5 text-cyan-400" />
+              <Zap className="w-4 h-4 text-amber-400" />
               <span>One-Click Master Admin Login (admin@primeshow.com)</span>
             </button>
 
+            <div className="p-2.5 rounded-xl bg-[#0B0F17] border border-slate-700/80 text-center space-y-0.5">
+              <div className="text-[11px] text-slate-400 font-semibold">Pre-configured Admin Access:</div>
+              <div className="text-xs font-mono font-bold text-[#F5B400]">
+                admin@primeshow.com &bull; admin123
+              </div>
+            </div>
+
             <button
               onClick={onReturnHome}
-              className="w-full py-2 px-4 text-slate-400 hover:text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-600 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm"
             >
-              <Home className="w-3.5 h-3.5" />
+              <Home className="w-3.5 h-3.5 text-slate-400" />
               <span>Exit to Main Customer Portal</span>
             </button>
           </div>
