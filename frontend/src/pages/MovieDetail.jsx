@@ -219,11 +219,11 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
         city: t.city || 'Surat',
         address: t.address || `${t.city || 'Surat'} Multiplex`,
         facilities: Array.isArray(t.facilities) ? t.facilities : ['IMAX 3D', 'Dolby Atmos', 'VIP Recliner'],
-        shows: Array.isArray(t.shows) && t.shows.length > 0 ? t.shows : [
-          { id: `${t.id}_sh_1`, time: '10:30 AM', format: 'Dolby Atmos', price: 250 },
-          { id: `${t.id}_sh_2`, time: '01:45 PM', format: 'Dolby Atmos', price: 280 },
-          { id: `${t.id}_sh_3`, time: '06:30 PM', format: 'VIP Recliner', price: 420 },
-          { id: `${t.id}_sh_4`, time: '09:45 PM', format: 'VIP Recliner', price: 480 }
+        shows: Array.isArray(t.shows) && t.shows.length > 0 ? t.shows.map(s => ({ ...s, date: currentDateSelection, showDate: currentDateSelection })) : [
+          { id: `${t.id}_sh_1`, time: '10:30 AM', format: 'Dolby Atmos', price: 250, date: currentDateSelection, showDate: currentDateSelection },
+          { id: `${t.id}_sh_2`, time: '01:45 PM', format: 'Dolby Atmos', price: 280, date: currentDateSelection, showDate: currentDateSelection },
+          { id: `${t.id}_sh_3`, time: '06:30 PM', format: 'VIP Recliner', price: 420, date: currentDateSelection, showDate: currentDateSelection },
+          { id: `${t.id}_sh_4`, time: '09:45 PM', format: 'VIP Recliner', price: 480, date: currentDateSelection, showDate: currentDateSelection }
         ]
       }));
     }
@@ -263,7 +263,13 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
   };
 
   const handleShowClick = (theatre, show) => {
-    selectShowForBooking(movie, theatre, show);
+    const selectedShowDate = show.date || show.showDate || currentDateSelection || (availableDates[0]?.date) || new Date().toISOString().split('T')[0];
+    const finalShow = {
+      ...show,
+      date: selectedShowDate,
+      showDate: selectedShowDate
+    };
+    selectShowForBooking(movie, theatre, finalShow);
     if (typeof onOpenSeatPicker === 'function') {
       onOpenSeatPicker();
     } else if (typeof onBookTickets === 'function') {
@@ -573,7 +579,7 @@ export const MovieDetail = ({ movieId, onOpenSeatPicker, onBookTickets, onBackTo
                       return (
                         <button
                           key={show.id}
-                          onClick={() => handleShowClick(theatre, { ...show, price: effectivePrice })}
+                          onClick={() => handleShowClick(theatre, { ...show, price: effectivePrice, date: currentDateSelection, showDate: currentDateSelection })}
                           className="px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl bg-white hover:bg-[#D90000] hover:text-white text-slate-900 border border-slate-300 font-bold transition-all text-center group cursor-pointer shadow-md hover:scale-105"
                         >
                           <div className="text-xs sm:text-sm font-extrabold group-hover:text-white">{show.time}</div>

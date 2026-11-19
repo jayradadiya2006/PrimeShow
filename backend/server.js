@@ -1548,6 +1548,9 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
             format: s.format || 'IMAX 3D',
             price: Number(s.price) || 450,
             screen: s.screen || 'Screen 1',
+            screenName: s.screen || s.screenName || 'Screen 1',
+            date: targetDate,
+            showDate: targetDate,
             screenId: `${matchedDbTh?.id || th.id || 'th_1'}_${movie.id || 'mov_1'}_${targetDate}_${s.time || s.showTime || '07:30 PM'}`
           })) : []
         };
@@ -1582,6 +1585,9 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
               format: h.format || 'IMAX 3D',
               price: Number(h.price) || 450,
               screen: h.hallName || 'Screen 1',
+              screenName: h.hallName || 'Screen 1',
+              date: targetDate,
+              showDate: targetDate,
               screenId: `${t.id}_${movie.id}_${targetDate}_${showTimeStr}`
             });
           }
@@ -1615,10 +1621,10 @@ app.get(['/api/movies/:id/schedules', '/api/admin/movies/:id/schedules'], async 
         address: t.address || `${t.city || 'Surat'} Multiplex`,
         facilities: cleanFac,
         shows: [
-          { id: `${t.id}_sh_1`, time: '10:30 AM', showTime: '10:30 AM', format: 'Dolby Atmos', price: 250, screen: 'Audi 1', screenId: `${t.id}_${movie.id}_${targetDate}_10:30 AM` },
-          { id: `${t.id}_sh_2`, time: '02:00 PM', showTime: '02:00 PM', format: 'Dolby Atmos', price: 300, screen: 'Audi 1', screenId: `${t.id}_${movie.id}_${targetDate}_02:00 PM` },
-          { id: `${t.id}_sh_3`, time: '06:30 PM', showTime: '06:30 PM', format: 'VIP Recliner', price: 450, screen: 'Audi 2', screenId: `${t.id}_${movie.id}_${targetDate}_06:30 PM` },
-          { id: `${t.id}_sh_4`, time: '09:45 PM', showTime: '09:45 PM', format: 'VIP Recliner', price: 500, screen: 'Audi 2', screenId: `${t.id}_${movie.id}_${targetDate}_09:45 PM` }
+          { id: `${t.id}_sh_1`, time: '10:30 AM', showTime: '10:30 AM', format: 'Dolby Atmos', price: 250, screen: 'Audi 1', screenName: 'Audi 1', date: targetDate, showDate: targetDate, screenId: `${t.id}_${movie.id}_${targetDate}_10:30 AM` },
+          { id: `${t.id}_sh_2`, time: '02:00 PM', showTime: '02:00 PM', format: 'Dolby Atmos', price: 300, screen: 'Audi 1', screenName: 'Audi 1', date: targetDate, showDate: targetDate, screenId: `${t.id}_${movie.id}_${targetDate}_02:00 PM` },
+          { id: `${t.id}_sh_3`, time: '06:30 PM', showTime: '06:30 PM', format: 'VIP Recliner', price: 450, screen: 'Audi 2', screenName: 'Audi 2', date: targetDate, showDate: targetDate, screenId: `${t.id}_${movie.id}_${targetDate}_06:30 PM` },
+          { id: `${t.id}_sh_4`, time: '09:45 PM', showTime: '09:45 PM', format: 'VIP Recliner', price: 500, screen: 'Audi 2', screenName: 'Audi 2', date: targetDate, showDate: targetDate, screenId: `${t.id}_${movie.id}_${targetDate}_09:45 PM` }
         ]
       });
     });

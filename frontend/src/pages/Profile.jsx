@@ -838,7 +838,9 @@ export const Profile = ({ initialTab = 'profile-info', onReturnHome }) => {
                         <button
                           onClick={() => {
                             if (movie.theatres?.[0]?.shows?.[0]) {
-                              selectShowForBooking(movie, movie.theatres[0], movie.theatres[0].shows[0]);
+                              const pDate = movie.showDates?.[0] || new Date().toISOString().split('T')[0];
+                              const pShow = { ...movie.theatres[0].shows[0], date: pDate, showDate: pDate };
+                              selectShowForBooking(movie, movie.theatres[0], pShow);
                             }
                           }}
                           className="w-full py-2 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-extrabold text-xs shadow-md cursor-pointer"

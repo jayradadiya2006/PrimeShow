@@ -1962,6 +1962,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
       id: `sh_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       time: effectiveTime,
       showTime: effectiveTime,
+      date: activeDate,
+      showDate: activeDate,
       format: schedFormat || 'IMAX 3D',
       price: Number(schedPrice) || 250,
       tier: schedTier || 'VIP',

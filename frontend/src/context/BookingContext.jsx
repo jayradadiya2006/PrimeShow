@@ -913,10 +913,17 @@ export const BookingProvider = ({ children }) => {
   });
 
   const selectShowForBooking = (movieObj, theatreObj, showObj) => {
+    const effectiveDate = showObj?.date || showObj?.showDate || movieObj?.showDates?.[0] || new Date().toISOString().split('T')[0];
+    const enrichedShow = {
+      ...showObj,
+      date: effectiveDate,
+      showDate: effectiveDate
+    };
     setActiveBooking({
       movie: movieObj,
       theatre: theatreObj,
-      show: showObj,
+      show: enrichedShow,
+      selectedDate: effectiveDate,
       selectedSeats: [],
       selectedTier: 'Recliner',
       appliedCoupon: null,
@@ -992,9 +999,16 @@ export const BookingProvider = ({ children }) => {
 
     const numSeats = Number(bookingDetails.ticketCount || bookingDetails.seatsBookedCount || bookingDetails.totalSeats || (bookingDetails.seats ? bookingDetails.seats.length : 1));
 
+    const effectiveShowDate = bookingDetails.showDate || bookingDetails.date || activeBooking.show?.date || activeBooking.show?.showDate || activeBooking.selectedDate || targetMovie.showDates?.[0] || new Date().toISOString().split('T')[0];
+    const effectiveShowTime = bookingDetails.showTime || bookingDetails.time || activeBooking.show?.time || '10:00 AM';
+
     const newBooking = {
       id: bookingId,
       ...bookingDetails,
+      showDate: effectiveShowDate,
+      showTime: effectiveShowTime,
+      date: effectiveShowDate,
+      time: effectiveShowTime,
       movieId,
       movieTitle,
       poster,
@@ -1035,6 +1049,10 @@ export const BookingProvider = ({ children }) => {
         userEmail: targetUserEmail,
         userName: targetUserName,
         showId: activeBooking.show?.id || bookingDetails.showId || 'sh_101',
+        showDate: effectiveShowDate,
+        showTime: effectiveShowTime,
+        date: effectiveShowDate,
+        time: effectiveShowTime,
         movieId: movieId,
         movieTitle: movieTitle,
         title: movieTitle,
@@ -1769,6 +1787,7 @@ export const BookingProvider = ({ children }) => {
       addRowToScreenLayout,
       deleteRowFromScreenLayout,
       activeBooking,
+      setActiveBooking,
       selectShowForBooking,
       toggleSeatSelection,
       applyCoupon,

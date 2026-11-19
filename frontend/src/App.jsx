@@ -118,7 +118,13 @@ const MainAppContent = () => {
 
     if (validMovie && selectShowForBooking) {
       const defaultTh = validMovie.theatres?.[0] || theatresList?.[0] || { id: 'th_1', name: 'PVR Cinemas', city: 'Surat' };
-      const defaultShow = defaultTh.shows?.[0] || { id: 'sh_101', time: '07:30 PM', price: 480, screenId: 'sc_1', format: 'IMAX 3D' };
+      const defaultDate = validMovie.showDates?.[0] || new Date().toISOString().split('T')[0];
+      const rawShow = defaultTh.shows?.[0] || { id: 'sh_101', time: '07:30 PM', price: 480, screenId: 'sc_1', format: 'IMAX 3D' };
+      const defaultShow = {
+        ...rawShow,
+        date: rawShow.date || defaultDate,
+        showDate: rawShow.showDate || rawShow.date || defaultDate
+      };
       selectShowForBooking(validMovie, defaultTh, defaultShow);
     }
 

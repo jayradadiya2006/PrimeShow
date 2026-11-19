@@ -37,6 +37,8 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
   if (!isOpen || !activeBooking.movie) return null;
 
   const { movie, theatre, show, selectedSeats, selectedTier, appliedCoupon, discountAmount } = activeBooking;
+  const effectiveShowDate = show?.date || show?.showDate || activeBooking?.selectedDate || movie?.showDates?.[0] || new Date().toISOString().split('T')[0];
+  const effectiveShowTime = show?.time || show?.showTime || '07:30 PM';
 
   // Payee & Platform Identity Details
   const payeeName = 'PrimeShow Official Cinema Pass';
@@ -86,8 +88,10 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
         poster: movie.poster,
         theatreName: theatre.name,
         screenName: show.screenName || 'Screen 1',
-        showDate: show.date || '2026-07-28',
-        showTime: show.time,
+        showDate: effectiveShowDate,
+        showTime: effectiveShowTime,
+        date: effectiveShowDate,
+        time: effectiveShowTime,
         seats: selectedSeats,
         tier: selectedTier,
         ticketCount: selectedSeats.length,
@@ -209,7 +213,9 @@ export const CheckoutModal = ({ isOpen, onClose, onBookingSuccess }) => {
                   <div className="text-[11px] sm:text-xs text-[#D90000] font-semibold truncate max-w-full">
                     Seats: <strong className="text-slate-900">{selectedSeats.join(', ')}</strong> ({selectedTier})
                   </div>
-                  <div className="text-[10px] sm:text-[11px] text-slate-600 truncate max-w-full">{show.date || '2026-07-28'} • {show.time} ({show.screenName || 'Screen 1'})</div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-600 truncate max-w-full font-medium">
+                    📅 <strong className="text-slate-900">{effectiveShowDate}</strong> • {effectiveShowTime} ({show.screenName || 'Screen 1'})
+                  </div>
                 </div>
               </div>
 

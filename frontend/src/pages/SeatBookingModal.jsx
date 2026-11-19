@@ -3,7 +3,7 @@ import { X, Sparkles, AlertCircle, Film, ShoppingBag, Info, ChevronDown, Chevron
 import { useBooking } from '../context/BookingContext';
 
 export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProceedToCheckout }) => {
-  const { activeBooking, moviesList, theatresList, toggleSeatSelection, showBookedSeatsMap, getScreenLayout, lockSeatsForShow } = useBooking();
+  const { activeBooking, setActiveBooking, moviesList, theatresList, toggleSeatSelection, showBookedSeatsMap, getScreenLayout, lockSeatsForShow } = useBooking();
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
 
@@ -22,7 +22,7 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
   const cityStr = theatre?.city || activeBooking?.city || 'Surat';
   const thId = theatre?.id || theatre?._id || 'th_1';
   const movId = movie?.id || movie?._id || 'mov_1';
-  const dateStr = show?.date || activeBooking?.selectedDate || new Date().toISOString().split('T')[0];
+  const dateStr = show?.date || show?.showDate || activeBooking?.selectedDate || (movie?.showDates?.[0]) || new Date().toISOString().split('T')[0];
   const timeStr = show?.time || show?.showTime || '07:30 PM';
 
   const layoutKeyCity = `${cityStr}_${thId}_${movId}_${dateStr}_${timeStr}`;
@@ -66,6 +66,14 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
   const handleProceedToPayment = async () => {
     if (selectedSeats.length === 0) return;
 
+    if (setActiveBooking && (!activeBooking?.show?.date || activeBooking?.show?.date !== dateStr)) {
+      setActiveBooking(prev => ({
+        ...prev,
+        show: { ...(prev.show || {}), date: dateStr, showDate: dateStr },
+        selectedDate: dateStr
+      }));
+    }
+
     setIsLocking(true);
 
     // 1. Temporarily Lock / Hold seats in real-time store & backend
@@ -101,7 +109,9 @@ export const SeatBookingModal = ({ isOpen, onClose, onProceedToPayment, onProcee
               </div>
               
               <div className="text-[11px] text-slate-700 mt-1 flex items-center gap-1.5 flex-wrap">
-                <span>{theatre.name}</span>
+                <span className="font-semibold text-slate-800">{theatre.name}</span>
+                <span>•</span>
+                <span className="text-[#D90000] font-bold">📅 {dateStr}</span>
                 <span>•</span>
                 <span className="text-[#D90000] font-bold">{show.time}</span>
                 <span>({show.screenName || 'Screen 1'})</span>
