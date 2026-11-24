@@ -100,12 +100,30 @@ export const HeroCarousel = ({ onSelectMovie, onBookNow, setActiveTab }) => {
       <div className="hero-left-content">
         <span className="hero-badge">{currentMovie.badge}</span>
         <h1 className="hero-title">{currentMovie.title}</h1>
-        <p className="hero-subtitle">{currentMovie.tagline}</p>
-        <p className="hero-desc">{currentMovie.description}</p>
+        {currentMovie.tagline && (
+          <p className="hero-subtitle">{currentMovie.tagline}</p>
+        )}
+        {currentMovie.description && currentMovie.description !== currentMovie.tagline && (
+          <p className="hero-desc">{currentMovie.description}</p>
+        )}
 
         <div className="hero-meta">
           <span className="hero-rating">★ {currentMovie.rating}</span>
           <span className="hero-languages">{currentMovie.languages}</span>
+        </div>
+
+        <div className="hero-buttons">
+          <button
+            type="button"
+            className="btn-book cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onBookNow) onBookNow(currentMovie.movieId || 'mov_1');
+              else if (onSelectMovie) onSelectMovie(currentMovie.movieId || 'mov_1');
+            }}
+          >
+            Book Tickets
+          </button>
         </div>
       </div>
 
@@ -122,10 +140,10 @@ export const HeroCarousel = ({ onSelectMovie, onBookNow, setActiveTab }) => {
         </div>
 
         <div className="nav-arrows">
-          <button className="arrow-btn" onClick={handlePrev}>
+          <button className="arrow-btn" onClick={handlePrev} aria-label="Previous Slide">
             &#10094;
           </button>
-          <button className="arrow-btn" onClick={handleNext}>
+          <button className="arrow-btn" onClick={handleNext} aria-label="Next Slide">
             &#10095;
           </button>
         </div>

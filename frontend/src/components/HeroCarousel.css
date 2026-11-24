@@ -1,7 +1,10 @@
 .hero-carousel-container {
   position: relative;
   width: 100%;
-  height: 420px;
+  max-width: 1240px;
+  height: 530px;
+  margin: 0 auto;
+  border-radius: 28px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -12,6 +15,8 @@
   padding: 40px 60px;
   box-sizing: border-box;
   overflow: hidden;
+  box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(219, 206, 165, 0.4);
   transition: background-image 0.5s ease-in-out;
 }
 
@@ -191,15 +196,23 @@
   background-color: #ff1e27;
 }
 
-/* Mobile Responsiveness */
+/* Tablet & Mobile Responsiveness */
+@media (max-width: 1024px) {
+  .hero-carousel-container {
+    height: 460px;
+    padding: 30px 40px;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-carousel-container {
-    height: 350px;
-    padding: 20px;
+    height: 400px;
+    padding: 24px 20px;
+    border-radius: 20px;
   }
 
   .hero-title {
-    font-size: 30px;
+    font-size: 28px;
   }
 
   .hero-controls {
