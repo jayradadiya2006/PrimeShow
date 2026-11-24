@@ -31,16 +31,14 @@ export const Home = ({ onSelectMovie, onBookNow, selectedCity, onOpenCityModal, 
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-slate-900 font-sans overflow-x-hidden">
       
-      {/* Dynamic Hero Billboard Carousel Section */}
-      <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 md:px-8 pt-3 sm:pt-6">
-        <HeroCarousel
-          onSelectMovie={onSelectMovie}
-          onBookNow={onBookNow}
-          selectedCity={selectedCity}
-          onOpenCityModal={onOpenCityModal}
-          setActiveTab={setActiveTab}
-        />
-      </div>
+      {/* Dynamic Hero Billboard Carousel Section - 100% Full Width Edge-to-Edge */}
+      <HeroCarousel
+        onSelectMovie={onSelectMovie}
+        onBookNow={onBookNow}
+        selectedCity={selectedCity}
+        onOpenCityModal={onOpenCityModal}
+        setActiveTab={setActiveTab}
+      />
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 md:px-8 space-y-10 sm:space-y-16 py-6 sm:py-12">

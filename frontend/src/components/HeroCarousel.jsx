@@ -49,12 +49,12 @@ const movies = [
   {
     id: 5,
     badge: 'LATEST RELEASE',
-    title: 'bhooth bangla',
+    title: 'Bhooth Bangla',
     tagline: 'Experience Ultra Luxury Cinema with Premium Comfort',
-    description: 'Experience Ultra Luxury Cinema with Premium Comfort',
+    description: 'The highly anticipated comedy-horror extravaganza arrives in PrimeShow luxury screens',
     rating: '9.5 (50K)',
     languages: 'Hindi • English • Gujarati',
-    image: 'https://timesofindia.indiatimes.com/thumb/msid-130320231,width-1280,height-720,resizemode-4/130320231.jpg',
+    image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1920&q=80',
     movieId: 'mov_2'
   },
 ];
