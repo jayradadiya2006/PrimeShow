@@ -3374,28 +3374,39 @@ export const AdminDashboard = ({ onReturnHome }) => {
                       onClick={() => setTopMoviesModalOpen(true)}
                       className="text-xs font-black text-[#D90000] hover:underline cursor-pointer flex items-center gap-1"
                     >
-                      <span>More / View All ({(Array.isArray(topMoviesList) ? topMoviesList : []).length})</span>
+                      <span>More / View Top 10 ({(Array.isArray(topMoviesList) ? topMoviesList : []).length})</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   <div className="space-y-3">
                     {Array.isArray(topMoviesList) && topMoviesList.length > 0 ? (
-                      topMoviesList.slice(0, 5).map((movie, idx) => {
+                      topMoviesList.slice(0, 2).map((movie, idx) => {
+                        const matchedMovie = (Array.isArray(moviesList) ? moviesList : []).find(m => 
+                          (m && m.id && (m.id === movie.id || m.id === movie.movieId)) || 
+                          (m && m.title && movie.title && m.title.trim().toLowerCase() === movie.title.trim().toLowerCase())
+                        );
+                        const posterImg = matchedMovie?.poster || matchedMovie?.posterUrl || matchedMovie?.image || movie?.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80';
+                        const movieTitle = matchedMovie?.title || movie?.title || 'Untitled Movie';
                         const pct = movie?.percentage !== undefined ? movie.percentage : 0;
+
                         return (
                           <div key={movie?.movieId || movie?.title || idx} className="p-3 rounded-xl bg-[#FFFFFF] border border-slate-300 space-y-2">
                             <div className="flex items-center gap-3">
-                              {/* Element 1: Movie Poster Image */}
+                              {/* Element 1: Movie Poster Image - Exact Poster from Add Movie */}
                               <img 
-                                src={movie?.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80'} 
-                                alt={movie?.title || 'Movie'} 
+                                src={posterImg} 
+                                alt={movieTitle} 
                                 className="w-12 h-16 rounded-lg object-cover border border-slate-300 shadow-sm shrink-0" 
+                                onError={(e) => {
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80';
+                                }}
                               />
                               
                               <div className="flex-1 min-w-0">
                                 {/* Element 2: Movie Title Name */}
-                                <h4 className="font-black text-[#1A1A1A] text-sm truncate">{movie?.title || 'Untitled Movie'}</h4>
+                                <h4 className="font-black text-[#1A1A1A] text-sm truncate">{movieTitle}</h4>
                                 
                                 {/* Element 3: Booking Percentage Bar / Percentage Value */}
                                 <div className="flex items-center justify-between text-xs mt-1 mb-1">
@@ -7992,8 +8003,8 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   <Film className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black font-sans text-[#1A1A1A]">All Booked Movies Ranking</h3>
-                  <p className="text-xs text-slate-800 font-semibold">Global ordered list of all movies by ticket sales & revenue across cities</p>
+                  <h3 className="text-xl font-black font-sans text-[#1A1A1A]">Top 10 Booked Movies Ranking</h3>
+                  <p className="text-xs text-slate-800 font-semibold">Live ranking of Top 10 movies booked by users across cities</p>
                 </div>
               </div>
 
@@ -8028,39 +8039,56 @@ export const AdminDashboard = ({ onReturnHome }) => {
                   );
                 }
 
-                return filteredMovies.map((movie, idx) => (
-                  <div key={idx} className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-slate-300 flex items-center justify-between gap-4 hover:border-[#D90000] transition-all shadow-sm text-[#1A1A1A]">
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <span className="w-7 h-7 rounded-xl bg-[#DBCEA5] border border-[#c5ba92] flex items-center justify-center text-xs font-black text-[#1A1A1A] font-mono shrink-0">
-                        #{movie.rank || idx + 1}
-                      </span>
-                      <img src={movie.poster} alt={movie.title} className="w-10 h-12 rounded-lg object-cover border border-slate-300 shrink-0 shadow-sm" />
-                      <div className="min-w-0">
-                        <h4 className="font-black text-[#1A1A1A] text-sm truncate">{movie.title}</h4>
-                        <div className="flex items-center gap-3 text-xs text-slate-700 font-bold mt-0.5">
-                          <span>🎟️ {movie.bookings || 0} Bookings</span>
-                          <span>•</span>
-                          <span>🍿 {movie.tickets || 0} Tickets Sold</span>
+                return filteredMovies.map((movie, idx) => {
+                  const matchedMovie = (Array.isArray(moviesList) ? moviesList : []).find(m => 
+                    (m && m.id && (m.id === movie.id || m.id === movie.movieId)) || 
+                    (m && m.title && movie.title && m.title.trim().toLowerCase() === movie.title.trim().toLowerCase())
+                  );
+                  const posterImg = matchedMovie?.poster || matchedMovie?.posterUrl || matchedMovie?.image || movie?.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80';
+                  const movieTitle = matchedMovie?.title || movie?.title || 'Movie';
+
+                  return (
+                    <div key={movie.id || idx} className="p-3.5 bg-[#FFFFFF] rounded-2xl border border-slate-300 flex items-center justify-between gap-4 hover:border-[#D90000] transition-all shadow-sm text-[#1A1A1A]">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <span className="w-7 h-7 rounded-xl bg-[#DBCEA5] border border-[#c5ba92] flex items-center justify-center text-xs font-black text-[#1A1A1A] font-mono shrink-0">
+                          #{movie.rank || idx + 1}
+                        </span>
+                        <img 
+                          src={posterImg} 
+                          alt={movieTitle} 
+                          className="w-10 h-14 rounded-lg object-cover border border-slate-300 shrink-0 shadow-sm"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80';
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <h4 className="font-black text-[#1A1A1A] text-sm truncate">{movieTitle}</h4>
+                          <div className="flex items-center gap-3 text-xs text-slate-700 font-bold mt-0.5">
+                            <span>🎟️ {movie.bookings || 0} Bookings</span>
+                            <span>•</span>
+                            <span>🍿 {movie.tickets || 0} Tickets Sold</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="text-right shrink-0">
-                      <div className="font-mono font-black text-[#2C5745] text-sm">
-                        ₹{(movie.revenue || 0).toLocaleString('en-IN')}
+                      <div className="text-right shrink-0">
+                        <div className="font-mono font-black text-[#2C5745] text-sm">
+                          ₹{(movie.revenue || 0).toLocaleString('en-IN')}
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-[#D90000] text-white text-[10px] font-black">
+                          {movie.category || 'Movie'}
+                        </span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-[#D90000] text-white text-[10px] font-black">
-                        {movie.category || 'Movie'}
-                      </span>
                     </div>
-                  </div>
-                ));
+                  );
+                });
               })()}
             </div>
 
             {/* Modal Footer */}
             <div className="pt-3 border-t border-[#c5ba92] flex justify-between items-center shrink-0">
-              <span className="text-xs text-slate-800 font-bold">Showing {topMoviesList.length} Total Movies</span>
+              <span className="text-xs text-slate-800 font-bold">Showing {topMoviesList.length} Ranked Movies (Top 10 by User Bookings)</span>
               <button
                 onClick={() => setTopMoviesModalOpen(false)}
                 className="px-5 py-2 rounded-xl bg-[#D90000] hover:bg-[#b00000] text-white font-black text-xs cursor-pointer transition-colors shadow-md"

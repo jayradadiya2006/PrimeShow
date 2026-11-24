@@ -897,7 +897,7 @@ app.get('/api/admin/analytics/charts', async (req, res) => {
   }
 });
 
-// Admin Analytics Top Movies
+// Admin Analytics Top Movies (Strictly User-Booked Movies, Exact Poster, Top 10)
 app.get(['/api/admin/analytics/top-booking-overview', '/api/admin/analytics/top-movies'], async (req, res) => {
   const bookings = await DataStore.find('bookings');
   const movies = await DataStore.find('movies');
@@ -905,45 +905,68 @@ app.get(['/api/admin/analytics/top-booking-overview', '/api/admin/analytics/top-
   const movieStatsMap = {};
 
   bookings.forEach(b => {
-    const mId = b.movieId || b.title || 'mov_1';
-    const mTitle = b.movieTitle || b.title || 'Movie';
-    if (!movieStatsMap[mId]) {
-      movieStatsMap[mId] = {
-        id: mId,
-        title: mTitle,
-        movieTitle: mTitle,
-        poster: b.poster || 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80',
+    // Exclude cancelled bookings
+    if (b && (b.status || 'CONFIRMED').toUpperCase() === 'CANCELLED') return;
+
+    const mId = String(b.movieId || b.title || 'mov_1').trim();
+    const mTitle = String(b.movieTitle || b.title || 'Movie').trim();
+
+    // Match exact movie from movies collection to fetch the exact poster uploaded in "Add Movie"
+    const matchedMovie = movies.find(m => 
+      (m && mId && (String(m.id || m._id).trim() === mId)) ||
+      (m && m.title && mTitle && m.title.trim().toLowerCase() === mTitle.toLowerCase())
+    );
+
+    const exactPoster = matchedMovie?.poster || matchedMovie?.posterUrl || matchedMovie?.image || b.poster || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&auto=format&fit=crop&q=80';
+    const exactTitle = matchedMovie?.title || mTitle;
+    const finalKey = matchedMovie?.id || mId;
+
+    if (!movieStatsMap[finalKey]) {
+      movieStatsMap[finalKey] = {
+        id: finalKey,
+        movieId: finalKey,
+        title: exactTitle,
+        movieTitle: exactTitle,
+        poster: exactPoster,
+        category: b.category || matchedMovie?.category || 'Movie',
         totalBookings: 0,
         totalRevenue: 0,
         totalTickets: 0
       };
+    } else if (matchedMovie && (!movieStatsMap[finalKey].poster || movieStatsMap[finalKey].poster.includes('unsplash'))) {
+      movieStatsMap[finalKey].poster = exactPoster;
     }
-    movieStatsMap[mId].totalBookings += 1;
-    movieStatsMap[mId].totalRevenue += Number(b.totalAmount || 0);
-    movieStatsMap[mId].totalTickets += Number(b.seatsBookedCount || b.ticketCount || 1);
+
+    const tCount = Number(b.seatsBookedCount || b.ticketCount || (Array.isArray(b.seats) ? b.seats.length : 1)) || 1;
+    movieStatsMap[finalKey].totalBookings += 1;
+    movieStatsMap[finalKey].totalRevenue += Number(b.totalAmount || 0);
+    movieStatsMap[finalKey].totalTickets += tCount;
   });
 
-  movies.forEach(m => {
-    const mId = m.id || m._id;
-    if (!movieStatsMap[mId]) {
-      movieStatsMap[mId] = {
-        id: mId,
-        title: m.title || 'Movie',
-        movieTitle: m.title || 'Movie',
-        poster: m.poster || m.banner || '',
-        totalBookings: 0,
-        totalRevenue: 0,
-        totalTickets: 0
-      };
-    }
-  });
+  // ONLY include movies that have ACTUAL user bookings (> 0)
+  const bookedMovies = Object.values(movieStatsMap).filter(m => (m.totalBookings > 0 || m.totalTickets > 0));
 
-  const topMovies = Object.values(movieStatsMap).sort((a, b) => b.totalRevenue - a.totalRevenue);
+  // Sort by tickets sold first, then revenue
+  bookedMovies.sort((a, b) => (b.totalTickets - a.totalTickets) || (b.totalRevenue - a.totalRevenue));
+
+  // Calculate total tickets across all booked movies for percentages
+  const totalAllTickets = bookedMovies.reduce((acc, curr) => acc + (curr.totalTickets || 0), 0) || 1;
+
+  // Rank and limit strictly to Top 10
+  const top10Movies = bookedMovies.slice(0, 10).map((m, idx) => ({
+    ...m,
+    rank: idx + 1,
+    tickets: m.totalTickets,
+    bookings: m.totalBookings,
+    revenue: m.totalRevenue,
+    percentage: Math.round((m.totalTickets / totalAllTickets) * 100)
+  }));
 
   res.json({
     success: true,
-    movies: topMovies,
-    topMovies: topMovies
+    movies: top10Movies,
+    topMovies: top10Movies,
+    totalBookedMoviesCount: bookedMovies.length
   });
 });
 
